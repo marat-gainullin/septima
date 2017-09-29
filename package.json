@@ -1,0 +1,10 @@
+{
+  "name": "septima",
+  "version": "0.0.1",
+  "description": "JavaScript framework for Java EE and client side MVVM framework.",
+  "main": "index.js",
+  "repository": "https://github.com/marat-gainullin/septima.git",
+  "author": "marat-gainullin <mg@altsoft.biz>",
+  "license": "BSD-3-Clause",
+  "private": false
+}
