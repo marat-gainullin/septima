@@ -1,7 +1,7 @@
 (function () {
     var global = window;
 
-    var INJECTED_SCRIPT_CLASS_NAME = 'platypus-injected-script';
+    var INJECTED_SCRIPT_CLASS_NAME = 'septima-injected-script';
     var MODULES_INDEX = 'modules-index'; // Map module name -> script file with this module
     var TYPE_JAVASCRIPT = 'text/javascript';
 
@@ -631,7 +631,7 @@
             throw new Error('Current application file test');
         } catch (ex) {
             var stack = ex.stack.split('\n');
-            var firstFileName = extractFileName(stack[1]);// On Chrome the first line is a error text
+            var firstFileName = extractFileName(stack[1]);// On Chrome the first line is an error text
             if (firstFileName) {
                 for (var frameIdx = 1; frameIdx < stack.length; frameIdx++) {
                     var fileName = extractFileName(stack[frameIdx]);
@@ -644,15 +644,6 @@
             }
         }
         return calledFromFile;
-    }
-
-    function lookupCallerJsFile() {
-        try {
-            throw new Error('Current file test');
-        } catch (ex) {
-            var stack = ex.stack.split('\n');
-            return extractFileName(stack[1]);// On Chrome the first line is a error text
-        }
     }
 
     function extractFileName(aFrame) {
@@ -725,10 +716,9 @@
             if (!Array.isArray(_deps))
                 _deps = [_deps];
             var _moduleDefiner = arguments.length === 3 ? arguments[2] : arguments.length === 2 ? arguments[1] : arguments[0];
-            function moduleDefiner() {
+            var moduleDefiner = function () {
                 return typeof _moduleDefiner === 'function' ? _moduleDefiner.apply(null, arguments) : _moduleDefiner;
-            }
-            ;
+            };
 
             var calledFromFile = lookupCallerJsFile();
             var lastSlashIndex = calledFromFile.lastIndexOf('/');
@@ -764,18 +754,18 @@
             });
 
         } else {
-            throw 'platypusjs.define() arguments mismatch';
+            throw 'septimajs.define() arguments mismatch';
         }
     }
 
     var NO_ENTRY_POINT_MSG = '"entry-point" attribute missing. Hope application is initialized in some other way.';
-    var APPLICATION_INITIALIZED_MSG = 'Platypus.js application initialized';
+    var APPLICATION_INITIALIZED_MSG = 'septima.js application initialized';
     var APPLICATION_INITIALIZATION_ERROR_MSG = 'Error while initializing application.\n';
 
     function init() {
         define.amd = {}; // AMD compliance
 
-        var platypusjs = {
+        var septimajs = {
             require: require,
             define: define,
             config: config,
@@ -783,9 +773,9 @@
             getModelDocument: getModelDocument,
             getFormDocument: getFormDocument
         };
-        Object.seal(platypusjs);
+        Object.seal(septimajs);
 
-        global.platypusjs = platypusjs;
+        global.septimajs = septimajs;
         global.require = require;
         global.define = define;
 
@@ -837,7 +827,7 @@
                         modulesStructures.set(moduleName, resourceStructure);
                     });
                 }
-                info('Platypus.js modules index applied');
+                info('septima.js modules index applied');
                 if (entryPoint) {
                     inject(relativeUri() + config.sourcePath + entryPoint, function () {
                         info(APPLICATION_INITIALIZED_MSG);

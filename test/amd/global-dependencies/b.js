@@ -1,3 +1,0 @@
-function GlobalB(){
-    return 'GlobalB';
-}

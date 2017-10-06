@@ -1,5 +1,0 @@
-function CycleB(){
-}
-(function(){
-   CycleC(); 
-}());
