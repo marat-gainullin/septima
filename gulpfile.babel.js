@@ -23,12 +23,9 @@ const argv = yargs.argv;
 
 const paths = {
     project: './',
-    testSrc: 'test/',
     src: 'src/',
     build: 'build/',
-    bundle: 'build/bundle/',
-    lib: 'build/lib/',
-    test: 'build/test/'
+    lib: 'build/lib/'
 };
 
 const masks = {
@@ -40,20 +37,20 @@ gulp.task('clean', () => gulp.src(paths.build)
             .pipe(clean()));
 
 // Lint JS
-gulp.task('lint', () => {
+gulp.task('js-hint', () => {
     return gulp.src(masks.scripts, {cwd: paths.src})
             .pipe(jshint())
             .pipe(jshint.reporter('default'));
 });
 
 // Process scripts
-gulp.task('transpile', ['clean'], () => gulp.src(masks.scripts, {cwd: paths.src})
+gulp.task('babel', ['clean'], () => gulp.src(masks.scripts, {cwd: paths.src})
             .pipe(babel({
                 presets: ['env']
             }))
             .pipe(gulp.dest(paths.lib)));
 
-gulp.task('js', ['lint', 'transpile'], () => {
+gulp.task('code', ['js-hint', 'babel'], () => {
 });
 
 function indexFrom(base) {
@@ -99,38 +96,8 @@ gulp.task('package', ['index'], () => gulp.src([
         'LICENSE', 'package.json'], {cwd: paths.project})
             .pipe(filterPackageJson(pkg))
             .pipe(gulp.dest(paths.lib)));
-gulp.task('build', ['js', 'package'], () => {
+gulp.task('lib', ['code', 'package'], () => {
 });
-
-gulp.task('bundle-src', ['clean'], () => {
-    return gulp.src([masks.scripts], {cwd: paths.src})
-            .pipe(gulp.dest(`${paths.bundle}src`));
-});
-gulp.task('bundle-index', ['clean'], () => {
-    return gulp.src([masks.scripts], {cwd: paths.src})
-            .pipe(indexFrom(process.cwd() + paths.src))
-            .pipe(gulpConcat(pkg.main, {newLine: ';\n'}))
-            .pipe(gulp.dest(`${paths.bundle}src`));
-});
-
-gulp.task('generate-bundle', ['bundle-index', 'bundle-src'], () => {
-    return browserify(`${paths.bundle}src/${pkg.main}`,
-            {
-                debug: !!argv.dev // source map generation
-            })
-            .transform('babelify', {
-                presets: 'env'
-            })
-            .bundle()
-            .pipe(vinylStream(`${pkg.name}.js`))
-            .pipe(vinylBuffer())
-            .pipe(gulpif(!!argv.dev, sourcemaps.init({loadMaps: true})))
-            .pipe(gulpif(!!!argv.dev, uglify()))
-            .pipe(gulpif(!!argv.dev, sourcemaps.write('.')))
-            .pipe(gulp.dest(paths.bundle));
-});
-gulp.task('bundle', ['generate-bundle'], () => gulp.src(`${paths.bundle}src`)
-            .pipe(clean()));
 
 // Define the default task as a sequence of the above tasks
-gulp.task('default', ['build']);
+gulp.task('default', ['lib']);
