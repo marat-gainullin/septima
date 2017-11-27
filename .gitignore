@@ -1,12 +1,3 @@
-# npm libraries
-node_modules
-
-# build directory
+.gradle
+.nb-gradle
 build
-
-# IDE specific
-nbproject
-
-# misc
-yarn.lock
-*.log

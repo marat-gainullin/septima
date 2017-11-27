@@ -1,3 +1,0 @@
-describe('Septima Api', () =>{
-    
-});
