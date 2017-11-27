@@ -1,0 +1,4 @@
+dependencies {
+    compile project(':septima-js-common-utils')
+    compile project(':septima-js-core')
+}

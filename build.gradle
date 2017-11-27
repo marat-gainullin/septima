@@ -1,0 +1,88 @@
+buildscript {
+    repositories{
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+    }
+}
+
+allprojects {
+    apply plugin: 'java'
+
+    repositories{
+        jcenter()
+        /*
+        maven {
+            url 'http://download.osgeo.org/webdav/geotools/'
+        }
+        maven {
+            url 'http://repo.boundlessgeo.com/main/'
+        }
+        maven {
+            url 'http://www.datanucleus.org/downloads/maven2/'
+        }
+        maven {
+            url 'https://clojars.org/repo/'
+        }
+        maven {
+            url 'http://maven.geotoolkit.org/'
+        }
+        */
+    }
+
+    dependencies {
+        testCompile 'junit:junit:4.11'
+    }
+}
+
+subprojects {
+    apply plugin: 'maven'
+    apply plugin: 'com.jfrog.bintray'
+
+    configurations {
+        compile.transitive = false
+        compileClasspath.transitive = false
+        compileOnly.transitive = false
+    }    
+    
+    repositories {
+        mavenLocal()
+    }
+    
+    tasks.withType(JavaCompile) { 
+        options.encoding = 'utf-8'
+    }
+    
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    artifacts {
+        archives sourcesJar
+        archives javadocJar
+    }
+
+    bintray {
+        user = 'marat-gainullin'
+        key = project.hasProperty('bintrayKey') ? project.bintrayKey : ''
+        pkg {
+            repo = "$group"
+            name = "$project.name"
+            licenses = ['Apache-2.0']
+            vcsUrl = 'https://github.com/marat-gainullin/septima.git'
+            version {
+                name = "${project.version}"
+                released  = new Date()
+            }
+            githubRepo = 'marat-gainullin/septima'
+        }
+        configurations = ['archives']
+    }
+}
