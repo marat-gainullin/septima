@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.eas.util;
 
 import java.text.SimpleDateFormat;
@@ -13,6 +9,9 @@ import java.util.TimeZone;
  * @author ab, mg
  */
 public class JsonUtils {
+
+    public static final String JSON_CONTENTTYPE = "application/json";
+    public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
     public static StringBuilder s(String aValue) {
         StringBuilder sb = new StringBuilder();

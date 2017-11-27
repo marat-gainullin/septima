@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.eas.util;
 
 /**
@@ -12,6 +7,7 @@ package com.eas.util;
  * A client can remove its listener by calling <code>remove()</code>.
  * @author vv
  */
+@FunctionalInterface
 public interface ListenerRegistration {
 
     void remove();

@@ -10,7 +10,7 @@ import java.util.function.Consumer;
  *
  * @author mg
  */
-public interface ModulesProxy extends PlatypusIndexer{
+public interface ModulesProxy extends PlatypusIndexer {
     
     public ModuleStructure getModule(String aName, Scripts.Space aSpace, Consumer<ModuleStructure> onSuccess, Consumer<Exception> onFailure) throws Exception;
     
