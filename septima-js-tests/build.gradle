@@ -21,12 +21,12 @@ configurations {
 }
 
 def tomcatVersion = '8.5.8'
-def wrappersProject = project(':platypus-js-wrappers')
+def wrappersProject = project(':septima-js-wrappers')
 
 dependencies {
-    runtime project(':platypus-js-servlet'),
-    project(':platypus-js-sql-driver-h2'),
-    project(':platypus-js-sql-driver-mysql')
+    runtime project(':septima-js-servlet'),
+    project(':septima-js-sql-driver-h2'),
+    project(':septima-js-sql-driver-mysql')
     wrappers wrappersProject
     tomcat "org.apache.tomcat:tomcat-catalina:$tomcatVersion",
            "org.apache.tomcat:tomcat-jasper:$tomcatVersion",
@@ -35,8 +35,8 @@ dependencies {
            "org.apache.tomcat:tomcat-jaspic-api:$tomcatVersion"
     containerLibs 'com.h2database:h2:1.4.193'
     containerLibs 'com.vividsolutions:jts:1.13'
-    testCompile project(':platypus-js-scripting'),
-    project(':platypus-js-core').sourceSets.test.output,
+    testCompile project(':septima-js-scripting'),
+    project(':septima-js-core').sourceSets.test.output,
                 'org.seleniumhq.selenium:selenium-java:3.0.1',
                 'io.github.bonigarcia:webdrivermanager:1.6.0'
     testRuntime 'com.h2database:h2:1.4.193'
@@ -135,8 +135,8 @@ if(!appPrivateProps.httpTomcatPort)
 appPrivateProps.httpTomcatPort = 8085
 def testBasesDirectory = "${buildDir}/test-databases"
 
-def datasource1Name = 'eas'
-def datasource1Dburl = "jdbc:h2:tcp://localhost/${testBasesDirectory}/platypus-tests-eas"
+def datasource1Name = 'septima'
+def datasource1Dburl = "jdbc:h2:tcp://localhost/${testBasesDirectory}/platypus-tests-septima"
 def datasource1Dbuser = 'sa'
 def datasource1Dbpassword = 'sa'
 def datasource1Dbschema = 'PUBLIC'
@@ -190,7 +190,7 @@ task h2Exec(type: JavaExec) {
 task h2FillEasExec(type: JavaExec) {
     classpath fileTree(sharedLibDir)
     main 'org.h2.tools.RunScript'
-    args '-url', datasource1Dburl, '-user', datasource1Dbuser, '-password', datasource1Dbpassword, '-script', "${projectDir}/src/test/resources/eas.sql"
+    args '-url', datasource1Dburl, '-user', datasource1Dbuser, '-password', datasource1Dbpassword, '-script', "${projectDir}/src/test/resources/septima.sql"
 }
 task h2FillHrExec(type: JavaExec) {
     classpath fileTree(sharedLibDir)
@@ -220,8 +220,8 @@ task launchServers(){
         if(new ProcessBuilder(h2FillEasExec.commandLine)
             .start()
             .waitFor() != 0)
-        throw new InvalidUserDataException("Can't fill test database 'eas'")
-        println 'Test database "eas" filled.'
+        throw new InvalidUserDataException("Can't fill test database 'septima'")
+        println 'Test database "septima" filled.'
         if(new ProcessBuilder(h2FillHrExec.commandLine)
             .start()
             .waitFor() != 0)

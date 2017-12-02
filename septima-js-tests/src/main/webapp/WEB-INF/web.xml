@@ -22,11 +22,11 @@
         <param-value>app</param-value>
     </context-param>
     <listener>
-        <listener-class>com.eas.server.httpservlet.PlatypusSessionsSynchronizer</listener-class>
+        <listener-class>com.septima.http.SessionsSynchronizer</listener-class>
     </listener>
     <servlet>
         <servlet-name>PlatypusServlet</servlet-name>
-        <servlet-class>com.eas.server.httpservlet.PlatypusHttpServlet</servlet-class>
+        <servlet-class>com.septima.http.SeptimaServlet</servlet-class>
         <async-supported>true</async-supported>
         <multipart-config>
             <location>C:/projects/PlatypusTests/pub</location>
