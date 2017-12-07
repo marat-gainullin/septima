@@ -5,7 +5,7 @@
  */
 package com.septima.queries;
 
-import com.septima.client.Databases;
+import com.septima.DataSources;
 import com.septima.client.resourcepool.BearResourcePool;
 import com.septima.client.resourcepool.GeneralResourceProvider;
 import com.septima.client.settings.DbConnectionSettings;
@@ -18,16 +18,16 @@ import com.septima.util.IdGenerator;
 public class DatabasesWithResource implements AutoCloseable {
 
     protected String resourceName;
-    protected Databases client;
+    protected DataSources client;
 
     public DatabasesWithResource(DbConnectionSettings aSettings) throws Exception {
         super();
         resourceName = "TestDb-" + IdGenerator.genStringId();
         GeneralResourceProvider.getInstance().registerDatasource(resourceName, aSettings);
-        client = new Databases(resourceName, true, BearResourcePool.DEFAULT_MAXIMUM_SIZE);
+        client = new DataSources(resourceName, true, BearResourcePool.DEFAULT_MAXIMUM_SIZE);
     }
 
-    public Databases getClient() {
+    public DataSources getClient() {
         return client;
     }
 

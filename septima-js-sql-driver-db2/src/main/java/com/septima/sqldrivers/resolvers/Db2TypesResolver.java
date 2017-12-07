@@ -1,7 +1,6 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.client.metadata.JdbcField;
-import com.septima.client.sqldrivers.resolvers.TypesResolver;
+import com.septima.metadata.JdbcColumn;
 import com.septima.script.Scripts;
 import java.util.Collections;
 import java.util.HashMap;
@@ -114,7 +113,7 @@ public class Db2TypesResolver implements TypesResolver {
     }
     
     @Override
-    public void resolveSize(JdbcField aField) {
+    public void resolveSize(JdbcColumn aField) {
         String sqlTypeName = aField.getType();
         if (sqlTypeName != null) {
             sqlTypeName = sqlTypeName.toUpperCase();

@@ -1,10 +1,7 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-package com.septima.client.sqldrivers.resolvers;
+package com.septima.sqldrivers.resolvers;
 
-import com.septima.client.metadata.JdbcField;
+import com.septima.metadata.JdbcColumn;
+
 import java.util.Set;
 
 /**
@@ -23,6 +20,6 @@ public interface TypesResolver {
 
     public boolean isScaled(String aTypeName);
     
-    public void resolveSize(JdbcField aField);
+    public void resolveSize(JdbcColumn aField);
 
 }

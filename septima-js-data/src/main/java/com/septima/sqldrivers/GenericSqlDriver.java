@@ -1,17 +1,14 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package com.septima.client.sqldrivers;
+package com.septima.sqldrivers;
 
-import com.septima.client.changes.JdbcChangeValue;
-import com.septima.client.metadata.DbTableIndexSpec;
-import com.septima.client.metadata.ForeignKeySpec;
-import com.septima.client.metadata.JdbcField;
-import com.septima.client.metadata.PrimaryKeySpec;
-import com.septima.client.sqldrivers.resolvers.GenericTypesResolver;
-import com.septima.client.sqldrivers.resolvers.TypesResolver;
+import com.septima.Constants;
+import com.septima.changes.JdbcChangeValue;
+import com.septima.metadata.ForeignKey;
+import com.septima.metadata.PrimaryKey;
+import com.septima.metadata.TableIndex;
+import com.septima.metadata.JdbcColumn;
+import com.septima.sqldrivers.resolvers.GenericTypesResolver;
+import com.septima.sqldrivers.resolvers.TypesResolver;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Wrapper;
@@ -22,6 +19,11 @@ import java.util.List;
  * @author mg
  */
 public class GenericSqlDriver extends SqlDriver {
+
+    @Override
+    public String getDialect() {
+        return Constants.GENERIC_DIALECT;
+    }
 
     @Override
     public boolean is(String aDialect) {
@@ -83,32 +85,32 @@ public class GenericSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String getSql4DropFkConstraint(String aSchemaName, ForeignKeySpec aFk) {
+    public String getSql4DropFkConstraint(String aSchemaName, ForeignKey aFk) {
         return null;
     }
 
     @Override
-    public String[] getSql4CreatePkConstraint(String aSchemaName, List<PrimaryKeySpec> listPk) {
+    public String[] getSql4CreatePkConstraint(String aSchemaName, List<PrimaryKey> listPk) {
         return null;
     }
 
     @Override
-    public String getSql4DropPkConstraint(String aSchemaName, PrimaryKeySpec aPk) {
+    public String getSql4DropPkConstraint(String aSchemaName, PrimaryKey aPk) {
         return null;
     }
 
     @Override
-    public String getSql4CreateFkConstraint(String aSchemaName, ForeignKeySpec aFk) {
+    public String getSql4CreateFkConstraint(String aSchemaName, ForeignKey aFk) {
         return null;
     }
 
     @Override
-    public String getSql4CreateFkConstraint(String aSchemaName, List<ForeignKeySpec> listFk) {
+    public String getSql4CreateFkConstraint(String aSchemaName, List<ForeignKey> listFk) {
         return null;
     }
 
     @Override
-    public String getSql4CreateIndex(String aSchemaName, String aTableName, DbTableIndexSpec aIndex) {
+    public String getSql4CreateIndex(String aSchemaName, String aTableName, TableIndex aIndex) {
         return null;
     }
 
@@ -130,22 +132,22 @@ public class GenericSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String getSql4FieldDefinition(JdbcField aField) {
+    public String getSql4FieldDefinition(JdbcColumn aField) {
         return null;
     }
 
     @Override
-    public String[] getSqls4AddingField(String aSchemaName, String aTableName, JdbcField aField) {
+    public String[] getSqls4AddingField(String aSchemaName, String aTableName, JdbcColumn aField) {
         return null;
     }
 
     @Override
-    public String[] getSqls4ModifyingField(String aSchemaName, String aTableName, JdbcField aOldFieldMd, JdbcField aNewFieldMd) {
+    public String[] getSqls4ModifyingField(String aSchemaName, String aTableName, JdbcColumn aOldFieldMd, JdbcColumn aNewFieldMd) {
         return null;
     }
 
     @Override
-    public String[] getSqls4RenamingField(String aSchemaName, String aTableName, String aOldFieldName, JdbcField aNewFieldMd) {
+    public String[] getSqls4RenamingField(String aSchemaName, String aTableName, String aOldFieldName, JdbcColumn aNewFieldMd) {
         return null;
     }
 

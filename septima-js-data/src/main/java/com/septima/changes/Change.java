@@ -1,15 +1,9 @@
-package com.septima.client.changes;
-
-import com.septima.script.AlreadyPublishedException;
-import com.septima.script.HasPublished;
-import com.septima.script.ScriptFunction;
-import jdk.nashorn.api.scripting.JSObject;
+package com.septima.changes;
 
 /**
- *
  * @author mg
  */
-public abstract class Change implements HasPublished {
+public abstract class Change {
 
     public interface Generic {
 
@@ -36,42 +30,20 @@ public abstract class Change implements HasPublished {
         void accept(TransferableChangeVisitor aChangeVisitor) throws Exception;
     }
 
-    public String entityName;
+    private final String entityName;
     public boolean consumed;
-    //
-    protected JSObject published;
 
     public Change(String aEntityName) {
         super();
         entityName = aEntityName;
     }
 
-    @ScriptFunction(jsDoc = ""
-            + "/**\n"
-            + " * Indicates the change's type (Insert, Update, Delete or Command).\n"
-            + " */")
-    public String getType() {
-        return getClass().getSimpleName();
-    }
-
-    @ScriptFunction(jsDoc = ""
-            + "/**\n"
-            + " *Indicates the change's destination entity.\n"
-            + " */")
     public String getEntity() {
         return entityName;
     }
 
     @Override
-    public void setPublished(JSObject aValue) {
-        if (published != null) {
-            throw new AlreadyPublishedException();
-        }
-        published = aValue;
-    }
-
-    @Override
     public String toString() {
-        return getType();
+        return getClass().getSimpleName();
     }
 }

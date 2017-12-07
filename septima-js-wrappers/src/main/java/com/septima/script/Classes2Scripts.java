@@ -1,6 +1,6 @@
 package com.septima.script;
 
-import com.septima.cache.SeptimaFiles;
+import com.septima.indexer.SeptimaFiles;
 import com.septima.client.forms.components.model.grid.ModelGrid;
 import com.septima.client.settings.SettingsConstants;
 import com.septima.util.FileUtils;

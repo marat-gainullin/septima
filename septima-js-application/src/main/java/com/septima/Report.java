@@ -5,7 +5,7 @@
  */
 package com.septima;
 
-import com.septima.cache.SeptimaFiles;
+import com.septima.indexer.SeptimaFiles;
 import com.septima.client.settings.SettingsConstants;
 import com.septima.script.AlreadyPublishedException;
 import com.septima.script.HasPublished;

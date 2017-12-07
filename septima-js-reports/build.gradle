@@ -3,7 +3,4 @@ dependencies{
     compile 'commons-beanutils:commons-beanutils:1.9.3'
     compile 'org.apache.poi:poi:3.15'
     compile 'org.apache.poi:poi-ooxml:3.15'
-    compile project(':septima-js-common-utils')
-    compile project(':septima-js-core')
-    testCompile project(':septima-js-scripting')
 }

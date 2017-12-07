@@ -5,7 +5,7 @@
  */
 package com.septima;
 
-import com.septima.cache.ScriptDocument;
+import com.septima.indexer.ScriptDocument;
 import com.septima.script.Scripts;
 import com.septima.script.JsObjectException;
 import java.util.function.Consumer;

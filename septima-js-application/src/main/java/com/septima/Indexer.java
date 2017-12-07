@@ -1,90 +1,65 @@
 package com.septima;
 
-import com.septima.cache.ScriptDocument;
-import com.septima.cache.ScriptDocuments;
+import com.septima.indexer.ScriptDocument;
 import com.septima.script.JsDoc;
+
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
-import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
  * @author mg
  */
 public class Indexer {
 
-    public interface ScanCallback {
+    @FunctionalInterface
+    public interface OnModule {
 
-        void moduleScanned(String aModuleName, ScriptDocument.ModuleDocument aModule, File aFile);
+        void scanned(String aModuleName, ScriptDocument.ModuleDocument aModule, File aFile);
     }
 
-    protected Path sourcePath;
-    protected Path apiPath;
-    protected Map<String, File> id2Paths = new HashMap<>();
-    protected WatchService service;
-    protected ScanCallback scanCallback;
-    protected boolean autoScan = true;
-    protected ScriptDocuments scriptDocuments;
+    protected Path appPath;
+    protected Path apiPath; // TODO: Remove after libraries / modules refactoring
+    protected Map<String, File> fileByPath = new HashMap<>();
+    protected OnModule onModule;
 
-    public Indexer(Path aSourcePath, Path aApiPath, ScriptDocuments aScriptDocuments) throws Exception {
-        this(aSourcePath, aApiPath, aScriptDocuments, true, null);
+    public Indexer(Path aSourcePath, Path aApiPath) throws Exception {
+        this(aSourcePath, aApiPath, null);
     }
 
-    public Indexer(Path aSourcePath, Path aApiPath, ScriptDocuments aScriptDocuments, ScanCallback aScanCallback) throws Exception {
-        this(aSourcePath, aApiPath, aScriptDocuments, true, aScanCallback);
-    }
-
-    public Indexer(Path aSourcePath, Path aApiPath, ScriptDocuments aScriptDocuments, boolean aAutoScan, ScanCallback aScanCallback) throws Exception {
+    public Indexer(Path aSourcePath, Path aApiPath, OnModule aOnModule) throws Exception {
         super();
-        autoScan = aAutoScan;
-        scriptDocuments = aScriptDocuments;
-        sourcePath = aSourcePath;
+        appPath = aSourcePath;
         apiPath = aApiPath;
-        scanCallback = aScanCallback;
-        if (autoScan) {
-            checkRootDirectory();
-            scanSource();
-        }
+        onModule = aOnModule;
     }
 
     private void checkRootDirectory() throws IllegalArgumentException {
-        File srcDirectory = sourcePath.toFile();
+        File srcDirectory = appPath.toFile();
         if (!srcDirectory.exists() || !srcDirectory.isDirectory()) {
-            throw new IllegalArgumentException(String.format("%s doesn't point to a directory.", sourcePath.toString()));
+            throw new IllegalArgumentException(String.format("%s doesn't point to a directory.", appPath.toString()));
         }
     }
 
-    public void watch() throws Exception {
-        service = FileSystems.getDefault().newWatchService();
-    }
-
-    public void unwatch() throws Exception {
-        assert service != null;
-        service.close();
-        service = null;
-    }
-
     public void rescan() {
-        id2Paths.clear();
-        checkRootDirectory();
+        fileByPath.clear();
         scanSource();
     }
 
     private void scanSource() {
+        checkRootDirectory();
         try {
-            Files.walkFileTree(sourcePath, new SimpleFileVisitor<Path>() {
+            Files.walkFileTree(appPath, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path aFilePath, BasicFileAttributes attrs) throws IOException {
                     if (apiPath != null && aFilePath.startsWith(apiPath)) {
@@ -118,32 +93,32 @@ public class Indexer {
     protected void add(File aFile) throws Exception {
         if (aFile.getName().endsWith(SeptimaFiles.JAVASCRIPT_FILE_END)) {
             String defaultModuleName = getDefaultModuleName(aFile);
-            ScriptDocument scriptDoc = scriptDocuments.get(defaultModuleName, aFile);
-            Set<Map.Entry<String, ScriptDocument.ModuleDocument>> modulesDocs = scriptDoc.getModules().entrySet();
-            modulesDocs.forEach((Map.Entry<String, ScriptDocument.ModuleDocument> aModuleDocEntry) -> {
-                id2Paths.put(aModuleDocEntry.getKey(), aFile);
-                if (scanCallback != null) {
-                    scanCallback.moduleScanned(aModuleDocEntry.getKey(), aModuleDocEntry.getValue(), aFile);
-                }
-            });
+            String source = new String(Files.readAllBytes(aFile.toPath()), StandardCharsets.UTF_8);
+            ScriptDocument scriptDoc = ScriptDocument.parse(source, defaultModuleName);
+            scriptDoc.getModules().entrySet()
+                    .forEach((Map.Entry<String, ScriptDocument.ModuleDocument> aModuleDocEntry) -> {
+                        fileByPath.put(aModuleDocEntry.getKey(), aFile);
+                        if (onModule != null) {
+                            onModule.scanned(aModuleDocEntry.getKey(), aModuleDocEntry.getValue(), aFile);
+                        }
+                    });
         } else if (aFile.getName().endsWith(SeptimaFiles.SQL_FILE_END)) {
-            String fileContent = FileUtils.readString(aFile, SeptimaFiles.DEFAULT_ENCODING);
+            String fileContent = new String(Files.readAllBytes(aFile.toPath()), StandardCharsets.UTF_8);
             String queryName = SeptimaFiles.getAnnotationValue(fileContent, JsDoc.Tag.NAME_TAG);
             if (queryName != null && !queryName.isEmpty()) {
-                id2Paths.put(queryName, aFile);
+                fileByPath.put(queryName, aFile);
             }
         }
     }
 
-    @Override
     public String getDefaultModuleName(File aFile) {
-        String defaultModuleName = sourcePath.relativize(Paths.get(aFile.toURI())).toString().replace(File.separator, "/");
+        String defaultModuleName = appPath.relativize(Paths.get(aFile.toURI())).toString().replace(File.separator, "/");
         defaultModuleName = defaultModuleName.substring(0, defaultModuleName.length() - SeptimaFiles.JAVASCRIPT_FILE_END.length());
         return defaultModuleName;
     }
 
     public Path getAppPath() {
-        return sourcePath;
+        return appPath;
     }
 
     /**
@@ -153,19 +128,18 @@ public class Indexer {
      * @return
      * @throws Exception
      */
-    @Override
     public File nameToFile(String aName) throws Exception {
         if (aName != null) {
-            File file = id2Paths.get(aName);
+            File file = fileByPath.get(aName);
             if (file != null) {
                 return file;
             } else {
                 String filyName = aName.replace('/', File.separatorChar);
-                Path appResource = sourcePath.resolve(filyName);
+                Path appResource = appPath.resolve(filyName);
                 if (appResource.toFile().exists()) {// plain resource relative 'app' directory
                     return appResource.toFile();
                 } else {
-                    Path appJsResource = sourcePath.resolve(filyName + SeptimaFiles.JAVASCRIPT_FILE_END);
+                    Path appJsResource = appPath.resolve(filyName + SeptimaFiles.JAVASCRIPT_FILE_END);
                     if (appJsResource.toFile().exists()) {// *.js resource relative 'app' directory
                         return appJsResource.toFile();
                     } else {

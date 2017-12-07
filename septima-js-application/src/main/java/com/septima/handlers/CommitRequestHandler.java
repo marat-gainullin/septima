@@ -1,12 +1,11 @@
 package com.septima.handlers;
 
 import com.septima.RequestHandler;
+import com.septima.changes.*;
 import com.septima.client.DatabasesClient;
 import com.septima.client.SqlCompiledQuery;
 import com.septima.client.SqlQuery;
-import com.septima.client.changes.*;
 import com.septima.login.AnonymousPrincipal;
-import com.septima.client.queries.LocalQueriesProxy;
 import com.septima.client.threetier.requests.CommitRequest;
 import com.septima.script.Scripts;
 import com.septima.SeptimaApplication;

@@ -24,7 +24,7 @@ def tomcatVersion = '8.5.8'
 def wrappersProject = project(':septima-js-wrappers')
 
 dependencies {
-    runtime project(':septima-js-servlet'),
+    runtime project(':septima-js-application'),
     project(':septima-js-sql-driver-h2'),
     project(':septima-js-sql-driver-mysql')
     wrappers wrappersProject
@@ -35,9 +35,7 @@ dependencies {
            "org.apache.tomcat:tomcat-jaspic-api:$tomcatVersion"
     containerLibs 'com.h2database:h2:1.4.193'
     containerLibs 'com.vividsolutions:jts:1.13'
-    testCompile project(':septima-js-scripting'),
-    project(':septima-js-core').sourceSets.test.output,
-                'org.seleniumhq.selenium:selenium-java:3.0.1',
+    testCompile 'org.seleniumhq.selenium:selenium-java:3.0.1',
                 'io.github.bonigarcia:webdrivermanager:1.6.0'
     testRuntime 'com.h2database:h2:1.4.193'
 }

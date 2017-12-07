@@ -1,22 +1,19 @@
-package com.septima.client;
+package com.septima;
 
-import com.septima.cache.SourceIndexer;
-import com.septima.client.metadata.Field;
-import com.septima.client.metadata.Fields;
-import com.septima.client.metadata.JdbcField;
-import com.septima.client.metadata.Parameter;
-import com.septima.client.model.QueryDocument;
-import com.septima.client.model.QueryDocument.StoredFieldMetadata;
-import com.septima.client.model.Relation;
-import com.septima.client.model.query.QueryEntity;
-import com.septima.client.model.query.QueryModel;
-import com.septima.client.model.query.QueryParametersEntity;
-import com.septima.client.queries.QueriesProxy;
-import com.septima.client.queries.SqlQuery;
-import com.septima.client.sqldrivers.resolvers.TypesResolver;
-import com.septima.script.JsDoc;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.TreeNode;
+import com.septima.metadata.Field;
+import com.septima.metadata.JdbcColumn;
+import com.septima.metadata.Parameter;
+import com.septima.queries.SqlQuery;
+import com.septima.sqldrivers.resolvers.TypesResolver;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,10 +34,10 @@ import net.sf.jsqlparser.statement.select.*;
  */
 public class StoredQueryFactory {
 
-    public static final String _Q = "\\" + ClientConstants.STORED_QUERY_REF_PREFIX + "?";
+    public static final String _Q = "\\" + Constants.STORED_QUERY_REF_PREFIX + "?";
 
     private Fields processSubQuery(SqlQuery aQuery, SubSelect aSubSelect) throws Exception {
-        SqlQuery subQuery = new SqlQuery(aQuery.getBasesProxy(), aQuery.getDatasourceName(), "");
+        SqlQuery subQuery = new SqlQuery(aQuery.getDatabase(), "", );
         subQuery.setEntityName(aSubSelect.getAliasName());
         resolveOutputFieldsFromTables(subQuery, aSubSelect.getSelectBody());
         return subQuery.getFields();
@@ -54,9 +51,8 @@ public class StoredQueryFactory {
     public static final String DUMMY_FIELD_NAME = "dummy";
     public static final String INEER_JOIN_CONSTRUCTING_MSG = "Constructing query with left Query %s and right table %s";
     public static final String LOADING_QUERY_MSG = "Loading stored query %s";
-    protected QueriesProxy<SqlQuery> subQueriesProxy;
-    private final Databases basesProxy;
-    private final SourceIndexer indexer;
+    private final Database database;
+    private final Path applicationPath;
     private boolean aliasesToTableNames;
 
     public boolean isAliasesToTableNames() {
@@ -70,14 +66,14 @@ public class StoredQueryFactory {
     protected void addTableFieldsToSelectResults(SqlQuery aQuery, Table aFieldsSource) throws Exception {
         FieldsResult fieldsRes = getTablyFields(aQuery.getDatasourceName(), aFieldsSource.getWholeTableName());
         if (fieldsRes != null && fieldsRes.fields != null) {
-            Metadata mdCache = basesProxy.getMetadataCache(aQuery.getDatasourceName());
+            Metadata mdCache = database.getMetadataCache(aQuery.getDatasourceName());
             if (mdCache != null) {
-                TypesResolver resolver = mdCache.getDatasourceSqlDriver().getTypesResolver();
+                TypesResolver resolver = mdCache.getDataSourceSqlDriver().getTypesResolver();
                 fieldsRes.fields.toCollection().stream().forEach((Field field) -> {
                     Field copied = new Field();
                     copied.assignFrom(field);
                     if (fieldsRes.fromRealTable) {
-                        JdbcField jField = (JdbcField) field;
+                        JdbcColumn jField = (JdbcColumn) field;
                         copied.setType(resolver.toApplicationType(jField.getJdbcType(), jField.getType()));
                         if (jField.getSchemaName() != null && !jField.getSchemaName().isEmpty()) {
                             copied.setTableName(jField.getSchemaName() + "." + copied.getTableName());
@@ -116,15 +112,51 @@ public class StoredQueryFactory {
     public SqlQuery loadQuery(String aEntityName) throws Exception {
         if (aEntityName != null) {
             Logger.getLogger(this.getClass().getName()).finer(String.format(LOADING_QUERY_MSG, aEntityName));
-            File mainQueryFile = indexer.nameToFile(aEntityName);
-            return mainQueryFile != null ? fileToSqlQuery(aEntityName, mainQueryFile) : null;
+            String filyName = aEntityName.replace(".", File.separator) + ".sql";
+            File mainQueryFile = applicationPath.resolve(filyName).toFile();
+            if(mainQueryFile.exists()) {
+                if(!mainQueryFile.isDirectory()) {
+                    return fileToSqlQuery(aEntityName, mainQueryFile);
+                } else {
+                    throw new IllegalStateException(filyName+"' at path: " + applicationPath + " is a directory.");
+                }
+            } else {
+                throw new FileNotFoundException("Can't find '"+filyName+"' from path: " + applicationPath);
+            }
         } else {
             throw new NullPointerException(CANT_LOAD_NULL_MSG);
         }
     }
 
     protected SqlQuery fileToSqlQuery(String aName, File aFile) throws Exception {
-        QueryDocument queryDoc = QueryDocument.parse(aName, aFile, basesProxy, subQueriesProxy);
+        String sql = new String(Files.readAllBytes(aFile.toPath()), StandardCharsets.UTF_8);
+        File jsonFile = aFile.getParentFile().toPath().resolve(aFile.getName() + ".json").toFile();
+        if(jsonFile.exists() && !jsonFile.isDirectory()){
+            String json = new String(Files.readAllBytes(jsonFile.toPath()), StandardCharsets.UTF_8);
+            JsonFactory factory = new JsonFactory();
+            JsonParser parser = factory.createParser(json);
+            TreeNode root = parser.readValueAsTree();
+            TreeNode titleNode = root.get("title");
+            if(titleNode != null && titleNode.isValueNode()){
+                String title = titleNode.asToken().asString();
+            }
+            TreeNode sqlNode = root.get("title");
+            if(sqlNode != null && sqlNode.isValueNode()){
+                String customSql = sqlNode.asToken().asString();
+            }
+            TreeNode commandNode = root.get("command");
+            if(commandNode != null && commandNode.isValueNode()){
+                boolean command = "true".equalsIgnoreCase(commandNode.asToken().asString());
+            }
+            TreeNode readonlyNode = root.get("readonly");
+            if(readonlyNode != null && readonlyNode.isValueNode()){
+                boolean readonly = "true".equalsIgnoreCase(readonlyNode.asToken().asString());
+            }
+            TreeNode parametersNode = root.get("parameters");
+            if(parametersNode != null && parametersNode.isObject()){
+            }
+        }
+        QueryDocument queryDoc = QueryDocument.parse(aName, aFile, database, subQueriesProxy);
         QueryModel model = queryDoc.getModel();
         SqlQuery query = queryDoc.getQuery();
         putRolesMutatables(query);
@@ -148,26 +180,20 @@ public class StoredQueryFactory {
                 }
             } finally {
                 query.setTitle(aName);
-                query.getFields().setTableDescription(query.getTitle());
             }
         }
         return query;
     }
 
     /**
-     * Constructs factory for stored in appliction database queries;
+     * Constructs factory for queries stored in application database;
      *
-     * @param aBasesProxy ClientIntf instance, responsible for interacting with
-     * appliction database.
-     * @param aSubQueriesProxy
-     * @param aIndexer
      * @throws java.lang.Exception
      */
-    public StoredQueryFactory(Databases aBasesProxy, QueriesProxy<SqlQuery> aSubQueriesProxy, SourceIndexer aIndexer) throws Exception {
+    public StoredQueryFactory(Database aDatabase, Path aApplicationPath) throws Exception {
         super();
-        basesProxy = aBasesProxy;
-        subQueriesProxy = aSubQueriesProxy;
-        indexer = aIndexer;
+        database = aDatabase;
+        applicationPath = aApplicationPath;
     }
 
     /**
@@ -410,7 +436,7 @@ public class StoredQueryFactory {
                      * // Absent alias generation is parser's work. field = new
                      * Field(col.getAlias()); // Such field is absent in
                      * database tables and so, field's table is the processed
-                     * query. field.setTableName(ClientConstants.QUERY_ID_PREFIX
+                     * query. field.setTableName(Constants.QUERY_ID_PREFIX
                      * + aQuery.getEntityId().toString()); /** There is an
                      * unsolved problem about type of the expression. This might
                      * be solved using manually setted up field's type and
@@ -466,9 +492,9 @@ public class StoredQueryFactory {
      * @throws Exception
      */
     protected FieldsResult getTablyFields(String aDatasourceName, String aTablyName) throws Exception {
-        if (aTablyName.startsWith(ClientConstants.STORED_QUERY_REF_PREFIX)) {
+        if (aTablyName.startsWith(Constants.STORED_QUERY_REF_PREFIX)) {
             // Reference to a stored subquery
-            String queryName = aTablyName.substring(ClientConstants.STORED_QUERY_REF_PREFIX.length());
+            String queryName = aTablyName.substring(Constants.STORED_QUERY_REF_PREFIX.length());
             SqlQuery query = subQueriesProxy.getQuery(queryName, null, null, null);
             if (query != null) {
                 return new FieldsResult(query.getFields(), false);
@@ -478,7 +504,7 @@ public class StoredQueryFactory {
         } else {
             // Reference to a table
             try {
-                Fields tableFields = basesProxy.getMetadataCache(aDatasourceName).getTableMetadata(aTablyName);
+                Fields tableFields = database.getMetadataCache(aDatasourceName).getTable(aTablyName);
                 return new FieldsResult(tableFields, true);
             } catch (Exception ex) {
                 return null;
@@ -550,21 +576,13 @@ public class StoredQueryFactory {
             Field copied = new Field();
             copied.assignFrom(field);
             if (fieldFromRealTable) {
-                TypesResolver resolver = basesProxy.getMetadataCache(aQuery.getDatasourceName()).getDatasourceSqlDriver().getTypesResolver();
-                JdbcField jField = (JdbcField) field;
+                TypesResolver resolver = database.getMetadataCache(aQuery.getDatasourceName()).getDataSourceSqlDriver().getTypesResolver();
+                JdbcColumn jField = (JdbcColumn) field;
                 copied.setType(resolver.toApplicationType(jField.getJdbcType(), jField.getType()));
                 if (jField.getSchemaName() != null && !jField.getSchemaName().isEmpty()) {
                     copied.setTableName(jField.getSchemaName() + "." + copied.getTableName());
                 }
             }
-            /**
-             * Заменим отметку о первичном ключе из оригинальной таблицы на
-             * отметку о внешнем ключе, указывающем на ту же таблицу. Замена
-             * производится с учетом "главной" таблицы. Теперь эта обработка не
-             * нужна, т.к. все таблицы "главные", т.е. изменения могут попасть в
-             * несколько таблиц одновременно, с учетом их ключей, конечно.
-             */
-            //checkPrimaryKey(aQuery, copied);
             /**
              * Заменим имя поля из оригинальной таблицы на алиас. Если его нет,
              * то его надо сгенерировать. Генерация алиаса, - это работа

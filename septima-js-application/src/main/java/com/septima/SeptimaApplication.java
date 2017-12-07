@@ -1,17 +1,5 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.septima;
 
-import com.septima.cache.ScriptDocument;
-import com.septima.cache.ScriptDocuments;
-import com.septima.client.DatabasesClient;
-import com.septima.client.SqlQuery;
-import com.septima.cache.ScriptDocument.ModuleDocument;
-import com.septima.client.queries.ContextHost;
-import com.septima.client.queries.QueriesProxy;
-import com.septima.client.scripts.ScriptedResource;
 import com.septima.script.HasPublished;
 import com.septima.script.JsDoc;
 import com.septima.script.Scripts;
@@ -38,35 +26,30 @@ import jdk.nashorn.internal.runtime.Undefined;
  *
  * @author mg
  */
-public abstract class SeptimaApplication implements ContextHost, Application<SqlQuery> {
+public abstract class SeptimaApplication implements Application<SqlQuery> {
 
     protected String startModuleName;
     protected final Scripts.Space[] statelessSpaces;
     protected Sessions sessions;
-    protected ScriptedDatabasesClient basesProxy;
+    protected DataSources basesProxy;
     protected Indexer indexer;
     protected ModulesIndexer modules;
     protected QueriesProxy<SqlQuery> queries;
-    protected ScriptDocuments scriptDocuments;
-    protected FormsDocuments forms = new FormsDocuments();
-    protected ReportsConfigs reports = new ReportsConfigs();
-    protected ModelsDocuments models = new ModelsDocuments();
-    protected ServerModulesProxy localServerModules = new LpcProxy(this);
+    protected LpcProxy localServerModules = new LpcProxy(this);
     protected Scripts.Space queueSpace;
 
-    public SeptimaApplication(Indexer aIndexer, ModulesIndexer aModules, QueriesProxy<SqlQuery> aQueries, ScriptedDatabasesClient aDatabasesClient, ScriptDocuments aSecurityConfigs, String aDefaultAppElement) throws Exception {
-        this(aIndexer, aModules, aQueries, aDatabasesClient, aSecurityConfigs, aDefaultAppElement, new Sessions(), (Runtime.getRuntime().availableProcessors() + 1) * 10);
+    public SeptimaApplication(Indexer aIndexer, QueriesProxy<SqlQuery> aQueries, DataSources aDatabases, String aDefaultAppElement) throws Exception {
+        this(aIndexer, aModules, aQueries, aDatabases, aSecurityConfigs, aDefaultAppElement, new Sessions(), (Runtime.getRuntime().availableProcessors() + 1) * 10);
     }
 
-    public SeptimaApplication(Indexer aIndexer, ModulesIndexer aModules, QueriesProxy<SqlQuery> aQueries, ScriptedDatabasesClient aDatabasesClient, ScriptDocuments aSecurityConfigs, String aDefaultAppElement, Sessions aSessions, int aMaxStatelessSpaces) throws Exception {
+    public SeptimaApplication(Indexer aIndexer, QueriesProxy<SqlQuery> aQueries, DataSources aDatabases, String aDefaultAppElement, Sessions aSessions, int aMaxStatelessSpaces) throws Exception {
         super();
         indexer = aIndexer;
         modules = aModules;
         queries = aQueries;
-        basesProxy = aDatabasesClient;
+        basesProxy = aDatabases;
         sessions = aSessions;
         startModuleName = aDefaultAppElement;
-        scriptDocuments = aSecurityConfigs;
         queueSpace = Scripts.createQueue();
         statelessSpaces = new Scripts.Space[Math.max(1, aMaxStatelessSpaces)];
         for (int s = 0; s < statelessSpaces.length; s++) {
@@ -357,6 +340,6 @@ public abstract class SeptimaApplication implements ContextHost, Application<Sql
 
     @Override
     public String unpreparationContext() throws Exception {
-        return basesProxy.getMetadataCache(null).getDatasourceSchema();
+        return basesProxy.getMetadataCache(null).getDataSourceSchema();
     }
 }

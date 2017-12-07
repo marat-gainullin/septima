@@ -1,4 +1,4 @@
-package com.septima.client.changes;
+package com.septima.changes;
 
 import com.septima.script.NoPublisherException;
 import com.septima.script.Scripts;

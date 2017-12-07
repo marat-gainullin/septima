@@ -1,10 +1,11 @@
-package com.septima.client;
+package com.septima;
 
 /**
  *
  * @author mg
  */
-public class ClientConstants {
+public class Constants {
+
     public static final String JDBCFKS_FKTABLE_SCHEM = "FKTABLE_SCHEM";
     public static final String JDBCFKS_FKTABLE_NAME = "FKTABLE_NAME";
     public static final String JDBCFKS_FKCOLUMN_NAME = "FKCOLUMN_NAME";
@@ -51,22 +52,40 @@ public class ClientConstants {
     public static final String JDBCPKS_TABLE_TYPE_FIELD_NAME = "TABLE_TYPE";
     public static final String JDBCPKS_TABLE_TYPE_TABLE = "TABLE";
     public static final String JDBCPKS_TABLE_TYPE_VIEW = "VIEW";
-    /*
-    // Java properties names
-    public static final String USER_DIR_PROP_NAME = "user.dir";
-    public static final String USER_HOME_PROP_NAME = "user.home";
-    public static final String LINE_SEPARATOR_PROP_NAME = "line.separator";
-    //public static final String TEMP_DIR_PROP_NAME = "java.io.tmpdir";
-    public static final String USER_HOME_SEPTIMA_DIRECTORY_NAME = ".septima";
-    */
+    public static final String GEOMETRY_TYPE_NAME = "Geometry";//NOI18N
+    public static final String STRING_TYPE_NAME = "String";//NOI18N
+    public static final String NUMBER_TYPE_NAME = "Number";//NOI18N
+    public static final String DATE_TYPE_NAME = "Date";//NOI18N
+    public static final String BOOLEAN_TYPE_NAME = "Boolean";//NOI18N
+    public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
     // Metadata elements types
     public static final int DB_MD_TYPE_TABLES = 1;
     public static final int DB_MD_TYPE_SCHEMAS = 2;
     // Database dialects are used as keys to select the SQL driver or JDBC driver.
-    public static final String SERVER_PROPERTY_ORACLE_DIALECT = "Oracle";
-    public static final String SERVER_PROPERTY_MSSQL_DIALECT = "MsSql";
-    public static final String SERVER_PROPERTY_POSTGRE_DIALECT = "PostgreSql";
-    public static final String SERVER_PROPERTY_MYSQL_DIALECT = "MySql";
-    public static final String SERVER_PROPERTY_DB2_DIALECT = "Db2";
-    public static final String SERVER_PROPERTY_H2_DIALECT = "H2";
+    public static final String GENERIC_DIALECT = "Generic";
+    public static final String ORACLE_DIALECT = "Oracle";
+    public static final String MSSQL_DIALECT = "MsSql";
+    public static final String POSTGRE_DIALECT = "PostgreSql";
+    public static final String MYSQL_DIALECT = "MySql";
+    public static final String DB2_DIALECT = "Db2";
+    public static final String H2_DIALECT = "H2";
+    //
+    private static final String SELECT_BY_FIELD_QUERY = "select * from %s where Upper(%s) = :%s";
+    private static final String TYPES_INFO_TRACE_MSG = "Getting types info from data source '%s'";
+    private static final String UNKNOWN_DATASOURCE_IN_COMMIT = "Unknown data source: %s. Can't commit to it.";
+    private static final String UNSUPPORTED_DATASOURCE_IN_COMMIT = "Unsupported data source: %s. Can't commit to it.";
+    public static final String STORED_QUERY_REF_PREFIX = "#";
+    public static final String TABLE_NAME_2_SQL = "select * from %s";
+    public static final String PARAMETER_NAME_REGEXP = "(?<=[^:]):{1}([A-za-z]\\w*\\b)";
+    public static final String PROPERTIES_VALUE_REGEXP = "={1}([A-za-z]\\w+\\b)";
+    public static final String SQL_SELECT_COMMON_WHERE_BY_FIELD = "select * from %s where %s.%s = :%s";
+    public static final String SQL_SELECT_COMMON_WHERE_ISNULL_FIELD = "select * from %s where %s.%s is null";
+    public static final String SQL_PARAMETER_FIELD_VALUE = "fieldValue";
+    public static final String SQL_UPDATE_COMMON_WHERE_BY_FIELD = "update %s set %s = %s where %s.%s = :" + SQL_PARAMETER_FIELD_VALUE;
+    public static final String SQL_UPDATE2_COMMON_WHERE_BY_FIELD = "update %s set %s = %s, %s = %s where %s.%s = :" + SQL_PARAMETER_FIELD_VALUE;
+    public static final String SQL_UPDATE3_COMMON_WHERE_BY_FIELD = "update %s set %s = %s, %s = %s, %s = %s where %s.%s = :" + SQL_PARAMETER_FIELD_VALUE;
+    public static final String SQL_UPDATE4_COMMON_WHERE_BY_FIELD = "update %s set %s = %s, %s = %s, %s = %s, %s = %s where %s.%s = :" + SQL_PARAMETER_FIELD_VALUE;
+    public static final String SQL_DELETE_COMMON_WHERE_BY_FIELD = "delete from %s where %s.%s = :" + SQL_PARAMETER_FIELD_VALUE;
+    public static final String SQL_INSERT_COMMON_ID_FIELD = "insert into %s columns = (%s) values = ( :" + SQL_PARAMETER_FIELD_VALUE + ")";
+    public static final String SQL_MAX_COMMON_BY_FIELD = "select max(%s) %s from %s";
 }

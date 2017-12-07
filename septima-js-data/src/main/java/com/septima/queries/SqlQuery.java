@@ -1,27 +1,19 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-package com.septima.client.queries;
+package com.septima.queries;
 
-import com.septima.client.ClientConstants;
-import com.septima.client.Databases;
-import com.septima.client.SqlUtils;
-import com.septima.client.dataflow.FlowProvider;
-import com.septima.client.metadata.Parameter;
-import com.septima.client.metadata.Parameters;
-import com.septima.script.Scripts;
-import java.sql.ParameterMetaData;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.Consumer;
+import com.septima.Constants;
+import com.septima.Database;
+import com.septima.DataSources;
+import com.septima.dataflow.DataProvider;
+import com.septima.metadata.Field;
+import com.septima.metadata.Parameter;
+
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import jdk.nashorn.api.scripting.JSObject;
 
 /**
  * A Sql query with name-bound parameters.
- *
+ * <p>
  * <p>
  * This class represents a SQL query which text contains named parameters, and
  * their values with type information. Provides a method compile() to transform
@@ -32,251 +24,154 @@ import jdk.nashorn.api.scripting.JSObject;
  *
  * @author mg
  */
-public class SqlQuery extends Query {
+public class SqlQuery {
 
-    private final static Pattern PARAMETER_NAME_PATTERN = Pattern.compile(SqlUtils.PARAMETER_NAME_REGEXP, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+    private final static Pattern PARAMETER_NAME_PATTERN = Pattern.compile(Constants.PARAMETER_NAME_REGEXP, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
     private final static Pattern STRINGS_PATTERN = Pattern.compile("'[^']*'", Pattern.MULTILINE);
-    protected String datasourceName;
-    // For single and multi-table queries
+
+    // parameters propagation. ParamName, QueryName, ParamName
+    protected Map<String, Map<String, String>> parametersBinds = new HashMap<>();
+    protected Map<String, Field> fields = new LinkedHashMap<>();
+    protected Map<String, Parameter> params = new LinkedHashMap<>();
+    protected String title;
+    protected String entityName;
+    protected boolean procedure;
+    protected Set<String> readRoles = new HashSet<>();
+    protected Set<String> writeRoles = new HashSet<>();
     // Joins, conditions, parametersList, groups, havings etc.
     protected String sqlText;
     // the same as sqlText, but it is used when very custom sql is needed.
     protected String fullSqlText;
     protected Set<String> writable;
-    protected int pageSize = FlowProvider.NO_PAGING_PAGE_SIZE;
+    protected int pageSize = DataProvider.NO_PAGING_PAGE_SIZE;
     protected boolean publicAccess;
     protected boolean command;
-    protected Databases basesProxy;
+    protected Database database;
 
     /**
      * Creates an instance of Query with empty SQL query text and parameters
      * map.
      *
-     * @param aBasesProxy
+     * @param aDatabase
      */
-    public SqlQuery(Databases aBasesProxy) {
+    public SqlQuery(Database aDatabase) {
         super();
-        basesProxy = aBasesProxy;
+        database = aDatabase;
     }
 
     /**
      * Creates an instance of Query with given SQL query text. Leaves the
      * parameters map empty.
      *
-     * @param aBasesProxy
-     * @param aSqlText the SQL query text.
+     * @param aDatabase
+     * @param aSqlText  the SQL query text.
      */
-    public SqlQuery(Databases aBasesProxy, String aSqlText) {
-        this(aBasesProxy);
+    public SqlQuery(Database aDatabase, String aSqlText) {
+        this(aDatabase);
         sqlText = aSqlText;
     }
 
-    /**
-     * Creates an instance of Query with given SQL query text. Leaves the
-     * parameters map empty.
-     *
-     * @param aBasesProxy
-     * @param aDatasourceName A database identifier.
-     * @param aSqlText the SQL query text.
-     */
-    public SqlQuery(Databases aBasesProxy, String aDatasourceName, String aSqlText) {
-        this(aBasesProxy, aSqlText);
-        datasourceName = aDatasourceName;
-    }
-
-    public SqlQuery(SqlQuery aSource) {
-        super(aSource);
-        String sourceDatasourceName = aSource.getDatasourceName();
-        if (sourceDatasourceName != null) {
-            datasourceName = sourceDatasourceName;
-        }
-        String asqlText = aSource.getSqlText();
-        if (asqlText != null) {
-            sqlText = asqlText;
-        }
-        String aFullSqlText = aSource.getFullSqlText();
-        if (aFullSqlText != null) {
-            fullSqlText = aFullSqlText;
-        }
-        if (aSource.getWritable() != null) {
-            writable = new HashSet<>();
-            writable.addAll(aSource.getWritable());
-        }
-        publicAccess = aSource.isPublicAccess();
-        command = aSource.isCommand();
-        basesProxy = aSource.getBasesProxy();
-    }
-
-    @Override
-    public SqlQuery copy() {
-        return new SqlQuery(this);
-    }
-
-    public Databases getBasesProxy() {
-        return basesProxy;
-    }
-
-    /**
-     * @return the datasourceName
-     */
-    public String getDatasourceName() {
-        return datasourceName;
-    }
-
-    /**
-     * @param aValue A datasourceName to set to the squery.
-     */
-    public void setDatasourceName(String aValue) {
-        String oldValue = datasourceName;
-        datasourceName = aValue;
-        changeSupport.firePropertyChange("datasourceName", oldValue, datasourceName);
-    }
-
-    /**
-     * Checks if this query's metadata is accessible from its datasource.
-     *
-     * @return True if metadata is accessible and false otherwise.
-     */
-    @Override
-    public boolean isMetadataAccessible() {
-        try {
-            return basesProxy != null && basesProxy.obtainDataSource(datasourceName) != null;
-        } catch (Exception ex) {
-            return false;
-        }
+    public Database getDatabase() {
+        return database;
     }
 
     public boolean isCommand() {
         return command;
     }
 
-    public void setCommand(boolean aValue) {
-        command = aValue;
-    }
-
-    /**
-     * Clears all roles assigned to this query. Used by two-tier datamodel for
-     * security context inheritance. WARNING!!! Don't use it if you have no
-     * clear mind about your use case.
-     */
-    public void clearRoles() {
-        if (readRoles != null) {
-            readRoles.clear();
-        }
-        if (writeRoles != null) {
-            writeRoles.clear();
-        }
-    }
-
-    /**
-     * Returns the SQL query text.
-     *
-     * @return SQL query text.
-     */
     public String getSqlText() {
         return sqlText;
-    }
-
-    /**
-     * Sets the SQL query text.
-     *
-     * @param aValue SQL query text.
-     */
-    public void setSqlText(String aValue) {
-        String oldValue = sqlText;
-        sqlText = aValue;
-        changeSupport.firePropertyChange("sqlText", oldValue, sqlText);
     }
 
     public String getFullSqlText() {
         return fullSqlText;
     }
 
-    public void setFullSqlText(String aValue) {
-        String oldValue = fullSqlText;
-        fullSqlText = aValue;
-        changeSupport.firePropertyChange("fullSqlText", oldValue, fullSqlText);
-    }
-
     public boolean isPublicAccess() {
         return publicAccess;
-    }
-
-    public void setPublicAccess(boolean aValue) {
-        boolean oldValue = publicAccess;
-        publicAccess = aValue;
-        changeSupport.firePropertyChange("publicAccess", oldValue, fullSqlText);
     }
 
     public Set<String> getWritable() {
         return writable;
     }
 
-    public void setWritable(Set<String> aValue) {
-        writable = aValue;
-    }
-
     public int getPageSize() {
         return pageSize;
     }
 
-    public void setPageSize(int aPageSize) {
-        pageSize = aPageSize;
+    public Set<String> getReadRoles() {
+        return readRoles;
     }
 
-    /**
-     * Builds internal representation of all named parameters based on query
-     * text
-     */
-    protected void extractParameters() {
-        if (sqlText != null && !sqlText.isEmpty()) {
-            Pattern ptrn = Pattern.compile(SqlUtils.PARAMETER_NAME_REGEXP, Pattern.CASE_INSENSITIVE);
-            Matcher mtch = ptrn.matcher(sqlText);
-            params = new Parameters();
-            Set<String> forUniqueness = new HashSet<>();
-            while (mtch.find()) {
-                String paramName = sqlText.substring(mtch.start() + 1, mtch.end());
-                if (paramName != null) {
-                    if (!forUniqueness.contains(paramName)) {
-                        forUniqueness.add(paramName);
-                        Parameter spmdi = new Parameter(paramName, "", Scripts.STRING_TYPE_NAME);
-                        params.add(spmdi);
-                    }
-                }
-            }
-        }
+    public Set<String> getWriteRoles() {
+        return writeRoles;
     }
 
-    public SqlCompiledQuery compile() throws Exception {
-        return compile(null);
+    public boolean isProcedure() {
+        return procedure;
+    }
+
+    public Map<String, Field> getFields() {
+        return fields;
+    }
+
+    public Map<String, Parameter> getParameters() {
+        return params;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public Map<String, Map<String, String>> getParametersBinds() {
+        return parametersBinds;
+    }
+
+    public String getEntityName() {
+        return entityName;
+    }
+
+    public void putParameter(String aName, String aType, Object aValue) {
+        Parameter param = new Parameter();
+        param.setName(aName);
+        param.setType(aType);
+        param.setDefaultValue(aValue);
+        param.setValue(aValue);
+        params.put(param.getName(), param);
+    }
+
+    public void putParameter(String aName, String aType, Object aDefaultValue, Object aValue) {
+        Parameter param = new Parameter();
+        param.setName(aName);
+        param.setType(aType);
+        param.setDefaultValue(aDefaultValue);
+        param.setValue(aValue);
+        params.put(param.getName(), param);
     }
 
     /**
      * Compiles the SQL query.
-     *
+     * <p>
      * <p>
      * The compilation process includes replacing named parameters binding like
      * ":param1" in SQL query text with JDBC "?" placeholders and filling the
      * vector of parameters values according to each parameter occurance in the
      * query.</p>
-     *
+     * <p>
      * <p>
      * The returned object is able to assign parameters values stored in it to
      * any PreparedStatement object.</p>
      *
-     * @param aSpace Scripts space for JavaScript to Java conversion. If null, no
-     * conversion is performed.
      * @return Compiled Sql query.
-     * @throws UnboundSqlParameterException
      * @throws Exception
      */
-    public SqlCompiledQuery compile(Scripts.Space aSpace) throws Exception {
-        String dialect = basesProxy.getConnectionDialect(datasourceName);
-        boolean postgreSQL = ClientConstants.SERVER_PROPERTY_POSTGRE_DIALECT.equals(dialect);
-        Parameters compiledParams = new Parameters();
+    public SqlCompiledQuery compile() throws Exception {
         if (sqlText == null || sqlText.isEmpty()) {
             throw new Exception("Empty sql query strings are not supported");
         }
+        String dialect = database.getSqlDriver().getDialect();
+        boolean postgreSQL = Constants.POSTGRE_DIALECT.equals(dialect);
+        List<Parameter> compiledParams = new ArrayList();
         StringBuilder compiledSb = new StringBuilder();
         Matcher sm = STRINGS_PATTERN.matcher(sqlText);
         String[] withoutStrings = sqlText.split("('[^']*')");
@@ -285,21 +180,20 @@ public class SqlQuery extends Query {
             StringBuffer withoutStringsSegment = new StringBuffer();
             while (m.find()) {
                 String paramName = m.group(1);
-                if (params == null) {
-                    throw new UnboundSqlParameterException(paramName, sqlText);
-                }
-                Parameter p = params.get(paramName);
-                if (p == null) {
-                    // Несвязанные параметры заменяем null-ами.
-                    p = new Parameter(paramName);
-                    p.setValue(null);
-                }
-                Parameter copied = p.copy();
-                if (aSpace != null) {
-                    copied.setValue(aSpace.toJava(copied.getValue()));
-                }
-                compiledParams.add(copied);
-                m.appendReplacement(withoutStringsSegment, postgreSQL && Scripts.DATE_TYPE_NAME.equals(p.getType()) ? "?::timestamp" : "?");
+                Parameter p = params.getOrDefault(
+                        paramName,
+                        new Parameter(paramName)/* null for unbound parameters*/
+                );
+                compiledParams.add(new Parameter(
+                        p.getName(),
+                        p.getDescription(),
+                        p.getType(),
+                        p.getValue(),
+                        p.getDefaultValue(),
+                        p.isModified(),
+                        p.getMode()
+                ));
+                m.appendReplacement(withoutStringsSegment, postgreSQL && Constants.DATE_TYPE_NAME.equals(p.getType()) ? "?::timestamp" : "?");
             }
             m.appendTail(withoutStringsSegment);
             withoutStrings[i] = withoutStringsSegment.toString();
@@ -308,37 +202,20 @@ public class SqlQuery extends Query {
                 compiledSb.append(sm.group(0));
             }
         }
-        SqlCompiledQuery compiled = new SqlCompiledQuery(basesProxy, datasourceName, compiledSb.toString(), compiledParams, fields);
-        compiled.setEntityName(entityName);
-        compiled.setProcedure(procedure);
-        compiled.setPageSize(pageSize);
-        return compiled;
+        return new SqlCompiledQuery(database, entityName, compiledSb.toString(), compiledParams, fields, pageSize, procedure);
     }
 
-    @Override
-    public JSObject execute(Scripts.Space aSpace, Consumer<JSObject> onSuccess, Consumer<Exception> onFailure) throws Exception {
-        SqlCompiledQuery compiled = compile();
-        Runnable paramsRetriever = () -> {
-            for (int i = 1; i <= compiled.getParameters().getParametersCount(); i++) {
-                Parameter param = compiled.getParameters().get(i);
-                if (param.getMode() == ParameterMetaData.parameterModeOut
-                        || param.getMode() == ParameterMetaData.parameterModeInOut) {
-                    Parameter innerParam = params.get(param.getName());
-                    if (innerParam != null) {
-                        innerParam.setValue(param.getValue());
-                    }
-                }
+    protected static Map<String, Parameter> extractParameters(String sqlText) {
+        Map<String, Parameter> params = new LinkedHashMap();
+        if (sqlText != null && !sqlText.isEmpty()) {
+            Pattern pattern = Pattern.compile(Constants.PARAMETER_NAME_REGEXP, Pattern.CASE_INSENSITIVE);
+            Matcher matcher = pattern.matcher(sqlText);
+            while (matcher.find()) {
+                String paramName = sqlText.substring(matcher.start() + 1, matcher.end());
+                Parameter parameter = new Parameter(paramName, "", Constants.STRING_TYPE_NAME);
+                params.put(parameter.getName(), parameter);
             }
-        };
-        JSObject jsData = compiled.executeQuery(onSuccess != null ? (JSObject aData) -> {
-            if (compiled.isProcedure()) {
-                paramsRetriever.run();
-            }
-            onSuccess.accept(aData);
-        } : null, onFailure, aSpace);
-        if (onSuccess == null && compiled.isProcedure()) {
-            paramsRetriever.run();
         }
-        return jsData;
+        return params;
     }
 }

@@ -1,10 +1,10 @@
 package com.septima.tools;
 
 import com.septima.client.Databases;
-import com.septima.cache.ApplicationIndexer;
-import com.septima.cache.SeptimaFiles;
-import com.septima.cache.ScriptDocument;
-import com.septima.cache.ScriptDocuments;
+import com.septima.indexer.ApplicationIndexer;
+import com.septima.indexer.SeptimaFiles;
+import com.septima.indexer.ScriptDocument;
+import com.septima.indexer.ScriptDocuments;
 import com.septima.client.model.store.Model2XmlDom;
 import com.septima.client.resourcepool.BearResourcePool;
 import com.septima.client.resourcepool.GeneralResourceProvider;

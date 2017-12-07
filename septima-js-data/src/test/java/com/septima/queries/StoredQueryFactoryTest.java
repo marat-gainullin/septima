@@ -1,11 +1,10 @@
 package com.septima.queries;
 
-import com.septima.client.StoredQueryFactory;
+import com.septima.StoredQueryFactory;
 import com.septima.client.TestConstants;
-import com.septima.cache.ApplicationIndexer;
-import com.septima.cache.ScriptDocuments;
-import com.septima.client.metadata.Field;
-import com.septima.client.metadata.Fields;
+import com.septima.indexer.ApplicationIndexer;
+import com.septima.indexer.ScriptDocuments;
+import com.septima.metadata.Field;
 import com.septima.client.settings.DbConnectionSettings;
 import com.septima.script.JsDoc;
 import java.net.URI;

@@ -4,14 +4,13 @@
  */
 package com.septima.http;
 
-import com.septima.cache.ScriptDocuments;
-import com.septima.client.changes.Change;
-import com.septima.client.changes.ChangeValue;
-import com.septima.client.changes.Command;
-import com.septima.client.changes.Delete;
-import com.septima.client.changes.Insert;
-import com.septima.client.changes.Update;
-import com.septima.client.queries.QueriesProxy;
+import com.septima.indexer.ScriptDocuments;
+import com.septima.changes.Change;
+import com.septima.changes.ChangeValue;
+import com.septima.changes.Command;
+import com.septima.changes.Delete;
+import com.septima.changes.Insert;
+import com.septima.changes.Update;
 import com.septima.client.scripts.ScriptedResource;
 import com.septima.handlers.ChangesJSONReader;
 import com.septima.script.Scripts;

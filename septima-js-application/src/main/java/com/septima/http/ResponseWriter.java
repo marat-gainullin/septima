@@ -218,8 +218,8 @@ public class ResponseWriter implements PlatypusResponseVisitor {
     }
 
     private static void makeResponseNotCacheable(HttpServletResponse aHttpResponse) {
-        aHttpResponse.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
-        aHttpResponse.setHeader("Pragma", "no-cache"); // HTTP 1.0.
+        aHttpResponse.setHeader("Cache-Control", "no-indexer, no-store, must-revalidate"); // HTTP 1.1.
+        aHttpResponse.setHeader("Pragma", "no-indexer"); // HTTP 1.0.
         aHttpResponse.setDateHeader("Expires", 0);// Proxies
     }
 

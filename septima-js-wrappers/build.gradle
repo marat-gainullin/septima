@@ -1,15 +1,14 @@
 apply plugin: 'application'
 
 dependencies {
-    compile project(':septima-js-common-utils')
-    compile project(':septima-js-core')
-    runtime project(':septima-js-reports')
-    runtime project(':septima-js-scripting')
-    runtime project(':septima-js-server')
-    runtime project(':septima-js-servlet')
-    runtime project(':septima-js-tools')
-    runtime 'javax.servlet:javax.servlet-api:3.1.0'
-    runtime 'javax.websocket:javax.websocket-api:1.1'
+    /*
+    compile project(':septima-js-common')
+    runtime project(':septima-js-reports'),
+            project(':septima-js-application'),
+            project(':septima-js-tools')
+    runtime 'javax.servlet:javax.servlet-api:3.1.0',
+            'javax.websocket:javax.websocket-api:1.1'
+    */
 }
 
 mainClassName = 'com.septima.script.Classes2Scripts'

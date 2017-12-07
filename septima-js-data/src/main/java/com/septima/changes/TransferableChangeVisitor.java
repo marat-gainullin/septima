@@ -1,4 +1,4 @@
-package com.septima.client.changes;
+package com.septima.changes;
 
 /**
  *

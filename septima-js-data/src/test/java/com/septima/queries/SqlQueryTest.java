@@ -1,6 +1,6 @@
 package com.septima.queries;
 
-import com.septima.client.Databases;
+import com.septima.DataSources;
 import com.septima.client.TestConstants;
 import com.septima.script.Scripts;
 import org.junit.After;
@@ -66,7 +66,7 @@ public class SqlQueryTest {
 
     @Test
     public void testCreation() {
-        SqlQuery b = new SqlQuery((Databases) null);
+        SqlQuery b = new SqlQuery((DataSources) null);
         assertNull(b.getSqlText());
         assertTrue(b.getParametersBinds().isEmpty());
         b.setSqlText(TWO_PARAMS_QUERY);

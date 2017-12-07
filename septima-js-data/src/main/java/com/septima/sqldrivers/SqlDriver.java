@@ -1,17 +1,17 @@
-package com.septima.client.sqldrivers;
+package com.septima.sqldrivers;
 
-import com.septima.client.ClientConstants;
-import com.septima.client.SqlUtils;
-import com.septima.client.changes.JdbcChangeValue;
-import com.septima.client.dataflow.StatementsGenerator;
-import com.septima.client.metadata.DbTableIndexSpec;
-import com.septima.client.metadata.JdbcField;
-import com.septima.client.metadata.ForeignKeySpec;
-import com.septima.client.metadata.PrimaryKeySpec;
-import com.septima.client.settings.SettingsConstants;
-import com.septima.client.sqldrivers.resolvers.TypesResolver;
+import com.septima.Constants;
+import com.septima.changes.JdbcChangeValue;
+import com.septima.dataflow.StatementsGenerator;
+import com.septima.metadata.PrimaryKey;
+import com.septima.metadata.TableIndex;
+import com.septima.metadata.JdbcColumn;
+import com.septima.metadata.ForeignKey;
+import com.septima.sqldrivers.resolvers.TypesResolver;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,7 +24,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
  * @author mg
  */
 public abstract class SqlDriver implements StatementsGenerator.GeometryConverter {
@@ -48,9 +47,6 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
         }
     }
 
-    // error codes
-    protected static final String EAS_TABLE_ALREADY_EXISTS = "EAS_TABLE_ALREADY_EXISTS";
-    protected static final String EAS_TABLE_DOESNT_EXISTS = "EAS_TABLE_DOESNT_EXISTS";
     // misc
     protected static final String EAS_SQL_SCRIPT_DELIMITER = "#GO";
     public static final String DROP_FIELD_SQL_PREFIX = "alter table %s drop column ";
@@ -62,33 +58,7 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
         super();
     }
 
-    /**
-     * Adds tables, foreign keys etc. to a database for in database users space
-     *
-     * @param aConnection
-     * @throws Exception
-     */
-    public void initializeUsersSpace(Connection aConnection) throws Exception {
-        if (!checkUsersSpaceInitialized(aConnection)) {
-            String scriptText = readUsersSpaceInitScriptResource();
-            Logger.getLogger(SqlDriver.class.getName()).log(Level.INFO, "About to initialize in-database users space.");
-            applyScript(scriptText, aConnection);
-        }
-    }
-
-    /**
-     * Adds tables, foreign keys etc. to a database for database versioning
-     *
-     * @param aConnection
-     * @throws Exception
-     */
-    public void initializeVersion(Connection aConnection) throws Exception {
-        if (!checkVersionInitialized(aConnection)) {
-            String scriptText = readVersionInitScriptResource();
-            Logger.getLogger(SqlDriver.class.getName()).log(Level.INFO, "About to initialize database versioning.");
-            applyScript(scriptText, aConnection);
-        }
-    }
+    public abstract String getDialect();
 
     /**
      * *
@@ -108,7 +78,6 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
     public abstract TypesResolver getTypesResolver();
 
     /**
-     *
      * Gets in database users space initial script location and file name.
      *
      * @return
@@ -116,7 +85,6 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
     public abstract String getUsersSpaceInitResourceName();
 
     /**
-     *
      * Gets database versioning initial script location and file name.
      *
      * @return
@@ -128,7 +96,7 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
      * Sets current schema for current session.
      *
      * @param aConnection JDBC connection
-     * @param aSchema Schema name
+     * @param aSchema     Schema name
      * @throws Exception in the case of operation failure
      */
     public abstract void applyContextToConnection(Connection aConnection, String aSchema) throws Exception;
@@ -154,7 +122,7 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
      * Returns sql text for create new schema.
      *
      * @param aSchemaName schema name
-     * @param aPassword owner password, required for some databases (Oracle)
+     * @param aPassword   owner password, required for some databases (Oracle)
      * @return Sql text.
      */
     public abstract String getSql4CreateSchema(String aSchemaName, String aPassword);
@@ -164,9 +132,9 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
      * Returns sql clause array to set column's comment. Eeach sql clause from
      * array executed consequentially
      *
-     * @param aOwnerName Schema name
-     * @param aTableName Table name
-     * @param aFieldName Column name
+     * @param aOwnerName   Schema name
+     * @param aTableName   Table name
+     * @param aFieldName   Column name
      * @param aDescription Comment
      * @return Sql texts array
      */
@@ -176,8 +144,8 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
      * *
      * Returns sql clause to set table's comment.
      *
-     * @param aOwnerName Schema name
-     * @param aTableName Table name
+     * @param aOwnerName   Schema name
+     * @param aTableName   Table name
      * @param aDescription Comment
      * @return Sql text
      */
@@ -188,7 +156,7 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
      * Gets sql clause for dropping the table.
      *
      * @param aSchemaName Schema name
-     * @param aTableName Table name
+     * @param aTableName  Table name
      * @return sql text
      */
     public abstract String getSql4DropTable(String aSchemaName, String aTableName);
@@ -198,8 +166,8 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
      * Gets sql clause for dropping the index on the table.
      *
      * @param aSchemaName Schema name
-     * @param aTableName Table name
-     * @param aIndexName Index name
+     * @param aTableName  Table name
+     * @param aIndexName  Index name
      * @return sql text
      */
     public abstract String getSql4DropIndex(String aSchemaName, String aTableName, String aIndexName);
@@ -209,68 +177,68 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
      * Gets sql clause for dropping the foreign key constraint.
      *
      * @param aSchemaName Schema name
-     * @param aFk Foreign key specification object
+     * @param aFk         Foreign key specification object
      * @return Sql text
      */
-    public abstract String getSql4DropFkConstraint(String aSchemaName, ForeignKeySpec aFk);
+    public abstract String getSql4DropFkConstraint(String aSchemaName, ForeignKey aFk);
 
     /**
      * *
      * Gets sql clause for creating the primary key.
      *
      * @param aSchemaName Schema name
-     * @param listPk Primary key columns specifications list
+     * @param listPk      Primary key columns specifications list
      * @return Sql text
      */
-    public abstract String[] getSql4CreatePkConstraint(String aSchemaName, List<PrimaryKeySpec> listPk);
+    public abstract String[] getSql4CreatePkConstraint(String aSchemaName, List<PrimaryKey> listPk);
 
     /**
      * *
      * Gets sql clause for dropping the primary key.
      *
      * @param aSchemaName Schema name
-     * @param aPk Primary key specification
+     * @param aPk         Primary key specification
      * @return Sql text
      */
-    public abstract String getSql4DropPkConstraint(String aSchemaName, PrimaryKeySpec aPk);
+    public abstract String getSql4DropPkConstraint(String aSchemaName, PrimaryKey aPk);
 
     /**
      * *
      * Gets sql clause for creating the foreign key constraint.
      *
      * @param aSchemaName Schema name
-     * @param aFk Foreign key specification
+     * @param aFk         Foreign key specification
      * @return Sql text
      */
-    public abstract String getSql4CreateFkConstraint(String aSchemaName, ForeignKeySpec aFk);
+    public abstract String getSql4CreateFkConstraint(String aSchemaName, ForeignKey aFk);
 
     /**
      * *
      * Gets sql clause for creating the foreign key constraint.
      *
      * @param aSchemaName Schema name
-     * @param listFk Foreign key columns specifications list
+     * @param listFk      Foreign key columns specifications list
      * @return Sql text
      */
-    public abstract String getSql4CreateFkConstraint(String aSchemaName, List<ForeignKeySpec> listFk);
+    public abstract String getSql4CreateFkConstraint(String aSchemaName, List<ForeignKey> listFk);
 
     /**
      * *
      * Gets sql clause for creating the index
      *
      * @param aSchemaName Schema name
-     * @param aTableName Table name
-     * @param aIndex Index specification
+     * @param aTableName  Table name
+     * @param aIndex      Index specification
      * @return Sql text
      */
-    public abstract String getSql4CreateIndex(String aSchemaName, String aTableName, DbTableIndexSpec aIndex);
+    public abstract String getSql4CreateIndex(String aSchemaName, String aTableName, TableIndex aIndex);
 
     /**
      * *
      * Gets sql clause for creating an empty table.
      *
-     * @param aSchemaName Schema name
-     * @param aTableName Table name
+     * @param aSchemaName  Schema name
+     * @param aTableName   Table name
      * @param aPkFieldName Column name for primary key
      * @return Sql text
      */
@@ -294,7 +262,7 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
      * @param aField A field information to deal with.
      * @return Sql string for field definition
      */
-    public abstract String getSql4FieldDefinition(JdbcField aField);
+    public abstract String getSql4FieldDefinition(JdbcColumn aField);
 
     /**
      * Generates Sql string to modify a field, according to specific features of
@@ -303,19 +271,19 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
      * name.
      *
      * @param aSchemaName Schema name
-     * @param aTableName Name of the table with that field
-     * @param aField A field information
+     * @param aTableName  Name of the table with that field
+     * @param aField      A field information
      * @return Sql array string for field modification.
      */
-    public abstract String[] getSqls4AddingField(String aSchemaName, String aTableName, JdbcField aField);
+    public abstract String[] getSqls4AddingField(String aSchemaName, String aTableName, JdbcColumn aField);
 
     /**
      * Generates sql texts array for dropping a field. Sql clauses from array
      * will execute consequentially
      *
      * @param aSchemaName Schema name
-     * @param aTableName Name of a table the field to dropped from.
-     * @param aFieldName Field name to drop
+     * @param aTableName  Name of a table the field to dropped from.
+     * @param aFieldName  Field name to drop
      * @return Sql string generted.
      */
     public String[] getSql4DroppingField(String aSchemaName, String aTableName, String aFieldName) {
@@ -324,7 +292,7 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
             fullTableName = wrapNameIfRequired(aSchemaName) + "." + fullTableName;
         }
         return new String[]{
-            String.format(DROP_FIELD_SQL_PREFIX, fullTableName) + wrapNameIfRequired(aFieldName)
+                String.format(DROP_FIELD_SQL_PREFIX, fullTableName) + wrapNameIfRequired(aFieldName)
         };
     }
 
@@ -335,25 +303,25 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
      * name.
      *
      * @param aSchemaName Schema name
-     * @param aTableName Name of the table with that field
+     * @param aTableName  Name of the table with that field
      * @param aOldFieldMd A field information to migrate from.
      * @param aNewFieldMd A field information to migrate to.
      * @return Sql array string for field modification.
      */
-    public abstract String[] getSqls4ModifyingField(String aSchemaName, String aTableName, JdbcField aOldFieldMd, JdbcField aNewFieldMd);
+    public abstract String[] getSqls4ModifyingField(String aSchemaName, String aTableName, JdbcColumn aOldFieldMd, JdbcColumn aNewFieldMd);
 
     /**
      * *
      * Generates Sql string to rename a field, according to specific features of
      * particular database.
      *
-     * @param aSchemaName Schema name
-     * @param aTableName Table name
+     * @param aSchemaName   Schema name
+     * @param aTableName    Table name
      * @param aOldFieldName Old column name
-     * @param aNewFieldMd New field
+     * @param aNewFieldMd   New field
      * @return Sql array string for field modification.
      */
-    public abstract String[] getSqls4RenamingField(String aSchemaName, String aTableName, String aOldFieldName, JdbcField aNewFieldMd);
+    public abstract String[] getSqls4RenamingField(String aSchemaName, String aTableName, String aOldFieldName, JdbcColumn aNewFieldMd);
 
     public static void applyScript(String scriptText, Connection aConnection) throws Exception {
         String[] commandsTexts = scriptText.split(EAS_SQL_SCRIPT_DELIMITER);
@@ -383,57 +351,11 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
         }
     }
 
-    private boolean checkUsersSpaceInitialized(Connection aConnection) {
-        try {
-            try (PreparedStatement stmt = aConnection.prepareStatement(String.format(SqlUtils.SQL_MAX_COMMON_BY_FIELD, ClientConstants.F_USR_NAME, ClientConstants.F_USR_NAME, ClientConstants.T_MTD_USERS))) {
-                ResultSet res = stmt.executeQuery();
-                res.close();
-            }
-            return true;
-        } catch (SQLException ex) {
-            try {
-                aConnection.rollback();
-            } catch (SQLException ex1) {
-                Logger.getLogger(SqlDriver.class.getName()).log(Level.SEVERE, null, ex1);
-            }
-            Logger.getLogger(SqlDriver.class.getName()).log(Level.WARNING, "In database users space seems to be uninitialized. {0}", ex.getMessage());
-        }
-        return false;
-    }
-
-    private boolean checkVersionInitialized(Connection aConnection) {
-        try {
-            try (PreparedStatement stmt = aConnection.prepareStatement(String.format(SqlUtils.SQL_MAX_COMMON_BY_FIELD, ClientConstants.F_VERSION_VALUE, ClientConstants.F_VERSION_VALUE, ClientConstants.T_MTD_VERSION))) {
-                ResultSet res = stmt.executeQuery();
-                res.close();
-            }
-            return true;
-        } catch (SQLException ex) {
-            try {
-                aConnection.rollback();
-            } catch (SQLException ex1) {
-                Logger.getLogger(SqlDriver.class.getName()).log(Level.SEVERE, null, ex1);
-            }
-            Logger.getLogger(SqlDriver.class.getName()).log(Level.WARNING, "Database vertioning seems to be uninitialized. {0}", ex.getMessage());
-        }
-        return false;
-    }
-
-    private String readUsersSpaceInitScriptResource() throws IOException {
-        String resName = getUsersSpaceInitResourceName();
-        return readScriptResource(resName);
-    }
-
-    private String readVersionInitScriptResource() throws IOException {
-        String resName = getVersionInitResourceName();
-        return readScriptResource(resName);
-    }
-
     protected String readScriptResource(String resName) throws IOException {
         try (InputStream is = SqlDriver.class.getResourceAsStream(resName)) {
             byte[] data = new byte[is.available()];
             is.read(data);
-            return new String(data, SettingsConstants.COMMON_ENCODING);
+            return new String(data, StandardCharsets.UTF_8);
         }
     }
 
@@ -489,7 +411,6 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
     }
 
     /**
-     *
      * Wrapping names containing restricted symbols.
      *
      * @param aName Name to wrap
@@ -538,7 +459,7 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
     }
 
     public abstract boolean is(String aDialect);
-    
+
     public boolean isWrappedName(String aName) {
         return getWrapLength(aName) > 0;
     }

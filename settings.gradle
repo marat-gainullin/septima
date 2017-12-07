@@ -1,6 +1,5 @@
-include 'septima-js-common-utils'
-include 'septima-js-core'
-include 'septima-js-datamodel'
+include 'septima-js-common'
+include 'septima-js-data'
 include 'septima-js-reports'
 include 'septima-js-application'
 include 'septima-js-sql-parser'

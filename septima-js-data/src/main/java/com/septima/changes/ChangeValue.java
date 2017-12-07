@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.septima.client.changes;
+package com.septima.changes;
 
 import com.septima.script.AlreadyPublishedException;
 import com.septima.script.HasPublished;

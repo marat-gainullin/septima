@@ -1,23 +1,9 @@
 package com.septima.http;
 
 import com.septima.*;
-import com.septima.client.ClientConstants;
-import com.septima.client.DatabasesClient;
-import com.septima.client.SqlQuery;
 import com.septima.Indexer;
-import com.septima.cache.ScriptDocument;
-import com.septima.cache.ScriptDocuments;
-import com.septima.client.dataflow.FlowProviderFailedException;
-import com.septima.login.AnonymousPrincipal;
-import com.septima.client.queries.LocalQueriesProxy;
-import com.septima.client.queries.QueriesProxy;
-import com.septima.client.scripts.ScriptedResource;
-import com.septima.client.threetier.Request;
+import com.septima.indexer.ScriptDocument;
 import com.septima.Requests;
-import com.septima.client.threetier.Response;
-import com.septima.client.threetier.http.PlatypusHttpRequestParams;
-import com.septima.client.threetier.requests.*;
-import com.septima.concurrent.PlatypusThreadFactory;
 import com.septima.script.JsObjectException;
 import com.septima.script.Scripts;
 import com.septima.util.IdGenerator;
@@ -53,7 +39,7 @@ import javax.servlet.http.Part;
 /**
  * Platypus HTTP servlet implementation
  *
- * @author ml, kl, mg refactoring
+ * @author mg
  */
 public class SeptimaServlet extends HttpServlet {
 
@@ -73,10 +59,10 @@ public class SeptimaServlet extends HttpServlet {
     public static final String PLATYPUS_SESSION_ID_ATTR_NAME = "platypus-session-id";
     public static final String PLATYPUS_USER_CONTEXT_ATTR_NAME = "platypus-user-context";
 
-    private static volatile SeptimaApplication platypusCore;
+    private static volatile SeptimaApplication application;
     private String realRootPathName;
     private Config platypusConfig;
-    private RestPointsScanner restScanner;
+    private RestPoints restPoints;
     private ExecutorService containerExecutor;
     private ExecutorService selfExecutor;
 
@@ -101,28 +87,23 @@ public class SeptimaServlet extends HttpServlet {
             }
             File realRoot = new File(realRootPathName);
             if (realRoot.exists() && realRoot.isDirectory()) {
-                ScriptDocuments lsecurityConfigs = new ScriptDocuments();
-                final TasksScanner tasksScanner = new TasksScanner();
-                restScanner = new RestPointsScanner();
+                final ResidentModules residentModules = new ResidentModules();
+                final ModulesSecurity modulesSecurity = new ModulesSecurity();
+                restPoints = new RestPoints();
                 Path projectRoot = Paths.get(realRoot.toURI());
                 Path appFolder = platypusConfig.getSourcePath() != null ? projectRoot.resolve(platypusConfig.getSourcePath()) : projectRoot;
                 Path apiFolder = projectRoot.resolve("WEB-INF" + File.separator + "classes");
-                Indexer indexer = new Indexer(appFolder, apiFolder, lsecurityConfigs, (String aModuleName, ScriptDocument.ModuleDocument aModuleDocument, File aFile) -> {
-                    tasksScanner.moduleScanned(aModuleName, aModuleDocument, aFile);
-                    restScanner.moduleScanned(aModuleName, aModuleDocument, aFile);
+                Indexer indexer = new Indexer(appFolder, apiFolder, (String aModuleName, ScriptDocument.ModuleDocument aModuleDocument, File aFile) -> {
+                    residentModules.scanned(aModuleName, aModuleDocument, aFile);
+                    restPoints.scanned(aModuleName, aModuleDocument, aFile);
+                    modulesSecurity.scanned(aModuleName, aModuleDocument, aFile);
                 });
-                ScriptedDatabasesClient basesProxy = new ScriptedDatabasesClient(platypusConfig.getDefaultDatasourceName(), indexer, true, tasksScanner.getValidators(), platypusConfig.getMaximumJdbcThreads());
+                DataSources basesProxy = new DataSources(platypusConfig.getDefaultDatasourceName(), indexer, true, residentModules.getValidators(), platypusConfig.getMaximumJdbcThreads());
                 QueriesProxy<SqlQuery> queries = new LocalQueriesProxy(basesProxy, indexer);
                 basesProxy.setQueries(queries);
-                platypusCore = new SeptimaApplication(indexer, new LocalModulesProxy(indexer, new ModelsDocuments(), platypusConfig.getAppElementName()), queries, basesProxy, lsecurityConfigs, platypusConfig.getAppElementName(), Sessions.Singleton.instance, platypusConfig.getMaximumSpaces()) {
-                    @Override
-                    public Application.Type getType() {
-                        return Application.Type.SERVLET;
-                    }
-                };
-                basesProxy.setContextHost(platypusCore);
+                application = new SeptimaApplication(indexer, new LocalModulesProxy(indexer, new ModelsDocuments(), platypusConfig.getAppElementName()), queries, basesProxy, modulesSecurity, platypusConfig.getAppElementName(), Sessions.Singleton.instance, platypusConfig.getMaximumSpaces());
                 Scripts.initBIO(platypusConfig.getMaximumBIOTreads());
-                ScriptedResource.init(platypusCore, apiFolder, platypusConfig.isGlobalAPI());
+                ScriptedResource.init(application, apiFolder, platypusConfig.isGlobalAPI());
                 Scripts.initTasks(containerExecutor != null ? containerExecutor /* J2EE 7+ */ : selfExecutor /* Other environment */);
                 if (platypusConfig.isWatch()) {
                     // TODO: Uncomment after watcher refactoring
@@ -137,22 +118,22 @@ public class SeptimaServlet extends HttpServlet {
     }
 
     public static SeptimaApplication getCore() {
-        return platypusCore;
+        return application;
     }
 
     @Override
     public void destroy() {
         if (platypusConfig.isWatch()) {
             try {
-                platypusCore.getIndexer().unwatch();
+                application.getIndexer().unwatch();
             } catch (Exception ex) {
                 Logger.getLogger(SeptimaServlet.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         Scripts.shutdown();
-        if (platypusCore.getDatabases() != null) {
+        if (application.getDatabases() != null) {
             try {
-                platypusCore.getDatabases().shutdown();
+                application.getDatabases().shutdown();
             } catch (InterruptedException ex) {
                 Logger.getLogger(SeptimaServlet.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -227,7 +208,7 @@ public class SeptimaServlet extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
         if (!checkUpload(request, response)) {
-            if (platypusCore != null) {
+            if (application != null) {
                 HttpSession httpSession = request.getSession();
                 if (httpSession != null) {
                     AsyncContext async = request.startAsync();
@@ -250,7 +231,7 @@ public class SeptimaServlet extends HttpServlet {
                     };
                     Session lookedup0 = platypusSessionByHttpSession(httpSession);
                     if (lookedup0 == null) {// Zombie check
-                        platypusCore.getQueueSpace().process(() -> {
+                        application.getQueueSpace().process(() -> {
                             // sessions accounting thread
                             Session lookedup1 = platypusSessionByHttpSession(httpSession);
                             if (lookedup1 == null) {
@@ -287,7 +268,7 @@ public class SeptimaServlet extends HttpServlet {
                                         }
                                     };
                                     if (request.getUserPrincipal() != null) {// Additional properties can be obtained only for authorized users
-                                        DatabasesClient.getUserProperties(platypusCore.getDatabases(), userName, platypusCore.getQueueSpace(), (Map<String, String> aUserProps) -> {
+                                        DatabasesClient.getUserProperties(application.getDatabases(), userName, application.getQueueSpace(), (Map<String, String> aUserProps) -> {
                                             // still sessions accounting thread
                                             String dataContext = aUserProps.get(ClientConstants.F_USR_CONTEXT);
                                             withDataContext.accept(dataContext);
@@ -326,7 +307,7 @@ public class SeptimaServlet extends HttpServlet {
     }
 
     public Session platypusSessionByHttpSession(HttpSession httpSession) {
-        Sessions sessions = platypusCore.getSessions();
+        Sessions sessions = application.getSessions();
         String platypusSessionId = (String) httpSession.getAttribute(PLATYPUS_SESSION_ID_ATTR_NAME);
         Session session = platypusSessionId != null ? sessions.get(platypusSessionId) : null;
         return session;
@@ -342,7 +323,7 @@ public class SeptimaServlet extends HttpServlet {
     }
 
     public SeptimaApplication getServerCore() {
-        return platypusCore;
+        return application;
     }
 
     /**
@@ -363,7 +344,7 @@ public class SeptimaServlet extends HttpServlet {
             aHttpResponse.setStatus(HttpServletResponse.SC_OK);
             aAsync.complete();
         } else {
-            RequestHandler<Request, Response> handler = (RequestHandler<Request, Response>) RequestHandlerFactory.getHandler(platypusCore, platypusRequest);
+            RequestHandler<Request, Response> handler = (RequestHandler<Request, Response>) RequestHandlerFactory.getHandler(application, platypusRequest);
             if (handler != null) {
                 Consumer<Exception> onFailure = (Exception ex) -> {
                     Logger.getLogger(SeptimaServlet.class.getName()).log(Level.SEVERE, ex.toString());
@@ -473,7 +454,7 @@ public class SeptimaServlet extends HttpServlet {
             int rqType = Integer.valueOf(sType);
             Request rq = PlatypusRequestsFactory.create(rqType);
             if (rq != null) {
-                RequestReader reader = new RequestReader(platypusCore, aHttpRequest);
+                RequestReader reader = new RequestReader(application, aHttpRequest);
                 rq.accept(reader);
                 return rq;
             } else {
@@ -482,7 +463,7 @@ public class SeptimaServlet extends HttpServlet {
         } else {
             String contextedUri = aHttpRequest.getPathInfo();
             if (contextedUri != null) {
-                Map<String, RpcPoint> methoded = restScanner.getMethoded().get(aHttpRequest.getMethod().toLowerCase());
+                Map<String, RpcPoint> methoded = restPoints.getMethoded().get(aHttpRequest.getMethod().toLowerCase());
                 if (methoded != null) {
                     String contextedUriHead = contextedUri;
                     while (!contextedUriHead.isEmpty() && !methoded.containsKey(contextedUriHead)) {

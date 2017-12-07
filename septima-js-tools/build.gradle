@@ -1,6 +1,2 @@
 dependencies {
-    compile project(':septima-js-common-utils')
-    compile project(':septima-js-core')
-    compile project(':septima-js-datamodel')
-    compile project(':septima-js-scripting')
 }

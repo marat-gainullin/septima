@@ -1,25 +1,27 @@
-package com.septima.client.queries;
+package com.septima.queries;
 
-import com.septima.client.Databases;
-import com.septima.client.SeptimaFlowProvider;
-import com.septima.client.changes.ChangeValue;
-import com.septima.client.changes.Command;
-import com.septima.client.dataflow.FlowProvider;
-import com.septima.client.metadata.Fields;
-import com.septima.client.metadata.Parameter;
-import com.septima.client.metadata.Parameters;
-import com.septima.concurrent.CallableConsumer;
-import com.septima.script.Scripts;
-import java.sql.ResultSet;
-import java.util.Collection;
+import com.septima.Database;
+import com.septima.SeptimaDataProvider;
+import com.septima.changes.Command;
+import com.septima.changes.ChangeValue;
+import com.septima.dataflow.DataProvider;
+import com.septima.dataflow.JdbcDataProvider;
+import com.septima.metadata.Field;
+import com.septima.metadata.Parameter;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
-import jdk.nashorn.api.scripting.JSObject;
 
 /**
  * A compiled SQL query.
- *
+ * <p>
  * <p>An instance of this class contains JDBC-compliant SQL query text with "?"
  * placeholders for parameters and all parameters values.</p>
  *
@@ -27,123 +29,51 @@ import jdk.nashorn.api.scripting.JSObject;
  */
 public class SqlCompiledQuery {
 
-    protected Databases basesProxy;
-    protected String datasourceName;
-    protected String entityName;
-    protected String sqlClause;
-    protected Parameters parameters;// 1 - Based    
-    protected Fields expectedFields;// 1 - Based
-    protected boolean procedure;
-    private int pageSize = FlowProvider.NO_PAGING_PAGE_SIZE;
+    private final Database database;
+    private final String entityName;
+    private final String sqlClause;
+    private final List<Parameter> parameters;
+    private final Map<String, Field> expectedFields;
+    private final boolean procedure;
+    private final int pageSize;
 
-    /**
-     * Creates an instance of compiled query.
-     *
-     * @param aClient
-     * @param aSqlClause the SQL query text
-     * @throws java.lang.Exception
-     */
-    public SqlCompiledQuery(Databases aClient, String aSqlClause) throws Exception {
-        super();
-        sqlClause = aSqlClause;
-        parameters = new Parameters();
-        basesProxy = aClient;
+    SqlCompiledQuery(Database aDatabase, String aSqlClause) {
+        this(aDatabase, aSqlClause, List.of());
     }
 
-    /**
-     * Creates an instance of compiled SQL query.
-     *
-     * <p>
-     * This constructor is used when creating a compiled query out of SqlQuery,
-     * providing parameters values.</p>
-     *
-     * @param sql the SQL query text.
-     * @param params parameters' values vector.
-     */
-    SqlCompiledQuery(Databases aClient, String aSqlClause, Parameters aParams) throws Exception {
+    SqlCompiledQuery(Database aDatabase, String aSqlClause, List<Parameter> aParams) {
+        this(aDatabase, aSqlClause, aParams, Map.of());
+    }
+
+    SqlCompiledQuery(Database aDatabase, String aSqlClause, List<Parameter> aParams, Map<String, Field> aExpectedFields) {
+        this(aDatabase, null, aSqlClause, aParams, aExpectedFields, DataProvider.NO_PAGING_PAGE_SIZE, false);
+    }
+
+    SqlCompiledQuery(Database aDatabase, String aEntityName, String aSqlClause, List<Parameter> aParams, Map<String, Field> aExpectedFields, int aPageSize, boolean aProcedure) {
         super();
         sqlClause = aSqlClause;
         parameters = aParams;
-        basesProxy = aClient;
-    }
-
-    SqlCompiledQuery(Databases aClient, String aDatasourceName, String aSqlClause, Parameters aParams) throws Exception {
-        super();
-        sqlClause = aSqlClause;
-        parameters = aParams;
-        datasourceName = aDatasourceName;
-        basesProxy = aClient;
-    }
-
-    public SqlCompiledQuery(Databases aClient, String aDatasourceName, String aSqlClause, Parameters aParams, Fields aExpectedFields) throws Exception {
-        super();
-        sqlClause = aSqlClause;
-        parameters = aParams;
-        datasourceName = aDatasourceName;
-        expectedFields = aExpectedFields;
-        basesProxy = aClient;
-    }
-
-    public SqlCompiledQuery(Databases aClient, String aDatasourceName, String aEntityName, String aSqlClause, Parameters aParams, Fields aExpectedFields) throws Exception {
-        super();
-        sqlClause = aSqlClause;
-        parameters = aParams;
-        datasourceName = aDatasourceName;
         entityName = aEntityName;
         expectedFields = aExpectedFields;
-        basesProxy = aClient;
-    }
-
-    /**
-     * Creates an instance of compiled query.
-     *
-     * @param aClient
-     * @param aDatasourceName Database identifier.
-     * @param aSqlClause the SQL query text
-     * @throws java.lang.Exception
-     */
-    public SqlCompiledQuery(Databases aClient, String aDatasourceName, String aSqlClause) throws Exception {
-        super();
-        datasourceName = aDatasourceName;
-        sqlClause = aSqlClause;
-        parameters = new Parameters();
-        basesProxy = aClient;
+        database = aDatabase;
+        pageSize = aPageSize;
+        procedure = aProcedure;
     }
 
     public boolean isProcedure() {
         return procedure;
     }
 
-    public void setProcedure(boolean aValue) {
-        procedure = aValue;
-    }
-
-    public void setParameters(Parameters aValue) {
-        parameters = aValue;
-    }
-
     public int getPageSize() {
         return pageSize;
     }
 
-    public void setPageSize(int aPageSize) throws Exception {
-        pageSize = aPageSize;
-    }
-
     /**
-     * Executes query and returns results whatever setted in procedure flag.
-     *
-     * @param <T>
-     * @param aResultSetProcessor
-     * @param aCallbacksExecutor
-     * @param onSuccess
-     * @param onFailure
-     * @return Rowset insatance, representing query results.
-     * @throws Exception
+     * Executes query and returns results regardless of procedure flag.
      */
-    public <T> T executeQuery(CallableConsumer<T, ResultSet> aResultSetProcessor, Executor aCallbacksExecutor, Consumer<T> onSuccess, Consumer<Exception> onFailure) throws Exception {
-        if (basesProxy != null) {
-            SeptimaFlowProvider flow = basesProxy.createFlowProvider(datasourceName, entityName, sqlClause, expectedFields);
+    public <T> T executeQuery(JdbcDataProvider.ResultSetProcessor<T> aResultSetProcessor, Executor aCallbacksExecutor, Consumer<T> onSuccess, Consumer<Exception> onFailure) throws Exception {
+        if (database != null) {
+            SeptimaDataProvider flow = database.createDataProvider(entityName, sqlClause, expectedFields);
             flow.setPageSize(pageSize);
             flow.setProcedure(procedure);
             return flow.<T>select(parameters, aResultSetProcessor, onSuccess != null ? (T t) -> {
@@ -160,52 +90,59 @@ public class SqlCompiledQuery {
         }
     }
 
-    public JSObject executeQuery(Consumer<JSObject> onSuccess, Consumer<Exception> onFailure, Scripts.Space aSpace) throws Exception {
-        if (basesProxy != null) {
-            SeptimaFlowProvider flow = basesProxy.createFlowProvider(datasourceName, entityName, sqlClause, expectedFields);
-            flow.setPageSize(pageSize);
-            flow.setProcedure(procedure);
-            Collection<Map<String, Object>> data = flow.refresh(parameters, onSuccess != null ? (Collection<Map<String, Object>> aData) -> {
-                aSpace.process(() -> {
-                    JSObject aJsData = aSpace.readJsArray(aData);
-                    onSuccess.accept(aJsData);
-                });
-            } : null, onFailure != null ? (Exception ex) -> {
-                aSpace.process(() -> {
-                    onFailure.accept(ex);
-                });
-            } : null);
-            return data != null ? aSpace.readJsArray(data) : null;
-        } else {
-            return null;
-        }
-    }
-
-    public FlowProvider getFlowProvider() throws Exception {
-        SeptimaFlowProvider flow = basesProxy.createFlowProvider(datasourceName, entityName, sqlClause, expectedFields);
-        flow.setPageSize(pageSize);
-        flow.setProcedure(procedure);
-        return flow;
-    }
-
     public Command prepareCommand() {
-        Command command = new Command(entityName);
-        command.clause = sqlClause;
-        for (int i = 0; i < parameters.getParametersCount(); i++) {
-            Parameter param = parameters.get(i + 1);
+        Command command = new Command(entityName, sqlClause);
+        for (int i = 0; i < parameters.size(); i++) {
+            Parameter param = parameters.get(i);
             command.getParameters().add(new ChangeValue(param.getName(), param.getValue()));
         }
         return command;
     }
-    
+
     public Command prepareCommand(Map<String, ChangeValue> aParameters) {
-        Command command = new Command(entityName);
-        command.clause = sqlClause;
-        for (int i = 0; i < parameters.getParametersCount(); i++) {
-            Parameter param = parameters.get(i + 1);
+        Command command = new Command(entityName, sqlClause);
+        for (int i = 0; i < parameters.size(); i++) {
+            Parameter param = parameters.get(i);
             command.getParameters().add(aParameters.get(param.getName()));
         }
         return command;
+    }
+
+    public CompletableFuture<Integer> executeUpdate() {
+        CompletableFuture<Integer> updating = new CompletableFuture<>();
+        database.getJdbcPerformer().accept(() -> {
+            try {
+                DataSource dataSource = database.getDataSource();
+                try (Connection connection = dataSource.getConnection()) {
+                    boolean autoCommit = connection.getAutoCommit();
+                    connection.setAutoCommit(false);
+                    try {
+                        try (PreparedStatement stmt = connection.prepareStatement(sqlClause)) {
+                            for (int i = 0; i < parameters.size(); i++) {
+                                Parameter param = parameters.get(i);
+                                int jdbcType = JdbcDataProvider.calcJdbcType(param.getType(), param.getValue());
+                                JdbcDataProvider.assign(param.getValue(), i + 1, stmt, jdbcType, null);
+                            }
+                            try {
+                                int rowsAffected = stmt.executeUpdate();
+                                connection.commit();
+                                updating.completeAsync(() -> rowsAffected, database.getFutureExecutor());
+                            } catch (SQLException ex) {
+                                connection.rollback();
+                                throw ex;
+                            }
+                        }
+                    } finally {
+                        connection.setAutoCommit(autoCommit);
+                    }
+                }
+            } catch (Exception ex) {
+                database.getFutureExecutor().execute(() -> {
+                    updating.completeExceptionally(ex);
+                });
+            }
+        });
+        return updating;
     }
 
     /**
@@ -217,35 +154,33 @@ public class SqlCompiledQuery {
         return sqlClause;
     }
 
-    public void setSqlClause(String aValue) throws Exception {
-        sqlClause = aValue;
-    }
-
     /**
      * Returns the vector of parameters' values.
      *
      * @return the vector of parameters' values.
      */
-    public Parameters getParameters() {
+    public List<Parameter> getParameters() {
         return parameters;
-    }
-
-    /**
-     * @return the databaseId
-     */
-    public String getDatasourceName() {
-        return datasourceName;
-    }
-
-    public void setDatasourceName(String aValue) throws Exception {
-        datasourceName = aValue;
     }
 
     public String getEntityName() {
         return entityName;
     }
 
-    public void setEntityName(String aValue) throws Exception {
-        entityName = aValue;
+    public String toString() {
+        StringBuilder sb = new StringBuilder("Sql query: ");
+        sb.append(sqlClause);
+        if (!parameters.isEmpty()) {
+            sb.append(" {");
+            String delimiter = "";
+            for (int i = 0; i < parameters.size(); i++) {
+                Parameter param = parameters.get(i);
+                sb.append(delimiter).append(Integer.toString(i + 1)).append('@').append(param.getValue() == null ? "null" : param.getValue().toString());
+                delimiter = ", ";
+            }
+            sb.append("}");
+        }
+        return sb.toString();
     }
+
 }
