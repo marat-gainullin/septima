@@ -1,7 +1,7 @@
 package com.septima.metadata;
 
 /**
- * A class intended to hold information about foreign key constraint in database.
+ * Foreign key constraint information holder.
  */
 public class ForeignKey extends PrimaryKey {
 
@@ -40,17 +40,25 @@ public class ForeignKey extends PrimaryKey {
             }
         }
     }
-    protected ForeignKeyRule fkUpdateRule = ForeignKeyRule.NOACTION;
-    protected ForeignKeyRule fkDeleteRule = ForeignKeyRule.NOACTION;
-    protected boolean fkDeferrable = true;
-    protected PrimaryKey referee = null;
 
     /**
-     * Default constructor.
+     * ForeignKeyRule.NOACTION is the default
+     * {@link ForeignKeyRule}
      */
-    public ForeignKey() {
-        super();
-    }
+    private final ForeignKeyRule updateRule;
+    /**
+     * ForeignKeyRule.NOACTION is the default
+     * {@link ForeignKeyRule}
+     */
+    private final ForeignKeyRule deleteRule;
+    /**
+     * {@code true} is the default
+     */
+    private final boolean deferrable;
+    /**
+     * {@code null} is the default
+     */
+    private final PrimaryKey referee;
 
     /**
      * Constructor with all information specified as the parameters.
@@ -58,136 +66,44 @@ public class ForeignKey extends PrimaryKey {
      * @param aTable Table name. Null and empty string are not allowed.
      * @param aField Field name. Null and empty string are not allowed.
      * @param aFkName Constraint name. Null and empty string are not allowed.
-     * @param afkUpdateRule Update rule for foreign key been constructed.
-     * @param afkDeleteRule Delete rule for foreign key been constructed.
-     * @param afkDeferrable Deferrable rule for foreign key check.
+     * @param aUpdateRule Update rule for foreign key been constructed.
+     * @param aDeleteRule Delete rule for foreign key been constructed.
+     * @param aDeferrable Deferrable rule for foreign key check.
      * @param aPkSchema Database schema for referent primary key. Null means application schema in application database.
      * @param aPkTable Table name of referent primary key. Null and empty string are not allowed.
      * @param aPkField Field name of referent primary key. Null and empty string are not allowed.
      * @param aPkName Referent primary key constraint name. Null and empty string are not allowed.
      */
-    public ForeignKey(String aSchema, String aTable, String aField, String aFkName, ForeignKeyRule afkUpdateRule, ForeignKeyRule afkDeleteRule, boolean afkDeferrable, String aPkSchema, String aPkTable, String aPkField, String aPkName) {
-        this();
-        copyFkFromValues(aSchema, aTable, aField, aFkName, afkUpdateRule, afkDeleteRule, afkDeferrable, aPkSchema, aPkTable, aPkField, aPkName);
-    }
-
-    /**
-     * Copy contructor.
-     * @param aSource <code>ForeignKey</code> instance to be used as information source.
-     */
-    protected ForeignKey(ForeignKey aSource) {
-        this();
-        if (aSource != null && aSource.getReferee() != null) {
-            PrimaryKey lpk = aSource.getReferee();
-            copyFkFromValues(aSource.getSchema(), aSource.getTable(), aSource.getField(), aSource.getCName(), aSource.getFkUpdateRule(), aSource.getFkDeleteRule(), aSource.getFkDeferrable(), lpk.getSchema(), lpk.getTable(), lpk.getField(), lpk.getCName());
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode() {
-        int hash = 5;
-        hash = 59 * hash + (this.fkUpdateRule != null ? this.fkUpdateRule.hashCode() : 0);
-        hash = 59 * hash + (this.fkDeleteRule != null ? this.fkDeleteRule.hashCode() : 0);
-        hash = 59 * hash + (this.fkDeferrable ? 1 : 0);
-        hash = 59 * hash + (this.referee != null ? this.referee.hashCode() : 0);
-        return hash;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        if (!super.equals(obj)) {
-            return false;
-        }
-        final ForeignKey other = (ForeignKey) obj;
-        if (this.fkUpdateRule != other.fkUpdateRule) {
-            return false;
-        }
-        if (this.fkDeleteRule != other.fkDeleteRule) {
-            return false;
-        }
-        if (this.fkDeferrable != other.fkDeferrable) {
-            return false;
-        }
-        if (this.referee != other.referee && (this.referee == null || !this.referee.equals(other.referee))) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Copies this instance to a new instance using copy constructor.
-     * @return Copied <code>ForeignKey</code> instance.
-     * @see #ForeignKey(ForeignKey aSource)
-     */
-    @Override
-    public PrimaryKey copy() {
-        return new ForeignKey(this);
+    public ForeignKey(String aSchema, String aTable, String aField, String aFkName, ForeignKeyRule aUpdateRule, ForeignKeyRule aDeleteRule, boolean aDeferrable, String aPkSchema, String aPkTable, String aPkField, String aPkName) {
+        super(aSchema, aTable, aField, aFkName);
+        updateRule = aUpdateRule;
+        deleteRule = aDeleteRule;
+        deferrable = aDeferrable;
+        referee = new PrimaryKey(aPkSchema, aPkTable, aPkField, aPkName);
     }
 
     /**
      * Returns deferrable state of this foreign key.
      * @return Deferrable state of this foreign key.
      */
-    public boolean getFkDeferrable() {
-        return fkDeferrable;
-    }
-
-    /**
-     * Sets deferrable state to this foreign key.
-     * @param aValue Deferrable state to set.
-     */
-    public void setFkDeferrable(boolean aValue) {
-        boolean oldValue = fkDeferrable;
-        fkDeferrable = aValue;
-        changeSupport.firePropertyChange("fkDeferrable", oldValue, aValue);
+    public boolean getDeferrable() {
+        return deferrable;
     }
 
     /**
      * Returns delete rule of this foreign key.
      * @return Delete rule of this foreign key.
      */
-    public ForeignKeyRule getFkDeleteRule() {
-        return fkDeleteRule;
-    }
-
-    /**
-     * Sets delete rule to this foreign key.
-     * @param aValue Delete rule to set.
-     */
-    public void setFkDeleteRule(ForeignKeyRule aValue) {
-        ForeignKeyRule oldValue = fkDeleteRule;
-        fkDeleteRule = aValue;
-        changeSupport.firePropertyChange("fkDeleteRule", oldValue, aValue);
+    public ForeignKeyRule getDeleteRule() {
+        return deleteRule;
     }
 
     /**
      * Returns update rule of this foreign key.
      * @return Update rule of this foreign key.
      */
-    public ForeignKeyRule getFkUpdateRule() {
-        return fkUpdateRule;
-    }
-
-    /**
-     * Sets update rule to this foreign key.
-     * @param aValue Update rule to set.
-     */
-    public void setFkUpdateRule(ForeignKeyRule aValue) {
-        ForeignKeyRule oldValue = fkUpdateRule;
-        fkUpdateRule = aValue;
-        changeSupport.firePropertyChange("fkUpdateRule", oldValue, aValue);
+    public ForeignKeyRule getUpdateRule() {
+        return updateRule;
     }
 
     /**
@@ -196,20 +112,5 @@ public class ForeignKey extends PrimaryKey {
      */
     public PrimaryKey getReferee() {
         return referee;
-    }
-
-    public void setReferee(PrimaryKey aValue) {
-        PrimaryKey oldValue = referee;
-        referee = aValue;
-        changeSupport.firePropertyChange("referee", oldValue, aValue);
-
-    }
-
-    private void copyFkFromValues(String aSchema, String aTable, String aField, String aFkName, ForeignKeyRule afkUpdateRule, ForeignKeyRule afkDeleteRule, boolean afkDeferrable, String aPkSchema, String aPkTable, String aPkField, String aPkName) {
-        copyPkFromValues(aSchema, aTable, aField, aFkName);
-        setFkUpdateRule(afkUpdateRule);
-        setFkDeleteRule(afkDeleteRule);
-        setFkDeferrable(afkDeferrable);
-        setReferee(new PrimaryKey(aPkSchema, aPkTable, aPkField, aPkName));
     }
 }

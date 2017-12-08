@@ -3,30 +3,21 @@ package com.septima.metadata;
 import java.sql.ParameterMetaData;
 
 /**
- * This class is a parameter specification for queries, forms, reports and
- * data modules. It holds information about field as the <code>Field</code> class
- * and additional information about parameter mode, value, default value and
- * it's selection form. If <code>getFk()</code> returns reference to a
- * <code>PrimaryKey</code>, than it is a foreign key in corresponding query,
- * form, report or data module, and it references to returning
- * <code>PrimaryKey</code>.
+ * This class is a parameter specification for queries.
+ * It holds information about field as the <code>Field</code> class
+ * and additional information about parameter mode, value and default value.
+ *
+ * TODO: Remove 'Field' inheritance (add 'name' and 'type' fields explicitly), maybe 'mode' and 'modified' fields too.
+ * TODO: Maybe remove this class at all and use Change.Value instead it?
  *
  * @author mg
  */
 public class Parameter extends Field {
 
-    private int mode;
-    private String selectionForm;
-    private Object defaultValue;
-    private Object value;
+    private final int mode;
     private boolean modified;
 
-    /**
-     * The default constructor.
-     */
-    public Parameter() {
-        this("");
-    }
+    private Object value;
 
     /**
      * Constructor with name.
@@ -55,13 +46,12 @@ public class Parameter extends Field {
      * @param aType        Type name of the created parameter.
      */
     public Parameter(String aName, String aDescription, String aType) {
-        this(aName, aDescription, aType, null, null, false, ParameterMetaData.parameterModeIn);
+        this(aName, aDescription, aType, null, false, ParameterMetaData.parameterModeIn);
     }
 
-    public Parameter(String aName, String aDescription, String aType, Object aValue, Object aDefaultValue, boolean aModified, int aMode) {
+    public Parameter(String aName, String aDescription, String aType, Object aValue, boolean aModified, int aMode) {
         super(aName, aDescription, aType);
         value = aValue;
-        defaultValue = aDefaultValue;
         modified = aModified;
         mode = aMode;
     }
@@ -73,33 +63,6 @@ public class Parameter extends Field {
      */
     public int getMode() {
         return mode;
-    }
-
-    /**
-     * Sets the parameter's mode (in, out, in/out).
-     *
-     * @param aValue The mode.
-     */
-    public void setMode(int aValue) {
-        mode = aValue;
-    }
-
-    /**
-     * Returns parameter's default value.
-     *
-     * @return Parameter's default value.
-     */
-    public Object getDefaultValue() {
-        return defaultValue;
-    }
-
-    /**
-     * Sets the default value of the parameter.
-     *
-     * @param aValue A value to be set as the default value
-     */
-    public void setDefaultValue(Object aValue) {
-        defaultValue = aValue;
     }
 
     /**
@@ -117,7 +80,7 @@ public class Parameter extends Field {
      * @param aValue A value to be set as the parameter's value.
      */
     public void setValue(Object aValue) {
-        if (!readonly) {
+        if (value != aValue) {
             value = aValue;
             modified = true;
         }
@@ -187,24 +150,6 @@ public class Parameter extends Field {
     }
     }
      */
-
-    /**
-     * Returns selection form of the parameter.
-     *
-     * @return Selection form of the parameter.
-     */
-    public String getSelectionForm() {
-        return selectionForm;
-    }
-
-    /**
-     * Sets the selection form of the parameter.
-     *
-     * @param aValue Selection form of the parameter.
-     */
-    public void setSelectionForm(String aValue) {
-        selectionForm = aValue;
-    }
 
     public boolean isModified() {
         return modified;

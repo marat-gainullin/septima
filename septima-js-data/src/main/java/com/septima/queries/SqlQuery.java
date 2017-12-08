@@ -2,7 +2,6 @@ package com.septima.queries;
 
 import com.septima.Constants;
 import com.septima.Database;
-import com.septima.DataSources;
 import com.septima.dataflow.DataProvider;
 import com.septima.metadata.Field;
 import com.septima.metadata.Parameter;
@@ -29,46 +28,77 @@ public class SqlQuery {
     private final static Pattern PARAMETER_NAME_PATTERN = Pattern.compile(Constants.PARAMETER_NAME_REGEXP, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
     private final static Pattern STRINGS_PATTERN = Pattern.compile("'[^']*'", Pattern.MULTILINE);
 
-    // parameters propagation. ParamName, QueryName, ParamName
-    protected Map<String, Map<String, String>> parametersBinds = new HashMap<>();
-    protected Map<String, Field> fields = new LinkedHashMap<>();
-    protected Map<String, Parameter> params = new LinkedHashMap<>();
-    protected String title;
-    protected String entityName;
-    protected boolean procedure;
-    protected Set<String> readRoles = new HashSet<>();
-    protected Set<String> writeRoles = new HashSet<>();
-    // Joins, conditions, parametersList, groups, havings etc.
-    protected String sqlText;
-    // the same as sqlText, but it is used when very custom sql is needed.
-    protected String fullSqlText;
-    protected Set<String> writable;
-    protected int pageSize = DataProvider.NO_PAGING_PAGE_SIZE;
-    protected boolean publicAccess;
-    protected boolean command;
-    protected Database database;
-
-    /**
-     * Creates an instance of Query with empty SQL query text and parameters
-     * map.
-     *
-     * @param aDatabase
-     */
-    public SqlQuery(Database aDatabase) {
-        super();
-        database = aDatabase;
-    }
+    private final Database database;
+    private final String sqlText;
+    private final String customSqlText;
+    private final String entityName;
+    private final boolean readonly;
+    private final boolean command;
+    private final boolean procedure;
+    private final boolean publicAccess;
+    private final String title;
+    private final int pageSize;
+    private final Map<String, Parameter> params;
+    private final Map<String, Field> fields;
+    private final Set<String> writable;
+    private final Set<String> readRoles;
+    private final Set<String> writeRoles;
 
     /**
      * Creates an instance of Query with given SQL query text. Leaves the
      * parameters map empty.
      *
-     * @param aDatabase
-     * @param aSqlText  the SQL query text.
+     * @param aDatabase {@link Database} instance to use with the new query.
+     * @param aSqlText  the Sql query text.
      */
     public SqlQuery(Database aDatabase, String aSqlText) {
-        this(aDatabase);
+        this(
+                aDatabase,
+                aSqlText,
+                null,
+                null,
+                false,
+                false,
+                false,
+                false,
+                null,
+                DataProvider.NO_PAGING_PAGE_SIZE,
+                Map.of(), Map.of(),
+                Set.of(), Set.of(), Set.of()
+        );
+    }
+
+    public SqlQuery(Database aDatabase,
+                    String aSqlText,
+                    String aCustomSqlText,
+                    String aEntityName,
+                    boolean aReadonly,
+                    boolean aCommand,
+                    boolean aProcedure,
+                    boolean aPublicAccess,
+                    String aTitle,
+                    int aPageSize,
+                    Map<String, Parameter> aParams,
+                    Map<String, Field> aFields,
+                    Set<String> aWritable,
+                    Set<String> aReadRoles,
+                    Set<String> aWriteRoles
+    ) {
+        database = aDatabase;
         sqlText = aSqlText;
+        customSqlText = aCustomSqlText;
+        entityName = aEntityName;
+        readonly = aReadonly;
+        command = aCommand;
+        procedure = aProcedure;
+        publicAccess = aPublicAccess;
+        title = aTitle;
+        pageSize = aPageSize;
+        params = aParams;
+        fields = aFields;
+        writable = aWritable;
+        readRoles = aReadRoles;
+        writeRoles = aWriteRoles;
     }
 
     public Database getDatabase() {
@@ -79,12 +109,16 @@ public class SqlQuery {
         return command;
     }
 
+    public boolean isReadonly() {
+        return readonly;
+    }
+
     public String getSqlText() {
         return sqlText;
     }
 
-    public String getFullSqlText() {
-        return fullSqlText;
+    public String getCustomSqlText() {
+        return customSqlText;
     }
 
     public boolean isPublicAccess() {
@@ -123,30 +157,8 @@ public class SqlQuery {
         return title;
     }
 
-    public Map<String, Map<String, String>> getParametersBinds() {
-        return parametersBinds;
-    }
-
     public String getEntityName() {
         return entityName;
-    }
-
-    public void putParameter(String aName, String aType, Object aValue) {
-        Parameter param = new Parameter();
-        param.setName(aName);
-        param.setType(aType);
-        param.setDefaultValue(aValue);
-        param.setValue(aValue);
-        params.put(param.getName(), param);
-    }
-
-    public void putParameter(String aName, String aType, Object aDefaultValue, Object aValue) {
-        Parameter param = new Parameter();
-        param.setName(aName);
-        param.setType(aType);
-        param.setDefaultValue(aDefaultValue);
-        param.setValue(aValue);
-        params.put(param.getName(), param);
     }
 
     /**
@@ -163,7 +175,7 @@ public class SqlQuery {
      * any PreparedStatement object.</p>
      *
      * @return Compiled Sql query.
-     * @throws Exception
+     * @throws Exception Thrown if any problems with this {@link SqlQuery} occur while compilation, e.g. empty Sql text.
      */
     public SqlCompiledQuery compile() throws Exception {
         if (sqlText == null || sqlText.isEmpty()) {
@@ -171,7 +183,7 @@ public class SqlQuery {
         }
         String dialect = database.getSqlDriver().getDialect();
         boolean postgreSQL = Constants.POSTGRE_DIALECT.equals(dialect);
-        List<Parameter> compiledParams = new ArrayList();
+        List<Parameter> compiledParams = new ArrayList<>(params.size());
         StringBuilder compiledSb = new StringBuilder();
         Matcher sm = STRINGS_PATTERN.matcher(sqlText);
         String[] withoutStrings = sqlText.split("('[^']*')");
@@ -206,7 +218,7 @@ public class SqlQuery {
     }
 
     protected static Map<String, Parameter> extractParameters(String sqlText) {
-        Map<String, Parameter> params = new LinkedHashMap();
+        Map<String, Parameter> params = new LinkedHashMap<>();
         if (sqlText != null && !sqlText.isEmpty()) {
             Pattern pattern = Pattern.compile(Constants.PARAMETER_NAME_REGEXP, Pattern.CASE_INSENSITIVE);
             Matcher matcher = pattern.matcher(sqlText);

@@ -263,7 +263,7 @@ public class MsSqlSqlDriver extends SqlDriver {
             }
 
             String fkRule = "";
-            switch (fk.getFkDeleteRule()) {
+            switch (fk.getDeleteRule()) {
                 case CASCADE:
                     fkRule += " ON DELETE CASCADE ";
                     break;
@@ -277,7 +277,7 @@ public class MsSqlSqlDriver extends SqlDriver {
                     fkRule += " ON DELETE set null ";
                     break;
             }
-            switch (fk.getFkUpdateRule()) {
+            switch (fk.getUpdateRule()) {
                 case CASCADE:
                     fkRule += " ON UPDATE CASCADE ";
                     break;

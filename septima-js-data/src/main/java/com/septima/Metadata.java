@@ -390,22 +390,23 @@ public class Metadata implements StatementsGenerator.TablesContainer {
                     int JDBCIDX_COLUMN_NAME = idxs.get(Constants.JDBCIDX_COLUMN_NAME);
                     int JDBCIDX_ASC_OR_DESC = idxs.get(Constants.JDBCIDX_ASC_OR_DESC);
                     int JDBCIDX_ORDINAL_POSITION = idxs.get(Constants.JDBCIDX_ORDINAL_POSITION);
+                    String idxName = null;
+                    Set<TableIndexColumn> columns = new LinkedHashSet<>();
+                    boolean clustered = false;
+                    boolean unique = false;
+                    boolean hashed = false;
                     while (r.next()) {
                         //String tableName = r.getString(JDBCIDX_TABLE_NAME);
-                        String idxName = r.getString(JDBCIDX_INDEX_NAME);
+                        idxName = r.getString(JDBCIDX_INDEX_NAME);
                         if (!r.wasNull()) {
-                            TableIndex idxSpec = indexSpecs.computeIfAbsent(idxName, in -> new TableIndex(in));
-                            boolean isUnique = r.getBoolean(JDBCIDX_NON_UNIQUE);
+                            unique = r.getBoolean(JDBCIDX_NON_UNIQUE);
                             short type = r.getShort(JDBCIDX_TYPE);
-                            idxSpec.setUnique(isUnique);
-                            idxSpec.setClustered(false);
-                            idxSpec.setHashed(false);
                             switch (type) {
                                 case DatabaseMetaData.tableIndexClustered:
-                                    idxSpec.setClustered(true);
+                                    clustered = true;
                                     break;
                                 case DatabaseMetaData.tableIndexHashed:
-                                    idxSpec.setHashed(true);
+                                    hashed = true;
                                     break;
                                 case DatabaseMetaData.tableIndexStatistic:
                                     break;
@@ -414,19 +415,21 @@ public class Metadata implements StatementsGenerator.TablesContainer {
                             }
                             String sColumnName = r.getString(JDBCIDX_COLUMN_NAME);
                             if (!r.wasNull()) {
-                                TableIndexColumn column = idxSpec.getColumn(sColumnName);
-                                if (column == null) {
-                                    column = new TableIndexColumn(sColumnName, true);
-                                    idxSpec.addColumn(column);
-                                }
                                 String sAsc = r.getString(JDBCIDX_ASC_OR_DESC);
                                 if (!r.wasNull()) {
-                                    column.setAscending(sAsc.toLowerCase().equals("a"));
+                                    sAsc = null;
                                 }
                                 short sPosition = r.getShort(JDBCIDX_ORDINAL_POSITION);
-                                column.setOrdinalPosition((int) sPosition);
+                                columns.add(new TableIndexColumn(
+                                        sColumnName,
+                                        sAsc != null ? sAsc.toLowerCase().equals("a") : true,
+                                        (int) sPosition
+                                ));
                             }
                         }
+                    }
+                    if(idxName != null) {
+                        indexSpecs.put(idxName, new TableIndex(idxName, clustered, hashed, unique, columns));
                     }
                 }
             } catch (SQLException ex) {

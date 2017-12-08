@@ -1,27 +1,54 @@
 package com.septima.metadata;
 
 /**
- *
  * @author mg
  */
 public class JdbcColumn extends Field {
 
-    private int size;
-    private int scale;
-    private int precision;
-    private boolean signed = true;
-    private String schemaName;
-    private int jdbcType;
+    private final int size;
+    private final int scale;
+    private final int precision;
+    /**
+     * {@code true} is the default.
+     */
+    private final boolean signed;
+    private final String schemaName;
+    private final int jdbcType;
 
-    public JdbcColumn() {
-        super();
+    public JdbcColumn(
+            String aName,
+            String aDescription,
+            String aOriginalName,
+            String aTableName,
+            String aType,
+            boolean aNullable,
+            boolean aPk,
+            ForeignKey aFk,
+            int aSize,
+            int aScale,
+            int aPrecision,
+            boolean aSigned,
+            String aSchemaName,
+            int aJdbcType
+    ) {
+        super(
+                aName,
+                aDescription,
+                aOriginalName,
+                aTableName,
+                aType,
+                aNullable,
+                aPk,
+                aFk
+        );
+        size = aSize;
+        scale = aScale;
+        precision = aPrecision;
+        signed = aSigned;
+        schemaName = aSchemaName;
+        jdbcType = aJdbcType;
     }
-    
-    public JdbcColumn(String aName) {
-        super();
-        name = aName;
-    }
-    
+
     /**
      * Returns the field's schema name.
      *
@@ -29,15 +56,6 @@ public class JdbcColumn extends Field {
      */
     public String getSchemaName() {
         return schemaName;
-    }
-
-    /**
-     * Sets this field schema name.
-     *
-     * @param aValue This field schema name.
-     */
-    public void setSchemaName(String aValue) {
-        schemaName = aValue;
     }
 
     /**
@@ -50,30 +68,12 @@ public class JdbcColumn extends Field {
     }
 
     /**
-     * Sets the field size.
-     *
-     * @param aValue The field size to be set.
-     */
-    public void setSize(int aValue) {
-        size = aValue;
-    }
-
-    /**
      * Returns the field's scale.
      *
      * @return The field's scale.
      */
     public int getScale() {
         return scale;
-    }
-
-    /**
-     * Sets the field's scale.
-     *
-     * @param aValue The field's scale to be set.
-     */
-    public void setScale(int aValue) {
-        scale = aValue;
     }
 
     /**
@@ -86,15 +86,6 @@ public class JdbcColumn extends Field {
     }
 
     /**
-     * Sets the field's precision.
-     *
-     * @param aValue The field's precision.
-     */
-    public void setPrecision(int aValue) {
-        precision = aValue;
-    }
-
-    /**
      * Returns whether this field is signed.
      *
      * @return Whether this field is signed.
@@ -104,30 +95,12 @@ public class JdbcColumn extends Field {
     }
 
     /**
-     * Sets the field's signed state.
+     * Returns the field jdbc type.
      *
-     * @param aValue Field's signed flag.
-     */
-    public void setSigned(boolean aValue) {
-        signed = aValue;
-    }
-
-    /**
-     * Returns the field size.
-     *
-     * @return The field size.
+     * @return The field jdbc type.
      */
     public int getJdbcType() {
         return jdbcType;
-    }
-
-    /**
-     * Sets the field size.
-     *
-     * @param aValue The field size to be set.
-     */
-    public void setJdbcType(int aValue) {
-        jdbcType = aValue;
     }
 
     /**
@@ -139,41 +112,38 @@ public class JdbcColumn extends Field {
         if (schemaName != null && !schemaName.isEmpty()) {
             sb.append(schemaName).append(".");
         }
-        if (tableName != null && !tableName.isEmpty()) {
-            sb.append(tableName).append(".");
+        if (getTableName() != null && !getTableName().isEmpty()) {
+            sb.append(getTableName()).append(".");
         }
-        if (originalName != null && !originalName.isEmpty()) {
-            sb.append(originalName);
+        if (getOriginalName() != null && !getOriginalName().isEmpty()) {
+            sb.append(getOriginalName());
         } else {
-            sb.append(name);
+            sb.append(getName());
         }
-        if (description != null && !description.isEmpty()) {
-            sb.append(" (").append(description).append(")");
+        if (getDescription() != null && !getDescription().isEmpty()) {
+            sb.append(" (").append(getDescription()).append(")");
         }
-        if (pk) {
+        if (isPk()) {
             sb.append(", primary key");
         }
-        if (fk != null && fk.getReferee() != null) {
-            PrimaryKey rf = fk.getReferee();
+        if (getFk() != null && getFk().getReferee() != null) {
+            PrimaryKey rf = getFk().getReferee();
             sb.append(", foreign key to ");
-            if (rf.schema != null && !rf.schema.isEmpty()) {
-                sb.append(rf.schema).append(".");
+            if (rf.getSchema() != null && !rf.getSchema().isEmpty()) {
+                sb.append(rf.getSchema()).append(".");
             }
-            if (rf.table != null && !rf.table.isEmpty()) {
-                sb.append(rf.table).append(".");
+            if (rf.getTable() != null && !rf.getTable().isEmpty()) {
+                sb.append(rf.getTable()).append(".");
             }
-            sb.append(rf.field);
+            sb.append(rf.getField());
         }
-        sb.append(", ").append(type);
+        sb.append(", ").append(getType());
         sb.append(", size ").append(size).append(", precision ").append(precision).append(", scale ").append(scale);
         if (signed) {
             sb.append(", signed");
         }
-        if (nullable) {
+        if (isNullable()) {
             sb.append(", nullable");
-        }
-        if (readonly) {
-            sb.append(", readonly");
         }
         return sb.toString();
     }

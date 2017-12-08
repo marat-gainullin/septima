@@ -164,7 +164,7 @@ public class MySqlSqlDriver extends SqlDriver {
             }
 
             String fkRule = "";
-            switch (fk.getFkUpdateRule()) {
+            switch (fk.getUpdateRule()) {
                 case CASCADE:
                     fkRule += " ON UPDATE CASCADE";
                     break;
@@ -178,7 +178,7 @@ public class MySqlSqlDriver extends SqlDriver {
                     fkRule += " ON UPDATE SET NULL";
                     break;
             }
-            switch (fk.getFkDeleteRule()) {
+            switch (fk.getDeleteRule()) {
                 case CASCADE:
                     fkRule += " ON DELETE CASCADE";
                     break;

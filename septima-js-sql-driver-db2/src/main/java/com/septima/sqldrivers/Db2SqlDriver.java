@@ -293,7 +293,7 @@ public class Db2SqlDriver extends SqlDriver {
              * foreign key constraints.
              */
             String fkRule = " ON UPDATE NO ACTION";
-            switch (fk.getFkDeleteRule()) {
+            switch (fk.getDeleteRule()) {
                 case CASCADE:
                     fkRule += " ON DELETE CASCADE ";
                     break;

@@ -1,95 +1,38 @@
 package com.septima.metadata;
 
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 /**
- *
  * @author mg
  */
 public class TableKeys {
 
-    protected Map<String, PrimaryKey> pks = new HashMap<>();
-    protected Map<String, ForeignKey> fks = new HashMap<>();
-    protected String tableName;
-
-    private TableKeys(TableKeys aSource) {
-        this();
-        if (aSource != null) {
-            String otherTableName = aSource.getTableName();
-            if (otherTableName != null) {
-                tableName = new String(otherTableName.toCharArray());
-            }
-            fks.clear();
-            Map<String, ForeignKey> lfks = aSource.getFks();
-            Set<Entry<String, ForeignKey>> lfkSet = lfks.entrySet();
-            if (lfkSet != null) {
-                Iterator<Entry<String, ForeignKey>> lfkIt = lfkSet.iterator();
-                while (lfkIt.hasNext()) {
-                    Entry<String, ForeignKey> lfkEntry = lfkIt.next();
-                    String lfkFieldName = lfkEntry.getKey();
-                    ForeignKey lfkSpec = lfkEntry.getValue();
-                    fks.put(new String(lfkFieldName.toCharArray()), (ForeignKey) lfkSpec.copy());
-                }
-            }
-            pks.clear();
-            Map<String, PrimaryKey> lpks = aSource.getPks();
-            Set<Entry<String, PrimaryKey>> lpkSet = lpks.entrySet();
-            if (lpkSet != null) {
-                Iterator<Entry<String, PrimaryKey>> lpkIt = lpkSet.iterator();
-                while (lpkIt.hasNext()) {
-                    Entry<String, PrimaryKey> lpkEntry = lpkIt.next();
-                    String lpkFieldName = lpkEntry.getKey();
-                    PrimaryKey lpkSpec = lpkEntry.getValue();
-                    pks.put(new String(lpkFieldName.toCharArray()), lpkSpec.copy());
-                }
-            }
-        }
-    }
-
-    public boolean isPrimaryKey(String fieldName) {
-        return (pks != null && pks.containsKey(fieldName));
-    }
-
-    public boolean isForeignKey(String fieldName) {
-        return (fks != null && fks.containsKey(fieldName));
-    }
-
-    public TableKeys() {
-        super();
-    }
+    private final String tableName;
+    private final Map<String, PrimaryKey> pks;
+    private final Map<String, ForeignKey> fks;
 
     /**
      * Constructor with table name
+     *
      * @param aTableName Table name without any schema name.
      */
     public TableKeys(String aTableName) {
-        super();
+        this(aTableName, Map.of(), Map.of());
+    }
+
+    public TableKeys(String aTableName, Map<String, PrimaryKey> aPks, Map<String, ForeignKey> aFks) {
         tableName = aTableName;
+        pks = aPks;
+        fks = aFks;
     }
 
     /**
      * Returns table name without any schema name.
+     *
      * @return Table name without any schema name.
      */
     public String getTableName() {
         return tableName;
-    }
-
-    public void addForeignKey(String aFkSchema, String aFkTable, String aFkField, String aFkName, ForeignKey.ForeignKeyRule afkUpdateRule, ForeignKey.ForeignKeyRule afkDeleteRule, boolean afkDeferrable, String aPkSchema, String aPkTable, String aPkField, String aPkName) {
-        fks.put(aFkField, new ForeignKey(aFkSchema, aFkTable, aFkField, aFkName, afkUpdateRule, afkDeleteRule, afkDeferrable, aPkSchema, aPkTable, aPkField, aPkName));
-    }
-
-    public void addPrimaryKey(String aPkSchema, String aPkTable, String aPkField, String aPkName) {
-        pks.put(aPkField, new PrimaryKey(aPkSchema, aPkTable, aPkField, aPkName));
-    }
-
-    public void clear() {
-        fks.clear();
-        pks.clear();
     }
 
     public boolean isEmpty() {
@@ -104,11 +47,7 @@ public class TableKeys {
         return pks;
     }
 
-    public TableKeys copy() {
-        TableKeys dbTblFks = new TableKeys(this);
-        return dbTblFks;
-    }
-
+    /*
     public static boolean isKeysCompatible(TableKeys table1Keys, String field1Name, TableKeys table2Keys, String field2Name) {
         if (table1Keys != null && field1Name != null
                 && table2Keys != null && field2Name != null) {
@@ -184,4 +123,5 @@ public class TableKeys {
         }
         return false;
     }
+    */
 }

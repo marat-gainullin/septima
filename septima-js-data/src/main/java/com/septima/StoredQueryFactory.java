@@ -1,13 +1,15 @@
 package com.septima;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.TreeNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.septima.dataflow.DataProvider;
 import com.septima.metadata.Field;
+import com.septima.metadata.ForeignKey;
 import com.septima.metadata.JdbcColumn;
 import com.septima.metadata.Parameter;
 import com.septima.queries.SqlQuery;
 import com.septima.sqldrivers.resolvers.TypesResolver;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.StringReader;
@@ -19,6 +21,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.StreamSupport;
+
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.ResultsFinder;
 import net.sf.jsqlparser.SourcesFinder;
@@ -29,7 +33,6 @@ import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.*;
 
 /**
- *
  * @author mg.
  */
 public class StoredQueryFactory {
@@ -114,75 +117,227 @@ public class StoredQueryFactory {
             Logger.getLogger(this.getClass().getName()).finer(String.format(LOADING_QUERY_MSG, aEntityName));
             String filyName = aEntityName.replace(".", File.separator) + ".sql";
             File mainQueryFile = applicationPath.resolve(filyName).toFile();
-            if(mainQueryFile.exists()) {
-                if(!mainQueryFile.isDirectory()) {
+            if (mainQueryFile.exists()) {
+                if (!mainQueryFile.isDirectory()) {
                     return fileToSqlQuery(aEntityName, mainQueryFile);
                 } else {
-                    throw new IllegalStateException(filyName+"' at path: " + applicationPath + " is a directory.");
+                    throw new IllegalStateException(filyName + "' at path: " + applicationPath + " is a directory.");
                 }
             } else {
-                throw new FileNotFoundException("Can't find '"+filyName+"' from path: " + applicationPath);
+                throw new FileNotFoundException("Can't find '" + filyName + "' from path: " + applicationPath);
             }
         } else {
             throw new NullPointerException(CANT_LOAD_NULL_MSG);
         }
     }
 
-    protected SqlQuery fileToSqlQuery(String aName, File aFile) throws Exception {
+    protected SqlQuery fileToSqlQuery(String anEntityName, File aFile) throws Exception {
         String sql = new String(Files.readAllBytes(aFile.toPath()), StandardCharsets.UTF_8);
-        File jsonFile = aFile.getParentFile().toPath().resolve(aFile.getName() + ".json").toFile();
-        if(jsonFile.exists() && !jsonFile.isDirectory()){
-            String json = new String(Files.readAllBytes(jsonFile.toPath()), StandardCharsets.UTF_8);
-            JsonFactory factory = new JsonFactory();
-            JsonParser parser = factory.createParser(json);
-            TreeNode root = parser.readValueAsTree();
-            TreeNode titleNode = root.get("title");
-            if(titleNode != null && titleNode.isValueNode()){
-                String title = titleNode.asToken().asString();
-            }
-            TreeNode sqlNode = root.get("title");
-            if(sqlNode != null && sqlNode.isValueNode()){
-                String customSql = sqlNode.asToken().asString();
-            }
-            TreeNode commandNode = root.get("command");
-            if(commandNode != null && commandNode.isValueNode()){
-                boolean command = "true".equalsIgnoreCase(commandNode.asToken().asString());
-            }
-            TreeNode readonlyNode = root.get("readonly");
-            if(readonlyNode != null && readonlyNode.isValueNode()){
-                boolean readonly = "true".equalsIgnoreCase(readonlyNode.asToken().asString());
-            }
-            TreeNode parametersNode = root.get("parameters");
-            if(parametersNode != null && parametersNode.isObject()){
-            }
-        }
-        QueryDocument queryDoc = QueryDocument.parse(aName, aFile, database, subQueriesProxy);
-        QueryModel model = queryDoc.getModel();
-        SqlQuery query = queryDoc.getQuery();
-        putRolesMutatables(query);
-        List<StoredFieldMetadata> additionalFieldsMetadata = queryDoc.getAdditionalFieldsMetadata();
-        String sqlText = query.getSqlText();
-        if (sqlText != null && !sqlText.isEmpty()) {
-            if (query.getFullSqlText() != null && !query.getFullSqlText().isEmpty() && !query.getFullSqlText().replaceAll("\\s", "").isEmpty()) {
-                sqlText = query.getFullSqlText();
-            }
-            try {
-                String compiledSqlText = compileSubqueries(sqlText, model);
-                try {
-                    putParametersMetadata(query, model);
-                    if (putTableFieldsMetadata(query)) {
-                        putStoredTableFieldsMetadata(query, additionalFieldsMetadata);
-                    } else {
-                        query.setCommand(true);
-                    }
-                } finally {
-                    query.setSqlText(compiledSqlText);
+        if (!sql.isEmpty()) {
+            String title;
+            String customSql;
+            boolean command;
+            boolean procedure;
+            boolean readonly;
+            boolean publicAccess;
+            int pageSize;
+
+            Map<String, Field> fields = new LinkedHashMap<>();
+            fillFieldsFromMetadata(fields);
+            Map<String, Parameter> params = new LinkedHashMap<>();
+            Map<String, Map<String, Set<String>>> paramsBinds = new HashMap<>();
+            Set<String> writable = new HashSet<>();
+            Set<String> readRoles = new HashSet<>();
+            Set<String> writeRoles = new HashSet<>();
+
+            File jsonFile = aFile.getParentFile().toPath().resolve(aFile.getName() + ".json").toFile();
+            if (jsonFile.exists() && !jsonFile.isDirectory()) {
+                String json = new String(Files.readAllBytes(jsonFile.toPath()), StandardCharsets.UTF_8);
+                ObjectMapper jsonMapper = new ObjectMapper();
+                JsonNode entityDocument = jsonMapper.readTree(json);
+                JsonNode titleNode = entityDocument.get("title");
+                title = titleNode != null && titleNode.isTextual() ? titleNode.asText() : anEntityName;
+                JsonNode sqlNode = entityDocument.get("sql");
+                customSql = sqlNode != null && sqlNode.isTextual() ? sqlNode.asText() : null;
+                JsonNode commandNode = entityDocument.get("command");
+                command = commandNode != null && commandNode.asBoolean();
+                JsonNode procedureNode = entityDocument.get("procedure");
+                procedure = procedureNode != null && procedureNode.asBoolean();
+                JsonNode readonlyNode = entityDocument.get("readonly");
+                readonly = readonlyNode != null && readonlyNode.asBoolean();
+                JsonNode publicNode = entityDocument.get("public");
+                publicAccess = publicNode != null && publicNode.asBoolean();
+                JsonNode pageSizeNode = entityDocument.get("pageSize");
+                pageSize = pageSizeNode != null && pageSizeNode.isInt() ? pageSizeNode.asInt(DataProvider.NO_PAGING_PAGE_SIZE) : DataProvider.NO_PAGING_PAGE_SIZE;
+                JsonNode paramsNode = entityDocument.get("parameters");
+                if (paramsNode != null && paramsNode.isObject()) {
+                    StreamSupport.stream(Spliterators.spliterator(
+                            paramsNode.fields(), paramsNode.size(), 0), false)
+                            .forEachOrdered(parameterEntry -> {
+                                String parameterName = parameterEntry.getKey();
+                                Parameter parameter = params.getOrDefault(parameterName, new Parameter(parameterName));
+                                JsonNode parameterNode = parameterEntry.getValue();
+                                JsonNode typeNode = parameterNode.get("type");
+                                String type = typeNode != null && typeNode.isTextual() ? typeNode.asText(parameter.getType()) : parameter.getType();
+                                JsonNode descriptionNode = parameterNode.get("description");
+                                String description = descriptionNode != null && descriptionNode.isTextual() ? descriptionNode.asText(parameter.getDescription()) : parameter.getDescription();
+                                JsonNode defaultValueNode = parameterNode.get("value");
+                                String defaultValue = defaultValueNode != null && defaultValueNode.isTextual() ? defaultValueNode.asText() : null;
+                                params.put(parameterName, new Parameter(
+                                        parameterName,
+                                        description,
+                                        type
+                                ));
+                                // Binds
+                                JsonNode bindsNode = parameterNode.get("binds");
+                                if (bindsNode != null && bindsNode.isObject()) {
+                                    StreamSupport.stream(Spliterators.spliteratorUnknownSize(
+                                            bindsNode.fields(), 0), false)
+                                            .forEachOrdered(subQueryEntry -> {
+                                                String subQueryName = subQueryEntry.getKey();
+                                                JsonNode subQueryParamsNode = subQueryEntry.getValue();
+                                                if (subQueryParamsNode.isArray()) {
+                                                    for (int i = 0; i < subQueryParamsNode.size(); i++) {
+                                                        JsonNode subQueryParamNode = subQueryParamsNode.get(i);
+                                                        if (subQueryParamNode.isTextual()) {
+                                                            Map<String, Set<String>> paramBinds = paramsBinds.computeIfAbsent(parameterName, name -> new HashMap<>());
+                                                            Set<String> subQueryParams = paramBinds.computeIfAbsent(subQueryName, name -> new HashSet<>());
+                                                            subQueryParams.add(subQueryParamNode.asText());
+                                                        }
+                                                    }
+                                                }
+                                            });
+                                }
+                            });
                 }
-            } finally {
-                query.setTitle(aName);
+                JsonNode fieldsNode = entityDocument.get("fields");
+                StreamSupport.stream(Spliterators.spliterator(
+                        fieldsNode.fields(), fieldsNode.size(), 0), false)
+                        .forEachOrdered(fieldEntry -> {
+                            String fieldName = fieldEntry.getKey();
+                            Field field = fields.getOrDefault(fieldName, new Field(fieldName));
+                            JsonNode fieldNode = fieldEntry.getValue();
+                            JsonNode typeNode = fieldNode.get("type");
+                            String type = typeNode != null && typeNode.isTextual() ? typeNode.asText(field.getType()) : field.getType();
+                            JsonNode descriptionNode = fieldNode.get("description");
+                            String description = descriptionNode != null && descriptionNode.isTextual() ? descriptionNode.asText(field.getDescription()) : field.getDescription();
+                            JsonNode nullableNode = entityDocument.get("nullable");
+                            boolean nullable = nullableNode != null && nullableNode.isBoolean() ? nullableNode.asBoolean() : field.isNullable();
+                            JsonNode originalNameNode = fieldNode.get("originalName");
+                            String originalName = originalNameNode != null && originalNameNode.isTextual() ? originalNameNode.asText(field.getOriginalName()) : field.getOriginalName();
+                            JsonNode tableNameNode = fieldNode.get("tableName");
+                            String tableName = tableNameNode != null && tableNameNode.isTextual() ? tableNameNode.asText(field.getTableName()) : field.getTableName();
+                            JsonNode keyNode = fieldNode.get("key");
+                            boolean key = keyNode != null && keyNode.isBoolean() ? keyNode.asBoolean() : field.isPk();
+                            String referencedEntity;
+                            String referencedKey;
+                            JsonNode referenceNode = fieldNode.get("reference");
+                            if (referenceNode != null && referenceNode.isObject()) {
+                                JsonNode referencedEntityNode = referenceNode.get("entity");
+                                JsonNode referencedKeyNode = referenceNode.get("key");
+                                if (referencedEntityNode != null &&
+                                        referencedKeyNode != null &&
+                                        referencedEntityNode.isTextual() &&
+                                        referencedKeyNode.isTextual()
+                                        ) {
+                                    referencedEntity = referencedEntityNode.asText();
+                                    referencedKey = referencedKeyNode.asText();
+                                } else {
+                                    referencedEntity = null;
+                                    referencedKey = null;
+                                }
+                            } else {
+                                referencedEntity = null;
+                                referencedKey = null;
+                            }
+                            fields.put(fieldName, new Field(
+                                            fieldName,
+                                            description,
+                                            originalName,
+                                            tableName,
+                                            type,
+                                            nullable,
+                                            key,
+                                            referencedEntity != null && !referencedEntity.isEmpty() &&
+                                                    referencedKey != null && !referencedKey.isEmpty() ?
+                                                    new ForeignKey(
+                                                            null, anEntityName, fieldName, null,
+                                                            ForeignKey.ForeignKeyRule.NOACTION, ForeignKey.ForeignKeyRule.NOACTION, false,
+                                                            null, referencedEntity, referencedKey, null)
+                                                    : field.getFk()
+                                    )
+                            );
+                        });
+
+                JsonNode writableNode = entityDocument.get("writable");
+                if (writableNode != null && writableNode.isArray()) {
+                    for (int i = 0; i < writableNode.size(); i++) {
+                        JsonNode writableTableNode = writableNode.get(i);
+                        if (writableTableNode.isTextual()) {
+                            String writableTable = writableTableNode.asText();
+                            if (writableTable != null && !writableTable.isEmpty()) {
+                                writable.add(writableTable);
+                            }
+                        }
+                    }
+                }
+                JsonNode rolesNode = entityDocument.get("roles");
+                if (rolesNode != null && rolesNode.isObject()) {
+                    JsonNode readRolesNode = rolesNode.get("read");
+                    if (readRolesNode != null && readRolesNode.isArray()) {
+                        for (int i = 0; i < readRolesNode.size(); i++) {
+                            JsonNode readRoleNode = readRolesNode.get(i);
+                            if (readRoleNode.isTextual()) {
+                                String readRole = readRoleNode.asText();
+                                if (readRole != null && !readRole.isEmpty()) {
+                                    readRoles.add(readRole);
+                                }
+                            }
+                        }
+                    }
+                    JsonNode writeRolesNode = rolesNode.get("write");
+                    if (writeRolesNode != null && writeRolesNode.isArray()) {
+                        for (int i = 0; i < writeRolesNode.size(); i++) {
+                            JsonNode writeRoleNode = writeRolesNode.get(i);
+                            if (writeRoleNode.isTextual()) {
+                                String writeRole = writeRoleNode.asText();
+                                if (writeRole != null && !writeRole.isEmpty()) {
+                                    writeRoles.add(writeRole);
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                title = null;
+                customSql = null;
+                readonly = false;
+                command = false;
+                procedure = false;
+                publicAccess = false;
+                pageSize = DataProvider.NO_PAGING_PAGE_SIZE;
             }
+            String sqlWithSubQueries = inlineSubQueries(sql, paramsBinds);
+            return new SqlQuery(
+                    database,
+                    sqlWithSubQueries,
+                    customSql,
+                    anEntityName,
+                    readonly,
+                    command,
+                    procedure,
+                    publicAccess,
+                    title,
+                    pageSize,
+                    Collections.unmodifiableMap(params),
+                    Collections.unmodifiableMap(fields),
+                    Collections.unmodifiableSet(writable),
+                    Collections.unmodifiableSet(readRoles),
+                    Collections.unmodifiableSet(writeRoles)
+            );
+        } else {
+            throw new IllegalStateException(anEntityName + " has an empty sql text.");
         }
-        return query;
     }
 
     /**
@@ -201,21 +356,21 @@ public class StoredQueryFactory {
      * параметры запроса в соответствии со связями в параметры подзапросов.
      *
      * @param aSqlText
-     * @param aModel
+     * @param aBinds
      * @return Запрос без ссылок на подзапросы.
      * @throws java.lang.Exception
      */
-    public String compileSubqueries(String aSqlText, QueryModel aModel) throws Exception {
+    public String inlineSubQueries(String aSqlText, Map<String, Map<String, String>> aBinds) throws Exception {
         /**
          * Старая реализация заменяла текст всех подзапросов с одним и тем же
          * идентификатором, не обращая внимания на алиасы. Поэтому запросы
          * содержащие в себе один и тот же подзапрос несколько раз,
          * компилировались неправильно. Неправильно подставлялись и параметры.
          */
-        assert aModel != null;
-        if (aModel.getEntities() != null) {
+        assert aBinds != null;
+        if (aBinds.getEntities() != null) {
             String processedSql = aSqlText;
-            for (QueryEntity entity : aModel.getEntities().values()) {
+            for (QueryEntity entity : aBinds.getEntities().values()) {
                 assert entity != null;
                 if (entity.getQueryName() != null) {
                     String queryTablyName = entity.getQueryName();
@@ -270,99 +425,12 @@ public class StoredQueryFactory {
         return aSqlText;
     }
 
-    private void putParametersMetadata(SqlQuery aQuery, QueryModel aModel) {
-        for (int i = 1; i <= aModel.getParameters().getParametersCount(); i++) {
-            Parameter p = aModel.getParameters().get(i);
-            aQuery.getParameters().add(p);
-        }
-    }
-
-    private void putStoredTableFieldsMetadata(SqlQuery aQuery, List<StoredFieldMetadata> storedMetadata) {
-        Fields fields = aQuery.getFields();
-        if (fields != null) {
-            storedMetadata.stream().forEach((addition) -> {
-                Field queryField = fields.get(addition.getBindedColumn());
-                if (queryField != null) {
-                    if (addition.description != null && !addition.description.isEmpty()) {
-                        queryField.setDescription(addition.description);
-                    }
-                    if (addition.getType() != null && !addition.getType().equals(queryField.getType())) {
-                        queryField.setType(addition.getType());
-                    }
-                }
-            });
-        }
-    }
-
-    public static void putRolesMutatables(SqlQuery aQuery) throws Exception {
-        // Let's extract all comments
-        Set<String> comments = new HashSet<>();
-        CCJSqlParserTokenManager tokenManager = new CCJSqlParserTokenManager(new SimpleCharStream(new StringReader(aQuery.getSqlText())));
-        Token token = tokenManager.getNextToken();
-        while (token != null && token.kind != CCJSqlParserConstants.EOF) {
-            if (token.specialToken != null) {
-                comments.add(token.specialToken.toString());
-            }
-            token = tokenManager.getNextToken();
-        }
-        if (token != null && token.specialToken != null) {
-            comments.add(token.specialToken.toString());
-        }
-        boolean readonly = false;
-        for (String comment : comments) {
-            JsDoc jsDoc = new JsDoc(comment);
-            jsDoc.parseAnnotations();
-            for (JsDoc.Tag tag : jsDoc.getAnnotations()) {
-                switch (tag.getName().toLowerCase()) {
-                    case JsDoc.Tag.ROLES_ALLOWED_TAG:
-                        aQuery.getReadRoles().addAll(tag.getParams());
-                        if (aQuery.getWriteRoles().isEmpty()) {
-                            aQuery.getWriteRoles().addAll(tag.getParams());
-                        }
-                        break;
-                    case JsDoc.Tag.ROLES_ALLOWED_READ_TAG:
-                        aQuery.getReadRoles().addAll(tag.getParams());
-                        break;
-                    case JsDoc.Tag.ROLES_ALLOWED_WRITE_TAG:
-                        if (!aQuery.getWriteRoles().isEmpty()) {
-                            aQuery.getWriteRoles().clear();
-                        }
-                        aQuery.getWriteRoles().addAll(tag.getParams());
-                        break;
-                    case JsDoc.Tag.READONLY_TAG:
-                        readonly = true;
-                        break;
-                    case JsDoc.Tag.WRITABLE_TAG:
-                        Set<String> writables = new HashSet<>();
-                        if (tag.getParams() != null) {
-                            tag.getParams().stream().forEach((writable) -> {
-                                if (writable != null) {
-                                    writables.add(writable.toLowerCase());
-                                }
-                            });
-                        }
-                        aQuery.setWritable(writables);
-                        break;
-                    case JsDoc.Tag.PROCEDURE_TAG:
-                        aQuery.setProcedure(true);
-                        break;
-                    case JsDoc.Tag.PUBLIC_TAG:
-                        aQuery.setPublicAccess(true);
-                        break;
-                }
-            }
-        }
-        if (readonly) {
-            aQuery.setWritable(Collections.<String>emptySet());
-        }
-    }
-
     /**
      * @param aQuery
      * @return True if query is select query.
      * @throws Exception
      */
-    public boolean putTableFieldsMetadata(SqlQuery aQuery) throws Exception {
+    public boolean fillFieldsFromMetadata(SqlQuery aQuery) throws Exception {
         CCJSqlParserManager parserManager = new CCJSqlParserManager();
         try {
             Statement parsedQuery = parserManager.parse(new StringReader(aQuery.getSqlText()));
@@ -485,9 +553,9 @@ public class StoredQueryFactory {
      * #&lt;queryName&gt;.
      *
      * @param aDatasourceName Database identifier, the query belongs to. That
-     * database is query-inner table metadata source, but query is stored in
-     * application.
-     * @param aTablyName Table or query tably name.
+     *                        database is query-inner table metadata source, but query is stored in
+     *                        application.
+     * @param aTablyName      Table or query tably name.
      * @return Fields instance.
      * @throws Exception
      */

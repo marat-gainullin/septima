@@ -5,24 +5,23 @@ package com.septima.metadata;
  */
 public class TableIndexColumn {
 
-    protected String columnName;
-    protected boolean ascending = true;
-    protected int ordinalPosition = -1;
+    private final String columnName;
+    private final boolean ascending;
+    private final int ordinalPosition;
+
+    public TableIndexColumn(String aColumnName) {
+        this(aColumnName, true);
+    }
 
     public TableIndexColumn(String aColumnName, boolean aAscending) {
+        this(aColumnName, aAscending, -1);
+    }
+
+    public TableIndexColumn(String aColumnName, boolean aAscending, int aOrdinalPosition) {
         super();
         columnName = aColumnName;
         ascending = aAscending;
-    }
-
-    public TableIndexColumn(TableIndexColumn aSource) {
-        columnName = new String(aSource.getColumnName().toCharArray());
-        ascending = aSource.isAscending();
-        ordinalPosition = aSource.getOrdinalPosition();
-    }
-
-    public TableIndexColumn copy() {
-        return new TableIndexColumn(this);
+        ordinalPosition = aOrdinalPosition;
     }
 
     public String getColumnName() {
@@ -31,18 +30,6 @@ public class TableIndexColumn {
 
     public boolean isAscending() {
         return ascending;
-    }
-
-    public void setColumnName(String columnName) {
-        this.columnName = columnName;
-    }
-
-    public void setAscending(boolean anAscending) {
-        ascending = anAscending;
-    }
-
-    public void setOrdinalPosition(int anOrdinalPosition) {
-        ordinalPosition = anOrdinalPosition;
     }
 
     public int getOrdinalPosition() {

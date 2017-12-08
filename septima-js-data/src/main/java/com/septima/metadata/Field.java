@@ -1,5 +1,7 @@
 package com.septima.metadata;
 
+import com.septima.Constants;
+
 /**
  * This class is table field representation. It holds information about field
  * name, description, typeInfo, size and information about primary and foreign
@@ -12,24 +14,24 @@ package com.septima.metadata;
  */
 public class Field {
 
-    protected String name = "";
-    // In queries, such as select t1.f1 as f11, t2.f1 as f21 to preserve output fields' names unique,
-    // but be able to generate right update sql clauses for multiple tables.
-    protected String originalName = "";
-    protected String tableName;
-    protected String description;
-    protected String type;// Null value will be used as "unknown" type
-    protected boolean readonly;
-    protected boolean nullable = true;
-    protected boolean pk;
-    protected ForeignKey fk;
-
+    private final String name;
+    private final String description;
     /**
-     * The default constructor.
+     * In queries, such as select t1.f1 as f11, t2.f1 as f21 to preserve output fields' names unique,
+     * but be able to generate right update sql clauses for multiple tables.
      */
-    public Field() {
-        super();
-    }
+    private final String originalName;
+    private final String tableName;
+    /**
+     * Null value will be used as "unknown" type
+     */
+    private final String type;
+    /**
+     * true is the default
+     */
+    private final boolean nullable;
+    private final boolean pk;
+    private final ForeignKey fk;
 
     /**
      * Constructor with name.
@@ -37,8 +39,7 @@ public class Field {
      * @param aName Name of the created field.
      */
     public Field(String aName) {
-        this();
-        name = aName;
+        this(aName, null);
     }
 
     /**
@@ -48,41 +49,39 @@ public class Field {
      * @param aDescription Description of the created field.
      */
     public Field(String aName, String aDescription) {
-        this(aName);
-        description = aDescription;
+        this(aName, aDescription, Constants.STRING_TYPE_NAME);
     }
 
-    /**
-     * Constructor with name, description and typeInfo.
-     *
-     * @param aName        Name of the created field.
-     * @param aDescription Description of the created field.
-     * @param aType        Type name of the created field.
-     */
     public Field(String aName, String aDescription, String aType) {
-        this(aName, aDescription);
+        this(aName, aDescription, aName, null, aType, true, false, null);
+    }
+
+    public Field(
+            String aName,
+            String aDescription,
+            String aOriginalName,
+            String aTableName,
+            String aType,
+            boolean aNullable,
+            boolean aPk,
+            ForeignKey aFk
+    ) {
+        name = aName;
+        description = aDescription;
+        originalName = aOriginalName;
+        tableName = aTableName;
         type = aType;
+        nullable = aNullable;
+        pk = aPk;
+        fk = aFk;
     }
 
     public String getOriginalName() {
         return originalName;
     }
 
-    public void setOriginalName(String aValue) {
-        originalName = aValue;
-    }
-
     public String getTableName() {
         return tableName;
-    }
-
-    /**
-     * Sets table name.
-     *
-     * @param aValue The table name to be set.
-     */
-    public void setTableName(String aValue) {
-        tableName = aValue;
     }
 
     /**
@@ -106,15 +105,6 @@ public class Field {
     }
 
     /**
-     * Sets primary key state of this field.
-     *
-     * @param aValue Flag, indicating primary key state of this field.
-     */
-    public void setPk(boolean aValue) {
-        pk = aValue;
-    }
-
-    /**
      * Returns foreign key specification of this field if it references to some
      * table.
      *
@@ -123,34 +113,6 @@ public class Field {
      */
     public ForeignKey getFk() {
         return fk;
-    }
-
-    /**
-     * Sets foreign key specification to this field, making it the reference to
-     * some table.
-     *
-     * @param aValue Foreign key specification to be set to this field.
-     */
-    public void setFk(ForeignKey aValue) {
-        fk = aValue;
-    }
-
-    /**
-     * Returns if this field is readonly.
-     *
-     * @return If true this field is readonly.
-     */
-    public boolean isReadonly() {
-        return readonly;
-    }
-
-    /**
-     * Sets readonly flag to this field.
-     *
-     * @param aValue Flag to be set to this field.
-     */
-    public void setReadonly(boolean aValue) {
-        readonly = aValue;
     }
 
     /**
@@ -163,35 +125,12 @@ public class Field {
     }
 
     /**
-     * Set the name to this field.
-     *
-     * @param aValue A name to be set.
-     */
-    public void setName(String aValue) {
-        name = aValue;
-    }
-
-    private static final String DESCRIPTION_JS_DOC = ""
-            + "/**\n"
-            + " * The description of the field.\n"
-            + " */";
-
-    /**
      * Returns description of the field.
      *
      * @return Description of the field.
      */
     public String getDescription() {
         return description;
-    }
-
-    /**
-     * Set the description to this field.
-     *
-     * @param aValue A description to be set.
-     */
-    public void setDescription(String aValue) {
-        description = aValue;
     }
 
     /**
@@ -203,14 +142,6 @@ public class Field {
         return type;
     }
 
-    /**
-     * Sets the field's type description
-     *
-     * @param aValue The filed's type description
-     */
-    public void setType(String aValue) {
-        type = aValue;
-    }
 
     /*
     public Object generateValue() {
@@ -250,15 +181,6 @@ public class Field {
     }
 
     /**
-     * Sets the field's nullable state.
-     *
-     * @param aValue Field's nullable flag.
-     */
-    public void setNullable(boolean aValue) {
-        nullable = aValue;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -281,20 +203,17 @@ public class Field {
         if (fk != null && fk.getReferee() != null) {
             PrimaryKey rf = fk.getReferee();
             sb.append(", foreign key to ");
-            if (rf.schema != null && !rf.schema.isEmpty()) {
-                sb.append(rf.schema).append(".");
+            if (rf.getSchema() != null && !rf.getSchema().isEmpty()) {
+                sb.append(rf.getSchema()).append(".");
             }
-            if (rf.table != null && !rf.table.isEmpty()) {
-                sb.append(rf.table).append(".");
+            if (rf.getTable() != null && !rf.getTable().isEmpty()) {
+                sb.append(rf.getTable()).append(".");
             }
-            sb.append(rf.field);
+            sb.append(rf.getField());
         }
         sb.append(", ").append(type);
         if (nullable) {
             sb.append(", nullable");
-        }
-        if (readonly) {
-            sb.append(", readonly");
         }
         return sb.toString();
     }
