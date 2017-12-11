@@ -4,12 +4,12 @@ package com.septima.changes;
  *
  * @author mg
  */
-public class JdbcChangeValue extends ChangeValue {
+public class NamedJdbcValue extends NamedValue {
 
-    public int jdbcType;
-    public String sqlTypeName;
+    private final int jdbcType;
+    private final String sqlTypeName;
     
-    public JdbcChangeValue(String aName, Object aValue, int aJdbcType, String aSqlTypeName) {
+    public NamedJdbcValue(String aName, Object aValue, int aJdbcType, String aSqlTypeName) {
         super(aName, aValue);
         jdbcType = aJdbcType;
         sqlTypeName = aSqlTypeName;

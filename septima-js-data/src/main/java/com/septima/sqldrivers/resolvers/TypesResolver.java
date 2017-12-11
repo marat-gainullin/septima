@@ -1,7 +1,5 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.metadata.JdbcColumn;
-
 import java.util.Set;
 
 /**
@@ -12,14 +10,14 @@ import java.util.Set;
  */
 public interface TypesResolver {
 
-    public String toApplicationType(int aJdbcType, String aRDBMSType);
+    String toApplicationType(int aJdbcType, String aRDBMSType);
     
-    public Set<String> getSupportedTypes();
+    Set<String> getSupportedTypes();
     
-    public boolean isSized(String aTypeName);
+    boolean isSized(String aTypeName);
 
-    public boolean isScaled(String aTypeName);
+    boolean isScaled(String aTypeName);
     
-    public void resolveSize(JdbcColumn aField);
+    int resolveSize(String aRdbmsTypeName, int aSize);
 
 }

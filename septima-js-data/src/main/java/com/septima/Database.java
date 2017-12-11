@@ -32,7 +32,7 @@ public class Database {
     private final Consumer<Runnable> jdbcPerformer;
     private final Executor futureExecutor;
 
-    Database(DataSource aDataSource, Metadata aMetadata, SqlDriver aSqlDriver, EntitiesHost aEntitiesHost, Consumer<Runnable> aJdbcPerfomrer, Executor aFuturesExecutor) {
+    private Database(DataSource aDataSource, Metadata aMetadata, SqlDriver aSqlDriver, EntitiesHost aEntitiesHost, Consumer<Runnable> aJdbcPerfomrer, Executor aFuturesExecutor) {
         dataSource = aDataSource;
         metadata = aMetadata;
         sqlDriver = aSqlDriver;
@@ -61,16 +61,6 @@ public class Database {
         return futureExecutor;
     }
 
-    /**
-     * Factory method for JdbcDataProvider. Intended to incapsulate flow
-     * provider creation in two tier or three tier applications.
-     *
-     * @param aEntityName
-     * @param aSqlClause
-     * @param aExpectedFields
-     * @return SeptimaDataProvider created.
-     * @throws Exception
-     */
     public SeptimaDataProvider createDataProvider(String aEntityName, String aSqlClause, Map<String, Field> aExpectedFields) throws Exception {
         return new SeptimaDataProvider(metadata.getDataSourceSqlDriver(), aEntityName, dataSource, jdbcPerformer, aSqlClause, aExpectedFields);
     }
@@ -84,7 +74,7 @@ public class Database {
                     boolean autoCommit = connection.getAutoCommit();
                     connection.setAutoCommit(false);
                     try {
-                        List<StatementsGenerator.StatementsLogEntry> statements = new ArrayList<>();
+                        List<StatementsGenerator.GeneratedStatement> statements = new ArrayList<>();
                         for (Change.Applicable change : aChangeLog) {
                             StatementsGenerator generator = new StatementsGenerator(entitiesHost, metadata, sqlDriver);
                             change.accept(generator);
@@ -106,12 +96,12 @@ public class Database {
         return commiting;
     }
 
-    private static int riddleStatements(List<StatementsGenerator.StatementsLogEntry> aStatements, Connection aConnection) throws Exception {
+    private static int riddleStatements(List<StatementsGenerator.GeneratedStatement> aStatements, Connection aConnection) throws Exception {
         int rowsAffected = 0;
         if (!aStatements.isEmpty()) {
-            List<StatementsGenerator.StatementsLogEntry> errorStatements = new ArrayList<>();
+            List<StatementsGenerator.GeneratedStatement> errorStatements = new ArrayList<>();
             List<String> errors = new ArrayList<>();
-            for (StatementsGenerator.StatementsLogEntry entry : aStatements) {
+            for (StatementsGenerator.GeneratedStatement entry : aStatements) {
                 try {
                     rowsAffected += entry.apply(aConnection);
                 } catch (Exception ex) {
@@ -129,7 +119,7 @@ public class Database {
         return rowsAffected;
     }
 
-    static DataSource obtainDataSource(String aDataSourceName) throws Exception {
+    private static DataSource obtainDataSource(String aDataSourceName) throws Exception {
         if (aDataSourceName != null && !aDataSourceName.isEmpty()) {
             Context initContext = new InitialContext();
             try {

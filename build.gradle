@@ -12,7 +12,6 @@ allprojects {
 
     repositories{
         jcenter()
-        /*
         maven {
             url 'http://download.osgeo.org/webdav/geotools/'
         }
@@ -28,7 +27,6 @@ allprojects {
         maven {
             url 'http://maven.geotoolkit.org/'
         }
-        */
     }
 
     dependencies {

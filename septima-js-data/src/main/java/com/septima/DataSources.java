@@ -14,7 +14,6 @@ import java.util.logging.Logger;
 import javax.sql.DataSource;
 
 /**
- *
  * @author mg
  */
 public class DataSources {
@@ -24,13 +23,13 @@ public class DataSources {
         {
             ServiceLoader<SqlDriver> loader = ServiceLoader.load(SqlDriver.class);
             Iterator<SqlDriver> drivers = loader.iterator();
-            while (drivers.hasNext()) {
+            drivers.forEachRemaining(sqlDriver -> {
                 try {
-                    put(drivers.next(), true);
+                    put(sqlDriver, true);
                 } catch (Throwable t) {
                     Logger.getLogger(DataSources.class.getName()).log(Level.WARNING, null, t);
                 }
-            }
+            });
         }
     }.keySet();
 
@@ -45,7 +44,7 @@ public class DataSources {
                 .orElse(GENERIC_DRIVER);
     }
 
-    public static ExecutorService newJdbcTasksPerformer(final int aMaxParallelQueries){
+    public static ExecutorService newJdbcTasksPerformer(final int aMaxParallelQueries) {
         AtomicLong threadNumber = new AtomicLong();
         ThreadPoolExecutor jdbcProcessor = new ThreadPoolExecutor(aMaxParallelQueries, aMaxParallelQueries,
                 3L, TimeUnit.SECONDS,
@@ -85,7 +84,7 @@ public class DataSources {
         String dialect = dialectByConnection(aConnection);
         SqlDriver driver = getSqlDriver(dialect);
         if (driver != null) {
-            String getSchemaClause = driver.getSql4GetConnectionContext();
+            String getSchemaClause = driver.getSql4GetSchema();
             if (getSchemaClause != null) {
                 try (Statement stmt = aConnection.createStatement()) {
                     try (ResultSet rs = stmt.executeQuery(getSchemaClause)) {

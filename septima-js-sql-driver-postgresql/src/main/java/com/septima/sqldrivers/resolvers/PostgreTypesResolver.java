@@ -1,8 +1,7 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.client.metadata.JdbcField;
-import com.septima.client.sqldrivers.resolvers.TypesResolver;
-import com.septima.script.Scripts;
+import com.septima.Constants;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,102 +10,95 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
  * @author mg
  */
 public class PostgreTypesResolver implements TypesResolver {
 
-    protected static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>();
-    protected static final Set<String> jdbcTypesWithSize = new HashSet<>();
-    protected static final Set<String> jdbcTypesWithScale = new HashSet<>();
-    private static final Map<String, Integer> jdbcTypesMaxSize = new HashMap<>();
-    private static final Map<String, Integer> jdbcTypesDefaultSize = new HashMap<>();
-
-    static {
-        rdbmsTypes2ApplicationTypes.put("character varying", Scripts.STRING_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("decimal", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("boolean", Scripts.BOOLEAN_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("timestamp", Scripts.DATE_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("geometry", Scripts.GEOMETRY_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("int8", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("bigint", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("bigserial", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("oid", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("numeric", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("integer", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("int", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("int4", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("serial", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("smallint", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("int2", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("real", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("float4", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("double precision", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("float", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("float8", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("money", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("bool", Scripts.BOOLEAN_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("bit", Scripts.BOOLEAN_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("bpchar", Scripts.STRING_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("char", Scripts.STRING_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("character", Scripts.STRING_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("varchar", Scripts.STRING_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("name", Scripts.STRING_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("text", Scripts.STRING_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("date", Scripts.DATE_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("time", Scripts.DATE_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("timetz", Scripts.DATE_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("time with time zone", Scripts.DATE_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("time without time zone", Scripts.DATE_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("timestamptz", Scripts.DATE_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("timestamp with time zone", Scripts.DATE_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("timestamp without time zone", Scripts.DATE_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("bytea", null);
+    private static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
+        put("character varying", Constants.STRING_TYPE_NAME);
+        put("decimal", Constants.NUMBER_TYPE_NAME);
+        put("boolean", Constants.BOOLEAN_TYPE_NAME);
+        put("timestamp", Constants.DATE_TYPE_NAME);
+        put("geometry", Constants.GEOMETRY_TYPE_NAME);
+        put("int8", Constants.NUMBER_TYPE_NAME);
+        put("bigint", Constants.NUMBER_TYPE_NAME);
+        put("bigserial", Constants.NUMBER_TYPE_NAME);
+        put("oid", Constants.NUMBER_TYPE_NAME);
+        put("numeric", Constants.NUMBER_TYPE_NAME);
+        put("integer", Constants.NUMBER_TYPE_NAME);
+        put("int", Constants.NUMBER_TYPE_NAME);
+        put("int4", Constants.NUMBER_TYPE_NAME);
+        put("serial", Constants.NUMBER_TYPE_NAME);
+        put("smallint", Constants.NUMBER_TYPE_NAME);
+        put("int2", Constants.NUMBER_TYPE_NAME);
+        put("real", Constants.NUMBER_TYPE_NAME);
+        put("float4", Constants.NUMBER_TYPE_NAME);
+        put("double precision", Constants.NUMBER_TYPE_NAME);
+        put("float", Constants.NUMBER_TYPE_NAME);
+        put("float8", Constants.NUMBER_TYPE_NAME);
+        put("money", Constants.NUMBER_TYPE_NAME);
+        put("bool", Constants.BOOLEAN_TYPE_NAME);
+        put("bit", Constants.BOOLEAN_TYPE_NAME);
+        put("bpchar", Constants.STRING_TYPE_NAME);
+        put("char", Constants.STRING_TYPE_NAME);
+        put("character", Constants.STRING_TYPE_NAME);
+        put("varchar", Constants.STRING_TYPE_NAME);
+        put("name", Constants.STRING_TYPE_NAME);
+        put("text", Constants.STRING_TYPE_NAME);
+        put("date", Constants.DATE_TYPE_NAME);
+        put("time", Constants.DATE_TYPE_NAME);
+        put("timetz", Constants.DATE_TYPE_NAME);
+        put("time with time zone", Constants.DATE_TYPE_NAME);
+        put("time without time zone", Constants.DATE_TYPE_NAME);
+        put("timestamptz", Constants.DATE_TYPE_NAME);
+        put("timestamp with time zone", Constants.DATE_TYPE_NAME);
+        put("timestamp without time zone", Constants.DATE_TYPE_NAME);
+        put("bytea", null);
         // gis types
-        rdbmsTypes2ApplicationTypes.put("geography", Scripts.GEOMETRY_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("geometry", Scripts.GEOMETRY_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("point", Scripts.GEOMETRY_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("line", Scripts.GEOMETRY_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("lseg", Scripts.GEOMETRY_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("box", Scripts.GEOMETRY_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("path", Scripts.GEOMETRY_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("polygon", Scripts.GEOMETRY_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("circle", Scripts.GEOMETRY_TYPE_NAME);
-
-        //typeName(M,D)
-        jdbcTypesWithScale.add("decimal");
-        jdbcTypesWithScale.add("numeric");
-
-        //typeName(M)
-        jdbcTypesWithSize.add("decimal");
-        jdbcTypesWithSize.add("numeric");
-        jdbcTypesWithSize.add("bpchar");
-        jdbcTypesWithSize.add("char");
-        jdbcTypesWithSize.add("character");
-        jdbcTypesWithSize.add("varchar");
-        jdbcTypesWithSize.add("character varying");
-
-        // max sizes for types
-        jdbcTypesMaxSize.put("bpchar", 10485760);
-        jdbcTypesMaxSize.put("char", 10485760);
-        jdbcTypesMaxSize.put("character", 10485760);
-        jdbcTypesMaxSize.put("varchar", 10485760);
-        jdbcTypesMaxSize.put("character varying", 10485760);
-        jdbcTypesMaxSize.put("name", 10485760); //????
-        jdbcTypesMaxSize.put("numeric", 1000);
-        jdbcTypesMaxSize.put("decimal", 1000);
-
-        // default sizes for types ??????????????????????????????????????????????
-        jdbcTypesDefaultSize.put("bpchar", 1);
-        jdbcTypesDefaultSize.put("char", 1);
-        jdbcTypesDefaultSize.put("character", 1);
-        jdbcTypesDefaultSize.put("varchar", 200);
-        jdbcTypesDefaultSize.put("character varying", 200);
-    }
+        put("geography", Constants.GEOMETRY_TYPE_NAME);
+        put("geometry", Constants.GEOMETRY_TYPE_NAME);
+        put("point", Constants.GEOMETRY_TYPE_NAME);
+        put("line", Constants.GEOMETRY_TYPE_NAME);
+        put("lseg", Constants.GEOMETRY_TYPE_NAME);
+        put("box", Constants.GEOMETRY_TYPE_NAME);
+        put("path", Constants.GEOMETRY_TYPE_NAME);
+        put("polygon", Constants.GEOMETRY_TYPE_NAME);
+        put("circle", Constants.GEOMETRY_TYPE_NAME);
+    }};
+    private static final Set<String> jdbcTypesWithSize = new HashSet<>() {{
+        add("decimal");
+        add("numeric");
+        add("bpchar");
+        add("char");
+        add("character");
+        add("varchar");
+        add("character varying");
+    }};
+    private static final Set<String> jdbcTypesWithScale = new HashSet<>() {{
+        add("decimal");
+        add("numeric");
+    }};
+    private static final Map<String, Integer> jdbcTypesMaxSize = new HashMap<>() {{
+        put("bpchar", 10485760);
+        put("char", 10485760);
+        put("character", 10485760);
+        put("varchar", 10485760);
+        put("character varying", 10485760);
+        put("name", 10485760); //????
+        put("numeric", 1000);
+        put("decimal", 1000);
+    }};
+    private static final Map<String, Integer> jdbcTypesDefaultSize = new HashMap<>() {{
+        put("bpchar", 1);
+        put("char", 1);
+        put("character", 1);
+        put("varchar", 200);
+        put("character varying", 200);
+    }};
 
     @Override
-    public String toApplicationType(int aJdbcType, String aRDBMSType) {
-        return aRDBMSType != null ? rdbmsTypes2ApplicationTypes.get(aRDBMSType.toLowerCase()) : null;
+    public String toApplicationType(int aJdbcType, String aRdbmsTypeName) {
+        return aRdbmsTypeName != null ? rdbmsTypes2ApplicationTypes.get(aRdbmsTypeName.toLowerCase()) : null;
     }
 
     @Override
@@ -115,30 +107,29 @@ public class PostgreTypesResolver implements TypesResolver {
     }
 
     @Override
-    public boolean isSized(String aRDBMSType) {
-        return jdbcTypesWithSize.contains(aRDBMSType.toLowerCase());
+    public boolean isSized(String aRdbmsTypeName) {
+        return jdbcTypesWithSize.contains(aRdbmsTypeName.toLowerCase());
     }
 
     @Override
-    public boolean isScaled(String aRDBMSType) {
-        return jdbcTypesWithScale.contains(aRDBMSType.toLowerCase());
+    public boolean isScaled(String aRdbmsTypeName) {
+        return jdbcTypesWithScale.contains(aRdbmsTypeName.toLowerCase());
     }
 
     @Override
-    public void resolveSize(JdbcField aField) {
-        String sqlTypeName = aField.getType();
-        if (sqlTypeName != null) {
-            sqlTypeName = sqlTypeName.toLowerCase();
+    public int resolveSize(String aRdbmsTypeName, int aSize) {
+        if (aRdbmsTypeName != null) {
             // check on max size
-            int fieldSize = aField.getSize();
-            Integer maxSize = jdbcTypesMaxSize.get(sqlTypeName);
-            if (maxSize != null && maxSize < fieldSize) {
-                aField.setSize(maxSize);
+            Integer maxSize = jdbcTypesMaxSize.getOrDefault(aRdbmsTypeName.toLowerCase(), Integer.MAX_VALUE);
+            if (aSize > maxSize) {
+                return maxSize;
+            } else if (aSize <= 0 && jdbcTypesDefaultSize.containsKey(aRdbmsTypeName.toLowerCase())) {
+                return jdbcTypesDefaultSize.get(aRdbmsTypeName.toLowerCase());
+            } else {
+                return aSize;
             }
-            // check on default size
-            if (fieldSize <= 0 && jdbcTypesDefaultSize.containsKey(sqlTypeName)) {
-                aField.setSize(jdbcTypesDefaultSize.get(sqlTypeName));
-            }
+        } else {
+            return aSize;
         }
     }
 }

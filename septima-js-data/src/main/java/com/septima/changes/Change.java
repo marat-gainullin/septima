@@ -31,7 +31,6 @@ public abstract class Change {
     }
 
     private final String entityName;
-    public boolean consumed;
 
     public Change(String aEntityName) {
         super();

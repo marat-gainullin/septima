@@ -1,20 +1,15 @@
 package com.septima.changes;
 
-import com.septima.script.NoPublisherException;
-import com.septima.script.ScriptFunction;
-import com.septima.script.Scripts;
 import java.util.ArrayList;
 import java.util.List;
-import jdk.nashorn.api.scripting.JSObject;
 
 /**
- *
  * @author mg
  */
 public class Update extends Change implements Change.Applicable, Change.Transferable {
 
-    private final List<ChangeValue> keys = new ArrayList<>();
-    private final List<ChangeValue> data = new ArrayList<>();
+    private final List<NamedValue> keys = new ArrayList<>();
+    private final List<NamedValue> data = new ArrayList<>();
 
     public Update(String aEntityName) {
         super(aEntityName);
@@ -29,31 +24,12 @@ public class Update extends Change implements Change.Applicable, Change.Transfer
         aChangeVisitor.visit(this);
     }
 
-    @ScriptFunction(jsDoc = ""
-            + "/**\n"
-            + " * Keys used for indentifying data changes within a target datasource\n"
-            + " */")
-    public List<ChangeValue> getKeys() {
+    public List<NamedValue> getKeys() {
         return keys;
     }
 
-    @ScriptFunction(jsDoc = ""
-            + "/**\n"
-            + " * Data to be applied within a target datasource.\n"
-            + " */")
-    public List<ChangeValue> getData() {
+    public List<NamedValue> getData() {
         return data;
     }
 
-    @Override
-    public JSObject getPublished() {
-        if (published == null) {
-            JSObject publisher = Scripts.getSpace().getPublisher(this.getClass().getName());
-            if (publisher == null || !publisher.isFunction()) {
-                throw new NoPublisherException();
-            }
-            published = (JSObject) publisher.call(null, new Object[]{this});
-        }
-        return published;
-    }
 }

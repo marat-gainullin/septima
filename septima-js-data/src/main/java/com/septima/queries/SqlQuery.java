@@ -201,7 +201,6 @@ public class SqlQuery {
                         p.getDescription(),
                         p.getType(),
                         p.getValue(),
-                        p.getDefaultValue(),
                         p.isModified(),
                         p.getMode()
                 ));

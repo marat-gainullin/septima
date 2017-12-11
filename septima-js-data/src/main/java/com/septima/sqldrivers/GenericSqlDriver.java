@@ -1,7 +1,7 @@
 package com.septima.sqldrivers;
 
 import com.septima.Constants;
-import com.septima.changes.JdbcChangeValue;
+import com.septima.changes.NamedJdbcValue;
 import com.septima.metadata.ForeignKey;
 import com.septima.metadata.PrimaryKey;
 import com.septima.metadata.TableIndex;
@@ -41,21 +41,7 @@ public class GenericSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String getUsersSpaceInitResourceName() {
-        return null;
-    }
-
-    @Override
-    public String getVersionInitResourceName() {
-        return null;
-    }
-
-    @Override
-    public void applyContextToConnection(Connection aConnection, String aSchema) throws Exception {
-    }
-
-    @Override
-    public String getSql4GetConnectionContext() {
+    public String getSql4GetSchema() {
         return null;
     }
 
@@ -152,7 +138,7 @@ public class GenericSqlDriver extends SqlDriver {
     }
 
     @Override
-    public JdbcChangeValue convertGeometry(String aValue, Connection aConnection) throws SQLException {
+    public NamedJdbcValue convertGeometry(String aValue, Connection aConnection) throws SQLException {
         return null;
     }
 
@@ -162,18 +148,8 @@ public class GenericSqlDriver extends SqlDriver {
     }
 
     @Override
-    public TwinString[] getCharsForWrap() {
+    public Escape getEscape() {
         return null;
-    }
-
-    @Override
-    public char[] getRestrictedChars() {
-        return null;
-    }
-
-    @Override
-    public boolean isHadWrapped(String aName) {
-        return true;
     }
 
 }

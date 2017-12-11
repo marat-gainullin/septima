@@ -2,7 +2,6 @@ package com.septima.dataflow;
 
 import com.septima.Constants;
 import com.septima.metadata.Field;
-import com.septima.metadata.JdbcColumn;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -88,22 +87,20 @@ public class ResultSetReader {
     public List<Field> readFields(ResultSetMetaData jdbcFields) throws SQLException {
         List<Field> appFields = new ArrayList<>();
         for (int i = 1; i <= jdbcFields.getColumnCount(); i++) {
-            Field field = new JdbcColumn();
-            String columnLabel = jdbcFields.getColumnLabel(i);// Column label in jdbc is the name of platypus property
+            // String schemaName = jdbcFields.getSchemaName(i);
+            String alias = jdbcFields.getColumnLabel(i);// Column label in jdbc is the name of platypus property
             String columnName = jdbcFields.getColumnName(i);
-            field.setName(columnLabel != null && !columnLabel.isEmpty() ? columnLabel : columnName);
-            field.setOriginalName(columnName);
 
-            field.setNullable(jdbcFields.isNullable(i) == ResultSetMetaData.columnNullable);
-            field.setType(resolver.toApplicationType(jdbcFields.getColumnType(i), jdbcFields.getColumnTypeName(i)));
-
-            String schemaName = jdbcFields.getSchemaName(i);
-            String tableName = jdbcFields.getTableName(i);
-            if (schemaName != null && !schemaName.isEmpty()) {
-                tableName = schemaName + "." + tableName;
-            }
-            field.setTableName(tableName);
-            appFields.add(field);
+            appFields.add(new Field(
+                    alias != null && !alias.isEmpty() ? alias : columnName,
+                    null,
+                    columnName,
+                    jdbcFields.getTableName(i),
+                    resolver.toApplicationType(jdbcFields.getColumnType(i), jdbcFields.getColumnTypeName(i)),
+                    jdbcFields.isNullable(i) == ResultSetMetaData.columnNullable,
+                    false,
+                    null
+            ));
         }
         return appFields;
     }

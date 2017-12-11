@@ -1,7 +1,7 @@
 package com.septima.sqldrivers;
 
-import com.septima.client.ClientConstants;
-import com.septima.changes.JdbcChangeValue;
+import com.septima.Constants;
+import com.septima.changes.NamedJdbcValue;
 import com.septima.metadata.*;
 import com.septima.metadata.ForeignKey;
 import com.septima.sqldrivers.resolvers.MsSqlTypesResolver;
@@ -19,18 +19,11 @@ import java.util.List;
 public class MsSqlSqlDriver extends SqlDriver {
 
     // настройка экранирования наименования объектов БД
-    private static final TwinString[] charsForWrap = {new TwinString("\"", "\""), new TwinString("[", "]")};
-    private static final char[] restrictedChars = {' ', ',', '\'', '"'};
+    private static final Escape ESCAPE = new Escape("[", "]");
 
     protected static final String GET_SCHEMA_CLAUSE = "SELECT SCHEMA_NAME()";
     protected static final String CREATE_SCHEMA_CLAUSE = "CREATE SCHEMA %s";
     protected static final MsSqlTypesResolver resolver = new MsSqlTypesResolver();
-    protected static final int[] mssqlErrorCodes = {
-        826
-    };
-    protected static final String[] platypusErrorMessages = {
-        EAS_TABLE_ALREADY_EXISTS
-    };
     protected static final String ADD_COLUMN_COMMENT_CLAUSE = ""
             + "begin "
             + "begin try "
@@ -58,8 +51,13 @@ public class MsSqlSqlDriver extends SqlDriver {
     }
 
     @Override
+    public String getDialect() {
+        return Constants.MSSQL_DIALECT;
+    }
+
+    @Override
     public boolean is(String aDialect) {
-        return ClientConstants.SERVER_PROPERTY_MSSQL_DIALECT.equals(aDialect);
+        return Constants.MSSQL_DIALECT.equals(aDialect);
     }
 
     @Override
@@ -72,21 +70,12 @@ public class MsSqlSqlDriver extends SqlDriver {
     public String getSql4EmptyTableCreation(String aSchemaName, String aTableName, String aPkFieldName) {
         String fullName = makeFullName(aSchemaName, aTableName);
         return "CREATE TABLE " + fullName + " ("
-                + wrapNameIfRequired(aPkFieldName) + " NUMERIC(18, 0) NOT NULL,"
-                + "CONSTRAINT " + wrapNameIfRequired(generatePkName(aTableName, PKEY_NAME_SUFFIX)) + " PRIMARY KEY (" + wrapNameIfRequired(aPkFieldName) + " ASC))";
+                + escapeNameIfNeeded(aPkFieldName) + " NUMERIC(18, 0) NOT NULL,"
+                + "CONSTRAINT " + escapeNameIfNeeded(generatePkName(aTableName, PKEY_NAME_SUFFIX)) + " PRIMARY KEY (" + escapeNameIfNeeded(aPkFieldName) + " ASC))";
     }
 
     @Override
     public String parseException(Exception ex) {
-        if (ex != null && ex instanceof SQLException) {
-            SQLException sqlEx = (SQLException) ex;
-            int errorCode = sqlEx.getErrorCode();
-            for (int i = 0; i < mssqlErrorCodes.length; i++) {
-                if (errorCode == mssqlErrorCodes[i]) {
-                    return platypusErrorMessages[i];
-                }
-            }
-        }
         return ex != null ? ex.getLocalizedMessage() : null;
     }
 
@@ -113,7 +102,7 @@ public class MsSqlSqlDriver extends SqlDriver {
      */
     @Override
     public String getSql4FieldDefinition(JdbcColumn aField) {
-        String fieldName = wrapNameIfRequired(aField.getName());
+        String fieldName = escapeNameIfNeeded(aField.getName());
         String fieldDefinition = fieldName + " " + getFieldTypeDefinition(aField);
 
         if (!aField.isNullable()) {
@@ -127,7 +116,7 @@ public class MsSqlSqlDriver extends SqlDriver {
     @Override
     public String getSql4DropFkConstraint(String aSchemaName, ForeignKey aFk) {
         String tableName = makeFullName(aSchemaName, aFk.getTable());
-        return "ALTER TABLE " + tableName + " DROP CONSTRAINT " + wrapNameIfRequired(aFk.getCName());
+        return "ALTER TABLE " + tableName + " DROP CONSTRAINT " + escapeNameIfNeeded(aFk.getCName());
     }
 
     @Override
@@ -138,22 +127,7 @@ public class MsSqlSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String getUsersSpaceInitResourceName() {
-        return "/sqlscripts/MsSqlInitUsersSpace.sql";
-    }
-
-    @Override
-    public String getVersionInitResourceName() {
-        return "/sqlscripts/MsSqlInitVersion.sql";
-    }
-
-    @Override
-    public void applyContextToConnection(Connection aConnection, String aSchema) throws Exception {
-        //no-op
-    }
-
-    @Override
-    public String getSql4GetConnectionContext() {
+    public String getSql4GetSchema() {
         return GET_SCHEMA_CLAUSE;
     }
 
@@ -179,7 +153,7 @@ public class MsSqlSqlDriver extends SqlDriver {
         if (aDescription == null) {
             aDescription = "";
         }
-        return new String[]{String.format(ADD_COLUMN_COMMENT_CLAUSE, unwrapName(aOwnerName), unwrapName(aTableName), unwrapName(aFieldName), aDescription, unwrapName(aOwnerName), unwrapName(aTableName), unwrapName(aFieldName))};
+        return new String[]{String.format(ADD_COLUMN_COMMENT_CLAUSE, unescapeName(aOwnerName), unescapeName(aTableName), unescapeName(aFieldName), aDescription, unescapeName(aOwnerName), unescapeName(aTableName), unescapeName(aFieldName))};
     }
 
     @Override
@@ -187,7 +161,7 @@ public class MsSqlSqlDriver extends SqlDriver {
         if (aDescription == null) {
             aDescription = "";
         }
-        return String.format(ADD_TABLE_COMMENT_CLAUSE, unwrapName(aOwnerName), unwrapName(aTableName), aDescription, unwrapName(aOwnerName), unwrapName(aTableName));
+        return String.format(ADD_TABLE_COMMENT_CLAUSE, unescapeName(aOwnerName), unescapeName(aTableName), aDescription, unescapeName(aOwnerName), unescapeName(aTableName));
     }
 
     @Override
@@ -198,13 +172,13 @@ public class MsSqlSqlDriver extends SqlDriver {
     @Override
     public String getSql4DropIndex(String aSchemaName, String aTableName, String aIndexName) {
         aTableName = makeFullName(aSchemaName, aTableName);
-        return "drop index " + wrapNameIfRequired(aIndexName) + " on " + aTableName;
+        return "drop index " + escapeNameIfNeeded(aIndexName) + " on " + aTableName;
     }
 
     @Override
     public String getSql4CreateIndex(String aSchemaName, String aTableName, TableIndex aIndex) {
         assert aIndex.getColumns().size() > 0 : "index definition must consist of at least 1 column";
-        String indexName = wrapNameIfRequired(aIndex.getName());
+        String indexName = escapeNameIfNeeded(aIndex.getName());
         String tableName = makeFullName(aSchemaName, aTableName);
         String modifier = "";
         /*
@@ -215,14 +189,15 @@ public class MsSqlSqlDriver extends SqlDriver {
         }
         modifier += " nonclustered";
 
-        String fieldsList = "";
-        for (int i = 0; i < aIndex.getColumns().size(); i++) {
-            TableIndexColumn column = aIndex.getColumns().get(i);
-            fieldsList += wrapNameIfRequired(column.getColumnName()) + " asc";
-            if (i != aIndex.getColumns().size() - 1) {
-                fieldsList += ", ";
-            }
-        }
+        String fieldsList = aIndex.getColumns().stream()
+                .map(column -> new StringBuilder(escapeNameIfNeeded(column.getColumnName()))
+                        .append(" asc"))
+                .reduce((s1, s2) -> new StringBuilder()
+                        .append(s1)
+                        .append(", ")
+                        .append(s2))
+                .map(sb -> sb.toString())
+                .orElse("");
         return "create " + modifier + " index " + indexName + " on " + tableName + "( " + fieldsList + " )";
     }
 
@@ -237,7 +212,7 @@ public class MsSqlSqlDriver extends SqlDriver {
 
     @Override
     public String getSql4DropPkConstraint(String aSchemaName, PrimaryKey aPk) {
-        String constraintName = wrapNameIfRequired(aPk.getCName());
+        String constraintName = escapeNameIfNeeded(aPk.getCName());
         String tableName = makeFullName(aSchemaName, aPk.getTable());
         return "alter table " + tableName + " drop constraint " + constraintName;
     }
@@ -248,18 +223,18 @@ public class MsSqlSqlDriver extends SqlDriver {
             ForeignKey fk = listFk.get(0);
             String fkTableName = makeFullName(aSchemaName, fk.getTable());
             String fkName = fk.getCName();
-            String fkColumnName = wrapNameIfRequired(fk.getField());
+            String fkColumnName = escapeNameIfNeeded(fk.getField());
 
             PrimaryKey pk = fk.getReferee();
             String pkSchemaName = pk.getSchema();
             String pkTableName = makeFullName(aSchemaName, pk.getTable());
-            String pkColumnName = wrapNameIfRequired(pk.getField());
+            String pkColumnName = escapeNameIfNeeded(pk.getField());
 
             for (int i = 1; i < listFk.size(); i++) {
                 fk = listFk.get(i);
                 pk = fk.getReferee();
-                fkColumnName += ", " + wrapNameIfRequired(fk.getField());
-                pkColumnName += ", " + wrapNameIfRequired(pk.getField());
+                fkColumnName += ", " + escapeNameIfNeeded(fk.getField());
+                pkColumnName += ", " + escapeNameIfNeeded(pk.getField());
             }
 
             String fkRule = "";
@@ -292,7 +267,7 @@ public class MsSqlSqlDriver extends SqlDriver {
                     break;
             }
             return String.format("ALTER TABLE %s ADD CONSTRAINT %s"
-                    + " FOREIGN KEY (%s) REFERENCES %s (%s) %s", fkTableName, fkName.isEmpty() ? "" : wrapNameIfRequired(fkName), fkColumnName, pkTableName, pkColumnName, fkRule);
+                    + " FOREIGN KEY (%s) REFERENCES %s (%s) %s", fkTableName, fkName.isEmpty() ? "" : escapeNameIfNeeded(fkName), fkColumnName, pkTableName, pkColumnName, fkRule);
         }
         return null;
     }
@@ -304,11 +279,11 @@ public class MsSqlSqlDriver extends SqlDriver {
             PrimaryKey pk = listPk.get(0);
             String tableName = pk.getTable();
             String pkTableName = makeFullName(aSchemaName, tableName);
-            String pkName = wrapNameIfRequired(generatePkName(tableName, PKEY_NAME_SUFFIX));
-            String pkColumnName = wrapNameIfRequired(pk.getField());
+            String pkName = escapeNameIfNeeded(generatePkName(tableName, PKEY_NAME_SUFFIX));
+            String pkColumnName = escapeNameIfNeeded(pk.getField());
             for (int i = 1; i < listPk.size(); i++) {
                 pk = listPk.get(i);
-                pkColumnName += ", " + wrapNameIfRequired(pk.getField());
+                pkColumnName += ", " + escapeNameIfNeeded(pk.getField());
             }
             return new String[]{
                 String.format("ALTER TABLE %s ADD CONSTRAINT %s PRIMARY KEY (%s)", pkTableName, pkName, pkColumnName)
@@ -331,26 +306,12 @@ public class MsSqlSqlDriver extends SqlDriver {
     }
 
     @Override
-    public TwinString[] getCharsForWrap() {
-        return charsForWrap;
+    public Escape getEscape() {
+        return ESCAPE;
     }
 
     @Override
-    public char[] getRestrictedChars() {
-        return restrictedChars;
-    }
-
-    @Override
-    public boolean isHadWrapped(String aName) {
-        return false;
-    }
-
-    private String prepareName(String aName) {
-        return (isWrappedName(aName) ? unwrapName(aName) : aName);
-    }
-    
-    @Override
-    public JdbcChangeValue convertGeometry(String aValue, Connection aConnection) throws SQLException {
+    public NamedJdbcValue convertGeometry(String aValue, Connection aConnection) throws SQLException {
         return null;
     }
 

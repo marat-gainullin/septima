@@ -1,8 +1,7 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.metadata.JdbcColumn;
-import com.septima.script.Scripts;
-import java.util.HashMap;
+import com.septima.Constants;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -12,40 +11,38 @@ import java.util.Set;
  */
 public class GenericTypesResolver implements TypesResolver {
 
-    protected static final Map<Integer, String> jdbcTypesToApplicationTypes = new HashMap<>();
-
-    static {
-        jdbcTypesToApplicationTypes.put(java.sql.Types.VARCHAR, Scripts.STRING_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.CHAR, Scripts.STRING_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.CLOB, Scripts.STRING_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.DATALINK, Scripts.STRING_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.LONGNVARCHAR, Scripts.STRING_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.LONGVARCHAR, Scripts.STRING_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.NCHAR, Scripts.STRING_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.NCLOB, Scripts.STRING_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.NVARCHAR, Scripts.STRING_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.ROWID, Scripts.STRING_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.SQLXML, Scripts.STRING_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.BIGINT, Scripts.NUMBER_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.DECIMAL, Scripts.NUMBER_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.DOUBLE, Scripts.NUMBER_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.FLOAT, Scripts.NUMBER_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.INTEGER, Scripts.NUMBER_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.NUMERIC, Scripts.NUMBER_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.REAL, Scripts.NUMBER_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.SMALLINT, Scripts.NUMBER_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.TINYINT, Scripts.NUMBER_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.DATE, Scripts.DATE_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.TIME, Scripts.DATE_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.TIMESTAMP, Scripts.DATE_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.TIMESTAMP_WITH_TIMEZONE, Scripts.DATE_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.TIME_WITH_TIMEZONE, Scripts.DATE_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.BIT, Scripts.BOOLEAN_TYPE_NAME);
-        jdbcTypesToApplicationTypes.put(java.sql.Types.BOOLEAN, Scripts.BOOLEAN_TYPE_NAME);
-    }
+    private static final Map<Integer, String> jdbcTypesToApplicationTypes = new LinkedHashMap<>(){{
+        put(java.sql.Types.VARCHAR, Constants.STRING_TYPE_NAME);
+        put(java.sql.Types.CHAR, Constants.STRING_TYPE_NAME);
+        put(java.sql.Types.CLOB, Constants.STRING_TYPE_NAME);
+        put(java.sql.Types.DATALINK, Constants.STRING_TYPE_NAME);
+        put(java.sql.Types.LONGNVARCHAR, Constants.STRING_TYPE_NAME);
+        put(java.sql.Types.LONGVARCHAR, Constants.STRING_TYPE_NAME);
+        put(java.sql.Types.NCHAR, Constants.STRING_TYPE_NAME);
+        put(java.sql.Types.NCLOB, Constants.STRING_TYPE_NAME);
+        put(java.sql.Types.NVARCHAR, Constants.STRING_TYPE_NAME);
+        put(java.sql.Types.ROWID, Constants.STRING_TYPE_NAME);
+        put(java.sql.Types.SQLXML, Constants.STRING_TYPE_NAME);
+        put(java.sql.Types.BIGINT, Constants.NUMBER_TYPE_NAME);
+        put(java.sql.Types.DECIMAL, Constants.NUMBER_TYPE_NAME);
+        put(java.sql.Types.DOUBLE, Constants.NUMBER_TYPE_NAME);
+        put(java.sql.Types.FLOAT, Constants.NUMBER_TYPE_NAME);
+        put(java.sql.Types.INTEGER, Constants.NUMBER_TYPE_NAME);
+        put(java.sql.Types.NUMERIC, Constants.NUMBER_TYPE_NAME);
+        put(java.sql.Types.REAL, Constants.NUMBER_TYPE_NAME);
+        put(java.sql.Types.SMALLINT, Constants.NUMBER_TYPE_NAME);
+        put(java.sql.Types.TINYINT, Constants.NUMBER_TYPE_NAME);
+        put(java.sql.Types.DATE, Constants.DATE_TYPE_NAME);
+        put(java.sql.Types.TIME, Constants.DATE_TYPE_NAME);
+        put(java.sql.Types.TIMESTAMP, Constants.DATE_TYPE_NAME);
+        put(java.sql.Types.TIMESTAMP_WITH_TIMEZONE, Constants.DATE_TYPE_NAME);
+        put(java.sql.Types.TIME_WITH_TIMEZONE, Constants.DATE_TYPE_NAME);
+        put(java.sql.Types.BIT, Constants.BOOLEAN_TYPE_NAME);
+        put(java.sql.Types.BOOLEAN, Constants.BOOLEAN_TYPE_NAME);
+    }};
 
     @Override
-    public String toApplicationType(int aJdbcType, String aRDBMSType) {
+    public String toApplicationType(int aJdbcType, String aRdbmsTypeName) {
         return jdbcTypesToApplicationTypes.get(aJdbcType);
     }
 
@@ -55,17 +52,18 @@ public class GenericTypesResolver implements TypesResolver {
     }
 
     @Override
-    public boolean isSized(String aTypeName) {
+    public boolean isSized(String aRdbmsTypeName) {
         return false;
     }
 
     @Override
-    public boolean isScaled(String aTypeName) {
+    public boolean isScaled(String aRdbmsTypeName) {
         return false;
     }
 
     @Override
-    public void resolveSize(JdbcColumn aField) {
+    public int resolveSize(String aRdbmsTypeName, int aSize) {
+        return aSize;
     }
 
 }

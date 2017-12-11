@@ -1,18 +1,15 @@
 package com.septima.sqldrivers;
 
-import com.septima.client.ClientConstants;
-import com.septima.changes.JdbcChangeValue;
+import com.septima.Constants;
+import com.septima.changes.NamedJdbcValue;
 import com.septima.metadata.*;
 import com.septima.metadata.ForeignKey;
 import com.septima.sqldrivers.resolvers.MySqlTypesResolver;
 import com.septima.sqldrivers.resolvers.TypesResolver;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Wrapper;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -23,8 +20,7 @@ import java.util.Set;
 public class MySqlSqlDriver extends SqlDriver {
 
     // настройка экранирования наименования объектов БД
-    private static final TwinString[] charsForWrap = {new TwinString("`", "`")};
-    private static final char[] restrictedChars = {' ', ',', '\'', '"'};
+    private static final Escape ESCAPE = new Escape("`", "`");
 
     protected static final int[] mySqlErrorCodes = {};
     protected static final String[] platypusErrorMessages = {};
@@ -32,14 +28,34 @@ public class MySqlSqlDriver extends SqlDriver {
     protected static final String SET_SCHEMA_CLAUSE = "USE %s";
     protected static final String GET_SCHEMA_CLAUSE = "SELECT DATABASE()";
     protected static final String CREATE_SCHEMA_CLAUSE = "CREATE DATABASE %s ENGINE=InnoDB";
+    private static final Set<String> numericTypes = Set.of(
+            "TINYINT",
+            "SMALLINT",
+            "MEDIUMINT",
+            "INT",
+            "INTEGER",
+            "BIGINT",
+            "FLOAT",
+            "DOUBLE",
+            "DOUBLE PRECISION",
+            "REAL",
+            "DECIMAL",
+            "DEC",
+            "NUMERIC"
+    );
 
     public MySqlSqlDriver() {
         super();
     }
 
     @Override
+    public String getDialect() {
+        return Constants.MYSQL_DIALECT;
+    }
+
+    @Override
     public boolean is(String aDialect) {
-        return ClientConstants.SERVER_PROPERTY_MYSQL_DIALECT.equals(aDialect);
+        return Constants.MYSQL_DIALECT.equals(aDialect);
     }
 
     @Override
@@ -48,18 +64,8 @@ public class MySqlSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String getUsersSpaceInitResourceName() {
-        return "/sqlscripts/MySqlInitUsersSpace.sql";
-    }
-
-    @Override
-    public String getVersionInitResourceName() {
-        return "/sqlscripts/MySqlInitVersion.sql";
-    }
-
-    @Override
     public String[] getSql4CreateColumnComment(String aOwnerName, String aTableName, String aFieldName, String aDescription) {
-        String schemaClause = ((aOwnerName != null && !aOwnerName.trim().isEmpty()) ? wrapNameIfRequired(aOwnerName) + "." : "");
+        String schemaClause = ((aOwnerName != null && !aOwnerName.trim().isEmpty()) ? escapeNameIfNeeded(aOwnerName) + "." : "");
         if (aDescription == null) {
             aDescription = "";
         }
@@ -104,7 +110,7 @@ public class MySqlSqlDriver extends SqlDriver {
                 + "   SET res = CONCAT(@select_stm,';',@stm); "
                 + "END";
         String sql2 = "CALL " + schemaClause + "setColumnComment('"
-                + unwrapName(aOwnerName) + "','" + unwrapName(aTableName) + "','" + unwrapName(aFieldName) + "','" + aDescription + "',@a)";
+                + unescapeName(aOwnerName) + "','" + unescapeName(aTableName) + "','" + unescapeName(aFieldName) + "','" + aDescription + "',@a)";
         String sql3 = "DROP PROCEDURE " + schemaClause + "setColumnComment";
         return new String[]{sql0, sql1, sql2, sql3};
     }
@@ -125,7 +131,7 @@ public class MySqlSqlDriver extends SqlDriver {
 
     @Override
     public String getSql4DropIndex(String aSchemaName, String aTableName, String aIndexName) {
-        return String.format("DROP INDEX %s ON %s", wrapNameIfRequired(aIndexName), makeFullName(aSchemaName, aTableName));
+        return String.format("DROP INDEX %s ON %s", escapeNameIfNeeded(aIndexName), makeFullName(aSchemaName, aTableName));
     }
 
     @Override
@@ -133,7 +139,7 @@ public class MySqlSqlDriver extends SqlDriver {
 
         String fkTableName = makeFullName(aSchemaName, aFk.getTable());
         String fkName = aFk.getCName();
-        return String.format("ALTER TABLE %s DROP FOREIGN KEY %s", fkTableName, wrapNameIfRequired(fkName));
+        return String.format("ALTER TABLE %s DROP FOREIGN KEY %s", fkTableName, escapeNameIfNeeded(fkName));
     }
 
     @Override
@@ -149,18 +155,18 @@ public class MySqlSqlDriver extends SqlDriver {
             ForeignKey fk = listFk.get(0);
             String fkTableName = makeFullName(aSchemaName, fk.getTable());
             String fkName = fk.getCName();
-            String fkColumnName = wrapNameIfRequired(fk.getField());
+            String fkColumnName = escapeNameIfNeeded(fk.getField());
 
             PrimaryKey pk = fk.getReferee();
             String pkSchemaName = pk.getSchema();
             String pkTableName = makeFullName(aSchemaName, pk.getTable());
-            String pkColumnName = wrapNameIfRequired(pk.getField());
+            String pkColumnName = escapeNameIfNeeded(pk.getField());
 
             for (int i = 1; i < listFk.size(); i++) {
                 fk = listFk.get(i);
                 pk = fk.getReferee();
-                fkColumnName += ", " + wrapNameIfRequired(fk.getField());
-                pkColumnName += ", " + wrapNameIfRequired(pk.getField());
+                fkColumnName += ", " + escapeNameIfNeeded(fk.getField());
+                pkColumnName += ", " + escapeNameIfNeeded(pk.getField());
             }
 
             String fkRule = "";
@@ -193,7 +199,7 @@ public class MySqlSqlDriver extends SqlDriver {
                     break;
             }
             return String.format("ALTER TABLE %s ADD CONSTRAINT %s"
-                    + " FOREIGN KEY (%s) REFERENCES %s (%s) %s", fkTableName, fkName.isEmpty() ? "" : wrapNameIfRequired(fkName), fkColumnName, pkTableName, pkColumnName, fkRule);
+                    + " FOREIGN KEY (%s) REFERENCES %s (%s) %s", fkTableName, fkName.isEmpty() ? "" : escapeNameIfNeeded(fkName), fkColumnName, pkTableName, pkColumnName, fkRule);
 
         }
         return null;
@@ -204,19 +210,17 @@ public class MySqlSqlDriver extends SqlDriver {
         assert aIndex.getColumns().size() > 0 : "index definition must consist of at least 1 column";
 
         String tableName = makeFullName(aSchemaName, aTableName);
-        String fieldsList = "";
-        for (int i = 0; i < aIndex.getColumns().size(); i++) {
-            TableIndexColumn column = aIndex.getColumns().get(i);
-            fieldsList += wrapNameIfRequired(column.getColumnName());
-            if (!column.isAscending()) {
-                fieldsList += " DESC";
-            }
-            if (i != aIndex.getColumns().size() - 1) {
-                fieldsList += ", ";
-            }
-        }
+        String fieldsList = aIndex.getColumns().stream()
+                .map(column -> new StringBuilder(escapeNameIfNeeded(column.getColumnName()))
+                        .append(!column.isAscending() ? " DESC" : ""))
+                .reduce((s1, s2) -> new StringBuilder()
+                        .append(s1)
+                        .append(", ")
+                        .append(s2))
+                .map(sb -> sb.toString())
+                .orElse("");
         return "CREATE " + (aIndex.isUnique() ? "UNIQUE " : "")
-                + "INDEX " + wrapNameIfRequired(aIndex.getName()) + (aIndex.isHashed() ? " USING HASH " : " ")
+                + "INDEX " + escapeNameIfNeeded(aIndex.getName()) + (aIndex.isHashed() ? " USING HASH " : " ")
                 + "ON " + tableName + " (" + fieldsList + ")";
     }
 
@@ -224,7 +228,7 @@ public class MySqlSqlDriver extends SqlDriver {
     public String getSql4EmptyTableCreation(String aSchemaName, String aTableName, String aPkFieldName) {
         String fullName = makeFullName(aSchemaName, aTableName);
         return String.format("CREATE TABLE %s (%s DECIMAL(18,0) NOT NULL,"
-                + "CONSTRAINT PRIMARY KEY (%s)) ENGINE=InnoDB", fullName, wrapNameIfRequired(aPkFieldName), wrapNameIfRequired(aPkFieldName));
+                + "CONSTRAINT PRIMARY KEY (%s)) ENGINE=InnoDB", fullName, escapeNameIfNeeded(aPkFieldName), escapeNameIfNeeded(aPkFieldName));
     }
 
     @Override
@@ -262,7 +266,7 @@ public class MySqlSqlDriver extends SqlDriver {
 
     @Override
     public String getSql4FieldDefinition(JdbcColumn aField) {
-        String fieldDefinition = wrapNameIfRequired(aField.getName()) + " " + getFieldTypeDefinition(aField);
+        String fieldDefinition = escapeNameIfNeeded(aField.getName()) + " " + getFieldTypeDefinition(aField);
         if (!aField.isSigned() && isNumeric(aField.getType())) {
             fieldDefinition += " UNSIGNED";
         }
@@ -282,7 +286,7 @@ public class MySqlSqlDriver extends SqlDriver {
     @Override
     public String[] getSqls4RenamingField(String aSchemaName, String aTableName, String aOldFieldName, JdbcColumn aNewFieldMd) {
         String fullTableName = makeFullName(aSchemaName, aTableName);
-        return new String[]{String.format("ALTER TABLE %s CHANGE %s %s", fullTableName, wrapNameIfRequired(aOldFieldName), getSql4FieldDefinition(aNewFieldMd))};
+        return new String[]{String.format("ALTER TABLE %s CHANGE %s %s", fullTableName, escapeNameIfNeeded(aOldFieldName), getSql4FieldDefinition(aNewFieldMd))};
     }
 
     @Override
@@ -294,17 +298,8 @@ public class MySqlSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String getSql4GetConnectionContext() {
+    public String getSql4GetSchema() {
         return GET_SCHEMA_CLAUSE;
-    }
-
-    @Override
-    public void applyContextToConnection(Connection aConnection, String aSchema) throws Exception {
-        if (aSchema != null && !aSchema.isEmpty()) {
-            try (Statement stmt = aConnection.createStatement()) {
-                stmt.execute(String.format(SET_SCHEMA_CLAUSE, wrapNameIfRequired(aSchema)));
-            }
-        }
     }
 
     @Override
@@ -314,11 +309,11 @@ public class MySqlSqlDriver extends SqlDriver {
             PrimaryKey pk = listPk.get(0);
             String tableName = pk.getTable();
             String pkTableName = makeFullName(aSchemaName, tableName);
-            String pkName = wrapNameIfRequired(generatePkName(tableName, PKEY_NAME_SUFFIX));
-            String pkColumnName = wrapNameIfRequired(pk.getField());
+            String pkName = escapeNameIfNeeded(generatePkName(tableName, PKEY_NAME_SUFFIX));
+            String pkColumnName = escapeNameIfNeeded(pk.getField());
             for (int i = 1; i < listPk.size(); i++) {
                 pk = listPk.get(i);
-                pkColumnName += ", " + wrapNameIfRequired(pk.getField());
+                pkColumnName += ", " + escapeNameIfNeeded(pk.getField());
             }
             return new String[]{
                 String.format("ALTER TABLE %s ADD CONSTRAINT %s PRIMARY KEY (%s)", pkTableName, pkName, pkColumnName)
@@ -347,46 +342,16 @@ public class MySqlSqlDriver extends SqlDriver {
     }
 
     @Override
-    public TwinString[] getCharsForWrap() {
-        return charsForWrap;
+    public Escape getEscape() {
+        return ESCAPE;
     }
-
-    @Override
-    public char[] getRestrictedChars() {
-        return restrictedChars;
-    }
-
-    @Override
-    public boolean isHadWrapped(String aName) {
-        return false;
-    }
-
-    private String prepareName(String aName) {
-        return (isWrappedName(aName) ? unwrapName(aName) : aName);
-    }
-
-    private static final Set<String> numericTypes = new HashSet<>(Arrays.asList(new String[]{
-        "TINYINT",
-        "SMALLINT",
-        "MEDIUMINT",
-        "INT",
-        "INTEGER",
-        "BIGINT",
-        "FLOAT",
-        "DOUBLE",
-        "DOUBLE PRECISION",
-        "REAL",
-        "DECIMAL",
-        "DEC",
-        "NUMERIC"
-    }));
 
     private static boolean isNumeric(String aType) {
         return numericTypes.contains(aType.toUpperCase());
     }
 
     @Override
-    public JdbcChangeValue convertGeometry(String aValue, Connection aConnection) throws SQLException {
+    public NamedJdbcValue convertGeometry(String aValue, Connection aConnection) throws SQLException {
         return null;
     }
 

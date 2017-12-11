@@ -1,7 +1,6 @@
 package com.septima.sqldrivers;
 
-import com.septima.Constants;
-import com.septima.changes.JdbcChangeValue;
+import com.septima.changes.NamedJdbcValue;
 import com.septima.dataflow.StatementsGenerator;
 import com.septima.metadata.PrimaryKey;
 import com.septima.metadata.TableIndex;
@@ -9,31 +8,24 @@ import com.septima.metadata.JdbcColumn;
 import com.septima.metadata.ForeignKey;
 import com.septima.sqldrivers.resolvers.TypesResolver;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Wrapper;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * @author mg
  */
 public abstract class SqlDriver implements StatementsGenerator.GeometryConverter {
 
-    protected static class TwinString {
+    protected static class Escape {
 
         private final String left;
         private final String right;
 
-        public TwinString(String aLeft, String aRight) {
+        Escape(String aLeft, String aRight) {
             left = aLeft;
             right = aRight;
         }
@@ -47,12 +39,10 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
         }
     }
 
-    // misc
-    protected static final String EAS_SQL_SCRIPT_DELIMITER = "#GO";
-    public static final String DROP_FIELD_SQL_PREFIX = "alter table %s drop column ";
-    public static final String ADD_FIELD_SQL_PREFIX = "alter table %s add ";
+    static final String DROP_FIELD_SQL_PREFIX = "alter table %s drop column ";
+    static final String ADD_FIELD_SQL_PREFIX = "alter table %s add ";
 
-    public static final String PKEY_NAME_SUFFIX = "_pk";
+    static final String PKEY_NAME_SUFFIX = "_pk";
 
     public SqlDriver() {
         super();
@@ -77,46 +67,7 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
      */
     public abstract TypesResolver getTypesResolver();
 
-    /**
-     * Gets in database users space initial script location and file name.
-     *
-     * @return
-     */
-    public abstract String getUsersSpaceInitResourceName();
-
-    /**
-     * Gets database versioning initial script location and file name.
-     *
-     * @return
-     */
-    public abstract String getVersionInitResourceName();
-
-    /**
-     * *
-     * Sets current schema for current session.
-     *
-     * @param aConnection JDBC connection
-     * @param aSchema     Schema name
-     * @throws Exception in the case of operation failure
-     */
-    public abstract void applyContextToConnection(Connection aConnection, String aSchema) throws Exception;
-
-    /**
-     * Gets current schema for connection
-     *
-     * @param aConnection JDBC connection
-     * @return Schema name
-     * @throws Exception in the case of operation failure
-     */
-    public String getConnectionContext(Connection aConnection) throws Exception {
-        try (PreparedStatement stmt = aConnection.prepareStatement(getSql4GetConnectionContext())) {
-            ResultSet rs = stmt.executeQuery();
-            rs.next();
-            return rs.getString(1);
-        }
-    }
-
-    public abstract String getSql4GetConnectionContext();
+    public abstract String getSql4GetSchema();
 
     /**
      * Returns sql text for create new schema.
@@ -287,12 +238,12 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
      * @return Sql string generted.
      */
     public String[] getSql4DroppingField(String aSchemaName, String aTableName, String aFieldName) {
-        String fullTableName = wrapNameIfRequired(aTableName);
+        String fullTableName = escapeNameIfNeeded(aTableName);
         if (aSchemaName != null && !aSchemaName.isEmpty()) {
-            fullTableName = wrapNameIfRequired(aSchemaName) + "." + fullTableName;
+            fullTableName = escapeNameIfNeeded(aSchemaName) + "." + fullTableName;
         }
         return new String[]{
-                String.format(DROP_FIELD_SQL_PREFIX, fullTableName) + wrapNameIfRequired(aFieldName)
+                String.format(DROP_FIELD_SQL_PREFIX, fullTableName) + escapeNameIfNeeded(aFieldName)
         };
     }
 
@@ -323,46 +274,10 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
      */
     public abstract String[] getSqls4RenamingField(String aSchemaName, String aTableName, String aOldFieldName, JdbcColumn aNewFieldMd);
 
-    public static void applyScript(String scriptText, Connection aConnection) throws Exception {
-        String[] commandsTexts = scriptText.split(EAS_SQL_SCRIPT_DELIMITER);
-        if (commandsTexts != null) {
-            boolean autoCommit = aConnection.getAutoCommit();
-            try {
-                aConnection.setAutoCommit(false);
-                try (Statement stmt = aConnection.createStatement()) {
-                    for (String commandText : commandsTexts) {
-                        String queryText = commandText;
-                        queryText = queryText.replace('\r', ' ');
-                        queryText = queryText.replace('\n', ' ');
-                        if (!queryText.isEmpty()) {
-                            try {
-                                stmt.execute(queryText);
-                                aConnection.commit();
-                            } catch (Exception ex) {
-                                aConnection.rollback();
-                                Logger.getLogger(SqlDriver.class.getName()).log(Level.WARNING, "Error applying SQL script. {0}", ex.getMessage());
-                            }
-                        }
-                    }
-                }
-            } finally {
-                aConnection.setAutoCommit(autoCommit);
-            }
-        }
-    }
-
-    protected String readScriptResource(String resName) throws IOException {
-        try (InputStream is = SqlDriver.class.getResourceAsStream(resName)) {
-            byte[] data = new byte[is.available()];
-            is.read(data);
-            return new String(data, StandardCharsets.UTF_8);
-        }
-    }
-
     public String makeFullName(String aSchemaName, String aName) {
-        String name = wrapNameIfRequired(aName);
+        String name = escapeNameIfNeeded(aName);
         if (aSchemaName != null && !aSchemaName.isEmpty()) {
-            name = wrapNameIfRequired(aSchemaName) + "." + name;
+            name = escapeNameIfNeeded(aSchemaName) + "." + name;
         }
         return name;
     }
@@ -378,17 +293,13 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
     }
 
     @Override
-    public abstract JdbcChangeValue convertGeometry(String aValue, Connection aConnection) throws SQLException;
+    public abstract NamedJdbcValue convertGeometry(String aValue, Connection aConnection) throws SQLException;
 
     public abstract String readGeometry(Wrapper aRs, int aColumnIndex, Connection aConnection) throws SQLException;
 
-    abstract public TwinString[] getCharsForWrap();
+    abstract public Escape getEscape();
 
-    abstract public char[] getRestrictedChars();
-
-    abstract public boolean isHadWrapped(String aName);
-
-    protected boolean isHaveLowerCase(String aValue) {
+    protected boolean hasLowerCase(String aValue) {
         if (aValue != null) {
             for (char c : aValue.toCharArray()) {
                 if (Character.isLowerCase(c)) {
@@ -399,7 +310,7 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
         return false;
     }
 
-    protected boolean isHaveUpperCase(String aValue) {
+    protected boolean hasUpperCase(String aValue) {
         if (aValue != null) {
             for (char c : aValue.toCharArray()) {
                 if (Character.isUpperCase(c)) {
@@ -416,16 +327,16 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
      * @param aName Name to wrap
      * @return Wrapped text
      */
-    public String wrapNameIfRequired(String aName) {
-        return wrapName(aName, isRequiredWrap(aName));
+    public String escapeNameIfNeeded(String aName) {
+        return wrapName(aName, isEscapeNeeded(aName));
     }
 
     public String wrapName(String aName, boolean requiredOnly) {
-        if (aName != null && !aName.isEmpty() && !isWrappedName(aName) && requiredOnly) {
-            TwinString[] twinsWrap = getCharsForWrap();
-            if (twinsWrap != null && twinsWrap.length > 0) {
-                String wrapL = twinsWrap[0].getLeft();
-                String wrapR = twinsWrap[0].getRight();
+        if (aName != null && !aName.isEmpty() && !isNameWrapped(aName) && requiredOnly) {
+            Escape escape = getEscape();
+            if (escape != null) {
+                String wrapL = escape.getLeft();
+                String wrapR = escape.getRight();
                 StringBuilder sb = new StringBuilder();
                 sb.append(wrapL);
                 if (wrapL.length() == 1) {
@@ -444,7 +355,7 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
         return aName;
     }
 
-    public String unwrapName(String aName) {
+    public String unescapeName(String aName) {
         int wrapLength = getWrapLength(aName);
         if (wrapLength > 0) {
             int length = aName.length();
@@ -460,40 +371,26 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
 
     public abstract boolean is(String aDialect);
 
-    public boolean isWrappedName(String aName) {
+    public boolean isNameWrapped(String aName) {
         return getWrapLength(aName) > 0;
     }
 
     public int getWrapLength(String aName) {
         if (aName != null && !aName.isEmpty()) {
-            TwinString[] twins = getCharsForWrap();
-
-            if (twins != null) {
-                for (TwinString twin : twins) {
-                    String left = twin.getLeft();
-                    String right = twin.getRight();
-                    if (aName.startsWith(left) && aName.endsWith(right)) {
-                        return left.length();
-                    }
+            Escape escape = getEscape();
+            if (escape != null) {
+                String left = escape.getLeft();
+                String right = escape.getRight();
+                if (aName.startsWith(left) && aName.endsWith(right)) {
+                    return left.length();
                 }
             }
         }
         return 0;
     }
 
-    public boolean isRequiredWrap(String aName) {
-        if (aName != null && !aName.isEmpty()) {
-            char[] restricted = getRestrictedChars();
-            assert restricted != null;
-            for (char c : aName.toCharArray()) {
-                for (char rC : restricted) {
-                    if (c == rC) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
+    public boolean isEscapeNeeded(String aName) {
+        return !Pattern.matches("^[_a-zA-Z][_a-zA-Z0-9]*", aName);
     }
 
     public String generatePkName(String aTableName, String aSuffix) {

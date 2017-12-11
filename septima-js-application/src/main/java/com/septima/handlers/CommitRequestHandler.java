@@ -46,14 +46,14 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
             space = aSpace;
         }
 
-        protected List<ChangeValue> parseObjectProperties(Object oData) throws Exception {
-            List<ChangeValue> data = new ArrayList<>();
+        protected List<NamedValue> parseObjectProperties(Object oData) throws Exception {
+            List<NamedValue> data = new ArrayList<>();
             if (oData instanceof JSObject) {
                 JSObject sValue = (JSObject) oData;
                 sValue.keySet().stream().forEach((sValueName) -> {
                     Object oValueValue = sValue.getMember(sValueName);
                     Object convertedValueValue = space.toJava(oValueValue);
-                    data.add(new ChangeValue(sValueName, convertedValueValue));
+                    data.add(new NamedValue(sValueName, convertedValueValue));
                 });
             }
             return data;
@@ -82,7 +82,7 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
         @Override
         public void visit(CommandRequest aRequest) throws Exception {
             Object oParameters = sChange.getMember(CHANGE_PARAMETERS_NAME);
-            List<ChangeValue> values = parseObjectProperties(oParameters);
+            List<NamedValue> values = parseObjectProperties(oParameters);
             values.stream().forEach(cv -> aRequest.getParameters().put(cv.name, cv));
         }
 

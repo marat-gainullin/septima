@@ -15,7 +15,7 @@ public class Command extends Change implements Change.Applicable {
     /**
      * Compiled and not unique collection of parameters.
      */
-    private final List<ChangeValue> parameters = new ArrayList<>();
+    private final List<NamedValue> parameters = new ArrayList<>();
 
     public Command(String aEntityName) {
         this(aEntityName, null);
@@ -35,7 +35,7 @@ public class Command extends Change implements Change.Applicable {
         aChangeVisitor.visit(this);
     }
 
-    public List<ChangeValue> getParameters() {
+    public List<NamedValue> getParameters() {
         return parameters;
     }
 

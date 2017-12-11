@@ -3,7 +3,7 @@ package com.septima.queries;
 import com.septima.Database;
 import com.septima.SeptimaDataProvider;
 import com.septima.changes.Command;
-import com.septima.changes.ChangeValue;
+import com.septima.changes.NamedValue;
 import com.septima.dataflow.DataProvider;
 import com.septima.dataflow.JdbcDataProvider;
 import com.septima.metadata.Field;
@@ -94,12 +94,12 @@ public class SqlCompiledQuery {
         Command command = new Command(entityName, sqlClause);
         for (int i = 0; i < parameters.size(); i++) {
             Parameter param = parameters.get(i);
-            command.getParameters().add(new ChangeValue(param.getName(), param.getValue()));
+            command.getParameters().add(new NamedValue(param.getName(), param.getValue()));
         }
         return command;
     }
 
-    public Command prepareCommand(Map<String, ChangeValue> aParameters) {
+    public Command prepareCommand(Map<String, NamedValue> aParameters) {
         Command command = new Command(entityName, sqlClause);
         for (int i = 0; i < parameters.size(); i++) {
             Parameter param = parameters.get(i);

@@ -4,13 +4,9 @@
  */
 package com.septima.http;
 
+import com.septima.changes.*;
 import com.septima.indexer.ScriptDocuments;
-import com.septima.changes.Change;
-import com.septima.changes.ChangeValue;
-import com.septima.changes.Command;
-import com.septima.changes.Delete;
-import com.septima.changes.Insert;
-import com.septima.changes.Update;
+import com.septima.changes.NamedValue;
 import com.septima.client.scripts.ScriptedResource;
 import com.septima.handlers.ChangesJSONReader;
 import com.septima.script.Scripts;
@@ -123,17 +119,17 @@ public class RequestReaderTest {
         System.out.println("changesJsonReadTest");
         List<Change> changes = ChangesJSONReader.read(WRITTEN_CHANGES, Scripts.getSpace());
 
-        ChangeValue key1 = new ChangeValue("key1", 78.9000015258789D);
-        ChangeValue key2 = new ChangeValue("key2", "key2Value");
-        ChangeValue[] keys = new ChangeValue[]{key1, key2};
+        NamedValue key1 = new NamedValue("key1", 78.9000015258789D);
+        NamedValue key2 = new NamedValue("key2", "key2Value");
+        NamedValue[] keys = new NamedValue[]{key1, key2};
 
         Date date = new Date(1346067735514L);
-        ChangeValue data1 = new ChangeValue("data\"\"1", 56);
-        ChangeValue data2 = new ChangeValue("data2", "data2Value");
-        ChangeValue data3 = new ChangeValue("da\"ta3", true);
-        ChangeValue data4 = new ChangeValue("data4", false);
-        ChangeValue data5 = new ChangeValue("data5", date);
-        ChangeValue[] data = new ChangeValue[]{data1, data2, data3, data4, data5};
+        NamedValue data1 = new NamedValue("data\"\"1", 56);
+        NamedValue data2 = new NamedValue("data2", "data2Value");
+        NamedValue data3 = new NamedValue("da\"ta3", true);
+        NamedValue data4 = new NamedValue("data4", false);
+        NamedValue data5 = new NamedValue("data5", date);
+        NamedValue[] data = new NamedValue[]{data1, data2, data3, data4, data5};
 
         assertNotNull(changes);
         assertEquals(4, changes.size());
@@ -174,7 +170,7 @@ public class RequestReaderTest {
         }
     }
 
-    protected static void compareValues(ChangeValue v1, ChangeValue v2) {
+    protected static void compareValues(NamedValue v1, NamedValue v2) {
         assertEquals(v1.name, v2.name);
         if(v1.value != null && !v1.value.equals(v2.value)){
             int h = 0;

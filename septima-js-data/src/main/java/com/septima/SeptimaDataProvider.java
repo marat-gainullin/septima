@@ -1,6 +1,6 @@
 package com.septima;
 
-import com.septima.changes.JdbcChangeValue;
+import com.septima.changes.NamedJdbcValue;
 import com.septima.dataflow.JdbcDataProvider;
 import com.septima.dataflow.ResultSetReader;
 import com.septima.metadata.Field;
@@ -54,10 +54,10 @@ public class SeptimaDataProvider extends JdbcDataProvider<String> {
     protected int assignParameter(Parameter aParameter, PreparedStatement aStatement, int aParameterIndex, Connection aConnection) throws SQLException {
         if (Constants.GEOMETRY_TYPE_NAME.equals(aParameter.getType())) {
             try {
-                JdbcChangeValue jv = sqlDriver.convertGeometry(aParameter.getValue().toString(), aConnection);
-                Object paramValue = jv.value;
-                int jdbcType = jv.jdbcType;
-                String sqlTypeName = jv.sqlTypeName;
+                NamedJdbcValue jv = sqlDriver.convertGeometry(aParameter.getValue().toString(), aConnection);
+                Object paramValue = jv.getValue();
+                int jdbcType = jv.getJdbcType();
+                String sqlTypeName = jv.getSqlTypeName();
                 int assignedJdbcType = assign(paramValue, aParameterIndex, aStatement, jdbcType, sqlTypeName);
                 checkOutParameter(aParameter, aStatement, aParameterIndex, jdbcType);
                 return assignedJdbcType;

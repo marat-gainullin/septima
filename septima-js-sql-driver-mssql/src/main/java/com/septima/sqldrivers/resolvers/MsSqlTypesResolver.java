@@ -1,7 +1,7 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.metadata.JdbcColumn;
-import com.septima.script.Scripts;
+import com.septima.Constants;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,84 +10,74 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
  * @author mg
  */
 public class MsSqlTypesResolver implements TypesResolver {
 
-    protected static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>();
-    protected static final Set<String> jdbcTypesWithSize = new HashSet<>();
-    protected static final Set<String> jdbcTypesWithScale = new HashSet<>();
-    private static final Map<String, Integer> jdbcTypesMaxSize = new HashMap<>();
-    private static final Map<String, Integer> jdbcTypesDefaultSize = new HashMap<>();
+    private static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
+        put("varchar", Constants.STRING_TYPE_NAME);
+        put("numeric", Constants.NUMBER_TYPE_NAME);
+        put("decimal", Constants.NUMBER_TYPE_NAME);
+        put("money", Constants.NUMBER_TYPE_NAME);
+        put("bit", Constants.BOOLEAN_TYPE_NAME);
+        put("datetime", Constants.DATE_TYPE_NAME);
+        put("int", Constants.NUMBER_TYPE_NAME);
+        put("smallint", Constants.NUMBER_TYPE_NAME);
+        put("tinyint", Constants.NUMBER_TYPE_NAME);
+        put("bigint", Constants.NUMBER_TYPE_NAME);
+        put("real", Constants.NUMBER_TYPE_NAME);
+        put("float", Constants.NUMBER_TYPE_NAME);
+        put("smallmoney", Constants.NUMBER_TYPE_NAME);
+        put("tinyint identity", Constants.NUMBER_TYPE_NAME);
+        put("bigint identity", Constants.NUMBER_TYPE_NAME);
+        put("numeric identity", Constants.NUMBER_TYPE_NAME);
+        put("decimal identity", Constants.NUMBER_TYPE_NAME);
+        put("int identity", Constants.NUMBER_TYPE_NAME);
+        put("smallint identity", Constants.NUMBER_TYPE_NAME);
+        put("nvarchar", Constants.STRING_TYPE_NAME);
+        put("char", Constants.STRING_TYPE_NAME);
+        put("nchar", Constants.STRING_TYPE_NAME);
 
-    static {
-        rdbmsTypes2ApplicationTypes.put("varchar", Scripts.STRING_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("numeric", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("decimal", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("money", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("bit", Scripts.BOOLEAN_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("datetime", Scripts.DATE_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("int", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("smallint", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("tinyint", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("bigint", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("real", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("float", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("smallmoney", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("tinyint identity", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("bigint identity", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("numeric identity", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("decimal identity", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("int identity", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("smallint identity", Scripts.NUMBER_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("nvarchar", Scripts.STRING_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("char", Scripts.STRING_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("nchar", Scripts.STRING_TYPE_NAME);
+        put("smalldatetime", Constants.DATE_TYPE_NAME);
+        put("datetime2", Constants.DATE_TYPE_NAME);
+        put("date", Constants.DATE_TYPE_NAME);
+        put("time", Constants.DATE_TYPE_NAME);
+        put("text", Constants.STRING_TYPE_NAME);
+        put("ntext", Constants.STRING_TYPE_NAME);
+        put("uniqueidentifier", Constants.STRING_TYPE_NAME);
+        put("sysname", Constants.STRING_TYPE_NAME);
+        put("xml", Constants.STRING_TYPE_NAME);
+        put("image", null);
+        put("sql_variant", null);
+        put("varbinary", null);
+        put("binary", null);
+    }};
+    private static final Set<String> jdbcTypesWithSize = new HashSet<>() {{
+        add("char");
+        add("varchar");
+        add("nchar");
+        add("nvarchar");
+        add("binary");
+        add("varbinary");
+    }};
+    private static final Set<String> jdbcTypesWithScale = new HashSet<>();
+    private static final Map<String, Integer> jdbcTypesMaxSize = new HashMap<>() {{
+        put("char", 8000);
+        put("nchar", 4000);
+        put("varchar", 8000);
+        put("nvarchar", 4000);
+        put("binary", 8000);
+        put("varbinary", 8000);
+    }};
+    private static final Map<String, Integer> jdbcTypesDefaultSize = new HashMap<>() {{
+        put("char", 1);
+        put("nchar", 1);
+        put("varchar", 200);
+        put("nvarchar", 200);
+        put("binary", 1);
+        put("varbinary", 200);
+    }};
 
-        rdbmsTypes2ApplicationTypes.put("smalldatetime", Scripts.DATE_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("datetime2", Scripts.DATE_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("date", Scripts.DATE_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("time", Scripts.DATE_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("text", Scripts.STRING_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("ntext", Scripts.STRING_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("uniqueidentifier", Scripts.STRING_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("sysname", Scripts.STRING_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("xml", Scripts.STRING_TYPE_NAME);
-        rdbmsTypes2ApplicationTypes.put("image", null);
-        rdbmsTypes2ApplicationTypes.put("sql_variant", null);
-        rdbmsTypes2ApplicationTypes.put("varbinary", null);
-        rdbmsTypes2ApplicationTypes.put("binary", null);
-
-        //typeName(M,D)
-        //jdbcTypesWithScale.add(Types.DECIMAL);
-
-        //typeName(M)
-        jdbcTypesWithSize.add("char");
-        jdbcTypesWithSize.add("varchar");
-        jdbcTypesWithSize.add("nchar");
-        jdbcTypesWithSize.add("nvarchar");
-        jdbcTypesWithSize.add("binary");
-        jdbcTypesWithSize.add("varbinary");
-
-
-        // max sizes for types
-        jdbcTypesMaxSize.put("char", 8000);
-        jdbcTypesMaxSize.put("nchar", 4000);
-        jdbcTypesMaxSize.put("varchar", 8000);
-        jdbcTypesMaxSize.put("nvarchar", 4000);
-        jdbcTypesMaxSize.put("binary", 8000);
-        jdbcTypesMaxSize.put("varbinary", 8000);
-
-        // default sizes for types ??????????????????????????????????????????????
-        jdbcTypesDefaultSize.put("char", 1);
-        jdbcTypesDefaultSize.put("nchar", 1);
-        jdbcTypesDefaultSize.put("varchar", 200);
-        jdbcTypesDefaultSize.put("nvarchar", 200);
-        jdbcTypesDefaultSize.put("binary", 1);
-        jdbcTypesDefaultSize.put("varbinary", 200);
-    }
-    
     @Override
     public String toApplicationType(int aJdbcType, String aRDBMSType) {
         return aRDBMSType != null ? rdbmsTypes2ApplicationTypes.get(aRDBMSType.toLowerCase()) : null;
@@ -109,20 +99,19 @@ public class MsSqlTypesResolver implements TypesResolver {
     }
 
     @Override
-    public void resolveSize(JdbcColumn aField) {
-        String sqlTypeName = aField.getType();
-        if (sqlTypeName != null) {
-            sqlTypeName = sqlTypeName.toLowerCase();
+    public int resolveSize(String aRdbmsTypeName, int aSize) {
+        if (aRdbmsTypeName != null) {
             // check on max size
-            int fieldSize = aField.getSize();
-            Integer maxSize = jdbcTypesMaxSize.get(sqlTypeName);
-            if (maxSize != null && maxSize < fieldSize) {
-                aField.setSize(maxSize);
+            Integer maxSize = jdbcTypesMaxSize.getOrDefault(aRdbmsTypeName.toLowerCase(), Integer.MAX_VALUE);
+            if (aSize > maxSize) {
+                return maxSize;
+            } else if (aSize <= 0 && jdbcTypesDefaultSize.containsKey(aRdbmsTypeName.toLowerCase())) {
+                return jdbcTypesDefaultSize.get(aRdbmsTypeName.toLowerCase());
+            } else {
+                return aSize;
             }
-            // check on default size
-            if (fieldSize <= 0 && jdbcTypesDefaultSize.containsKey(sqlTypeName)) {
-                aField.setSize(jdbcTypesDefaultSize.get(sqlTypeName));
-            }
+        } else {
+            return aSize;
         }
     }
 }
