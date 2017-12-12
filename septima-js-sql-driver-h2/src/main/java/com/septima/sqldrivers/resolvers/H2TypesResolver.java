@@ -1,6 +1,6 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.Constants;
+import com.septima.ApplicationTypes;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,25 +15,25 @@ import java.util.Set;
 public class H2TypesResolver implements TypesResolver {
 
     private static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
-        put("VARCHAR", Constants.STRING_TYPE_NAME);
-        put("NUMERIC", Constants.NUMBER_TYPE_NAME);
-        put("DECIMAL", Constants.NUMBER_TYPE_NAME);
-        put("BOOLEAN", Constants.BOOLEAN_TYPE_NAME);
-        put("TIMESTAMP", Constants.DATE_TYPE_NAME);
-        put("TINYINT", Constants.NUMBER_TYPE_NAME);
-        put("BIGINT", Constants.NUMBER_TYPE_NAME);
-        put("IDENTITY", Constants.NUMBER_TYPE_NAME);
-        put("INTEGER", Constants.NUMBER_TYPE_NAME);
-        put("SMALLINT", Constants.NUMBER_TYPE_NAME);
-        put("FLOAT", Constants.NUMBER_TYPE_NAME);
-        put("REAL", Constants.NUMBER_TYPE_NAME);
-        put("DOUBLE", Constants.NUMBER_TYPE_NAME);
-        put("LONGVARCHAR", Constants.STRING_TYPE_NAME);
-        put("CHAR", Constants.STRING_TYPE_NAME);
-        put("VARCHAR_IGNORECASE", Constants.STRING_TYPE_NAME);
-        put("DATE", Constants.DATE_TYPE_NAME);
-        put("TIME", Constants.DATE_TYPE_NAME);
-        put("CLOB", Constants.STRING_TYPE_NAME);
+        put("VARCHAR", ApplicationTypes.STRING_TYPE_NAME);
+        put("NUMERIC", ApplicationTypes.NUMBER_TYPE_NAME);
+        put("DECIMAL", ApplicationTypes.NUMBER_TYPE_NAME);
+        put("BOOLEAN", ApplicationTypes.BOOLEAN_TYPE_NAME);
+        put("TIMESTAMP", ApplicationTypes.DATE_TYPE_NAME);
+        put("TINYINT", ApplicationTypes.NUMBER_TYPE_NAME);
+        put("BIGINT", ApplicationTypes.NUMBER_TYPE_NAME);
+        put("IDENTITY", ApplicationTypes.NUMBER_TYPE_NAME);
+        put("INTEGER", ApplicationTypes.NUMBER_TYPE_NAME);
+        put("SMALLINT", ApplicationTypes.NUMBER_TYPE_NAME);
+        put("FLOAT", ApplicationTypes.NUMBER_TYPE_NAME);
+        put("REAL", ApplicationTypes.NUMBER_TYPE_NAME);
+        put("DOUBLE", ApplicationTypes.NUMBER_TYPE_NAME);
+        put("LONGVARCHAR", ApplicationTypes.STRING_TYPE_NAME);
+        put("CHAR", ApplicationTypes.STRING_TYPE_NAME);
+        put("VARCHAR_IGNORECASE", ApplicationTypes.STRING_TYPE_NAME);
+        put("DATE", ApplicationTypes.DATE_TYPE_NAME);
+        put("TIME", ApplicationTypes.DATE_TYPE_NAME);
+        put("CLOB", ApplicationTypes.STRING_TYPE_NAME);
         put("LONGVARBINARY", null);
         put("VARBINARY", null);
         put("BINARY", null);

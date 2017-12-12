@@ -11,8 +11,13 @@ import com.septima.sqldrivers.resolvers.TypesResolver;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Wrapper;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -20,29 +25,32 @@ import java.util.regex.Pattern;
  */
 public abstract class SqlDriver implements StatementsGenerator.GeometryConverter {
 
-    protected static class Escape {
-
-        private final String left;
-        private final String right;
-
-        Escape(String aLeft, String aRight) {
-            left = aLeft;
-            right = aRight;
-        }
-
-        public String getLeft() {
-            return left;
-        }
-
-        public String getRight() {
-            return right;
-        }
-    }
-
     static final String DROP_FIELD_SQL_PREFIX = "alter table %s drop column ";
     static final String ADD_FIELD_SQL_PREFIX = "alter table %s add ";
 
     static final String PKEY_NAME_SUFFIX = "_pk";
+
+    private static final SqlDriver GENERIC_DRIVER = new GenericSqlDriver();
+    private static final Set<SqlDriver> DRIVERS = new ConcurrentHashMap<SqlDriver, Boolean>() {
+        {
+            ServiceLoader<SqlDriver> loader = ServiceLoader.load(SqlDriver.class);
+            Iterator<SqlDriver> drivers = loader.iterator();
+            drivers.forEachRemaining(sqlDriver -> {
+                try {
+                    put(sqlDriver, true);
+                } catch (Throwable t) {
+                    Logger.getLogger(SqlDriver.class.getName()).log(Level.WARNING, null, t);
+                }
+            });
+        }
+    }.keySet();
+
+    public static SqlDriver of(String aJdbcUrl) {
+        return DRIVERS.stream()
+                .filter(sqlDriver -> sqlDriver.is(aJdbcUrl))
+                .findFirst()
+                .orElse(GENERIC_DRIVER);
+    }
 
     public SqlDriver() {
         super();
@@ -297,7 +305,7 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
 
     public abstract String readGeometry(Wrapper aRs, int aColumnIndex, Connection aConnection) throws SQLException;
 
-    abstract public Escape getEscape();
+    abstract public Character getEscape();
 
     protected boolean hasLowerCase(String aValue) {
         if (aValue != null) {
@@ -322,71 +330,38 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
     }
 
     /**
-     * Wrapping names containing restricted symbols.
+     * Escaping names containing restricted symbols.
      *
      * @param aName Name to wrap
      * @return Wrapped text
      */
-    public String escapeNameIfNeeded(String aName) {
-        return wrapName(aName, isEscapeNeeded(aName));
-    }
-
-    public String wrapName(String aName, boolean requiredOnly) {
-        if (aName != null && !aName.isEmpty() && !isNameWrapped(aName) && requiredOnly) {
-            Escape escape = getEscape();
-            if (escape != null) {
-                String wrapL = escape.getLeft();
-                String wrapR = escape.getRight();
-                StringBuilder sb = new StringBuilder();
-                sb.append(wrapL);
-                if (wrapL.length() == 1) {
-                    if (wrapL.equals(wrapR)) {
-                        sb.append(aName.replaceAll(wrapL, wrapL + wrapL));
-                    } else {
-                        sb.append(aName.replaceAll(wrapL, wrapL + wrapL).replaceAll(wrapR, wrapR + wrapR));
-                    }
-                } else {
-                    sb.append(aName);
-                }
-                sb.append(wrapR);
-                return sb.toString();
-            }
+    protected String escapeNameIfNeeded(String aName) {
+        if (aName != null && !aName.isEmpty() && getEscape() != null &&
+                isEscapeNeeded(aName) && !isNameEscaped(aName)) {
+            Character escape = getEscape();
+            return new StringBuilder()
+                    .append(escape)
+                    .append(aName.replace(escape + "", escape + escape + ""))
+                    .append(escape)
+                    .toString();
+        } else {
+            return aName;
         }
-        return aName;
     }
 
-    public String unescapeName(String aName) {
-        int wrapLength = getWrapLength(aName);
-        if (wrapLength > 0) {
-            int length = aName.length();
-            String left = aName.substring(0, wrapLength);
-            String right = aName.substring(length - wrapLength);
-            if (left.equals(right)) {
-                return aName.substring(wrapLength, length - wrapLength).replaceAll(left + right, left);
-            }
-            return aName.substring(wrapLength, length - wrapLength);
+    public String unescapeNameIfNeeded(String aName) {
+        if (aName != null && !aName.isEmpty() && getEscape() != null && isNameEscaped(aName)) {
+            String body = aName.substring(1, aName.length() - 2);
+            return body.replace(getEscape() + getEscape() + "", getEscape() + "");
+        } else {
+            return aName;
         }
-        return aName;
     }
 
-    public abstract boolean is(String aDialect);
+    public abstract boolean is(String aJdbcUrl);
 
-    public boolean isNameWrapped(String aName) {
-        return getWrapLength(aName) > 0;
-    }
-
-    public int getWrapLength(String aName) {
-        if (aName != null && !aName.isEmpty()) {
-            Escape escape = getEscape();
-            if (escape != null) {
-                String left = escape.getLeft();
-                String right = escape.getRight();
-                if (aName.startsWith(left) && aName.endsWith(right)) {
-                    return left.length();
-                }
-            }
-        }
-        return 0;
+    public boolean isNameEscaped(String aName) {
+        return getEscape() != null && aName.startsWith(getEscape() + "") && aName.endsWith(getEscape() + "");
     }
 
     public boolean isEscapeNeeded(String aName) {
@@ -394,11 +369,6 @@ public abstract class SqlDriver implements StatementsGenerator.GeometryConverter
     }
 
     public String generatePkName(String aTableName, String aSuffix) {
-        int wrapLength = getWrapLength(aTableName);
-        StringBuilder sb = new StringBuilder();
-        sb.append(aTableName.substring(0, aTableName.length() - wrapLength));
-        sb.append(aSuffix);
-        sb.append(aTableName.substring(aTableName.length() - wrapLength));
-        return sb.toString();
+        return escapeNameIfNeeded(unescapeNameIfNeeded(aTableName) + aSuffix);
     }
 }

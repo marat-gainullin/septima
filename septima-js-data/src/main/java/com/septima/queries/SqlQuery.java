@@ -1,6 +1,6 @@
 package com.septima.queries;
 
-import com.septima.Constants;
+import com.septima.ApplicationTypes;
 import com.septima.Database;
 import com.septima.dataflow.DataProvider;
 import com.septima.metadata.Field;
@@ -25,7 +25,8 @@ import java.util.regex.Pattern;
  */
 public class SqlQuery {
 
-    private final static Pattern PARAMETER_NAME_PATTERN = Pattern.compile(Constants.PARAMETER_NAME_REGEXP, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+    private static final String PARAMETER_NAME_REGEXP = "(?<=[^:]):{1}([A-za-z]\\w*\\b)";
+    private final static Pattern PARAMETER_NAME_PATTERN = Pattern.compile(PARAMETER_NAME_REGEXP, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
     private final static Pattern STRINGS_PATTERN = Pattern.compile("'[^']*'", Pattern.MULTILINE);
 
     private final Database database;
@@ -182,7 +183,7 @@ public class SqlQuery {
             throw new Exception("Empty sql query strings are not supported");
         }
         String dialect = database.getSqlDriver().getDialect();
-        boolean postgreSQL = Constants.POSTGRE_DIALECT.equals(dialect);
+        boolean postgreSQL = dialect.toLowerCase().contains("postgre"); // TODO: Think about how to avoid this hack
         List<Parameter> compiledParams = new ArrayList<>(params.size());
         StringBuilder compiledSb = new StringBuilder();
         Matcher sm = STRINGS_PATTERN.matcher(sqlText);
@@ -204,7 +205,7 @@ public class SqlQuery {
                         p.isModified(),
                         p.getMode()
                 ));
-                m.appendReplacement(withoutStringsSegment, postgreSQL && Constants.DATE_TYPE_NAME.equals(p.getType()) ? "?::timestamp" : "?");
+                m.appendReplacement(withoutStringsSegment, postgreSQL && ApplicationTypes.DATE_TYPE_NAME.equals(p.getType()) ? "?::timestamp" : "?");
             }
             m.appendTail(withoutStringsSegment);
             withoutStrings[i] = withoutStringsSegment.toString();
@@ -219,11 +220,11 @@ public class SqlQuery {
     protected static Map<String, Parameter> extractParameters(String sqlText) {
         Map<String, Parameter> params = new LinkedHashMap<>();
         if (sqlText != null && !sqlText.isEmpty()) {
-            Pattern pattern = Pattern.compile(Constants.PARAMETER_NAME_REGEXP, Pattern.CASE_INSENSITIVE);
+            Pattern pattern = Pattern.compile(PARAMETER_NAME_REGEXP, Pattern.CASE_INSENSITIVE);
             Matcher matcher = pattern.matcher(sqlText);
             while (matcher.find()) {
                 String paramName = sqlText.substring(matcher.start() + 1, matcher.end());
-                Parameter parameter = new Parameter(paramName, "", Constants.STRING_TYPE_NAME);
+                Parameter parameter = new Parameter(paramName, "", ApplicationTypes.STRING_TYPE_NAME);
                 params.put(parameter.getName(), parameter);
             }
         }

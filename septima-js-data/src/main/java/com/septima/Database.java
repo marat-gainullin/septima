@@ -62,7 +62,7 @@ public class Database {
     }
 
     public SeptimaDataProvider createDataProvider(String aEntityName, String aSqlClause, Map<String, Field> aExpectedFields) throws Exception {
-        return new SeptimaDataProvider(metadata.getDataSourceSqlDriver(), aEntityName, dataSource, jdbcPerformer, aSqlClause, aExpectedFields);
+        return new SeptimaDataProvider(metadata.getSqlDriver(), aEntityName, dataSource, jdbcPerformer, aSqlClause, aExpectedFields);
     }
 
     public CompletableFuture<Integer> commit(List<Change.Applicable> aChangeLog) {

@@ -1,6 +1,5 @@
 package com.septima.sqldrivers;
 
-import com.septima.Constants;
 import com.septima.changes.NamedJdbcValue;
 import com.septima.metadata.*;
 import com.septima.sqldrivers.resolvers.PostgreTypesResolver;
@@ -22,25 +21,25 @@ import org.postgis.PGgeometry;
  */
 public class PostgreSqlDriver extends SqlDriver {
 
-    // настройка экранирования наименования объектов БД
-    private static final Escape ESCAPE = new Escape("\"", "\"");
+    private static final String POSTGRES_DIALECT = "Postgres";
+    private static final Character ESCAPE = '"';
 
-    protected static final PostgreTypesResolver resolver = new PostgreTypesResolver();
-    protected static final String SET_SCHEMA_CLAUSE = "set search_path = %s,public";
-    protected static final String GET_SCHEMA_CLAUSE = "select current_schema()";
-    protected static final String CREATE_SCHEMA_CLAUSE = "CREATE SCHEMA %s";
-    protected static final String DEF_OTHER_TYPE_NAME = "point";
-    protected static final String RENAME_FIELD_SQL_PREFIX = "alter table %s rename column %s to %s";
-    protected static final String MODIFY_FIELD_SQL_PREFIX = "alter table %s alter ";
+    private static final PostgreTypesResolver resolver = new PostgreTypesResolver();
+    private static final String SET_SCHEMA_CLAUSE = "set search_path = %s,public";
+    private static final String GET_SCHEMA_CLAUSE = "select current_schema()";
+    private static final String CREATE_SCHEMA_CLAUSE = "CREATE SCHEMA %s";
+    private static final String DEF_OTHER_TYPE_NAME = "point";
+    private static final String RENAME_FIELD_SQL_PREFIX = "alter table %s rename column %s to %s";
+    private static final String MODIFY_FIELD_SQL_PREFIX = "alter table %s alter ";
 
     @Override
     public String getDialect() {
-        return Constants.POSTGRE_DIALECT;
+        return POSTGRES_DIALECT;
     }
 
     @Override
-    public boolean is(String aDialect) {
-        return Constants.POSTGRE_DIALECT.equals(aDialect);
+    public boolean is(String aJdbcUrl) {
+        return aJdbcUrl.contains("jdbc:postgre");
     }
 
     @Override
@@ -105,7 +104,7 @@ public class PostgreSqlDriver extends SqlDriver {
                         .append(s1)
                         .append(", ")
                         .append(s2))
-                .map(sb -> sb.toString())
+                .map(StringBuilder::toString)
                 .orElse("");
         return "create " + modifier + " index " + indexName + " on " + tableName + " " + methodClause + " ( " + fieldsList + " )";
     }
@@ -202,15 +201,16 @@ public class PostgreSqlDriver extends SqlDriver {
         if (oldNullable != newNullable) {
             sqls.add(updateDefinition + (newNullable ? " drop not null" : " set not null"));
         }
-        return (String[]) sqls.toArray(new String[sqls.size()]);
+        return sqls.toArray(new String[sqls.size()]);
     }
 
     @Override
     public String[] getSqls4RenamingField(String aSchemaName, String aTableName, String aOldFieldName, JdbcColumn aNewFieldMd) {
-        String fullTableName = makeFullName(aSchemaName, aTableName);
-        String sqlText = String.format(RENAME_FIELD_SQL_PREFIX, fullTableName, escapeNameIfNeeded(aOldFieldName), escapeNameIfNeeded(aNewFieldMd.getName()));
         return new String[]{
-                sqlText
+                String.format(RENAME_FIELD_SQL_PREFIX,
+                        makeFullName(aSchemaName, aTableName),
+                        escapeNameIfNeeded(aOldFieldName),
+                        escapeNameIfNeeded(aNewFieldMd.getName()))
         };
     }
 
@@ -308,7 +308,6 @@ public class PostgreSqlDriver extends SqlDriver {
                     String.format("ALTER TABLE %s ADD CONSTRAINT %s PRIMARY KEY (%s)", pkTableName, pkName, pkColumnName)
             };
         }
-        ;
         return null;
     }
 
@@ -337,17 +336,17 @@ public class PostgreSqlDriver extends SqlDriver {
     }
 
     @Override
-    public Escape getEscape() {
+    public Character getEscape() {
         return ESCAPE;
     }
 
     @Override
     public NamedJdbcValue convertGeometry(String aValue, Connection aConnection) throws SQLException {
-        NamedJdbcValue jdbcValue = new NamedJdbcValue(null, null, 0, null);
-        jdbcValue.value = aValue != null ? new PGgeometry(aValue) : null;
-        jdbcValue.jdbcType = Types.OTHER;
-        jdbcValue.sqlTypeName = "geometry";
-        return jdbcValue;
+        return new NamedJdbcValue(
+                null,
+                aValue != null ? new PGgeometry(aValue) : null,
+                Types.OTHER,
+                "geometry");
     }
 
     @Override

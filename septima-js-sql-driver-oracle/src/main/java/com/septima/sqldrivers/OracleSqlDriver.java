@@ -1,6 +1,5 @@
 package com.septima.sqldrivers;
 
-import com.septima.Constants;
 import com.septima.changes.NamedJdbcValue;
 import com.septima.metadata.ForeignKey;
 import com.septima.metadata.JdbcColumn;
@@ -12,6 +11,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
 import com.vividsolutions.jts.io.WKTWriter;
+
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -20,35 +20,35 @@ import java.sql.Types;
 import java.sql.Wrapper;
 import java.util.ArrayList;
 import java.util.List;
+
 import oracle.jdbc.OracleConnection;
 import oracle.sql.STRUCT;
 import org.geotools.data.oracle.sdo.GeometryConverter;
 
 /**
- *
  * @author mg
  */
 public class OracleSqlDriver extends SqlDriver {
 
-    // настройка экранирования наименования объектов БД
-    private static final Escape ESCAPE = new Escape("\"", "\"");
+    private static final String ORACLE_DIALECT = "Oracle";
+    private static final Character ESCAPE = '"';
 
-    protected static final OracleTypesResolver resolver = new OracleTypesResolver();
-    protected static final String SET_SCHEMA_CLAUSE = "alter session set current_schema = %s";
-    protected static final String GET_SCHEMA_CLAUSE = "SELECT sys_context('USERENV', 'CURRENT_SCHEMA') FROM DUAL";
-    protected static final String CREATE_SCHEMA_CLAUSE = "CREATE USER %s IDENTIFIED BY %s";
-    protected static final String RENAME_FIELD_SQL_PREFIX = "alter table %s rename column %s to %s";
-    protected static final String MODIFY_FIELD_SQL_PREFIX = "alter table %s modify ";
-    protected static final String DEFAULT_OBJECT_TYPE_NAME = "SYS.ANYDATA";
+    private static final OracleTypesResolver resolver = new OracleTypesResolver();
+    private static final String SET_SCHEMA_CLAUSE = "alter session set current_schema = %s";
+    private static final String GET_SCHEMA_CLAUSE = "SELECT sys_context('USERENV', 'CURRENT_SCHEMA') FROM DUAL";
+    private static final String CREATE_SCHEMA_CLAUSE = "CREATE USER %s IDENTIFIED BY %s";
+    private static final String RENAME_FIELD_SQL_PREFIX = "alter table %s rename column %s to %s";
+    private static final String MODIFY_FIELD_SQL_PREFIX = "alter table %s modify ";
+    private static final String DEFAULT_OBJECT_TYPE_NAME = "SYS.ANYDATA";
 
     @Override
     public String getDialect() {
-        return Constants.ORACLE_DIALECT;
+        return ORACLE_DIALECT;
     }
 
     @Override
-    public boolean is(String aDialect) {
-        return Constants.ORACLE_DIALECT.equals(aDialect);
+    public boolean is(String aJdbcUrl) {
+        return aJdbcUrl.contains("jdbc:oracle");
     }
 
     @Override
@@ -155,7 +155,7 @@ public class OracleSqlDriver extends SqlDriver {
         if (oldNullable != newNullable) {
             sqls.add(updateDefinition + (newNullable ? " null" : " not null"));
         }
-        return (String[]) sqls.toArray(new String[sqls.size()]);
+        return sqls.toArray(new String[sqls.size()]);
     }
 
     @Override
@@ -163,7 +163,7 @@ public class OracleSqlDriver extends SqlDriver {
         String fullTableName = makeFullName(aSchemaName, aTableName);
         String sqlText = String.format(RENAME_FIELD_SQL_PREFIX, fullTableName, escapeNameIfNeeded(aOldFieldName), escapeNameIfNeeded(aNewFieldMd.getName()));
         return new String[]{
-            sqlText
+                sqlText
         };
     }
 
@@ -218,7 +218,7 @@ public class OracleSqlDriver extends SqlDriver {
                         .append(s1)
                         .append(", ")
                         .append(s2))
-                .map(sb -> sb.toString())
+                .map(StringBuilder::toString)
                 .orElse("");
         return "create " + modifier + " index " + indexName + " on " + tableName + "( " + fieldsList + " )";
     }
@@ -296,9 +296,9 @@ public class OracleSqlDriver extends SqlDriver {
                 pkColumnName += ", " + escapeNameIfNeeded(pk.getField());
             }
             return new String[]{
-                String.format("ALTER TABLE %s ADD CONSTRAINT %s PRIMARY KEY (%s)", makeFullName(aSchemaName, tableName), pkName, pkColumnName)
+                    String.format("ALTER TABLE %s ADD CONSTRAINT %s PRIMARY KEY (%s)", makeFullName(aSchemaName, tableName), pkName, pkColumnName)
             };
-        };
+        }
         return null;
     }
 
@@ -309,30 +309,28 @@ public class OracleSqlDriver extends SqlDriver {
 
     @Override
     public String[] getSqls4AddingField(String aSchemaName, String aTableName, JdbcColumn aField) {
-        String fullTableName = makeFullName(aSchemaName, aTableName);
         return new String[]{
-            String.format(SqlDriver.ADD_FIELD_SQL_PREFIX, fullTableName) + getSql4FieldDefinition(aField)
+                String.format(SqlDriver.ADD_FIELD_SQL_PREFIX, makeFullName(aSchemaName, aTableName)) +
+                        getSql4FieldDefinition(aField)
         };
     }
 
     @Override
-    public Escape getEscape() {
+    public Character getEscape() {
         return ESCAPE;
     }
 
     @Override
     public NamedJdbcValue convertGeometry(String aValue, Connection aConnection) throws SQLException {
-        if (!(aConnection instanceof OracleConnection)) {
-            aConnection = aConnection.unwrap(OracleConnection.class);
-        }
         try {
-            GeometryConverter gc = new GeometryConverter((OracleConnection) aConnection);
-            NamedJdbcValue jdbcValue = new NamedJdbcValue(null, null, 0, null);
-            WKTReader reader = new WKTReader();
-            jdbcValue.value = aValue != null ? gc.toSDO(reader.read(aValue)) : null;
-            jdbcValue.jdbcType = Types.STRUCT;
-            jdbcValue.sqlTypeName = "MDSYS.SDO_GEOMETRY";
-            return jdbcValue;
+            return new NamedJdbcValue(
+                    null,
+                    aValue != null ?
+                            new GeometryConverter(!(aConnection instanceof OracleConnection) ? aConnection.unwrap(OracleConnection.class) : (OracleConnection) aConnection)
+                                    .toSDO(new WKTReader().read(aValue)) :
+                            null,
+                    Types.STRUCT,
+                    "MDSYS.SDO_GEOMETRY");
         } catch (ParseException ex) {
             throw new SQLException(ex);
         }

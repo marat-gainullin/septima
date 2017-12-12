@@ -52,7 +52,7 @@ public class SeptimaDataProvider extends JdbcDataProvider<String> {
 
     @Override
     protected int assignParameter(Parameter aParameter, PreparedStatement aStatement, int aParameterIndex, Connection aConnection) throws SQLException {
-        if (Constants.GEOMETRY_TYPE_NAME.equals(aParameter.getType())) {
+        if (ApplicationTypes.GEOMETRY_TYPE_NAME.equals(aParameter.getType())) {
             try {
                 NamedJdbcValue jv = sqlDriver.convertGeometry(aParameter.getValue().toString(), aConnection);
                 Object paramValue = jv.getValue();
@@ -71,7 +71,7 @@ public class SeptimaDataProvider extends JdbcDataProvider<String> {
 
     @Override
     protected void acceptOutParameter(Parameter aParameter, CallableStatement aStatement, int aParameterIndex, Connection aConnection) throws SQLException {
-        if (Constants.GEOMETRY_TYPE_NAME.equals(aParameter.getType())) {
+        if (ApplicationTypes.GEOMETRY_TYPE_NAME.equals(aParameter.getType())) {
             try {
                 String sGeometry = sqlDriver.readGeometry(aStatement, aParameterIndex, aConnection);
                 aParameter.setValue(sGeometry);

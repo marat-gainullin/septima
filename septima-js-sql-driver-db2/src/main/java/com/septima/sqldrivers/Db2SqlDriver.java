@@ -1,6 +1,5 @@
 package com.septima.sqldrivers;
 
-import com.septima.Constants;
 import com.septima.changes.NamedJdbcValue;
 import com.septima.metadata.*;
 import com.septima.metadata.ForeignKey;
@@ -14,36 +13,36 @@ import java.util.List;
 
 /**
  *
- * @author kl
+ * @author mg
  */
 public class Db2SqlDriver extends SqlDriver {
 
-    // Настройка экранирования наименования объектов БД
-    private static final Escape ESCAPE = new Escape("\"", "\"");
+    private static final String DB2_DIALECT = "Db2";
+    private static final Character ESCAPE = '"';
 
-    protected static final String SET_SCHEMA_CLAUSE = "SET SCHEMA %s";
-    protected static final String GET_SCHEMA_CLAUSE = "VALUES CURRENT SCHEMA";
-    protected static final String CREATE_SCHEMA_CLAUSE = "CREATE SCHEMA %s";
-    protected static final Db2TypesResolver resolver = new Db2TypesResolver();
+    private static final String SET_SCHEMA_CLAUSE = "SET SCHEMA %s";
+    private static final String GET_SCHEMA_CLAUSE = "VALUES CURRENT SCHEMA";
+    private static final String CREATE_SCHEMA_CLAUSE = "CREATE SCHEMA %s";
+    private static final Db2TypesResolver resolver = new Db2TypesResolver();
     /**
      * Listing of SQLSTATE values
      */
-    protected static final int[] db2ErrorCodes = {};
-    protected static final String[] platypusErrorMessages = {};
-    protected static final String SQL_RENAME_FIELD = "alter table %s rename column %s to %s";
-    protected static final String SQL_MODIFY_FIELD = "alter table %s modify ";
-    protected static final String ALTER_FIELD_SQL_PREFIX = "alter table %s alter column ";
-    protected static final String REORG_TABLE = "CALL SYSPROC.ADMIN_CMD('REORG TABLE %s')";
-    protected static final String VOLATILE_TABLE = "ALTER TABLE %s VOLATILE CARDINALITY";
+    private static final int[] db2ErrorCodes = {};
+    private static final String[] platypusErrorMessages = {};
+    private static final String SQL_RENAME_FIELD = "alter table %s rename column %s to %s";
+    private static final String SQL_MODIFY_FIELD = "alter table %s modify ";
+    private static final String ALTER_FIELD_SQL_PREFIX = "alter table %s alter column ";
+    private static final String REORG_TABLE = "CALL SYSPROC.ADMIN_CMD('REORG TABLE %s')";
+    private static final String VOLATILE_TABLE = "ALTER TABLE %s VOLATILE CARDINALITY";
 
     @Override
     public String getDialect() {
-        return Constants.DB2_DIALECT;
+        return DB2_DIALECT;
     }
 
     @Override
-    public boolean is(String aDialect) {
-        return Constants.DB2_DIALECT.equals(aDialect);
+    public boolean is(String aJdbcUrl) {
+        return aJdbcUrl.contains("jdbc:db2");
     }
 
     @Override
@@ -116,7 +115,7 @@ public class Db2SqlDriver extends SqlDriver {
                         .append(s1)
                         .append(", ")
                         .append(s2))
-                .map(sb -> sb.toString())
+                .map(StringBuilder::toString)
                 .orElse("");
         return "create " + modifier + " index " + indexName + " on " + tableName + "( " + fieldsList + " )";
     }
@@ -132,7 +131,7 @@ public class Db2SqlDriver extends SqlDriver {
 
     @Override
     public String parseException(Exception ex) {
-        if (ex != null && ex instanceof SQLException) {
+        if (ex instanceof SQLException) {
             SQLException sqlEx = (SQLException) ex;
             int errorCode = sqlEx.getErrorCode();
             for (int i = 0; i < db2ErrorCodes.length; i++) {
@@ -200,8 +199,7 @@ public class Db2SqlDriver extends SqlDriver {
         } else {
             sqls.add(getSql4ReorgTable(fullTableName));
         }
-
-        return (String[]) sqls.toArray(new String[sqls.size()]);
+        return sqls.toArray(new String[sqls.size()]);
     }
 
     @Override
@@ -271,7 +269,7 @@ public class Db2SqlDriver extends SqlDriver {
                 pkColumnName += ", " + escapeNameIfNeeded(pk.getField());
             }
 
-            /**
+            /*
              * The DB2 system does not allow the "on update cascade" option for
              * foreign key constraints.
              */
@@ -336,7 +334,7 @@ public class Db2SqlDriver extends SqlDriver {
     }
 
     @Override
-    public Escape getEscape() {
+    public Character getEscape() {
         return ESCAPE;
     }
 

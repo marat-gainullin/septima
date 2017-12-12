@@ -1,6 +1,6 @@
 package com.septima.dataflow;
 
-import com.septima.Constants;
+import com.septima.ApplicationTypes;
 import com.septima.metadata.Field;
 import com.septima.metadata.Parameter;
 
@@ -20,36 +20,29 @@ import javax.sql.DataSource;
  * This flow dataSource intended to support the flow process from and to jdbc
  * data sources.
  *
- * @param <JKT> Jdbc source key type. It may be long number or string
- *              identifier.
  * @author mg
  * @see DataProvider
  */
-public abstract class JdbcDataProvider<JKT> implements DataProvider {
+public abstract class JdbcDataProvider implements DataProvider {
 
     public interface ResultSetProcessor<T> {
         T apply(ResultSet aData) throws SQLException;
     }
 
-    /*
-    protected static final String CONVERTER_MISSING_MSG = "Refreshing of a rowset without converter is impossible";
-    protected static final String STATEMENT_MISSING_MSG = "Refreshing of a rowset without statement is impossible";
-    protected static final String BAD_PARAMETERS_MSG = "Bad parameters. Parameter count from an sql clause and in parameters collection must be th same!";
-    protected static final String BAD_REFRESH_NEXTPAGE_CHAIN_MSG = "The call of refresh() method is allowed only for non paged flow providers or as the first call in the refresh() -> nextPage() -> nextPage() -> ... calls chain";
-    */
-    protected static final String BAD_NEXTPAGE_REFRESH_CHAIN_MSG = "The call of nextPage() method is allowed only for paged flow providers as the subsequent calls in the refresh() -> nextPage() -> nextPage() -> ... calls chain";
-    protected static final Logger queriesLogger = Logger.getLogger(JdbcDataProvider.class.getName());
+    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+    private static final String BAD_NEXTPAGE_REFRESH_CHAIN_MSG = "The call of nextPage() method is allowed only for paged flow providers as the subsequent calls in the refresh() -> nextPage() -> nextPage() -> ... calls chain";
+    private static final Logger queriesLogger = Logger.getLogger(JdbcDataProvider.class.getName());
 
-    protected String clause;
-    protected int pageSize = NO_PAGING_PAGE_SIZE;
-    protected DataSource dataSource;
-    protected Map<String, Field> expectedFields;
-    protected Consumer<Runnable> asyncDataPuller;
-    protected boolean procedure;
+    private final String clause;
+    private final DataSource dataSource;
+    private final Map<String, Field> expectedFields;
+    private final Consumer<Runnable> asyncDataPuller;
+    private int pageSize = NO_PAGING_PAGE_SIZE;
+    private boolean procedure;
 
-    protected ResultSet lowLevelResults;
-    protected Connection lowLevelConnection;
-    protected PreparedStatement lowLevelStatement;
+    private ResultSet lowLevelResults;
+    private Connection lowLevelConnection;
+    private PreparedStatement lowLevelStatement;
 
     /**
      * A flow dataSource, intended to support jdbc data sources.
@@ -57,17 +50,16 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
      * @param aDataSource      A DataSource instance, that would supply resources for
      *                         use them by flow dataSource in single operations, like retriving data of
      *                         applying data changes.
-     * @param aAsyncDataPuller
+     * @param aAsyncDataPuller Some {@link Runnable} consumer, typically backed by {@link java.util.concurrent.Executor}.
      * @param aClause          A sql clause, dataSource should use to achieve
      *                         PreparedStatement instance to use it in the result set querying process.
-     * @param aExpectedFields
+     * @param aExpectedFields  Fields, expected by Septima according to metadata analysis.
      * @see DataSource
      */
     public JdbcDataProvider(DataSource aDataSource, Consumer<Runnable> aAsyncDataPuller, String aClause, Map<String, Field> aExpectedFields) {
         super();
         assert aClause != null : "Flow provider cant't exist without a selecting sql clause";
         assert aDataSource != null : "Flow provider can't exist without a data source";
-        assert aClause != null : "Flow provider can't exist without a selecting sql clause";
         clause = aClause;
         dataSource = aDataSource;
         asyncDataPuller = aAsyncDataPuller;
@@ -84,16 +76,8 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
         pageSize = aPageSize;
     }
 
-    protected boolean isPaged() {
+    private boolean isPaged() {
         return pageSize > 0;
-    }
-
-    public String getClause() {
-        return clause;
-    }
-
-    public void setClause(String aValue) {
-        clause = aValue;
     }
 
     @Override
@@ -190,10 +174,10 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
     }
 
     // Ms sql non jdbc string types
-    public static final int NON_JDBC_LONG_STRING = 258;
-    public static final int NON_JDBC_MEDIUM_STRING = 259;
-    public static final int NON_JDBC_MEMO_STRING = 260;
-    public static final int NON_JDBC_SHORT_STRING = 261;
+    private static final int NON_JDBC_LONG_STRING = 258;
+    private static final int NON_JDBC_MEDIUM_STRING = 259;
+    private static final int NON_JDBC_MEMO_STRING = 260;
+    private static final int NON_JDBC_SHORT_STRING = 261;
 
     private static BigDecimal number2BigDecimal(Number aNumber) {
         if (aNumber instanceof Float || aNumber instanceof Double) {
@@ -320,8 +304,6 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
                 value = null;
             }
             return value;
-        } catch (SQLException ex) {
-            throw ex;
         } catch (IOException ex) {
             throw new SQLException(ex);
         }
@@ -474,7 +456,7 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
                     } else if (aValue instanceof String) {
                         castedFloat = Float.valueOf((String) aValue);
                     } else if (aValue instanceof Boolean) {
-                        castedFloat = Float.valueOf(((Boolean) aValue) ? 1 : 0);
+                        castedFloat = (Boolean) aValue ? 1f : 0f;
                     } else if (aValue instanceof java.util.Date) {
                         castedFloat = (float) ((java.util.Date) aValue).getTime();
                     }
@@ -492,7 +474,7 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
                     } else if (aValue instanceof String) {
                         castedDouble = Double.valueOf((String) aValue);
                     } else if (aValue instanceof Boolean) {
-                        castedDouble = Double.valueOf(((Boolean) aValue) ? 1 : 0);
+                        castedDouble = (Boolean) aValue ? 1d : 0d;
                     } else if (aValue instanceof java.util.Date) {
                         castedDouble = (double) ((java.util.Date) aValue).getTime();
                     }
@@ -512,11 +494,11 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
                     // target type - string
                     String castedString = null;
                     if (aValue instanceof Number) {
-                        castedString = ((Number) aValue).toString();
+                        castedString = aValue.toString();
                     } else if (aValue instanceof String) {
                         castedString = (String) aValue;
                     } else if (aValue instanceof Boolean) {
-                        castedString = ((Boolean) aValue) ? ((Boolean) aValue).toString() : "";
+                        castedString = ((Boolean) aValue) ? aValue.toString() : "";
                     } else if (aValue instanceof java.util.Date) {
                         castedString = String.valueOf(((java.util.Date) aValue).getTime());
                     } else if (aValue instanceof Clob) {
@@ -549,7 +531,7 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
                     } else if (aValue instanceof Boolean) {
                         castedBoolean = (Boolean) aValue;
                     } else if (aValue instanceof java.util.Date) {
-                        castedBoolean = !((java.util.Date) aValue).equals(new java.util.Date(0));
+                        castedBoolean = !aValue.equals(new java.util.Date(0));
                     }
                     if (castedBoolean != null) {
                         aStmt.setBoolean(aParameterIndex, castedBoolean);
@@ -607,7 +589,7 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
         return aParameterJdbcType;
     }
 
-    protected static final String FALLED_TO_NULL_MSG = "Some value falled to null while tranferring to a database. May be it''s class is unsupported: {0}";
+    private static final String FALLED_TO_NULL_MSG = "Some value falled to null while tranferring to a database. May be it''s class is unsupported: {0}";
 
     /**
      * {@inheritDoc}
@@ -645,7 +627,7 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
                                 assignedJdbcTypes.put(i, assignedJdbcType);
                             }
                             logQuery(sqlClause, aParams, assignedJdbcTypes);
-                            ResultSet rs = null;
+                            ResultSet rs;
                             if (procedure) {
                                 assert stmt instanceof CallableStatement;
                                 CallableStatement cStmt = (CallableStatement) stmt;
@@ -676,7 +658,6 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
                         } catch (SQLException ex) {
                             throw new DataProviderFailedException(ex);
                         } finally {
-                            assert dataSource != null; // since we've got a statement, dataSource must present.
                             if (isPaged()) {
                                 // Paged statements can't be closed, because of ResultSet existance.
                                 lowLevelStatement = stmt;
@@ -720,17 +701,17 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
         }
     }
 
-    protected static void logQuery(String sqlClause, List<Parameter> aParams, Map<Integer, Integer> aAssignedJdbcTypes) {
+    private static void logQuery(String sqlClause, List<Parameter> aParams, Map<Integer, Integer> aAssignedJdbcTypes) {
         if (queriesLogger.isLoggable(Level.FINE)) {
             boolean finerLogs = queriesLogger.isLoggable(Level.FINER);
             queriesLogger.log(Level.FINE, "Executing sql:\n{0}\nwith {1} parameters{2}", new Object[]{sqlClause, aParams.size(), finerLogs && !aParams.isEmpty() ? ":" : ""});
             if (finerLogs) {
                 for (int i = 1; i <= aParams.size(); i++) {
-                    Parameter param = aParams.get(i-1);
+                    Parameter param = aParams.get(i - 1);
                     Object paramValue = param.getValue();
-                    if (paramValue != null && Constants.DATE_TYPE_NAME.equals(param.getType())) {
+                    if (paramValue != null && ApplicationTypes.DATE_TYPE_NAME.equals(param.getType())) {
                         java.util.Date dateValue = (java.util.Date) paramValue;
-                        SimpleDateFormat sdf = new SimpleDateFormat(Constants.DATE_FORMAT);
+                        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
                         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
                         String jsonLikeText = sdf.format(dateValue);
                         queriesLogger.log(Level.FINER, "order: {0}; name: {1}; jdbc type: {2}; json like timestamp: {3}; raw timestamp: {4};", new Object[]{i, param.getName(), aAssignedJdbcTypes.get(i), jsonLikeText, dateValue.getTime()});
@@ -752,16 +733,16 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
                 String pType = aParameter.getType();
                 if (pType != null) {
                     switch (pType) {
-                        case Constants.STRING_TYPE_NAME:
+                        case ApplicationTypes.STRING_TYPE_NAME:
                             aParameter.setValue(aStatement.getString(aParameterIndex));
                             break;
-                        case Constants.NUMBER_TYPE_NAME:
+                        case ApplicationTypes.NUMBER_TYPE_NAME:
                             aParameter.setValue(aStatement.getDouble(aParameterIndex));
                             break;
-                        case Constants.DATE_TYPE_NAME:
+                        case ApplicationTypes.DATE_TYPE_NAME:
                             aParameter.setValue(aStatement.getDate(aParameterIndex));
                             break;
-                        case Constants.BOOLEAN_TYPE_NAME:
+                        case ApplicationTypes.BOOLEAN_TYPE_NAME:
                             aParameter.setValue(aStatement.getBoolean(aParameterIndex));
                             break;
                         default:
@@ -794,7 +775,7 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
             //sqlTypeName = null;
         } else {
             //sqlTypeName = null;
-            jdbcType = calcJdbcType(aParameter.getType(), paramValue);
+            jdbcType = calcJdbcType(aParameter.getType(), null);
         }
         /*
         }
@@ -807,16 +788,16 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
     public static int calcJdbcType(String aType, Object aParamValue) {
         int jdbcType;
         switch (aType) {
-            case Constants.STRING_TYPE_NAME:
+            case ApplicationTypes.STRING_TYPE_NAME:
                 jdbcType = java.sql.Types.VARCHAR;
                 break;
-            case Constants.NUMBER_TYPE_NAME:
+            case ApplicationTypes.NUMBER_TYPE_NAME:
                 jdbcType = java.sql.Types.DOUBLE;
                 break;
-            case Constants.DATE_TYPE_NAME:
+            case ApplicationTypes.DATE_TYPE_NAME:
                 jdbcType = java.sql.Types.TIMESTAMP;
                 break;
-            case Constants.BOOLEAN_TYPE_NAME:
+            case ApplicationTypes.BOOLEAN_TYPE_NAME:
                 jdbcType = java.sql.Types.BOOLEAN;
                 break;
             default:
@@ -844,7 +825,7 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
      * @return StatementResourceDescriptor instance, provided according to sql
      * clause.
      */
-    protected PreparedStatement getFlowStatement(Connection aConnection, String aClause) throws DataProviderFailedException {
+    private PreparedStatement getFlowStatement(Connection aConnection, String aClause) throws DataProviderFailedException {
         try {
             assert aConnection != null;
             if (procedure) {
@@ -863,12 +844,12 @@ public abstract class JdbcDataProvider<JKT> implements DataProvider {
      * @param aReader Reader to read from.
      * @param length  Length of segment to be read. It length == -1, than reading is performed until the end of Reader.
      * @return String, containing data read from Reader.
-     * @throws IOException
+     * @throws IOException If some error occur while communicating with database.
      */
     private static String readReader(Reader aReader, int length) throws IOException {
         char[] buffer = new char[32];
         StringWriter res = new StringWriter();
-        int read = 0;
+        int read;
         int written = 0;
         while ((read = aReader.read(buffer)) != -1) {
             if (length < 0 || written + read <= length) {

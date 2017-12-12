@@ -1,6 +1,7 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.Constants;
+import com.septima.ApplicationTypes;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -12,33 +13,33 @@ import java.util.Set;
 public class GenericTypesResolver implements TypesResolver {
 
     private static final Map<Integer, String> jdbcTypesToApplicationTypes = new LinkedHashMap<>(){{
-        put(java.sql.Types.VARCHAR, Constants.STRING_TYPE_NAME);
-        put(java.sql.Types.CHAR, Constants.STRING_TYPE_NAME);
-        put(java.sql.Types.CLOB, Constants.STRING_TYPE_NAME);
-        put(java.sql.Types.DATALINK, Constants.STRING_TYPE_NAME);
-        put(java.sql.Types.LONGNVARCHAR, Constants.STRING_TYPE_NAME);
-        put(java.sql.Types.LONGVARCHAR, Constants.STRING_TYPE_NAME);
-        put(java.sql.Types.NCHAR, Constants.STRING_TYPE_NAME);
-        put(java.sql.Types.NCLOB, Constants.STRING_TYPE_NAME);
-        put(java.sql.Types.NVARCHAR, Constants.STRING_TYPE_NAME);
-        put(java.sql.Types.ROWID, Constants.STRING_TYPE_NAME);
-        put(java.sql.Types.SQLXML, Constants.STRING_TYPE_NAME);
-        put(java.sql.Types.BIGINT, Constants.NUMBER_TYPE_NAME);
-        put(java.sql.Types.DECIMAL, Constants.NUMBER_TYPE_NAME);
-        put(java.sql.Types.DOUBLE, Constants.NUMBER_TYPE_NAME);
-        put(java.sql.Types.FLOAT, Constants.NUMBER_TYPE_NAME);
-        put(java.sql.Types.INTEGER, Constants.NUMBER_TYPE_NAME);
-        put(java.sql.Types.NUMERIC, Constants.NUMBER_TYPE_NAME);
-        put(java.sql.Types.REAL, Constants.NUMBER_TYPE_NAME);
-        put(java.sql.Types.SMALLINT, Constants.NUMBER_TYPE_NAME);
-        put(java.sql.Types.TINYINT, Constants.NUMBER_TYPE_NAME);
-        put(java.sql.Types.DATE, Constants.DATE_TYPE_NAME);
-        put(java.sql.Types.TIME, Constants.DATE_TYPE_NAME);
-        put(java.sql.Types.TIMESTAMP, Constants.DATE_TYPE_NAME);
-        put(java.sql.Types.TIMESTAMP_WITH_TIMEZONE, Constants.DATE_TYPE_NAME);
-        put(java.sql.Types.TIME_WITH_TIMEZONE, Constants.DATE_TYPE_NAME);
-        put(java.sql.Types.BIT, Constants.BOOLEAN_TYPE_NAME);
-        put(java.sql.Types.BOOLEAN, Constants.BOOLEAN_TYPE_NAME);
+        put(java.sql.Types.VARCHAR, ApplicationTypes.STRING_TYPE_NAME);
+        put(java.sql.Types.CHAR, ApplicationTypes.STRING_TYPE_NAME);
+        put(java.sql.Types.CLOB, ApplicationTypes.STRING_TYPE_NAME);
+        put(java.sql.Types.DATALINK, ApplicationTypes.STRING_TYPE_NAME);
+        put(java.sql.Types.LONGNVARCHAR, ApplicationTypes.STRING_TYPE_NAME);
+        put(java.sql.Types.LONGVARCHAR, ApplicationTypes.STRING_TYPE_NAME);
+        put(java.sql.Types.NCHAR, ApplicationTypes.STRING_TYPE_NAME);
+        put(java.sql.Types.NCLOB, ApplicationTypes.STRING_TYPE_NAME);
+        put(java.sql.Types.NVARCHAR, ApplicationTypes.STRING_TYPE_NAME);
+        put(java.sql.Types.ROWID, ApplicationTypes.STRING_TYPE_NAME);
+        put(java.sql.Types.SQLXML, ApplicationTypes.STRING_TYPE_NAME);
+        put(java.sql.Types.BIGINT, ApplicationTypes.NUMBER_TYPE_NAME);
+        put(java.sql.Types.DECIMAL, ApplicationTypes.NUMBER_TYPE_NAME);
+        put(java.sql.Types.DOUBLE, ApplicationTypes.NUMBER_TYPE_NAME);
+        put(java.sql.Types.FLOAT, ApplicationTypes.NUMBER_TYPE_NAME);
+        put(java.sql.Types.INTEGER, ApplicationTypes.NUMBER_TYPE_NAME);
+        put(java.sql.Types.NUMERIC, ApplicationTypes.NUMBER_TYPE_NAME);
+        put(java.sql.Types.REAL, ApplicationTypes.NUMBER_TYPE_NAME);
+        put(java.sql.Types.SMALLINT, ApplicationTypes.NUMBER_TYPE_NAME);
+        put(java.sql.Types.TINYINT, ApplicationTypes.NUMBER_TYPE_NAME);
+        put(java.sql.Types.DATE, ApplicationTypes.DATE_TYPE_NAME);
+        put(java.sql.Types.TIME, ApplicationTypes.DATE_TYPE_NAME);
+        put(java.sql.Types.TIMESTAMP, ApplicationTypes.DATE_TYPE_NAME);
+        put(java.sql.Types.TIMESTAMP_WITH_TIMEZONE, ApplicationTypes.DATE_TYPE_NAME);
+        put(java.sql.Types.TIME_WITH_TIMEZONE, ApplicationTypes.DATE_TYPE_NAME);
+        put(java.sql.Types.BIT, ApplicationTypes.BOOLEAN_TYPE_NAME);
+        put(java.sql.Types.BOOLEAN, ApplicationTypes.BOOLEAN_TYPE_NAME);
     }};
 
     @Override

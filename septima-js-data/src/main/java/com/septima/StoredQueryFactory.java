@@ -37,7 +37,8 @@ import net.sf.jsqlparser.statement.select.*;
  */
 public class StoredQueryFactory {
 
-    public static final String _Q = "\\" + Constants.STORED_QUERY_REF_PREFIX + "?";
+    private static final String STORED_QUERY_REF_PREFIX = "#";
+    private static final String _Q = "\\" + STORED_QUERY_REF_PREFIX + "?";
 
     private Fields processSubQuery(SqlQuery aQuery, SubSelect aSubSelect) throws Exception {
         SqlQuery subQuery = new SqlQuery(aQuery.getDatabase(), "", );
@@ -71,7 +72,7 @@ public class StoredQueryFactory {
         if (fieldsRes != null && fieldsRes.fields != null) {
             Metadata mdCache = database.getMetadataCache(aQuery.getDatasourceName());
             if (mdCache != null) {
-                TypesResolver resolver = mdCache.getDataSourceSqlDriver().getTypesResolver();
+                TypesResolver resolver = mdCache.getSqlDriver().getTypesResolver();
                 fieldsRes.fields.toCollection().stream().forEach((Field field) -> {
                     Field copied = new Field();
                     copied.assignFrom(field);
@@ -504,7 +505,7 @@ public class StoredQueryFactory {
                      * // Absent alias generation is parser's work. field = new
                      * Field(col.getAlias()); // Such field is absent in
                      * database tables and so, field's table is the processed
-                     * query. field.setTableName(Constants.QUERY_ID_PREFIX
+                     * query. field.setTableName(ApplicationTypes.QUERY_ID_PREFIX
                      * + aQuery.getEntityId().toString()); /** There is an
                      * unsolved problem about type of the expression. This might
                      * be solved using manually setted up field's type and
@@ -560,9 +561,9 @@ public class StoredQueryFactory {
      * @throws Exception
      */
     protected FieldsResult getTablyFields(String aDatasourceName, String aTablyName) throws Exception {
-        if (aTablyName.startsWith(Constants.STORED_QUERY_REF_PREFIX)) {
+        if (aTablyName.startsWith(ApplicationTypes.STORED_QUERY_REF_PREFIX)) {
             // Reference to a stored subquery
-            String queryName = aTablyName.substring(Constants.STORED_QUERY_REF_PREFIX.length());
+            String queryName = aTablyName.substring(ApplicationTypes.STORED_QUERY_REF_PREFIX.length());
             SqlQuery query = subQueriesProxy.getQuery(queryName, null, null, null);
             if (query != null) {
                 return new FieldsResult(query.getFields(), false);

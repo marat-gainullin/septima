@@ -1,6 +1,6 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.Constants;
+import com.septima.ApplicationTypes;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,35 +15,35 @@ import java.util.Set;
 public class OracleTypesResolver implements TypesResolver {
 
     private static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
-        put("VARCHAR2", Constants.STRING_TYPE_NAME);
-        put("DECIMAL", Constants.NUMBER_TYPE_NAME);
-        put("NUMBER", Constants.NUMBER_TYPE_NAME);
-        put("TIMESTAMP", Constants.DATE_TYPE_NAME);
-        put("MDSYS.SDO_GEOMETRY", Constants.GEOMETRY_TYPE_NAME);
-        put("INTEGER", Constants.NUMBER_TYPE_NAME);
-        put("FLOAT", Constants.NUMBER_TYPE_NAME);
-        put("REAL", Constants.NUMBER_TYPE_NAME);
-        put("DATE", Constants.DATE_TYPE_NAME);
-        put("NVARCHAR2", Constants.STRING_TYPE_NAME);
-        put("NCHAR", Constants.STRING_TYPE_NAME);
-        put("TIMESTAMP(6)", Constants.DATE_TYPE_NAME);
-        put("TIMESTAMP WITH TIME ZONE", Constants.DATE_TYPE_NAME);
-        put("TIMESTAMP WITH LOCAL TIME ZONE", Constants.DATE_TYPE_NAME);
-        put("TIMESTAMP(6) WITH TIME ZONE", Constants.DATE_TYPE_NAME);
-        put("TIMESTAMP(6) WITH LOCAL TIME ZONE", Constants.DATE_TYPE_NAME);
-        put("LONG RAW", Constants.STRING_TYPE_NAME);
-        put("RAW", Constants.STRING_TYPE_NAME);
-        put("LONG", Constants.STRING_TYPE_NAME);
-        put("CHAR", Constants.STRING_TYPE_NAME);
-        put("CLOB", Constants.STRING_TYPE_NAME);
-        put("NCLOB", Constants.STRING_TYPE_NAME);
-        put("GEOMETRY", Constants.GEOMETRY_TYPE_NAME);
-        put("CURVE", Constants.GEOMETRY_TYPE_NAME);
-        put("POLYGON", Constants.GEOMETRY_TYPE_NAME);
-        put("LINESTRING", Constants.GEOMETRY_TYPE_NAME);
-        put("POINT", Constants.GEOMETRY_TYPE_NAME);
-        put("SURFACE", Constants.GEOMETRY_TYPE_NAME);
-        put("SDO_GEOMETRY", Constants.GEOMETRY_TYPE_NAME);
+        put("VARCHAR2", ApplicationTypes.STRING_TYPE_NAME);
+        put("DECIMAL", ApplicationTypes.NUMBER_TYPE_NAME);
+        put("NUMBER", ApplicationTypes.NUMBER_TYPE_NAME);
+        put("TIMESTAMP", ApplicationTypes.DATE_TYPE_NAME);
+        put("MDSYS.SDO_GEOMETRY", ApplicationTypes.GEOMETRY_TYPE_NAME);
+        put("INTEGER", ApplicationTypes.NUMBER_TYPE_NAME);
+        put("FLOAT", ApplicationTypes.NUMBER_TYPE_NAME);
+        put("REAL", ApplicationTypes.NUMBER_TYPE_NAME);
+        put("DATE", ApplicationTypes.DATE_TYPE_NAME);
+        put("NVARCHAR2", ApplicationTypes.STRING_TYPE_NAME);
+        put("NCHAR", ApplicationTypes.STRING_TYPE_NAME);
+        put("TIMESTAMP(6)", ApplicationTypes.DATE_TYPE_NAME);
+        put("TIMESTAMP WITH TIME ZONE", ApplicationTypes.DATE_TYPE_NAME);
+        put("TIMESTAMP WITH LOCAL TIME ZONE", ApplicationTypes.DATE_TYPE_NAME);
+        put("TIMESTAMP(6) WITH TIME ZONE", ApplicationTypes.DATE_TYPE_NAME);
+        put("TIMESTAMP(6) WITH LOCAL TIME ZONE", ApplicationTypes.DATE_TYPE_NAME);
+        put("LONG RAW", ApplicationTypes.STRING_TYPE_NAME);
+        put("RAW", ApplicationTypes.STRING_TYPE_NAME);
+        put("LONG", ApplicationTypes.STRING_TYPE_NAME);
+        put("CHAR", ApplicationTypes.STRING_TYPE_NAME);
+        put("CLOB", ApplicationTypes.STRING_TYPE_NAME);
+        put("NCLOB", ApplicationTypes.STRING_TYPE_NAME);
+        put("GEOMETRY", ApplicationTypes.GEOMETRY_TYPE_NAME);
+        put("CURVE", ApplicationTypes.GEOMETRY_TYPE_NAME);
+        put("POLYGON", ApplicationTypes.GEOMETRY_TYPE_NAME);
+        put("LINESTRING", ApplicationTypes.GEOMETRY_TYPE_NAME);
+        put("POINT", ApplicationTypes.GEOMETRY_TYPE_NAME);
+        put("SURFACE", ApplicationTypes.GEOMETRY_TYPE_NAME);
+        put("SDO_GEOMETRY", ApplicationTypes.GEOMETRY_TYPE_NAME);
         put("BLOB", null);
     }};
     private static final Set<String> jdbcTypesWithSize = new HashSet<>() {{

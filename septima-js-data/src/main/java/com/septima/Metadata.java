@@ -23,6 +23,53 @@ import javax.sql.DataSource;
  */
 public class Metadata implements StatementsGenerator.TablesContainer {
 
+    private static final String JDBCFKS_FKTABLE_SCHEM = "FKTABLE_SCHEM";
+    private static final String JDBCFKS_FKTABLE_NAME = "FKTABLE_NAME";
+    private static final String JDBCFKS_FKCOLUMN_NAME = "FKCOLUMN_NAME";
+    private static final String JDBCFKS_FK_NAME = "FK_NAME";
+    private static final String JDBCFKS_FKUPDATE_RULE = "UPDATE_RULE";
+    private static final String JDBCFKS_FKDELETE_RULE = "DELETE_RULE";
+    private static final String JDBCFKS_FKDEFERRABILITY = "DEFERRABILITY";
+    private static final String JDBCFKS_FKPKTABLE_SCHEM = "PKTABLE_SCHEM";
+    private static final String JDBCFKS_FKPKTABLE_NAME = "PKTABLE_NAME";
+    private static final String JDBCFKS_FKPKCOLUMN_NAME = "PKCOLUMN_NAME";
+    private static final String JDBCFKS_FKPK_NAME = "PK_NAME";
+    private static final String JDBCCOLS_TABLE_SCHEM = "TABLE_SCHEM";
+    private static final String JDBCCOLS_TABLE_NAME = "TABLE_NAME";
+    //private static final String JDBCCOLS_TABLE_DESC = "TABLE_DESCRIPTION";
+    private static final String JDBCCOLS_COLUMN_NAME = "COLUMN_NAME";
+    private static final String JDBCCOLS_REMARKS = "REMARKS";
+    private static final String JDBCCOLS_DATA_TYPE = "DATA_TYPE";
+    private static final String JDBCCOLS_TYPE_NAME = "TYPE_NAME";
+    //private static final String JDBCCOLS_TABLE_TYPE = "TABLE_TYPE";
+    private static final String JDBCCOLS_COLUMN_SIZE = "COLUMN_SIZE";
+    private static final String JDBCCOLS_DECIMAL_DIGITS = "DECIMAL_DIGITS";
+    private static final String JDBCCOLS_NUM_PREC_RADIX = "NUM_PREC_RADIX";
+    private static final String JDBCCOLS_NULLABLE = "NULLABLE";
+    private static final String JDBCPKS_TABLE_SCHEM = JDBCCOLS_TABLE_SCHEM;
+    private static final String JDBCPKS_TABLE_NAME = JDBCCOLS_TABLE_NAME;
+    private static final String JDBCPKS_COLUMN_NAME = JDBCCOLS_COLUMN_NAME;
+    private static final String JDBCPKS_CONSTRAINT_NAME = "PK_NAME";
+    //private static final String JDBCIDX_TABLE_SCHEM = JDBCCOLS_TABLE_SCHEM;
+    //private static final String JDBCIDX_TABLE_NAME = JDBCCOLS_TABLE_NAME;
+    private static final String JDBCIDX_COLUMN_NAME = JDBCCOLS_COLUMN_NAME;
+    private static final String JDBCIDX_NON_UNIQUE = "NON_UNIQUE";      //boolean => Can index values be non-unique. false when TYPE is tableIndexStatistic
+    //private static final String JDBCIDX_INDEX_QUALIFIER = "INDEX_QUALIFIER"; //String => index catalog (may be null); null when TYPE is tableIndexStatistic
+    private static final String JDBCIDX_INDEX_NAME = "INDEX_NAME";      //String => index name; null when TYPE is tableIndexStatistic
+    private static final String JDBCIDX_TYPE = "TYPE";            //short => index type:
+    //private static final String JDBCIDX_PRIMARY_KEY = "IS_PKEY";
+    //private static final String JDBCIDX_FOREIGN_KEY = "FKEY_NAME";
+    //tableIndexStatistic - this identifies table statistics that are returned in conjuction with a table's index descriptions
+    //tableIndexClustered - this is a clustered index
+    //tableIndexHashed - this is a hashed index
+    //tableIndexOther - this is some other style of index
+    private static final String JDBCIDX_ORDINAL_POSITION = "ORDINAL_POSITION";//short => column sequence number within index; zero when TYPE is tableIndexStatistic
+    private static final String JDBCIDX_ASC_OR_DESC = "ASC_OR_DESC";//String => column sort sequence, "A" => ascending, "D" => descending, may be null if sort sequence is not supported; null when TYPE is tableIndexStatistic
+    //private static final String JDBCPKS_TABLE_CAT_FIELD_NAME = "TABLE_CAT";
+    //private static final String JDBCPKS_TABLE_TYPE_FIELD_NAME = "TABLE_TYPE";
+    private static final String JDBCPKS_TABLE_TYPE_TABLE = "TABLE";
+    private static final String JDBCPKS_TABLE_TYPE_VIEW = "VIEW";
+    
     private static class CaseInsensitiveSet extends HashSet<String> {
 
         private String keyToLowerCase(String aKey) {
@@ -151,7 +198,7 @@ public class Metadata implements StatementsGenerator.TablesContainer {
             }
         }
         Metadata metadata = new Metadata(aDataSource, schemas, DataSources.getDataSourceSchema(aDataSource), DataSources.getDataSourceSqlDriver(aDataSource));
-        metadata.fillTablesByDataSourceSchema();
+        metadata.fillTablesByDefaultSchema();
         return metadata;
     }
 
@@ -159,7 +206,7 @@ public class Metadata implements StatementsGenerator.TablesContainer {
         return defaultSchema;
     }
 
-    public SqlDriver getDataSourceSqlDriver() {
+    public SqlDriver getSqlDriver() {
         return sqlDriver;
     }
 
@@ -176,7 +223,7 @@ public class Metadata implements StatementsGenerator.TablesContainer {
     @Override
     public Optional<Map<String, JdbcColumn>> getTable(String aQualifiedTableName) throws Exception {
         String schema = schemaName(aQualifiedTableName);
-        if (schema != null && !schema.isEmpty() && schemas.contains(schema)) {
+        if (schema != null && !schema.isEmpty() && schemas.contains(schema) && !schemasTablesColumns.containsKey(schema)) {
             fillTablesBySchema(schema);
         }
         return Optional
@@ -211,23 +258,23 @@ public class Metadata implements StatementsGenerator.TablesContainer {
      *
      * @throws Exception If some error occurs while database communication
      */
-    public final void fillTablesByDataSourceSchema() throws Exception {
+    private void fillTablesByDefaultSchema() throws Exception {
         fillTablesBySchema(defaultSchema);
     }
 
     private Map<String, String> readTablesNames(String aSchema4Sql) throws Exception {
         try (Connection conn = dataSource.getConnection()) {
-            try (ResultSet r = conn.getMetaData().getTables(null, aSchema4Sql, null, new String[]{Constants.JDBCPKS_TABLE_TYPE_TABLE, Constants.JDBCPKS_TABLE_TYPE_VIEW})) {
+            try (ResultSet r = conn.getMetaData().getTables(null, aSchema4Sql, null, new String[]{JDBCPKS_TABLE_TYPE_TABLE, JDBCPKS_TABLE_TYPE_VIEW})) {
                 Map<String, Integer> colIndicies = ColumnsIndicies.of(r.getMetaData());
-                int colIndex = colIndicies.get(Constants.JDBCCOLS_TABLE_NAME);
-                int colRemarks = colIndicies.get(Constants.JDBCCOLS_REMARKS);
-                assert colIndex > 0;
+                int colTableName = colIndicies.get(JDBCCOLS_TABLE_NAME);
+                int colRemarks = colIndicies.get(JDBCCOLS_REMARKS);
+                assert colTableName > 0;
                 assert colRemarks > 0;
                 Map<String, String> tNames = new CaseInsensitiveMap<>();
                 while (r.next()) {
-                    String lTableName = r.getString(colIndex);
-                    String lRemarks = r.getString(colRemarks);
-                    tNames.put(lTableName, lRemarks);
+                    String tableName = r.getString(colTableName);
+                    String remarks = r.getString(colRemarks);
+                    tNames.put(tableName, remarks);
                 }
                 return tNames;
             }
@@ -241,7 +288,7 @@ public class Metadata implements StatementsGenerator.TablesContainer {
      *                If it is null, connection default schema is used
      * @throws Exception If some error occurs while database communication
      */
-    public void fillTablesBySchema(String aSchema) throws Exception {
+    private void fillTablesBySchema(String aSchema) throws Exception {
         schemasTablesColumns.put(aSchema, querySchemaColumns(aSchema));
     }
 
@@ -250,7 +297,7 @@ public class Metadata implements StatementsGenerator.TablesContainer {
      *
      * @param aSchema A schema for which we should achieve metadata information.
      *                If it is null, connection default schema is used
-     * @param aTable
+     * @param aTable Table indexes to be fetched for.
      * @throws Exception If some error occurs while database communication
      */
     public void fillIndexes(final String aSchema, final String aTable) throws Exception {
@@ -273,7 +320,7 @@ public class Metadata implements StatementsGenerator.TablesContainer {
     }
 
     private Map<String, Map<String, JdbcColumn>> queryTablesColumns(String aSchema, String aTableNamePattern) throws Exception {
-        SqlDriver sqlDriver = getDataSourceSqlDriver();
+        SqlDriver sqlDriver = getSqlDriver();
         Map<String, Map<String, JdbcColumn>> columns;
         try (Connection conn = dataSource.getConnection()) {
             DatabaseMetaData meta = conn.getMetaData();
@@ -301,26 +348,26 @@ public class Metadata implements StatementsGenerator.TablesContainer {
         Map<String, Map<String, JdbcColumn>> tablesColumns = new CaseInsensitiveMap<>();
         if (r != null) {
             Map<String, Integer> colIndicies = ColumnsIndicies.of(r.getMetaData());
-            int JDBCCOLS_TABLE_INDEX = colIndicies.get(Constants.JDBCCOLS_TABLE_NAME);
-            int JDBCCOLS_COLUMN_INDEX = colIndicies.get(Constants.JDBCCOLS_COLUMN_NAME);
-            int JDBCCOLS_REMARKS_INDEX = colIndicies.get(Constants.JDBCCOLS_REMARKS);
-            int JDBCCOLS_DATA_TYPE_INDEX = colIndicies.get(Constants.JDBCCOLS_DATA_TYPE);
-            int JDBCCOLS_TYPE_NAME_INDEX = colIndicies.get(Constants.JDBCCOLS_TYPE_NAME);
-            int JDBCCOLS_COLUMN_SIZE_INDEX = colIndicies.get(Constants.JDBCCOLS_COLUMN_SIZE);
-            int JDBCCOLS_DECIMAL_DIGITS_INDEX = colIndicies.get(Constants.JDBCCOLS_DECIMAL_DIGITS);
-            int JDBCCOLS_NUM_PREC_RADIX_INDEX = colIndicies.get(Constants.JDBCCOLS_NUM_PREC_RADIX);
-            int JDBCCOLS_NULLABLE_INDEX = colIndicies.get(Constants.JDBCCOLS_NULLABLE);
+            int colTableName = colIndicies.get(JDBCCOLS_TABLE_NAME);
+            int colColumnName = colIndicies.get(JDBCCOLS_COLUMN_NAME);
+            int colRemarks = colIndicies.get(JDBCCOLS_REMARKS);
+            int colDataType = colIndicies.get(JDBCCOLS_DATA_TYPE);
+            int colTypeName = colIndicies.get(JDBCCOLS_TYPE_NAME);
+            int colColumnSize = colIndicies.get(JDBCCOLS_COLUMN_SIZE);
+            int colDecimalDigits = colIndicies.get(JDBCCOLS_DECIMAL_DIGITS);
+            int colNumPrecRadix = colIndicies.get(JDBCCOLS_NUM_PREC_RADIX);
+            int colNullable = colIndicies.get(JDBCCOLS_NULLABLE);
             while (r.next()) {
-                String fTableName = r.getString(JDBCCOLS_TABLE_INDEX);
+                String fTableName = r.getString(colTableName);
                 Map<String, JdbcColumn> columns = tablesColumns.computeIfAbsent(fTableName, tn -> new CaseInsensitiveMap<>());
-                String fName = r.getString(JDBCCOLS_COLUMN_INDEX);
-                String fDescription = r.getString(JDBCCOLS_REMARKS_INDEX);
-                String rdbmsTypeName = r.getString(JDBCCOLS_TYPE_NAME_INDEX);
-                int jdbcType = r.getInt(JDBCCOLS_DATA_TYPE_INDEX);
-                int size = r.getInt(JDBCCOLS_COLUMN_SIZE_INDEX);
-                int scale = r.getInt(JDBCCOLS_DECIMAL_DIGITS_INDEX);
-                int precision = r.getInt(JDBCCOLS_NUM_PREC_RADIX_INDEX);
-                int nullable = r.getInt(JDBCCOLS_NULLABLE_INDEX);
+                String fName = r.getString(colColumnName);
+                String fDescription = r.getString(colRemarks);
+                String rdbmsTypeName = r.getString(colTypeName);
+                int jdbcType = r.getInt(colDataType);
+                int size = r.getInt(colColumnSize);
+                int scale = r.getInt(colDecimalDigits);
+                int precision = r.getInt(colNumPrecRadix);
+                int nullable = r.getInt(colNullable);
                 //
                 int resolvedSize = sqlDriver.getTypesResolver().resolveSize(rdbmsTypeName, size);
 
@@ -376,15 +423,15 @@ public class Metadata implements StatementsGenerator.TablesContainer {
         Map<String, Map<String, PrimaryKey>> tablesKeys = new CaseInsensitiveMap<>();
         if (r != null) {
             Map<String, Integer> colsIndicies = ColumnsIndicies.of(r.getMetaData());
-            int JDBCPKS_TABLE_SCHEM_INDEX = colsIndicies.get(Constants.JDBCPKS_TABLE_SCHEM);
-            int JDBCPKS_TABLE_NAME_INDEX = colsIndicies.get(Constants.JDBCPKS_TABLE_NAME);
-            int JDBCPKS_COLUMN_NAME_INDEX = colsIndicies.get(Constants.JDBCPKS_COLUMN_NAME);
-            int JDBCPKS_CONSTRAINT_NAME_INDEX = colsIndicies.get(Constants.JDBCPKS_CONSTRAINT_NAME);
+            int colTableSchem = colsIndicies.get(JDBCPKS_TABLE_SCHEM);
+            int colTableName = colsIndicies.get(JDBCPKS_TABLE_NAME);
+            int colColumnName = colsIndicies.get(JDBCPKS_COLUMN_NAME);
+            int colConstraintName = colsIndicies.get(JDBCPKS_CONSTRAINT_NAME);
             while (r.next()) {
-                String lpkSchema = r.getString(JDBCPKS_TABLE_SCHEM_INDEX);
-                String lpkTableName = r.getString(JDBCPKS_TABLE_NAME_INDEX);
-                String lpkField = r.getString(JDBCPKS_COLUMN_NAME_INDEX);
-                String lpkName = r.getString(JDBCPKS_CONSTRAINT_NAME_INDEX);
+                String lpkSchema = r.getString(colTableSchem);
+                String lpkTableName = r.getString(colTableName);
+                String lpkField = r.getString(colColumnName);
+                String lpkName = r.getString(colConstraintName);
                 Map<String, PrimaryKey> tableKeys = tablesKeys.computeIfAbsent(lpkTableName, tn -> new CaseInsensitiveMap<>());
                 tableKeys.put(lpkTableName, new PrimaryKey(lpkSchema, lpkTableName, lpkField, lpkName));
             }
@@ -396,31 +443,31 @@ public class Metadata implements StatementsGenerator.TablesContainer {
         Map<String, Map<String, ForeignKey>> tablesKeys = new CaseInsensitiveMap<>();
         if (r != null) {
             Map<String, Integer> colsIndicies = ColumnsIndicies.of(r.getMetaData());
-            int JDBCFKS_FKTABLE_SCHEM_INDEX = colsIndicies.get(Constants.JDBCFKS_FKTABLE_SCHEM);
-            int JDBCFKS_FKTABLE_NAME_INDEX = colsIndicies.get(Constants.JDBCFKS_FKTABLE_NAME);
-            int JDBCFKS_FKCOLUMN_NAME_INDEX = colsIndicies.get(Constants.JDBCFKS_FKCOLUMN_NAME);
-            int JDBCFKS_FK_NAME_INDEX = colsIndicies.get(Constants.JDBCFKS_FK_NAME);
-            int JDBCFKS_FKUPDATE_RULE_INDEX = colsIndicies.get(Constants.JDBCFKS_FKUPDATE_RULE);
-            int JDBCFKS_FKDELETE_RULE_INDEX = colsIndicies.get(Constants.JDBCFKS_FKDELETE_RULE);
-            int JDBCFKS_FKDEFERRABILITY_INDEX = colsIndicies.get(Constants.JDBCFKS_FKDEFERRABILITY);
+            int colFkTableSchem = colsIndicies.get(JDBCFKS_FKTABLE_SCHEM);
+            int colFkTableName = colsIndicies.get(JDBCFKS_FKTABLE_NAME);
+            int colFkColumnName = colsIndicies.get(JDBCFKS_FKCOLUMN_NAME);
+            int colFkName = colsIndicies.get(JDBCFKS_FK_NAME);
+            int colFkUpdateRule = colsIndicies.get(JDBCFKS_FKUPDATE_RULE);
+            int colFkDeleteRule = colsIndicies.get(JDBCFKS_FKDELETE_RULE);
+            int colFkDeferrability = colsIndicies.get(JDBCFKS_FKDEFERRABILITY);
             //
-            int JDBCFKS_FKPKTABLE_SCHEM_INDEX = colsIndicies.get(Constants.JDBCFKS_FKPKTABLE_SCHEM);
-            int JDBCFKS_FKPKTABLE_NAME_INDEX = colsIndicies.get(Constants.JDBCFKS_FKPKTABLE_NAME);
-            int JDBCFKS_FKPKCOLUMN_NAME_INDEX = colsIndicies.get(Constants.JDBCFKS_FKPKCOLUMN_NAME);
-            int JDBCFKS_FKPK_NAME_INDEX = colsIndicies.get(Constants.JDBCFKS_FKPK_NAME);
+            int colFkPkTableSchem = colsIndicies.get(JDBCFKS_FKPKTABLE_SCHEM);
+            int colFkPkTableName = colsIndicies.get(JDBCFKS_FKPKTABLE_NAME);
+            int colFkPkColumnName = colsIndicies.get(JDBCFKS_FKPKCOLUMN_NAME);
+            int colFkPkName = colsIndicies.get(JDBCFKS_FKPK_NAME);
             while (r.next()) {
-                String lfkSchema = r.getString(JDBCFKS_FKTABLE_SCHEM_INDEX);
-                String lfkTableName = r.getString(JDBCFKS_FKTABLE_NAME_INDEX);
-                String lfkField = r.getString(JDBCFKS_FKCOLUMN_NAME_INDEX);
-                String lfkName = r.getString(JDBCFKS_FK_NAME_INDEX);
-                short lfkUpdateRule = r.getShort(JDBCFKS_FKUPDATE_RULE_INDEX);
-                short lfkDeleteRule = r.getShort(JDBCFKS_FKDELETE_RULE_INDEX);
-                short lfkDeferability = r.getShort(JDBCFKS_FKDEFERRABILITY_INDEX);
+                String lfkSchema = r.getString(colFkTableSchem);
+                String lfkTableName = r.getString(colFkTableName);
+                String lfkField = r.getString(colFkColumnName);
+                String lfkName = r.getString(colFkName);
+                short lfkUpdateRule = r.getShort(colFkUpdateRule);
+                short lfkDeleteRule = r.getShort(colFkDeleteRule);
+                short lfkDeferability = r.getShort(colFkDeferrability);
                 //
-                String lpkSchema = r.getString(JDBCFKS_FKPKTABLE_SCHEM_INDEX);
-                String lpkTableName = r.getString(JDBCFKS_FKPKTABLE_NAME_INDEX);
-                String lpkField = r.getString(JDBCFKS_FKPKCOLUMN_NAME_INDEX);
-                String lpkName = r.getString(JDBCFKS_FKPK_NAME_INDEX);
+                String lpkSchema = r.getString(colFkPkTableSchem);
+                String lpkTableName = r.getString(colFkPkTableName);
+                String lpkField = r.getString(colFkPkColumnName);
+                String lpkName = r.getString(colFkPkName);
                 //
                 Map<String, ForeignKey> tableKeys = tablesKeys.computeIfAbsent(lfkTableName, tn -> new CaseInsensitiveMap<>());
                 tableKeys.put(lfkField, new ForeignKey(lfkSchema, lfkTableName, lfkField, lfkName,
@@ -443,13 +490,13 @@ public class Metadata implements StatementsGenerator.TablesContainer {
             try {
                 try (ResultSet r = conn.getMetaData().getIndexInfo(null, schema4Sql, aTable, false, false)) {
                     Map<String, Integer> idxs = ColumnsIndicies.of(r.getMetaData());
-                    int JDBCIDX_INDEX_NAME = idxs.get(Constants.JDBCIDX_INDEX_NAME);
-                    int JDBCIDX_NON_UNIQUE = idxs.get(Constants.JDBCIDX_NON_UNIQUE);
-                    int JDBCIDX_TYPE = idxs.get(Constants.JDBCIDX_TYPE);
-                    //int JDBCIDX_TABLE_NAME = idxs.get(Constants.JDBCIDX_TABLE_NAME);
-                    int JDBCIDX_COLUMN_NAME = idxs.get(Constants.JDBCIDX_COLUMN_NAME);
-                    int JDBCIDX_ASC_OR_DESC = idxs.get(Constants.JDBCIDX_ASC_OR_DESC);
-                    int JDBCIDX_ORDINAL_POSITION = idxs.get(Constants.JDBCIDX_ORDINAL_POSITION);
+                    int colIndexName = idxs.get(JDBCIDX_INDEX_NAME);
+                    int colNonUnique = idxs.get(JDBCIDX_NON_UNIQUE);
+                    int colType = idxs.get(JDBCIDX_TYPE);
+                    //int colTableName = idxs.get(JDBCIDX_TABLE_NAME);
+                    int colColumnName = idxs.get(JDBCIDX_COLUMN_NAME);
+                    int colAscOrDesc = idxs.get(JDBCIDX_ASC_OR_DESC);
+                    int colOrdinalPosition = idxs.get(JDBCIDX_ORDINAL_POSITION);
                     String idxName = null;
                     Set<TableIndexColumn> columns = new LinkedHashSet<>();
                     boolean clustered = false;
@@ -457,10 +504,10 @@ public class Metadata implements StatementsGenerator.TablesContainer {
                     boolean hashed = false;
                     while (r.next()) {
                         //String tableName = r.getString(JDBCIDX_TABLE_NAME);
-                        idxName = r.getString(JDBCIDX_INDEX_NAME);
+                        idxName = r.getString(colIndexName);
                         if (!r.wasNull()) {
-                            unique = r.getBoolean(JDBCIDX_NON_UNIQUE);
-                            short type = r.getShort(JDBCIDX_TYPE);
+                            unique = r.getBoolean(colNonUnique);
+                            short type = r.getShort(colType);
                             switch (type) {
                                 case DatabaseMetaData.tableIndexClustered:
                                     clustered = true;
@@ -473,13 +520,13 @@ public class Metadata implements StatementsGenerator.TablesContainer {
                                 case DatabaseMetaData.tableIndexOther:
                                     break;
                             }
-                            String sColumnName = r.getString(JDBCIDX_COLUMN_NAME);
+                            String sColumnName = r.getString(colColumnName);
                             if (!r.wasNull()) {
-                                String sAsc = r.getString(JDBCIDX_ASC_OR_DESC);
+                                String sAsc = r.getString(colAscOrDesc);
                                 if (!r.wasNull()) {
                                     sAsc = null;
                                 }
-                                short sPosition = r.getShort(JDBCIDX_ORDINAL_POSITION);
+                                short sPosition = r.getShort(colOrdinalPosition);
                                 columns.add(new TableIndexColumn(
                                         sColumnName,
                                         sAsc == null || sAsc.toLowerCase().equals("a"),

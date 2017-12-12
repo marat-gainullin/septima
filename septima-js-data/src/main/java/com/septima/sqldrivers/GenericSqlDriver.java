@@ -1,6 +1,5 @@
 package com.septima.sqldrivers;
 
-import com.septima.Constants;
 import com.septima.changes.NamedJdbcValue;
 import com.septima.metadata.ForeignKey;
 import com.septima.metadata.PrimaryKey;
@@ -15,18 +14,19 @@ import java.sql.Wrapper;
 import java.util.List;
 
 /**
- *
  * @author mg
  */
 public class GenericSqlDriver extends SqlDriver {
 
+    private static final String GENERIC_DIALECT = "Generic";
+
     @Override
     public String getDialect() {
-        return Constants.GENERIC_DIALECT;
+        return GENERIC_DIALECT;
     }
 
     @Override
-    public boolean is(String aDialect) {
+    public boolean is(String aJdbcUrl) {
         return true;
     }
 
@@ -148,7 +148,7 @@ public class GenericSqlDriver extends SqlDriver {
     }
 
     @Override
-    public Escape getEscape() {
+    public Character getEscape() {
         return null;
     }
 

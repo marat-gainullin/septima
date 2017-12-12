@@ -1,6 +1,5 @@
 package com.septima.sqldrivers;
 
-import com.septima.Constants;
 import com.septima.changes.NamedJdbcValue;
 import com.septima.metadata.*;
 import com.septima.metadata.ForeignKey;
@@ -19,15 +18,14 @@ import java.util.Set;
  */
 public class MySqlSqlDriver extends SqlDriver {
 
-    // настройка экранирования наименования объектов БД
-    private static final Escape ESCAPE = new Escape("`", "`");
-
-    protected static final int[] mySqlErrorCodes = {};
-    protected static final String[] platypusErrorMessages = {};
-    protected MySqlTypesResolver resolver = new MySqlTypesResolver();
-    protected static final String SET_SCHEMA_CLAUSE = "USE %s";
-    protected static final String GET_SCHEMA_CLAUSE = "SELECT DATABASE()";
-    protected static final String CREATE_SCHEMA_CLAUSE = "CREATE DATABASE %s ENGINE=InnoDB";
+    private static final String MYSQL_DIALECT = "MySql";
+    private final MySqlTypesResolver resolver = new MySqlTypesResolver();
+    private static final Character ESCAPE = '`';
+    private static final int[] mySqlErrorCodes = {};
+    private static final String[] platypusErrorMessages = {};
+    private static final String SET_SCHEMA_CLAUSE = "USE %s";
+    private static final String GET_SCHEMA_CLAUSE = "SELECT DATABASE()";
+    private static final String CREATE_SCHEMA_CLAUSE = "CREATE DATABASE %s ENGINE=InnoDB";
     private static final Set<String> numericTypes = Set.of(
             "TINYINT",
             "SMALLINT",
@@ -50,12 +48,12 @@ public class MySqlSqlDriver extends SqlDriver {
 
     @Override
     public String getDialect() {
-        return Constants.MYSQL_DIALECT;
+        return MYSQL_DIALECT;
     }
 
     @Override
-    public boolean is(String aDialect) {
-        return Constants.MYSQL_DIALECT.equals(aDialect);
+    public boolean is(String aJdbcUrl) {
+        return aJdbcUrl.contains("jdbc:mysql");
     }
 
     @Override
@@ -110,7 +108,7 @@ public class MySqlSqlDriver extends SqlDriver {
                 + "   SET res = CONCAT(@select_stm,';',@stm); "
                 + "END";
         String sql2 = "CALL " + schemaClause + "setColumnComment('"
-                + unescapeName(aOwnerName) + "','" + unescapeName(aTableName) + "','" + unescapeName(aFieldName) + "','" + aDescription + "',@a)";
+                + unescapeNameIfNeeded(aOwnerName) + "','" + unescapeNameIfNeeded(aTableName) + "','" + unescapeNameIfNeeded(aFieldName) + "','" + aDescription + "',@a)";
         String sql3 = "DROP PROCEDURE " + schemaClause + "setColumnComment";
         return new String[]{sql0, sql1, sql2, sql3};
     }
@@ -217,7 +215,7 @@ public class MySqlSqlDriver extends SqlDriver {
                         .append(s1)
                         .append(", ")
                         .append(s2))
-                .map(sb -> sb.toString())
+                .map(StringBuilder::toString)
                 .orElse("");
         return "CREATE " + (aIndex.isUnique() ? "UNIQUE " : "")
                 + "INDEX " + escapeNameIfNeeded(aIndex.getName()) + (aIndex.isHashed() ? " USING HASH " : " ")
@@ -342,7 +340,7 @@ public class MySqlSqlDriver extends SqlDriver {
     }
 
     @Override
-    public Escape getEscape() {
+    public Character getEscape() {
         return ESCAPE;
     }
 

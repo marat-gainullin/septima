@@ -1,6 +1,5 @@
 package com.septima.sqldrivers;
 
-import com.septima.Constants;
 import com.septima.changes.NamedJdbcValue;
 import com.septima.metadata.*;
 import com.septima.metadata.ForeignKey;
@@ -18,13 +17,13 @@ import java.util.List;
  */
 public class MsSqlSqlDriver extends SqlDriver {
 
-    // настройка экранирования наименования объектов БД
-    private static final Escape ESCAPE = new Escape("[", "]");
+    private static final String MSSQL_DIALECT = "MsSql";
+    private static final Character ESCAPE = '"';
 
-    protected static final String GET_SCHEMA_CLAUSE = "SELECT SCHEMA_NAME()";
-    protected static final String CREATE_SCHEMA_CLAUSE = "CREATE SCHEMA %s";
-    protected static final MsSqlTypesResolver resolver = new MsSqlTypesResolver();
-    protected static final String ADD_COLUMN_COMMENT_CLAUSE = ""
+    private static final String GET_SCHEMA_CLAUSE = "SELECT SCHEMA_NAME()";
+    private static final String CREATE_SCHEMA_CLAUSE = "CREATE SCHEMA %s";
+    private static final MsSqlTypesResolver resolver = new MsSqlTypesResolver();
+    private static final String ADD_COLUMN_COMMENT_CLAUSE = ""
             + "begin "
             + "begin try "
             + "EXEC sys.sp_dropextendedproperty @name=N'MS_Description' , @level0type=N'SCHEMA',@level0name=N'%s', @level1type=N'TABLE',@level1name=N'%s', @level2type=N'COLUMN',@level2name=N'%s' "
@@ -34,7 +33,7 @@ public class MsSqlSqlDriver extends SqlDriver {
             + "EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'%s' , @level0type=N'SCHEMA',@level0name=N'%s', @level1type=N'TABLE',@level1name=N'%s', @level2type=N'COLUMN',@level2name=N'%s' "
             + " commit "
             + "end ";
-    protected static final String ADD_TABLE_COMMENT_CLAUSE = ""
+    private static final String ADD_TABLE_COMMENT_CLAUSE = ""
             + "begin "
             + "  begin try "
             + "    EXEC sys.sp_dropextendedproperty @name=N'MS_Description' , @level0type=N'SCHEMA',@level0name=N'%s', @level1type=N'TABLE',@level1name=N'%s'"
@@ -44,7 +43,7 @@ public class MsSqlSqlDriver extends SqlDriver {
             + "  EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'%s' , @level0type=N'SCHEMA',@level0name=N'%s', @level1type=N'TABLE',@level1name=N'%s' "
             + " commit "
             + "end ";
-    protected static final String ALTER_FIELD_SQL_PREFIX = "alter table %s alter column ";
+    private static final String ALTER_FIELD_SQL_PREFIX = "alter table %s alter column ";
 
     public MsSqlSqlDriver() {
         super();
@@ -52,12 +51,12 @@ public class MsSqlSqlDriver extends SqlDriver {
 
     @Override
     public String getDialect() {
-        return Constants.MSSQL_DIALECT;
+        return MSSQL_DIALECT;
     }
 
     @Override
-    public boolean is(String aDialect) {
-        return Constants.MSSQL_DIALECT.equals(aDialect);
+    public boolean is(String aJdbcUrl) {
+        return aJdbcUrl.contains("jdbc:jtds:sqlserver");
     }
 
     @Override
@@ -153,7 +152,7 @@ public class MsSqlSqlDriver extends SqlDriver {
         if (aDescription == null) {
             aDescription = "";
         }
-        return new String[]{String.format(ADD_COLUMN_COMMENT_CLAUSE, unescapeName(aOwnerName), unescapeName(aTableName), unescapeName(aFieldName), aDescription, unescapeName(aOwnerName), unescapeName(aTableName), unescapeName(aFieldName))};
+        return new String[]{String.format(ADD_COLUMN_COMMENT_CLAUSE, unescapeNameIfNeeded(aOwnerName), unescapeNameIfNeeded(aTableName), unescapeNameIfNeeded(aFieldName), aDescription, unescapeNameIfNeeded(aOwnerName), unescapeNameIfNeeded(aTableName), unescapeNameIfNeeded(aFieldName))};
     }
 
     @Override
@@ -161,7 +160,7 @@ public class MsSqlSqlDriver extends SqlDriver {
         if (aDescription == null) {
             aDescription = "";
         }
-        return String.format(ADD_TABLE_COMMENT_CLAUSE, unescapeName(aOwnerName), unescapeName(aTableName), aDescription, unescapeName(aOwnerName), unescapeName(aTableName));
+        return String.format(ADD_TABLE_COMMENT_CLAUSE, unescapeNameIfNeeded(aOwnerName), unescapeNameIfNeeded(aTableName), aDescription, unescapeNameIfNeeded(aOwnerName), unescapeNameIfNeeded(aTableName));
     }
 
     @Override
@@ -196,7 +195,7 @@ public class MsSqlSqlDriver extends SqlDriver {
                         .append(s1)
                         .append(", ")
                         .append(s2))
-                .map(sb -> sb.toString())
+                .map(StringBuilder::toString)
                 .orElse("");
         return "create " + modifier + " index " + indexName + " on " + tableName + "( " + fieldsList + " )";
     }
@@ -306,7 +305,7 @@ public class MsSqlSqlDriver extends SqlDriver {
     }
 
     @Override
-    public Escape getEscape() {
+    public Character getEscape() {
         return ESCAPE;
     }
 

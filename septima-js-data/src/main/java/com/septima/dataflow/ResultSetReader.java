@@ -1,6 +1,6 @@
 package com.septima.dataflow;
 
-import com.septima.Constants;
+import com.septima.ApplicationTypes;
 import com.septima.metadata.Field;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -156,7 +156,7 @@ public class ResultSetReader {
                 Field expectedField = aExpectedFields.get(readField.getName());
                 Field field = expectedField != null ? expectedField : readField;
                 Object appObject;
-                if (Constants.GEOMETRY_TYPE_NAME.equals(field.getType())) {
+                if (ApplicationTypes.GEOMETRY_TYPE_NAME.equals(field.getType())) {
                     appObject = gReader.readGeometry(aResultSet, i, aConnection);
                 } else {
                     appObject = JdbcDataProvider.get(aResultSet, i);

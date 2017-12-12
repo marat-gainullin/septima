@@ -1,6 +1,5 @@
 package com.septima.sqldrivers;
 
-import com.septima.Constants;
 import com.septima.changes.NamedJdbcValue;
 import com.septima.metadata.*;
 import com.septima.metadata.ForeignKey;
@@ -18,44 +17,28 @@ import java.util.List;
  */
 public class H2SqlDriver extends SqlDriver {
 
-    // настройка экранирования наименования объектов БД
-    private static final Escape ESCAPE = new Escape("`", "`");
+    private static final String H2_DIALECT = "H2";
+    private static final Character ESCAPE = '`';
 
-    protected TypesResolver resolver = new H2TypesResolver();
-    protected static final int[] h2ErrorCodes = {};
-    protected static final String[] platypusErrorMessages = {};
-    protected static final String SET_SCHEMA_CLAUSE = "SET SCHEMA %s";
-    protected static final String GET_SCHEMA_CLAUSE = "SELECT SCHEMA()";
-    protected static final String CREATE_SCHEMA_CLAUSE = "CREATE SCHEMA IF NOT EXISTS %s";
-    protected static final String SQL_CREATE_EMPTY_TABLE = "CREATE TABLE %s (%s DECIMAL(18,0) NOT NULL PRIMARY KEY)";
-    protected static final String SQL_CREATE_TABLE_COMMENT = "COMMENT ON TABLE %s IS '%s'";
-    protected static final String SQL_CREATE_COLUMN_COMMENT = "COMMENT ON COLUMN %s IS '%s'";
-    protected static final String SQL_DROP_TABLE = "DROP TABLE %s";
-    protected static final String SQL_CREATE_INDEX = "CREATE %s INDEX %s ON %s (%s)";
-    protected static final String SQL_DROP_INDEX = "DROP INDEX %s";
-    protected static final String SQL_ADD_PK = "ALTER TABLE %s ADD %s PRIMARY KEY (%s)";
-    protected static final String SQL_DROP_PK = "ALTER TABLE %s DROP PRIMARY KEY";
-    protected static final String SQL_ADD_FK = "ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s) %s";
-    protected static final String SQL_DROP_FK = "ALTER TABLE %s DROP CONSTRAINT %s";
-    protected static final String SQL_PARENTS_LIST = ""
-            + "WITH RECURSIVE parents(mdent_id, mdent_parent_id) AS "
-            + "( "
-            + "SELECT m1.mdent_id, m1.mdent_parent_id FROM mtd_entities m1 WHERE m1.mdent_id = %s "
-            + "    UNION ALL "
-            + "SELECT m2.mdent_id, m2.mdent_parent_id FROM parents p, mtd_entities m2 WHERE m2.mdent_id = p.mdent_parent_id "
-            + ") "
-            + "SELECT mdent_id, mdent_parent_id FROM parents";
-    protected static final String SQL_CHILDREN_LIST = ""
-            + "WITH recursive children(mdent_id, mdent_name, mdent_parent_id, mdent_type, mdent_content_txt, mdent_content_txt_size, mdent_content_txt_crc32) AS"
-            + "( "
-            + "SELECT m1.mdent_id, m1.mdent_name, m1.mdent_parent_id, m1.mdent_type, m1.mdent_content_txt, m1.mdent_content_txt_size, m1.mdent_content_txt_crc32 FROM mtd_entities m1 WHERE m1.mdent_id = :%s "
-            + "    union all "
-            + "SELECT m2.mdent_id, m2.mdent_name, m2.mdent_parent_id, m2.mdent_type, m2.mdent_content_txt, m2.mdent_content_txt_size, m2.mdent_content_txt_crc32 FROM children c, mtd_entities m2 WHERE c.mdent_id = m2.mdent_parent_id "
-            + ") "
-            + "SELECT mdent_id, mdent_name, mdent_parent_id, mdent_type, mdent_content_txt, mdent_content_txt_size, mdent_content_txt_crc32 FROM children";
-    protected static final String SQL_RENAME_COLUMN = "ALTER TABLE %s ALTER COLUMN %s RENAME TO %s";
-    protected static final String SQL_CHANGE_COLUMN_TYPE = "ALTER TABLE %s ALTER COLUMN %s %s";
-    protected static final String SQL_CHANGE_COLUMN_NULLABLE = "ALTER TABLE %s ALTER COLUMN %s SET %s NULL";
+    private TypesResolver resolver = new H2TypesResolver();
+    private static final int[] h2ErrorCodes = {};
+    private static final String[] platypusErrorMessages = {};
+    private static final String SET_SCHEMA_CLAUSE = "SET SCHEMA %s";
+    private static final String GET_SCHEMA_CLAUSE = "SELECT SCHEMA()";
+    private static final String CREATE_SCHEMA_CLAUSE = "CREATE SCHEMA IF NOT EXISTS %s";
+    private static final String SQL_CREATE_EMPTY_TABLE = "CREATE TABLE %s (%s DECIMAL(18,0) NOT NULL PRIMARY KEY)";
+    private static final String SQL_CREATE_TABLE_COMMENT = "COMMENT ON TABLE %s IS '%s'";
+    private static final String SQL_CREATE_COLUMN_COMMENT = "COMMENT ON COLUMN %s IS '%s'";
+    private static final String SQL_DROP_TABLE = "DROP TABLE %s";
+    private static final String SQL_CREATE_INDEX = "CREATE %s INDEX %s ON %s (%s)";
+    private static final String SQL_DROP_INDEX = "DROP INDEX %s";
+    private static final String SQL_ADD_PK = "ALTER TABLE %s ADD %s PRIMARY KEY (%s)";
+    private static final String SQL_DROP_PK = "ALTER TABLE %s DROP PRIMARY KEY";
+    private static final String SQL_ADD_FK = "ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s) %s";
+    private static final String SQL_DROP_FK = "ALTER TABLE %s DROP CONSTRAINT %s";
+    private static final String SQL_RENAME_COLUMN = "ALTER TABLE %s ALTER COLUMN %s RENAME TO %s";
+    private static final String SQL_CHANGE_COLUMN_TYPE = "ALTER TABLE %s ALTER COLUMN %s %s";
+    private static final String SQL_CHANGE_COLUMN_NULLABLE = "ALTER TABLE %s ALTER COLUMN %s SET %s NULL";
 
     public H2SqlDriver() {
         super();
@@ -63,12 +46,12 @@ public class H2SqlDriver extends SqlDriver {
 
     @Override
     public String getDialect() {
-        return Constants.H2_DIALECT;
+        return H2_DIALECT;
     }
 
     @Override
-    public boolean is(String aDialect) {
-        return Constants.H2_DIALECT.equals(aDialect);
+    public boolean is(String aJdbcUrl) {
+        return aJdbcUrl.contains("jdbc:h2");
     }
 
     /**
@@ -280,7 +263,7 @@ public class H2SqlDriver extends SqlDriver {
                         .append(s1)
                         .append(", ")
                         .append(s2))
-                .map(sb -> sb.toString())
+                .map(StringBuilder::toString)
                 .orElse("");
         return String.format(SQL_CREATE_INDEX,
                 (aIndex.isUnique() ? "UNIQUE " : "") + (aIndex.isHashed() ? "HASH " : ""),
@@ -303,7 +286,7 @@ public class H2SqlDriver extends SqlDriver {
      */
     @Override
     public String parseException(Exception ex) {
-        if (ex != null && ex instanceof SQLException) {
+        if (ex instanceof SQLException) {
             SQLException sqlEx = (SQLException) ex;
             int errorCode = sqlEx.getErrorCode();
             for (int i = 0; i < h2ErrorCodes.length; i++) {
@@ -415,7 +398,7 @@ public class H2SqlDriver extends SqlDriver {
     }
 
     @Override
-    public Escape getEscape() {
+    public Character getEscape() {
         return ESCAPE;
     }
 
