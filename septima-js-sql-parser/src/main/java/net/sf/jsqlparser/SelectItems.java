@@ -16,12 +16,15 @@ import net.sf.jsqlparser.statement.select.Union;
  *
  * @author mg
  */
-public class ResultsFinder implements SelectVisitor, SelectItemVisitor {
+public class SelectItems implements SelectVisitor, SelectItemVisitor {
 
-    private List<SelectItem> results = new ArrayList<>();
+    private final List<SelectItem> results = new ArrayList<>();
 
-    public static List<SelectItem> getResults(SelectBody aSelectBody) {
-        ResultsFinder instance = new ResultsFinder();
+    private SelectItems(){
+    }
+
+    public static List<SelectItem> find(SelectBody aSelectBody) {
+        SelectItems instance = new SelectItems();
         aSelectBody.accept(instance);
         return instance.results;
     }

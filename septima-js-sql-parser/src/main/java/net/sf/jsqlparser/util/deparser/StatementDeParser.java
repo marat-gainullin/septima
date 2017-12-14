@@ -1,7 +1,6 @@
 package net.sf.jsqlparser.util.deparser;
 
-import java.util.Iterator;
-
+import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.StatementVisitor;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import net.sf.jsqlparser.statement.delete.Delete;
@@ -15,97 +14,100 @@ import net.sf.jsqlparser.statement.update.Update;
 
 public class StatementDeParser implements StatementVisitor {
 
-    protected StringBuilder buffer;
+    public static String assemble(Statement syntax){
+        StatementDeParser deParser = new StatementDeParser(new StringBuilder());
+        syntax.accept(deParser);
+        return deParser.getBuilder().toString();
+    }
 
-    public StatementDeParser(StringBuilder buffer) {
-        this.buffer = buffer;
+    protected final StringBuilder builder;
+
+    public StatementDeParser(StringBuilder builder) {
+        this.builder = builder;
     }
 
     public void visit(CreateTable createTable) {
-        CreateTableDeParser createTableDeParser = new CreateTableDeParser(buffer);
+        CreateTableDeParser createTableDeParser = new CreateTableDeParser(builder);
         createTableDeParser.deParse(createTable);
     }
 
     public void visit(Delete delete) {
         SelectDeParser selectDeParser = new SelectDeParser();
-        selectDeParser.setBuffer(buffer);
-        ExpressionDeParser expressionDeParser = new ExpressionDeParser(selectDeParser, buffer);
+        selectDeParser.setBuffer(builder);
+        ExpressionDeParser expressionDeParser = new ExpressionDeParser(selectDeParser, builder);
         selectDeParser.setExpressionVisitor(expressionDeParser);
-        DeleteDeParser deleteDeParser = new DeleteDeParser(expressionDeParser, buffer);
+        DeleteDeParser deleteDeParser = new DeleteDeParser(expressionDeParser, builder);
         deleteDeParser.deParse(delete);
     }
 
     public void visit(Drop drop) {
         SelectDeParser selectDeParser = new SelectDeParser();
-        selectDeParser.setBuffer(buffer);
-        ExpressionDeParser expressionDeParser = new ExpressionDeParser(selectDeParser, buffer);
+        selectDeParser.setBuffer(builder);
+        ExpressionDeParser expressionDeParser = new ExpressionDeParser(selectDeParser, builder);
         selectDeParser.setExpressionVisitor(expressionDeParser);
-        DropDeParser dropDeParser = new DropDeParser(expressionDeParser, buffer);
+        DropDeParser dropDeParser = new DropDeParser(expressionDeParser, builder);
         dropDeParser.deParse(drop);
     }
 
     public void visit(Insert insert) {
         SelectDeParser selectDeParser = new SelectDeParser();
-        selectDeParser.setBuffer(buffer);
-        ExpressionDeParser expressionDeParser = new ExpressionDeParser(selectDeParser, buffer);
+        selectDeParser.setBuffer(builder);
+        ExpressionDeParser expressionDeParser = new ExpressionDeParser(selectDeParser, builder);
         selectDeParser.setExpressionVisitor(expressionDeParser);
-        InsertDeParser insertDeParser = new InsertDeParser(expressionDeParser, selectDeParser, buffer);
+        InsertDeParser insertDeParser = new InsertDeParser(expressionDeParser, selectDeParser, builder);
         insertDeParser.deParse(insert);
 
     }
 
     public void visit(Replace replace) {
         SelectDeParser selectDeParser = new SelectDeParser();
-        selectDeParser.setBuffer(buffer);
-        ExpressionDeParser expressionDeParser = new ExpressionDeParser(selectDeParser, buffer);
+        selectDeParser.setBuffer(builder);
+        ExpressionDeParser expressionDeParser = new ExpressionDeParser(selectDeParser, builder);
         selectDeParser.setExpressionVisitor(expressionDeParser);
-        ReplaceDeParser replaceDeParser = new ReplaceDeParser(expressionDeParser, selectDeParser, buffer);
+        ReplaceDeParser replaceDeParser = new ReplaceDeParser(expressionDeParser, selectDeParser, builder);
         replaceDeParser.deParse(replace);
     }
 
     public void visit(Select select) {
         SelectDeParser selectDeParser = new SelectDeParser();
-        selectDeParser.setBuffer(buffer);
-        ExpressionDeParser expressionDeParser = new ExpressionDeParser(selectDeParser, buffer);
+        selectDeParser.setBuffer(builder);
+        ExpressionDeParser expressionDeParser = new ExpressionDeParser(selectDeParser, builder);
         selectDeParser.setExpressionVisitor(expressionDeParser);
         if (select.getWithItemsList() != null && !select.getWithItemsList().isEmpty()) {
-            buffer.append(select.getCommentWith() != null ? select.getCommentWith()+" " : "").append(ExpressionDeParser.LINE_SEPARATOR).append("With ");
-            
-            for (int i = 0; i <  select.getWithItemsList().size(); i++) {
-             WithItem withItem = (WithItem) select.getWithItemsList().get(i);
-             buffer.append(withItem);
-             buffer.append((i < select.getWithItemsList().size() - 1) ? (!"".equals(select.getCommentsComma().get(i)) ? " " + select.getCommentsComma().get(i)+ExpressionDeParser.LINE_SEPARATOR:"")+ "," : "")
-             .append(ExpressionDeParser.LINE_SEPARATOR).append(" ");
+            builder.append(select.getCommentWith() != null ? select.getCommentWith() + " " : "").append(ExpressionDeParser.LINE_SEPARATOR).append("With ");
+
+            for (int i = 0; i < select.getWithItemsList().size(); i++) {
+                WithItem withItem = select.getWithItemsList().get(i);
+                builder.append(withItem);
+                builder.append((i < select.getWithItemsList().size() - 1) ? (!"".equals(select.getCommentsComma().get(i)) ? " " + select.getCommentsComma().get(i) + ExpressionDeParser.LINE_SEPARATOR : "") + "," : "")
+                        .append(ExpressionDeParser.LINE_SEPARATOR).append(" ");
             }
         }
         select.getSelectBody().accept(selectDeParser);
-        buffer.append(!"".equals(select.getEndComment()) ? " "+select.getEndComment() : "");
+        builder.append(!"".equals(select.getEndComment()) ? " " + select.getEndComment() : "");
     }
 
     public void visit(Truncate truncate) {
         SelectDeParser selectDeParser = new SelectDeParser();
-        selectDeParser.setBuffer(buffer);
-        ExpressionDeParser expressionDeParser = new ExpressionDeParser(selectDeParser, buffer);
+        selectDeParser.setBuffer(builder);
+        ExpressionDeParser expressionDeParser = new ExpressionDeParser(selectDeParser, builder);
         selectDeParser.setExpressionVisitor(expressionDeParser);
-        TruncateDeParser truncateDeParser = new TruncateDeParser(expressionDeParser, buffer);
+        TruncateDeParser truncateDeParser = new TruncateDeParser(expressionDeParser, builder);
         truncateDeParser.deParse(truncate);
     }
 
     public void visit(Update update) {
         SelectDeParser selectDeParser = new SelectDeParser();
-        selectDeParser.setBuffer(buffer);
-        ExpressionDeParser expressionDeParser = new ExpressionDeParser(selectDeParser, buffer);
-        UpdateDeParser updateDeParser = new UpdateDeParser(expressionDeParser, buffer);
+        selectDeParser.setBuffer(builder);
+        ExpressionDeParser expressionDeParser = new ExpressionDeParser(selectDeParser, builder);
+        UpdateDeParser updateDeParser = new UpdateDeParser(expressionDeParser, builder);
         selectDeParser.setExpressionVisitor(expressionDeParser);
         updateDeParser.deParse(update);
 
     }
 
-    public StringBuilder getBuffer() {
-        return buffer;
+    public StringBuilder getBuilder() {
+        return builder;
     }
 
-    public void setBuffer(StringBuilder buffer) {
-        this.buffer = buffer;
-    }
 }

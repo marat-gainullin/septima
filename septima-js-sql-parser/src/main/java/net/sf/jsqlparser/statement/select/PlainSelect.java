@@ -30,7 +30,7 @@ import net.sf.jsqlparser.expression.Expression;
  */
 public class PlainSelect implements SelectBody {
 
-    private Distinct distinct = null;
+    private Distinct distinct;
     private List<SelectItem> selectItems;
     private Into into;
     private FromItem fromItem;
@@ -198,7 +198,7 @@ public class PlainSelect implements SelectBody {
                 }
             }
         }
-        //sql += getFormatedList(joins, "", false, false);
+        //sql += getFormattedList(joins, "", false, false);
         sql += ((where != null) ? (getCommentWhere() != null ? " " + getCommentWhere() : "") + " WHERE " + where : "");
         sql += ((connect != null) ? (sql.startsWith(" ") ? connect.toString() : " " + connect.toString()) : "");
 
@@ -510,7 +510,7 @@ public class PlainSelect implements SelectBody {
     /**
      * @return the commentCommaOrderBy
      */
-    public List getCommentCommaOrderBy() {
+    public List<String> getCommentCommaOrderBy() {
         return commentCommaOrderBy;
     }
 

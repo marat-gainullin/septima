@@ -1,7 +1,7 @@
 package net.sf.jsqlparser;
 
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import net.sf.jsqlparser.expression.AllComparisonExpression;
@@ -10,7 +10,6 @@ import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.CaseExpression;
 import net.sf.jsqlparser.expression.DateValue;
 import net.sf.jsqlparser.expression.DoubleValue;
-import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.ExpressionVisitor;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.InverseExpression;
@@ -64,29 +63,24 @@ import net.sf.jsqlparser.statement.select.Union;
  *
  * @author mg
  */
-public class SourcesFinder implements SelectVisitor, FromItemVisitor, ExpressionVisitor, ItemsListVisitor {
+public class FromItems implements SelectVisitor, FromItemVisitor, ExpressionVisitor, ItemsListVisitor {
 
-    public enum TO_CASE {
-
+    public enum ToCase {
         LOWER,
         UPPER
     }
-    private TO_CASE toCase = null;
-    private Map<String, FromItem> sources = new HashMap<>();
+    private final ToCase toCase;
+    private final Map<String, FromItem> sources = new HashMap<>();
 
-    private SourcesFinder() {
-        super();
-    }
-
-    private SourcesFinder(TO_CASE aToCase) {
+    private FromItems(ToCase aToCase) {
         super();
         toCase = aToCase;
     }
 
-    public static Map<String, FromItem> getSourcesMap(TO_CASE toCase, SelectBody aSelectBody) {
-        SourcesFinder instance = new SourcesFinder(toCase);
+    public static Map<String, FromItem> find(ToCase toCase, SelectBody aSelectBody) {
+        FromItems instance = new FromItems(toCase);
         aSelectBody.accept(instance);
-        return instance.sources;
+        return Collections.unmodifiableMap(instance.sources);
     }
 
     @Override
@@ -104,11 +98,9 @@ public class SourcesFinder implements SelectVisitor, FromItemVisitor, Expression
 
     @Override
     public void visit(Union union) {
-        Iterator iter = union.getPlainSelects().iterator();
-        if (iter.hasNext()) {
-            PlainSelect plainSelect = (PlainSelect) iter.next();
-            visit(plainSelect);
-        }
+        union.getPlainSelects().stream()
+                .findFirst()
+                .ifPresent(this::visit);
     }
 
     @Override
@@ -116,23 +108,24 @@ public class SourcesFinder implements SelectVisitor, FromItemVisitor, Expression
         String tableWholeName = table.getWholeTableName();
         if (table.getAlias() != null && !"".equals(table.getAlias().getName())) {
             tableWholeName = table.getAlias().getName();
-        } else {// Если нет алиаса, то надо ориентироваться по имени таблицы (в имени м.б. и схема).
+        } else {
+            // Если нет алиаса, то надо ориентироваться по имени таблицы (в имени м.б. и схема).
             // Однако, в списке from может быть указана таблица со схемой, а в списке select без неё.
             // Для того, чтобы соответствующая таблица из from могла быть найдена, если в её
             // имени присутствует имя схемы, то надо её добавить ещё раз и по имени без схемы.
             if (table.getSchemaName() != null && !table.getSchemaName().isEmpty()) {
                 String nameWithoutSchema = table.getName();
-                if (toCase == TO_CASE.LOWER) {
+                if (toCase == ToCase.LOWER) {
                     nameWithoutSchema = nameWithoutSchema.toLowerCase();
-                } else if (toCase == TO_CASE.UPPER) {
+                } else if (toCase == ToCase.UPPER) {
                     nameWithoutSchema = nameWithoutSchema.toUpperCase();
                 }
                 sources.put(nameWithoutSchema, table);
             }
         }
-        if (toCase == TO_CASE.LOWER) {
+        if (toCase == ToCase.LOWER) {
             tableWholeName = tableWholeName.toLowerCase();
-        } else if (toCase == TO_CASE.UPPER) {
+        } else if (toCase == ToCase.UPPER) {
             tableWholeName = tableWholeName.toUpperCase();
         }
         sources.put(tableWholeName, table);
@@ -272,18 +265,15 @@ public class SourcesFinder implements SelectVisitor, FromItemVisitor, Expression
         visitBinaryExpression(subtraction);
     }
 
-    public void visitBinaryExpression(BinaryExpression binaryExpression) {
+    private void visitBinaryExpression(BinaryExpression binaryExpression) {
         binaryExpression.getLeftExpression().accept(this);
         binaryExpression.getRightExpression().accept(this);
     }
 
     @Override
     public void visit(ExpressionList expressionList) {
-        for (Iterator iter = expressionList.getExpressions().iterator(); iter.hasNext();) {
-            Expression expression = (Expression) iter.next();
-            expression.accept(this);
-        }
-
+        expressionList.getExpressions()
+                .forEach(expression -> expression.accept(this));
     }
 
     @Override
@@ -298,30 +288,22 @@ public class SourcesFinder implements SelectVisitor, FromItemVisitor, Expression
     public void visit(TimeValue timeValue) {
     }
 
-    /* (non-Javadoc)
-     * @see net.sf.jsqlparser.expression.ExpressionVisitor#visit(net.sf.jsqlparser.expression.CaseExpression)
-     */
     @Override
     public void visit(CaseExpression caseExpression) {
-        // TODO Auto-generated method stub
     }
 
-    /* (non-Javadoc)
-     * @see net.sf.jsqlparser.expression.ExpressionVisitor#visit(net.sf.jsqlparser.expression.WhenClause)
-     */
     @Override
     public void visit(WhenClause whenClause) {
-        // TODO Auto-generated method stub
     }
 
     @Override
     public void visit(AllComparisonExpression allComparisonExpression) {
-        allComparisonExpression.GetSubSelect().getSelectBody().accept(this);
+        allComparisonExpression.getSubSelect().getSelectBody().accept(this);
     }
 
     @Override
     public void visit(AnyComparisonExpression anyComparisonExpression) {
-        anyComparisonExpression.GetSubSelect().getSelectBody().accept(this);
+        anyComparisonExpression.getSubSelect().getSelectBody().accept(this);
     }
 
     @Override

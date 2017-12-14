@@ -5,7 +5,7 @@ import net.sf.jsqlparser.statement.create.table.CreateTable;
 import net.sf.jsqlparser.statement.create.table.Index;
 
 /**
- * A class to de-parse (that is, tranform from JSqlParser hierarchy into a
+ * A class to de-parse (that is, transform from JSqlParser hierarchy into a
  * string) a {@link net.sf.jsqlparser.statement.create.table.CreateTable}
  */
 public class CreateTableDeParser {
@@ -13,7 +13,7 @@ public class CreateTableDeParser {
     protected StringBuilder buffer;
 
     /**
-     * @param aBuffer the buffer that will be filled with the select
+     * @param aBuffer the builder that will be filled with the select
      */
     public CreateTableDeParser(StringBuilder aBuffer) {
         buffer = aBuffer;
@@ -30,7 +30,7 @@ public class CreateTableDeParser {
             buffer.append(aCreateTable.getCommentBeginBracket() != null ? " " + aCreateTable.getCommentBeginBracket() + ExpressionDeParser.LINE_SEPARATOR : "").append(" ( ");
 
             for (int i = 0; i < aCreateTable.getColumnDefinitions().size(); i++) {
-                ColumnDefinition columnDefinition = (ColumnDefinition) aCreateTable.getColumnDefinitions().get(i);
+                ColumnDefinition columnDefinition = aCreateTable.getColumnDefinitions().get(i);
                 buffer.append(columnDefinition.getCommentName() != null ? columnDefinition.getCommentName() + " " + ExpressionDeParser.LINE_SEPARATOR : "");
                 buffer.append(columnDefinition.getColumnName());
                 buffer.append(" ");
@@ -40,7 +40,7 @@ public class CreateTableDeParser {
                     for (int j = 0; j < columnDefinition.getColumnSpecStrings().size(); j++) {
                         buffer.append(" ");
                         buffer.append(!"".equals(columnDefinition.getCommentsSpec().get(i)) ? columnDefinition.getCommentsSpec().get(i) + " " + ExpressionDeParser.LINE_SEPARATOR : "");
-                        buffer.append((String) columnDefinition.getColumnSpecStrings().get(i));
+                        buffer.append(columnDefinition.getColumnSpecStrings().get(i));
                     }
                 }
 
@@ -52,7 +52,7 @@ public class CreateTableDeParser {
             for (int i = 0; i < aCreateTable.getIndexes().size(); i++) {
                 buffer.append(!"".equals(aCreateTable.getCommentCommaIndexes().get(i + shift)) ? aCreateTable.getCommentCommaIndexes().get(i + shift) + " " + ExpressionDeParser.LINE_SEPARATOR : "");
                 buffer.append(",").append(ExpressionDeParser.LINE_SEPARATOR);
-                Index index = (Index) aCreateTable.getIndexes().get(i);
+                Index index = aCreateTable.getIndexes().get(i);
                 buffer.append(index.toString());
             }
             buffer.append(" ").append(aCreateTable.getCommentEndBracket() != null ? aCreateTable.getCommentEndBracket() + " " : "").append(ExpressionDeParser.LINE_SEPARATOR).append(") ");

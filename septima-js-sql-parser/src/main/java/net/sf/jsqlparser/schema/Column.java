@@ -61,18 +61,12 @@ public class Column implements Expression {
      * @return the name of the column, prefixed with 'tableName' and '.'
      */
     public String getWholeColumnName() {
-
-        String columnWholeName = "";
         String tableWholeName = table.getWholeTableName();
-
         if (tableWholeName != null && tableWholeName.length() != 0) {
-            columnWholeName = tableWholeName + "." + columnName;
+            return tableWholeName + "." + columnName;
         } else {
-            columnWholeName = columnName;
+            return columnName;
         }
-
-        return columnWholeName;
-
     }
 
     public void accept(ExpressionVisitor expressionVisitor) {

@@ -5,7 +5,7 @@
 package net.sf.jsqlparser.expression;
 
 /**
- * Marker expression inteface for relational operators.
+ * Marker expression interface for relational operators.
  *
  * @author mg
  */

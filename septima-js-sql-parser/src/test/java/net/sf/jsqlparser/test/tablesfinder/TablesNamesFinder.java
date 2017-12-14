@@ -239,11 +239,11 @@ public class TablesNamesFinder implements SelectVisitor, FromItemVisitor, Expres
     }
 
     public void visit(AllComparisonExpression allComparisonExpression) {
-        allComparisonExpression.GetSubSelect().getSelectBody().accept(this);
+        allComparisonExpression.getSubSelect().getSelectBody().accept(this);
     }
 
     public void visit(AnyComparisonExpression anyComparisonExpression) {
-        anyComparisonExpression.GetSubSelect().getSelectBody().accept(this);
+        anyComparisonExpression.getSubSelect().getSelectBody().accept(this);
     }
 
     public void visit(SubJoin subjoin) {

@@ -7,32 +7,33 @@ import java.util.List;
  */
 public class Distinct {
 
-    private List onSelectItems;
+    private List<SelectItem> onSelectItems;
     private String comment;
     private String commentOn;
     private String commentBeginBracket;
     private String commentEndBracket;
-    private List commentsComma;
-    
+    private List<String> commentsComma;
+
     /**
      * A list of {@link SelectItem}s expressions, as in "select DISTINCT ON (a,b,c) a,b FROM..."
+     *
      * @return a list of {@link SelectItem}s expressions
      */
-    public List getOnSelectItems() {
+    public List<SelectItem> getOnSelectItems() {
         return onSelectItems;
     }
 
-    public void setOnSelectItems(List list) {
+    public void setOnSelectItems(List<SelectItem> list) {
         onSelectItems = list;
     }
 
     @Override
     public String toString() {
-        String sql = (getComment() != null ? getComment()+" " : "")+"DISTINCT";
+        String sql = (getComment() != null ? getComment() + " " : "") + "DISTINCT";
 
         if (onSelectItems != null && onSelectItems.size() > 0) {
-            sql += (getCommentOn() != null ? " "+getCommentOn() : "") + " ON " + (getCommentBeginBracket() != null ? getCommentBeginBracket()+" " : "") 
-                   + PlainSelect.getStringListWithCommaComment(onSelectItems, commentsComma, true, true, commentEndBracket);
+            sql += (getCommentOn() != null ? " " + getCommentOn() : "") + " ON " + (getCommentBeginBracket() != null ? getCommentBeginBracket() + " " : "")
+                    + PlainSelect.getStringListWithCommaComment(onSelectItems, commentsComma, true, true, commentEndBracket);
         }
 
         return sql;
@@ -97,14 +98,14 @@ public class Distinct {
     /**
      * @return the commentsComma
      */
-    public List getCommentsComma() {
+    public List<String> getCommentsComma() {
         return commentsComma;
     }
 
     /**
      * @param commentsComma the commentsComma to set
      */
-    public void setCommentsComma(List commentsComma) {
+    public void setCommentsComma(List<String> commentsComma) {
         this.commentsComma = commentsComma;
     }
 }

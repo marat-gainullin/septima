@@ -224,7 +224,7 @@ public class CreateTable implements Statement {
     /**
      * @return the commentCreateOptions
      */
-    public List getCommentCreateOptions() {
+    public List<String> getCommentCreateOptions() {
         return commentCreateOptions;
     }
 

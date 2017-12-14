@@ -26,5 +26,5 @@ package net.sf.jsqlparser.expression.operators.relational;
  */
 public interface ItemsList {
 
-    public void accept(ItemsListVisitor itemsListVisitor);
+    void accept(ItemsListVisitor itemsListVisitor);
 }

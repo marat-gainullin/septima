@@ -61,8 +61,8 @@ public class Database {
         return futureExecutor;
     }
 
-    public SeptimaDataProvider createDataProvider(String aEntityName, String aSqlClause, Map<String, Field> aExpectedFields) throws Exception {
-        return new SeptimaDataProvider(metadata.getSqlDriver(), aEntityName, dataSource, jdbcPerformer, aSqlClause, aExpectedFields);
+    public ApplicationDataProvider createDataProvider(String aEntityName, String aSqlClause, Map<String, Field> aExpectedFields) throws Exception {
+        return new ApplicationDataProvider(metadata.getSqlDriver(), aEntityName, dataSource, jdbcPerformer, aSqlClause, aExpectedFields);
     }
 
     public CompletableFuture<Integer> commit(List<Change.Applicable> aChangeLog) {

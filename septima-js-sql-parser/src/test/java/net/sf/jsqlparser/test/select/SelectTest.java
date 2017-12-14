@@ -777,21 +777,21 @@ public class SelectTest {
         Statement parsed = parserManager.parse(new StringReader(statement));
         StatementDeParser deParser = new StatementDeParser(new StringBuilder());
         parsed.accept(deParser);
-        assertEquals(statement.toLowerCase(), deParser.getBuffer().toString().replaceAll("[\r\n]+", "").toLowerCase());
+        assertEquals(statement.toLowerCase(), deParser.getBuilder().toString().replaceAll("[\r\n]+", "").toLowerCase());
 
         statement = "SELECT count(DISTINCT f + 4) FROM a";
         parsed = parserManager.parse(new StringReader(statement));
         deParser = new StatementDeParser(new StringBuilder());
         parsed.accept(deParser);
         assertEquals(statement.toLowerCase(), parsed.toString().replaceAll("[\r\n]+", "").toLowerCase());
-        assertEquals(statement.toLowerCase(), deParser.getBuffer().toString().replaceAll("[\r\n]+", "").toLowerCase());
+        assertEquals(statement.toLowerCase(), deParser.getBuilder().toString().replaceAll("[\r\n]+", "").toLowerCase());
 
         statement = "SELECT count(DISTINCT f, g, h) FROM a";
         parsed = parserManager.parse(new StringReader(statement));
         deParser = new StatementDeParser(new StringBuilder());
         parsed.accept(deParser);
         assertEquals(statement.toLowerCase(), parsed.toString().replaceAll("[\r\n]+", "").toLowerCase());
-        assertEquals(statement.toLowerCase(), deParser.getBuffer().toString().replaceAll("[\r\n]+", "").toLowerCase());
+        assertEquals(statement.toLowerCase(), deParser.getBuilder().toString().replaceAll("[\r\n]+", "").toLowerCase());
     }
 
     @Test
@@ -804,7 +804,7 @@ public class SelectTest {
         parsed.accept(deParser);
 
         assertEquals(statement, parsed.toString());
-        assertEquals(statement.toLowerCase(), deParser.getBuffer().toString().replaceAll("[\r\n]+", "").toLowerCase());
+        assertEquals(statement.toLowerCase(), deParser.getBuilder().toString().replaceAll("[\r\n]+", "").toLowerCase());
     }
 
     @Test
@@ -815,7 +815,7 @@ public class SelectTest {
         parsed.accept(deParser);
 
         assertEquals(statement, parsed.toString());
-        assertEquals(statement.toLowerCase(), deParser.getBuffer().toString().replaceAll("[\r\n]+", "").toLowerCase());
+        assertEquals(statement.toLowerCase(), deParser.getBuilder().toString().replaceAll("[\r\n]+", "").toLowerCase());
     }
 
     @Test
@@ -826,7 +826,7 @@ public class SelectTest {
         parsed.accept(deParser);
 
         assertEquals(statement, parsed.toString());
-        assertEquals(statement.toLowerCase(), deParser.getBuffer().toString().replaceAll("[\r\n]+", "").toLowerCase());
+        assertEquals(statement.toLowerCase(), deParser.getBuilder().toString().replaceAll("[\r\n]+", "").toLowerCase());
     }
 
     @Test
@@ -840,7 +840,7 @@ public class SelectTest {
         parsed.accept(deParser);
 
         assertEquals(statement, parsed.toString());
-        assertEquals(statement.toLowerCase(), deParser.getBuffer().toString().replaceAll("[\r\n]+", "").toLowerCase());
+        assertEquals(statement.toLowerCase(), deParser.getBuilder().toString().replaceAll("[\r\n]+", "").toLowerCase());
     }
 
     @Test
@@ -853,6 +853,6 @@ public class SelectTest {
         parsed.accept(deParser);
 
         assertEquals(statement, parsed.toString());
-        assertEquals(statement.toLowerCase(), deParser.getBuffer().toString().replaceAll("[\r\n]+", "").toLowerCase());
+        assertEquals(statement.toLowerCase(), deParser.getBuilder().toString().replaceAll("[\r\n]+", "").toLowerCase());
     }
 }

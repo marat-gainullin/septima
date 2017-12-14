@@ -1,6 +1,6 @@
 package com.septima.queries;
 
-import com.septima.StoredQueryFactory;
+import com.septima.ApplicationEntities;
 import com.septima.client.TestConstants;
 import com.septima.indexer.ApplicationIndexer;
 import com.septima.indexer.ScriptDocuments;
@@ -16,12 +16,12 @@ import static org.junit.Assert.*;
  *
  * @author pk, mg
  */
-public class StoredQueryFactoryTest {
+public class ApplicationEntitiesTest {
 
     protected static ApplicationIndexer indexer;
     protected static DatabasesWithResource resource;
 
-    public StoredQueryFactoryTest() {
+    public ApplicationEntitiesTest() {
     }
 
     private static String rn2n(String withRn){
@@ -88,7 +88,7 @@ public class StoredQueryFactoryTest {
                 + " */\n"
                 + "select from dual", JsDoc.Tag.ROLES_ALLOWED_TAG, role1, role2, role3);
         SqlQuery q = new SqlQuery(null, sqlText);
-        StoredQueryFactory.putRolesMutatables(q);
+        ApplicationEntities.putRolesMutatables(q);
         assertEquals(q.getReadRoles(), q.getWriteRoles());
         assertEquals(3, q.getReadRoles().size());
         assertTrue(q.getReadRoles().contains(role1));
@@ -109,7 +109,7 @@ public class StoredQueryFactoryTest {
                 + " */\n"
                 + "select from dual", JsDoc.Tag.ROLES_ALLOWED_TAG, role1, role2, role3);
         SqlQuery q = new SqlQuery(null, sqlText);
-        StoredQueryFactory.putRolesMutatables(q);
+        ApplicationEntities.putRolesMutatables(q);
         assertEquals(q.getReadRoles(), q.getWriteRoles());
         assertEquals(3, q.getReadRoles().size());
         assertTrue(q.getReadRoles().contains(role1));
@@ -130,7 +130,7 @@ public class StoredQueryFactoryTest {
                 + " */\n"
                 + "select from dual", JsDoc.Tag.ROLES_ALLOWED_TAG, role1, role2, role3);
         SqlQuery q = new SqlQuery(null, sqlText);
-        StoredQueryFactory.putRolesMutatables(q);
+        ApplicationEntities.putRolesMutatables(q);
         assertEquals(q.getReadRoles(), q.getWriteRoles());
         assertEquals(3, q.getReadRoles().size());
         assertTrue(q.getReadRoles().contains(role1));
@@ -151,7 +151,7 @@ public class StoredQueryFactoryTest {
                 + " */\n"
                 + "", JsDoc.Tag.ROLES_ALLOWED_TAG.toUpperCase(), role1, role2, role3);
         SqlQuery q = new SqlQuery(null, sqlText);
-        StoredQueryFactory.putRolesMutatables(q);
+        ApplicationEntities.putRolesMutatables(q);
         assertEquals(q.getReadRoles(), q.getWriteRoles());
         assertEquals(3, q.getReadRoles().size());
         assertTrue(q.getReadRoles().contains(role1));
@@ -172,7 +172,7 @@ public class StoredQueryFactoryTest {
                 + " */\n"
                 + "", JsDoc.Tag.ROLES_ALLOWED_TAG, role1, role2, role3);
         SqlQuery q = new SqlQuery(null, sqlText);
-        StoredQueryFactory.putRolesMutatables(q);
+        ApplicationEntities.putRolesMutatables(q);
         assertEquals(q.getReadRoles(), q.getWriteRoles());
         assertEquals(3, q.getReadRoles().size());
         assertTrue(q.getReadRoles().contains(role1));
@@ -193,7 +193,7 @@ public class StoredQueryFactoryTest {
                 + " */\n"
                 + "", JsDoc.Tag.ROLES_ALLOWED_TAG, role1, role2, role3);
         SqlQuery q = new SqlQuery(null, sqlText);
-        StoredQueryFactory.putRolesMutatables(q);
+        ApplicationEntities.putRolesMutatables(q);
         assertEquals(q.getReadRoles(), q.getWriteRoles());
         assertEquals(3, q.getReadRoles().size());
         assertTrue(q.getReadRoles().contains(role1));
@@ -214,7 +214,7 @@ public class StoredQueryFactoryTest {
                 + " */\n"
                 + "", JsDoc.Tag.ROLES_ALLOWED_READ_TAG, role1, role2, role3);
         SqlQuery q = new SqlQuery(null, sqlText);
-        StoredQueryFactory.putRolesMutatables(q);
+        ApplicationEntities.putRolesMutatables(q);
         assertEquals(0, q.getWriteRoles().size());
         assertEquals(3, q.getReadRoles().size());
         assertTrue(q.getReadRoles().contains(role1));
@@ -235,7 +235,7 @@ public class StoredQueryFactoryTest {
                 + " */\n"
                 + "", JsDoc.Tag.ROLES_ALLOWED_WRITE_TAG, role1, role2, role3);
         SqlQuery q = new SqlQuery(null, sqlText);
-        StoredQueryFactory.putRolesMutatables(q);
+        ApplicationEntities.putRolesMutatables(q);
         assertEquals(0, q.getReadRoles().size());
         assertEquals(3, q.getWriteRoles().size());
         assertTrue(q.getWriteRoles().contains(role1));
@@ -261,7 +261,7 @@ public class StoredQueryFactoryTest {
                 JsDoc.Tag.ROLES_ALLOWED_READ_TAG, role1, role2, role3,
                 JsDoc.Tag.ROLES_ALLOWED_WRITE_TAG, role1, role2);
         SqlQuery q = new SqlQuery(null, sqlText);
-        StoredQueryFactory.putRolesMutatables(q);
+        ApplicationEntities.putRolesMutatables(q);
         assertEquals(3, q.getReadRoles().size());
         assertTrue(q.getReadRoles().contains(role1));
         assertTrue(q.getReadRoles().contains(role2));

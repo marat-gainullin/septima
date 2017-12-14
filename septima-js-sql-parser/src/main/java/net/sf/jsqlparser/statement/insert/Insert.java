@@ -38,7 +38,7 @@ public class Insert implements Statement {
 
     private Table table;
     private List<Column> columns;
-    private List<String> columsComment;
+    private List<String> columnsComment;
     private ItemsList itemsList;
     private List<String> itemsListComments;
     private boolean useValues = true;
@@ -104,7 +104,7 @@ public class Insert implements Statement {
 
         sql += "INSERT" + (getCommentInto() != null ? " " + getCommentInto() : "") + " INTO ";
         sql += table + (getCommentBeforeColums() != null ? " " + getCommentBeforeColums() + " " : " ");
-        sql += ((columns != null) ? PlainSelect.getStringListWithCommaComment(columns, columsComment, true, true, commentAfterColums) + " " : "");
+        sql += ((columns != null) ? PlainSelect.getStringListWithCommaComment(columns, columnsComment, true, true, commentAfterColums) + " " : "");
 
         if (useValues) {
             sql += (getCommentValues() != null ? getCommentValues() + " " : "") + "VALUES " + (getCommentItemsList() != null ? getCommentItemsList() + " " : "") + itemsList + "";
@@ -196,17 +196,17 @@ public class Insert implements Statement {
     }
 
     /**
-     * @return the columsComment
+     * @return the columnsComment
      */
-    public List<String> getColumsComment() {
-        return columsComment;
+    public List<String> getColumnsComment() {
+        return columnsComment;
     }
 
     /**
-     * @param columsComment the columsComment to set
+     * @param columnsComment the columnsComment to set
      */
-    public void setColumsComment(List<String> columsComment) {
-        this.columsComment = columsComment;
+    public void setColumnsComment(List<String> columnsComment) {
+        this.columnsComment = columnsComment;
     }
 
     /**

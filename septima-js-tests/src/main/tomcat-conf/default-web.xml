@@ -48,7 +48,7 @@
   <!--   fileEncoding        Encoding to be used to read static resources   -->
   <!--                       [platform default]                             -->
   <!--                                                                      -->
-  <!--   input               Input buffer size (in bytes) when reading      -->
+  <!--   input               Input builder size (in bytes) when reading      -->
   <!--                       resources to be served.  [2048]                -->
   <!--                                                                      -->
   <!--   listings            Should directory listings be produced if there -->
@@ -57,7 +57,7 @@
   <!--                       entries can be slow and may consume            -->
   <!--                       significant proportions of server resources.   -->
   <!--                                                                      -->
-  <!--   output              Output buffer size (in bytes) when writing     -->
+  <!--   output              Output builder size (in bytes) when writing     -->
   <!--                       resources to be served.  [2048]                -->
   <!--                                                                      -->
   <!--   readonly            Is this context "read only", so HTTP           -->

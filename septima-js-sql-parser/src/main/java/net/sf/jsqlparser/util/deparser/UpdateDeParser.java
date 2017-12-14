@@ -20,8 +20,8 @@ public class UpdateDeParser {
     /**
      * @param aExpressionVisitor a {@link ExpressionVisitor} to de-parse
      * expressions. It has to share the same<br>
-     * StringBuilder (buffer parameter) as this object in order to work
-     * @param aBuffer the buffer that will be filled with the select
+     * StringBuilder (builder parameter) as this object in order to work
+     * @param aBuffer the builder that will be filled with the select
      */
     public UpdateDeParser(ExpressionVisitor aExpressionVisitor, StringBuilder aBuffer) {
         buffer = aBuffer;

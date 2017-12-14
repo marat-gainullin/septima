@@ -1,6 +1,7 @@
 package com.septima;
 
 import com.septima.changes.NamedJdbcValue;
+import com.septima.dataflow.DataProvider;
 import com.septima.dataflow.JdbcDataProvider;
 import com.septima.dataflow.ResultSetReader;
 import com.septima.metadata.Field;
@@ -26,13 +27,13 @@ import javax.sql.DataSource;
  *
  * @author mg
  */
-public class SeptimaDataProvider extends JdbcDataProvider<String> {
+public class ApplicationDataProvider extends JdbcDataProvider {
 
     private final String entityName;
     private final SqlDriver sqlDriver;
 
-    SeptimaDataProvider(SqlDriver aSqlDriver, String aEntityName, DataSource aDataSource, Consumer<Runnable> aDataPuller, String aClause, Map<String, Field> aExpectedFields) {
-        super(aDataSource, aDataPuller, aClause, aExpectedFields);
+    ApplicationDataProvider(SqlDriver aSqlDriver, String aEntityName, DataSource aDataSource, Consumer<Runnable> aDataPuller, String aClause, boolean aProcedure, Map<String, Field> aExpectedFields) {
+        super(aDataSource, aDataPuller, aClause, aProcedure, DataProvider.NO_PAGING_PAGE_SIZE, aExpectedFields);
         entityName = aEntityName;
         sqlDriver = aSqlDriver;
     }
@@ -76,7 +77,7 @@ public class SeptimaDataProvider extends JdbcDataProvider<String> {
                 String sGeometry = sqlDriver.readGeometry(aStatement, aParameterIndex, aConnection);
                 aParameter.setValue(sGeometry);
             } catch (Exception ex) {
-                Logger.getLogger(SeptimaDataProvider.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ApplicationDataProvider.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
             super.acceptOutParameter(aParameter, aStatement, aParameterIndex, aConnection);

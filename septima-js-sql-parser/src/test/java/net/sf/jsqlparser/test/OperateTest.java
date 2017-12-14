@@ -7,10 +7,12 @@ package net.sf.jsqlparser.test;
 
 import java.io.StringReader;
 import java.util.Map;
+
+import net.sf.jsqlparser.FromItems;
 import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.TablesFinder;
-import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.select.FromItem;
+import net.sf.jsqlparser.statement.select.Select;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -61,10 +63,9 @@ public class OperateTest extends GeneralTest{
         String statementText = "SELECT * FROM TABLE1 where TABLE1.f1 is null";
         checkParseAndDeparse(statementText);
         Statement statement = parserManager.parse(new StringReader(statementText));
-        Map<String, Table> tbls = TablesFinder.getTablesMap(null, statement,true);
-        assertEquals(1, tbls.size());
-        assertEquals("TABLE1", tbls.keySet().iterator().next());
-        tbls = null;
+        Map<String, FromItem> fromItems = FromItems.find(FromItems.ToCase.UPPER, ((Select)statement).getSelectBody());
+        assertEquals(1, fromItems.size());
+        assertEquals("TABLE1", fromItems.keySet().iterator().next());
     }
 
     @Test

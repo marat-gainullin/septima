@@ -41,8 +41,8 @@ public class SelectDeParser implements SelectVisitor, OrderByVisitor, SelectItem
     /**
      * @param aExpressionVisitor a {@link ExpressionVisitor} to de-parse
      * expressions. It has to share the same<br>
-     * StringBuilder (buffer parameter) as this object in order to work
-     * @param aBuilder the buffer that will be filled with the select
+     * StringBuilder (builder parameter) as this object in order to work
+     * @param aBuilder the builder that will be filled with the select
      */
     public SelectDeParser(ExpressionVisitor aExpressionVisitor, StringBuilder aBuilder) {
         buffer = aBuilder;
@@ -227,7 +227,7 @@ public class SelectDeParser implements SelectVisitor, OrderByVisitor, SelectItem
         String alias = subSelect.getAlias() != null ? subSelect.getAlias().toString() : "";
         if (alias != null && !alias.isEmpty()) {
             buffer.append(" ").append(alias);// it's very strange, but in fact oracle doesn't permit as key word if form clause
-//            buffer.append(" as ").append(alias);
+//            builder.append(" as ").append(alias);
         }
     }
 
@@ -236,7 +236,7 @@ public class SelectDeParser implements SelectVisitor, OrderByVisitor, SelectItem
         String alias = aTable.getAlias() != null ? aTable.getAlias().toString() : "";
         if (alias != null && !alias.isEmpty()) {
             buffer.append(" ").append(alias);// it's very strange, but in fact oracle doesn't permit as key word if form clause
-//            buffer.append(" as ").append(alias);
+//            builder.append(" as ").append(alias);
         }
     }
 

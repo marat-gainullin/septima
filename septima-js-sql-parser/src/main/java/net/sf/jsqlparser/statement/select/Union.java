@@ -174,7 +174,7 @@ public class Union implements SelectBody {
     /**
      * @return the commentCommaOrderBy
      */
-    public List getCommentCommaOrderBy() {
+    public List<String> getCommentCommaOrderBy() {
         return commentCommaOrderBy;
     }
 

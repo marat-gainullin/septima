@@ -68,14 +68,14 @@ public class ExpressionList implements ItemsList {
     /**
      * @return the commentsComma
      */
-    public List getCommentsComma() {
+    public List<String> getCommentsComma() {
         return commentsComma;
     }
 
     /**
      * @param commentsComma the commentsComma to set
      */
-    public void setCommentsComma(List commentsComma) {
+    public void setCommentsComma(List<String> commentsComma) {
         this.commentsComma = commentsComma;
     }
 

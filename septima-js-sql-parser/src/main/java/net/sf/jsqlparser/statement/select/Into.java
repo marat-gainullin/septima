@@ -4,15 +4,17 @@
  */
 package net.sf.jsqlparser.statement.select;
 
+import net.sf.jsqlparser.schema.Table;
+
 import java.util.List;
 
 /**
  *
- * @author AB
+ * @author ab
  */
 public class Into {
-    private List commentsComma = null;
-    private List tables = null;
+    private List<String> commentsComma;
+    private List<Table> tables;
     private String commentInto;
     
      @Override
@@ -24,28 +26,28 @@ public class Into {
     /**
      * @return the commentsComma
      */
-    public List getCommentsComma() {
+    public List<String> getCommentsComma() {
         return commentsComma;
     }
 
     /**
      * @param commentsComma the commentsComma to set
      */
-    public void setCommentsComma(List commentsComma) {
+    public void setCommentsComma(List<String> commentsComma) {
         this.commentsComma = commentsComma;
     }
 
     /**
      * @return the tables
      */
-    public List getTables() {
+    public List<Table> getTables() {
         return tables;
     }
 
     /**
      * @param tables the tables to set
      */
-    public void setTables(List tables) {
+    public void setTables(List<Table> tables) {
         this.tables = tables;
     }
 

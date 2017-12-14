@@ -1,7 +1,7 @@
 package com.septima.queries;
 
 import com.septima.Database;
-import com.septima.SeptimaDataProvider;
+import com.septima.ApplicationDataProvider;
 import com.septima.changes.Command;
 import com.septima.changes.NamedValue;
 import com.septima.dataflow.DataProvider;
@@ -73,7 +73,7 @@ public class SqlCompiledQuery {
      */
     public <T> T executeQuery(JdbcDataProvider.ResultSetProcessor<T> aResultSetProcessor, Executor aCallbacksExecutor, Consumer<T> onSuccess, Consumer<Exception> onFailure) throws Exception {
         if (database != null) {
-            SeptimaDataProvider flow = database.createDataProvider(entityName, sqlClause, expectedFields);
+            ApplicationDataProvider flow = database.createDataProvider(entityName, sqlClause, expectedFields);
             flow.setPageSize(pageSize);
             flow.setProcedure(procedure);
             return flow.<T>select(parameters, aResultSetProcessor, onSuccess != null ? (T t) -> {

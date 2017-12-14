@@ -63,15 +63,6 @@ public interface DataProvider extends AutoCloseable {
      */
     int getPageSize();
 
-    /**
-     * Sets page size for paged flow providers.
-     *
-     * @param aPageSize Page size for paged flow providers.
-     */
-    void setPageSize(int aPageSize);
-
     boolean isProcedure();
 
-    void setProcedure(boolean aProcedure);
-    
 }

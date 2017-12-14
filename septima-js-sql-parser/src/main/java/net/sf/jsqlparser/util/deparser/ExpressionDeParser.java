@@ -75,7 +75,7 @@ public class ExpressionDeParser implements ExpressionVisitor, ItemsListVisitor {
      * ExpressionDeParser expressionDeParser = new ExpressionDeParser(selectDeparser, myBuf);
      * </code>
      * </pre>
-     * @param aBuffer the buffer that will be filled with the expression
+     * @param aBuffer the builder that will be filled with the expression
      */
     public ExpressionDeParser(SelectVisitor aSelectVisitor, StringBuilder aBuffer) {
         selectVisitor = aSelectVisitor;
@@ -343,12 +343,12 @@ public class ExpressionDeParser implements ExpressionVisitor, ItemsListVisitor {
 
     public void visit(AllComparisonExpression allComparisonExpression) {
         buffer.append(allComparisonExpression.getComment() != null ? " " + allComparisonExpression.getComment() + ExpressionDeParser.LINE_SEPARATOR : "").append(" all ");
-        allComparisonExpression.GetSubSelect().accept((ExpressionVisitor) this);
+        allComparisonExpression.getSubSelect().accept((ExpressionVisitor) this);
     }
 
     public void visit(AnyComparisonExpression anyComparisonExpression) {
         buffer.append(anyComparisonExpression.getComment() != null ? " " + anyComparisonExpression.getComment() + ExpressionDeParser.LINE_SEPARATOR : "").append(" any ");
-        anyComparisonExpression.GetSubSelect().accept((ExpressionVisitor) this);
+        anyComparisonExpression.getSubSelect().accept((ExpressionVisitor) this);
     }
 
     public void visit(Concat concat) {

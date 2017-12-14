@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 import javax.sql.DataSource;
 
 /**
- * This flow dataSource intended to support the flow process from and to jdbc
+ * This flow dataSource intended to support the data flow process from jdbc
  * data sources.
  *
  * @author mg
@@ -35,10 +35,12 @@ public abstract class JdbcDataProvider implements DataProvider {
 
     private final String clause;
     private final DataSource dataSource;
-    private final Map<String, Field> expectedFields;
     private final Consumer<Runnable> asyncDataPuller;
-    private int pageSize = NO_PAGING_PAGE_SIZE;
-    private boolean procedure;
+    private final boolean procedure;
+    private final int pageSize;
+
+    protected final Map<String, Field> expectedFields;
+
 
     private ResultSet lowLevelResults;
     private Connection lowLevelConnection;
@@ -56,11 +58,13 @@ public abstract class JdbcDataProvider implements DataProvider {
      * @param aExpectedFields  Fields, expected by Septima according to metadata analysis.
      * @see DataSource
      */
-    public JdbcDataProvider(DataSource aDataSource, Consumer<Runnable> aAsyncDataPuller, String aClause, Map<String, Field> aExpectedFields) {
+    public JdbcDataProvider(DataSource aDataSource, Consumer<Runnable> aAsyncDataPuller, String aClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
         super();
         assert aClause != null : "Flow provider cant't exist without a selecting sql clause";
         assert aDataSource != null : "Flow provider can't exist without a data source";
         clause = aClause;
+        procedure = aProcedure;
+        pageSize = aPageSize;
         dataSource = aDataSource;
         asyncDataPuller = aAsyncDataPuller;
         expectedFields = aExpectedFields;
@@ -71,11 +75,6 @@ public abstract class JdbcDataProvider implements DataProvider {
         return pageSize;
     }
 
-    @Override
-    public void setPageSize(int aPageSize) {
-        pageSize = aPageSize;
-    }
-
     private boolean isPaged() {
         return pageSize > 0;
     }
@@ -83,11 +82,6 @@ public abstract class JdbcDataProvider implements DataProvider {
     @Override
     public boolean isProcedure() {
         return procedure;
-    }
-
-    @Override
-    public void setProcedure(boolean aValue) {
-        procedure = aValue;
     }
 
     /**

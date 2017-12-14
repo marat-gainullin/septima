@@ -11,7 +11,7 @@ public class AllComparisonExpression implements Expression {
         this.subSelect = subSelect;
     }
 
-    public SubSelect GetSubSelect() {
+    public SubSelect getSubSelect() {
         return subSelect;
     }
 

@@ -512,7 +512,7 @@ columns.add(tableColumn);
 if (tk.specialToken != null) {
           insert.setCommentAfterColums(tk.specialToken.image);
          }
-         insert.setColumsComment(columnsComments);
+         insert.setColumnsComment(columnsComments);
     } else {
       ;
     }

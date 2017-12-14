@@ -1,7 +1,5 @@
 package net.sf.jsqlparser.util.deparser;
 
-import java.util.Iterator;
-
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.ExpressionVisitor;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
@@ -28,12 +26,12 @@ public class InsertDeParser implements ItemsListVisitor {
      * @param expressionVisitor a {@link ExpressionVisitor} to de-parse
      * {@link net.sf.jsqlparser.expression.Expression}s. It has to share the
      * same<br>
-     * StringBuilder (buffer parameter) as this object in order to work
+     * StringBuilder (builder parameter) as this object in order to work
      * @param selectVisitor a {@link SelectVisitor} to de-parse
      * {@link net.sf.jsqlparser.statement.select.Select}s. It has to share the
      * same<br>
-     * StringBuilder (buffer parameter) as this object in order to work
-     * @param buffer the buffer that will be filled with the insert
+     * StringBuilder (builder parameter) as this object in order to work
+     * @param buffer the builder that will be filled with the insert
      */
     public InsertDeParser(ExpressionVisitor expressionVisitor, SelectVisitor selectVisitor, StringBuilder buffer) {
         this.buffer = buffer;
@@ -61,7 +59,7 @@ public class InsertDeParser implements ItemsListVisitor {
             for (int i = 0; i < insert.getColumns().size(); i++) {
                 Column column = (Column) insert.getColumns().get(i);
                 buffer.append(column.getComment() != null ? column.getComment() + " " + ExpressionDeParser.LINE_SEPARATOR : "").append(column.getWholeColumnName());
-                buffer.append((i < insert.getColumns().size() - 1) ? (!"".equals(insert.getColumsComment().get(i)) ? " " + insert.getColumsComment().get(i) : "") : "");
+                buffer.append((i < insert.getColumns().size() - 1) ? (!"".equals(insert.getColumnsComment().get(i)) ? " " + insert.getColumnsComment().get(i) : "") : "");
                 if (i < insert.getColumns().size() - 1) {
                     if (columnsCounter++ == 2) {
                         columnsCounter = 0;

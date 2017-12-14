@@ -83,7 +83,7 @@ class JavaCharStream
     throw new java.io.IOException(); // Should never come here
   }
 
-/** Position in buffer. */
+/** Position in builder. */
   public int bufpos = -1;
   int bufsize;
   int available;

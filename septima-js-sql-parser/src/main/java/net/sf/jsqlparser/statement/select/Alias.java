@@ -6,7 +6,7 @@ package net.sf.jsqlparser.statement.select;
 
 /**
  *
- * @author AB
+ * @author ab
  */
 public class Alias {
     private String name;

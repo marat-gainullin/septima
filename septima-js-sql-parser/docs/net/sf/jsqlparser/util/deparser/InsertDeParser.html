@@ -123,7 +123,7 @@ A class to de-parse (that is, tranform from JSqlParser hierarchy into a string)
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>protected &nbsp;java.lang.StringBuffer</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../net/sf/jsqlparser/util/deparser/InsertDeParser.html#buffer">buffer</A></B></CODE>
+<TD><CODE><B><A HREF="../../../../../net/sf/jsqlparser/util/deparser/InsertDeParser.html#builder">builder</A></B></CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -163,7 +163,7 @@ A class to de-parse (that is, tranform from JSqlParser hierarchy into a string)
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD><CODE><B><A HREF="../../../../../net/sf/jsqlparser/util/deparser/InsertDeParser.html#InsertDeParser(net.sf.jsqlparser.expression.ExpressionVisitor, net.sf.jsqlparser.statement.select.SelectVisitor, java.lang.StringBuffer)">InsertDeParser</A></B>(<A HREF="../../../../../net/sf/jsqlparser/expression/ExpressionVisitor.html" title="interface in net.sf.jsqlparser.expression">ExpressionVisitor</A>&nbsp;expressionVisitor,
                <A HREF="../../../../../net/sf/jsqlparser/statement/select/SelectVisitor.html" title="interface in net.sf.jsqlparser.statement.select">SelectVisitor</A>&nbsp;selectVisitor,
-               java.lang.StringBuffer&nbsp;buffer)</CODE>
+               java.lang.StringBuffer&nbsp;builder)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -213,7 +213,7 @@ A class to de-parse (that is, tranform from JSqlParser hierarchy into a string)
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../../net/sf/jsqlparser/util/deparser/InsertDeParser.html#setBuffer(java.lang.StringBuffer)">setBuffer</A></B>(java.lang.StringBuffer&nbsp;buffer)</CODE>
+<TD><CODE><B><A HREF="../../../../../net/sf/jsqlparser/util/deparser/InsertDeParser.html#setBuffer(java.lang.StringBuffer)">setBuffer</A></B>(java.lang.StringBuffer&nbsp;builder)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
@@ -273,10 +273,10 @@ A class to de-parse (that is, tranform from JSqlParser hierarchy into a string)
 </TR>
 </TABLE>
 
-<A NAME="buffer"><!-- --></A><H3>
-buffer</H3>
+<A NAME="builder"><!-- --></A><H3>
+builder</H3>
 <PRE>
-protected java.lang.StringBuffer <B>buffer</B></PRE>
+protected java.lang.StringBuffer <B>builder</B></PRE>
 <DL>
 <DL>
 </DL>
@@ -325,13 +325,13 @@ InsertDeParser</H3>
 <PRE>
 public <B>InsertDeParser</B>(<A HREF="../../../../../net/sf/jsqlparser/expression/ExpressionVisitor.html" title="interface in net.sf.jsqlparser.expression">ExpressionVisitor</A>&nbsp;expressionVisitor,
                       <A HREF="../../../../../net/sf/jsqlparser/statement/select/SelectVisitor.html" title="interface in net.sf.jsqlparser.statement.select">SelectVisitor</A>&nbsp;selectVisitor,
-                      java.lang.StringBuffer&nbsp;buffer)</PRE>
+                      java.lang.StringBuffer&nbsp;builder)</PRE>
 <DL>
 <DL>
 <DT><B>Parameters:</B><DD><CODE>expressionVisitor</CODE> - a <A HREF="../../../../../net/sf/jsqlparser/expression/ExpressionVisitor.html" title="interface in net.sf.jsqlparser.expression"><CODE>ExpressionVisitor</CODE></A> to de-parse <A HREF="../../../../../net/sf/jsqlparser/expression/Expression.html" title="interface in net.sf.jsqlparser.expression"><CODE>Expression</CODE></A>s. It has to share the same<br>
- StringBuffer (buffer parameter) as this object in order to work<DD><CODE>selectVisitor</CODE> - a <A HREF="../../../../../net/sf/jsqlparser/statement/select/SelectVisitor.html" title="interface in net.sf.jsqlparser.statement.select"><CODE>SelectVisitor</CODE></A> to de-parse <A HREF="../../../../../net/sf/jsqlparser/statement/select/Select.html" title="class in net.sf.jsqlparser.statement.select"><CODE>Select</CODE></A>s.
+ StringBuffer (builder parameter) as this object in order to work<DD><CODE>selectVisitor</CODE> - a <A HREF="../../../../../net/sf/jsqlparser/statement/select/SelectVisitor.html" title="interface in net.sf.jsqlparser.statement.select"><CODE>SelectVisitor</CODE></A> to de-parse <A HREF="../../../../../net/sf/jsqlparser/statement/select/Select.html" title="class in net.sf.jsqlparser.statement.select"><CODE>Select</CODE></A>s.
  It has to share the same<br>
- StringBuffer (buffer parameter) as this object in order to work<DD><CODE>buffer</CODE> - the buffer that will be filled with the insert</DL>
+ StringBuffer (builder parameter) as this object in order to work<DD><CODE>builder</CODE> - the builder that will be filled with the insert</DL>
 </DL>
 
 <!-- ============ METHOD DETAIL ========== -->
@@ -361,7 +361,7 @@ public java.lang.StringBuffer <B>getBuffer</B>()</PRE>
 <A NAME="setBuffer(java.lang.StringBuffer)"><!-- --></A><H3>
 setBuffer</H3>
 <PRE>
-public void <B>setBuffer</B>(java.lang.StringBuffer&nbsp;buffer)</PRE>
+public void <B>setBuffer</B>(java.lang.StringBuffer&nbsp;builder)</PRE>
 <DL>
 <DD><DL>
 </DL>

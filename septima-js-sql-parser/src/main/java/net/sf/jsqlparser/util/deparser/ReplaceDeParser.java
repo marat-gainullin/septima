@@ -27,12 +27,12 @@ public class ReplaceDeParser implements ItemsListVisitor {
     /**
      * @param expressionVisitor a {@link ExpressionVisitor} to de-parse
      * expressions. It has to share the same<br>
-     * StringBuilder (buffer parameter) as this object in order to work
+     * StringBuilder (builder parameter) as this object in order to work
      * @param selectVisitor a {@link SelectVisitor} to de-parse
      * {@link net.sf.jsqlparser.statement.select.Select}s. It has to share the
      * same<br>
-     * StringBuilder (buffer parameter) as this object in order to work
-     * @param buffer the buffer that will be filled with the select
+     * StringBuilder (builder parameter) as this object in order to work
+     * @param buffer the builder that will be filled with the select
      */
     public ReplaceDeParser(ExpressionVisitor expressionVisitor, SelectVisitor selectVisitor, StringBuilder buffer) {
         this.buffer = buffer;
