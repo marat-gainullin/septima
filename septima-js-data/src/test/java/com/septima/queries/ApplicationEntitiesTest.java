@@ -1,6 +1,6 @@
 package com.septima.queries;
 
-import com.septima.ApplicationEntities;
+import com.septima.application.ApplicationEntities;
 import com.septima.client.TestConstants;
 import com.septima.indexer.ApplicationIndexer;
 import com.septima.indexer.ScriptDocuments;
@@ -87,7 +87,7 @@ public class ApplicationEntitiesTest {
                 + " * \n"
                 + " */\n"
                 + "select from dual", JsDoc.Tag.ROLES_ALLOWED_TAG, role1, role2, role3);
-        SqlQuery q = new SqlQuery(null, sqlText);
+        SqlEntity q = new SqlEntity(null, sqlText);
         ApplicationEntities.putRolesMutatables(q);
         assertEquals(q.getReadRoles(), q.getWriteRoles());
         assertEquals(3, q.getReadRoles().size());
@@ -108,7 +108,7 @@ public class ApplicationEntitiesTest {
                 + " * \r\n"
                 + " */\n"
                 + "select from dual", JsDoc.Tag.ROLES_ALLOWED_TAG, role1, role2, role3);
-        SqlQuery q = new SqlQuery(null, sqlText);
+        SqlEntity q = new SqlEntity(null, sqlText);
         ApplicationEntities.putRolesMutatables(q);
         assertEquals(q.getReadRoles(), q.getWriteRoles());
         assertEquals(3, q.getReadRoles().size());
@@ -129,7 +129,7 @@ public class ApplicationEntitiesTest {
                 + " * \r\n"
                 + " */\n"
                 + "select from dual", JsDoc.Tag.ROLES_ALLOWED_TAG, role1, role2, role3);
-        SqlQuery q = new SqlQuery(null, sqlText);
+        SqlEntity q = new SqlEntity(null, sqlText);
         ApplicationEntities.putRolesMutatables(q);
         assertEquals(q.getReadRoles(), q.getWriteRoles());
         assertEquals(3, q.getReadRoles().size());
@@ -150,7 +150,7 @@ public class ApplicationEntitiesTest {
                 + " * \r\n"
                 + " */\n"
                 + "", JsDoc.Tag.ROLES_ALLOWED_TAG.toUpperCase(), role1, role2, role3);
-        SqlQuery q = new SqlQuery(null, sqlText);
+        SqlEntity q = new SqlEntity(null, sqlText);
         ApplicationEntities.putRolesMutatables(q);
         assertEquals(q.getReadRoles(), q.getWriteRoles());
         assertEquals(3, q.getReadRoles().size());
@@ -171,7 +171,7 @@ public class ApplicationEntitiesTest {
                 + " * \r\n"
                 + " */\n"
                 + "", JsDoc.Tag.ROLES_ALLOWED_TAG, role1, role2, role3);
-        SqlQuery q = new SqlQuery(null, sqlText);
+        SqlEntity q = new SqlEntity(null, sqlText);
         ApplicationEntities.putRolesMutatables(q);
         assertEquals(q.getReadRoles(), q.getWriteRoles());
         assertEquals(3, q.getReadRoles().size());
@@ -192,7 +192,7 @@ public class ApplicationEntitiesTest {
                 + " * \r\n"
                 + " */\n"
                 + "", JsDoc.Tag.ROLES_ALLOWED_TAG, role1, role2, role3);
-        SqlQuery q = new SqlQuery(null, sqlText);
+        SqlEntity q = new SqlEntity(null, sqlText);
         ApplicationEntities.putRolesMutatables(q);
         assertEquals(q.getReadRoles(), q.getWriteRoles());
         assertEquals(3, q.getReadRoles().size());
@@ -213,7 +213,7 @@ public class ApplicationEntitiesTest {
                 + " * \r\n"
                 + " */\n"
                 + "", JsDoc.Tag.ROLES_ALLOWED_READ_TAG, role1, role2, role3);
-        SqlQuery q = new SqlQuery(null, sqlText);
+        SqlEntity q = new SqlEntity(null, sqlText);
         ApplicationEntities.putRolesMutatables(q);
         assertEquals(0, q.getWriteRoles().size());
         assertEquals(3, q.getReadRoles().size());
@@ -234,7 +234,7 @@ public class ApplicationEntitiesTest {
                 + " * \r\n"
                 + " */\n"
                 + "", JsDoc.Tag.ROLES_ALLOWED_WRITE_TAG, role1, role2, role3);
-        SqlQuery q = new SqlQuery(null, sqlText);
+        SqlEntity q = new SqlEntity(null, sqlText);
         ApplicationEntities.putRolesMutatables(q);
         assertEquals(0, q.getReadRoles().size());
         assertEquals(3, q.getWriteRoles().size());
@@ -260,7 +260,7 @@ public class ApplicationEntitiesTest {
                 + "from dual",
                 JsDoc.Tag.ROLES_ALLOWED_READ_TAG, role1, role2, role3,
                 JsDoc.Tag.ROLES_ALLOWED_WRITE_TAG, role1, role2);
-        SqlQuery q = new SqlQuery(null, sqlText);
+        SqlEntity q = new SqlEntity(null, sqlText);
         ApplicationEntities.putRolesMutatables(q);
         assertEquals(3, q.getReadRoles().size());
         assertTrue(q.getReadRoles().contains(role1));
@@ -275,7 +275,7 @@ public class ApplicationEntitiesTest {
     @Test
     public void testCompilingWithSubqueries() throws Exception {
         LocalQueriesProxy queriesProxy = new LocalQueriesProxy(resource.getClient(), indexer);
-        SqlQuery testQuery = queriesProxy.getQuery("sub_query_compile", null, null, null);
+        SqlEntity testQuery = queriesProxy.getQuery("sub_query_compile", null, null, null);
         assertEquals(rn2n("/**\n"
                 + " * \n"
                 + " * @author mg\n"
@@ -308,7 +308,7 @@ public class ApplicationEntitiesTest {
     @Test
     public void testCompilingWithSubqueriesBad() throws Exception {
         LocalQueriesProxy queriesProxy = new LocalQueriesProxy(resource.getClient(), indexer);
-        SqlQuery testQuery = queriesProxy.getQuery("bad_schema", null, null, null);
+        SqlEntity testQuery = queriesProxy.getQuery("bad_schema", null, null, null);
         assertEquals(rn2n("/**\n"
                 + " * \n"
                 + " * @author mg\n"
@@ -353,7 +353,7 @@ public class ApplicationEntitiesTest {
     @Test
     public void testAsteriskMetadata() throws Exception {
         LocalQueriesProxy queriesProxy = new LocalQueriesProxy(resource.getClient(), indexer);
-        SqlQuery testQuery = queriesProxy.getQuery("asterisk_schema", null, null, null);
+        SqlEntity testQuery = queriesProxy.getQuery("asterisk_schema", null, null, null);
         assertEquals(rn2n(""
                 + "/**\n"
                 + " * \n"
@@ -380,7 +380,7 @@ public class ApplicationEntitiesTest {
     @Test
     public void testBadSubquery() throws Exception {
         LocalQueriesProxy queriesProxy = new LocalQueriesProxy(resource.getClient(), indexer);
-        SqlQuery testQuery = queriesProxy.getQuery("bad_subquery", null, null, null);
+        SqlEntity testQuery = queriesProxy.getQuery("bad_subquery", null, null, null);
         assertEquals(rn2n(""
                 + "/**\n"
                 + " * \n"
@@ -394,7 +394,7 @@ public class ApplicationEntitiesTest {
     @Test
     public void testPartialTablesAsteriskMetadata() throws Exception {
         LocalQueriesProxy queriesProxy = new LocalQueriesProxy(resource.getClient(), indexer);
-        SqlQuery testQuery = queriesProxy.getQuery("partial_asterisk_schema", null, null, null);
+        SqlEntity testQuery = queriesProxy.getQuery("partial_asterisk_schema", null, null, null);
         assertEquals(rn2n(""
                 + "/**\n"
                 + " * \n"
@@ -421,7 +421,7 @@ public class ApplicationEntitiesTest {
     @Test
     public void testPrimaryKey() throws Exception {
         LocalQueriesProxy queriesProxy = new LocalQueriesProxy(resource.getClient(), indexer);
-        SqlQuery testQuery = queriesProxy.getQuery("primary_key", null, null, null);
+        SqlEntity testQuery = queriesProxy.getQuery("primary_key", null, null, null);
         Fields fields = testQuery.getFields();
         assertNotNull(fields);
         assertTrue(fields.getFieldsCount() > 0);
@@ -431,7 +431,7 @@ public class ApplicationEntitiesTest {
     @Test
     public void testMultiplePrimaryKeys() throws Exception {
         LocalQueriesProxy queriesProxy = new LocalQueriesProxy(resource.getClient(), indexer);
-        SqlQuery testQuery = queriesProxy.getQuery("multiple_primary_keys", null, null, null);
+        SqlEntity testQuery = queriesProxy.getQuery("multiple_primary_keys", null, null, null);
         Fields fields = testQuery.getFields();
         assertNotNull(fields);
         assertTrue(fields.getFieldsCount() == 2);
@@ -442,7 +442,7 @@ public class ApplicationEntitiesTest {
     @Test
     public void testWithoutAliases_Schema_NonSchema_Schema_Columns() throws Exception {
         LocalQueriesProxy queriesProxy = new LocalQueriesProxy(resource.getClient(), indexer);
-        SqlQuery testQuery = queriesProxy.getQuery("without_aliases_with_schema_without_schema_columns_from_single_table", null, null, null);
+        SqlEntity testQuery = queriesProxy.getQuery("without_aliases_with_schema_without_schema_columns_from_single_table", null, null, null);
         assertEquals(rn2n(""
                 + "/**\n"
                 + " * \n"
@@ -462,7 +462,7 @@ public class ApplicationEntitiesTest {
     @Test
     public void testMultiplePrimaryKeysWithAsterisk() throws Exception {
         LocalQueriesProxy queriesProxy = new LocalQueriesProxy(resource.getClient(), indexer);
-        SqlQuery testQuery = queriesProxy.getQuery("multiple_primary_keys_asterisk", null, null, null);
+        SqlEntity testQuery = queriesProxy.getQuery("multiple_primary_keys_asterisk", null, null, null);
         Fields fields = testQuery.getFields();
         assertNotNull(fields);
         assertTrue(fields.getFieldsCount() == 23);
@@ -479,7 +479,7 @@ public class ApplicationEntitiesTest {
     @Test
     public void testGetQuery() throws Exception {
         LocalQueriesProxy queriesProxy = new LocalQueriesProxy(resource.getClient(), indexer);
-        SqlQuery testQuery = queriesProxy.getQuery("get_query", null, null, null);
+        SqlEntity testQuery = queriesProxy.getQuery("get_query", null, null, null);
         Fields metadata = testQuery.getFields();
         assertEquals(3, metadata.getFieldsCount());
     }
@@ -488,10 +488,10 @@ public class ApplicationEntitiesTest {
     public void testGetEmptyQuery() throws Exception {
         LocalQueriesProxy queriesProxy = new LocalQueriesProxy(resource.getClient(), indexer);
         try {
-            SqlQuery testQuery = queriesProxy.getQuery("empty_query", null, null, null);
+            SqlEntity testQuery = queriesProxy.getQuery("empty_query", null, null, null);
             fail("Empty query must lead to an exception, but it doesn't. Why?");
         } catch (Exception ex) {
-            //fine. there muist be an exception
+            //fine. there must be an exception
         }
     }
 }

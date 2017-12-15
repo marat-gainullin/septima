@@ -1,6 +1,6 @@
 package com.septima.sqldrivers;
 
-import com.septima.changes.NamedJdbcValue;
+import com.septima.jdbc.NamedJdbcValue;
 import com.septima.metadata.*;
 import com.septima.metadata.ForeignKey;
 import com.septima.sqldrivers.resolvers.Db2TypesResolver;

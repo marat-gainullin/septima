@@ -1,5 +1,7 @@
 package com.septima.changes;
 
+import com.septima.NamedValue;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,7 +22,7 @@ public class CommandRequest extends Change implements Change.Transferable {
     }
 
     @Override
-    public void accept(TransferableChangeVisitor aChangeVisitor) throws Exception {
+    public void accept(TransferableChangeVisitor aChangeVisitor) {
         aChangeVisitor.visit(this);
     }
 

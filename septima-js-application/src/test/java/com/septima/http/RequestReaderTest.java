@@ -6,7 +6,7 @@ package com.septima.http;
 
 import com.septima.changes.*;
 import com.septima.indexer.ScriptDocuments;
-import com.septima.changes.NamedValue;
+import com.septima.NamedValue;
 import com.septima.client.scripts.ScriptedResource;
 import com.septima.handlers.ChangesJSONReader;
 import com.septima.script.Scripts;

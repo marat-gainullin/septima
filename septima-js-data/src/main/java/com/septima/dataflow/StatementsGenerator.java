@@ -1,12 +1,13 @@
 package com.septima.dataflow;
 
-import com.septima.ApplicationTypes;
+import com.septima.*;
+import com.septima.application.ApplicationDataTypes;
 import com.septima.changes.*;
-import com.septima.changes.NamedValue;
-import com.septima.EntitiesHost;
+import com.septima.jdbc.NamedJdbcValue;
+import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
 import com.septima.metadata.JdbcColumn;
-import com.septima.metadata.Parameter;
+import com.septima.Parameter;
 
 import java.sql.Connection;
 import java.sql.ParameterMetaData;
@@ -31,7 +32,7 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
 
     public interface TablesContainer {
 
-        Optional<Map<String, JdbcColumn>> getTable(String aTableName) throws Exception;
+        Optional<Map<String, JdbcColumn>> getTable(String aTableName) throws SQLException;
     }
 
     public interface GeometryConverter {
@@ -65,7 +66,7 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
             geometryConverter = aGeometryConverter;
         }
 
-        public int apply(Connection aConnection) throws Exception {
+        public int apply(Connection aConnection) throws SQLException {
             try (PreparedStatement stmt = aConnection.prepareStatement(clause)) {
                 ParameterMetaData pMeta = stmt.getParameterMetaData();
                 for (int i = 1; i <= parameters.size(); i++) {
@@ -88,7 +89,7 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
                         try {
                             jdbcType = pMeta.getParameterType(i);
                             sqlTypeName = pMeta.getParameterTypeName(i);
-                        } catch (SQLException ex) {
+                        } catch (SQLException | UncheckedSQLException ex) {
                             Logger.getLogger(StatementsGenerator.class.getName()).log(Level.WARNING, null, ex);
                             jdbcType = JdbcDataProvider.assumeJdbcType(v.getValue());
                             sqlTypeName = null;
@@ -124,7 +125,7 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
         return logEntries;
     }
 
-    private NamedValue bindNamedValueToTable(final String aTableName, final String aColumnName, final Object aValue) throws Exception {
+    private NamedValue bindNamedValueToTable(final String aTableName, final String aColumnName, final Object aValue) throws SQLException {
         return tables.getTable(aTableName)
                 .map(tableFields -> tableFields.get(aColumnName))
                 .map(tableField -> (NamedValue) new NamedJdbcValue(aColumnName, aValue, tableField.getJdbcType(), tableField.getType()))
@@ -136,18 +137,18 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
             try {
                 Field entityField = entitiesHost.resolveField(aEntity, datum.getName());
                 String keyColumnName = entityField.getOriginalName() != null ? entityField.getOriginalName() : entityField.getName();
-                NamedValue bound = ApplicationTypes.GEOMETRY_TYPE_NAME.equals(entityField.getType()) ?
+                NamedValue bound = ApplicationDataTypes.GEOMETRY_TYPE_NAME.equals(entityField.getType()) ?
                         new NamedGeometryValue(keyColumnName, datum.getValue()) :
                         bindNamedValueToTable(entityField.getTableName(), keyColumnName, datum.getValue());
                 return Map.entry(entityField.getTableName(), List.of(bound));
-            } catch (Exception ex) {
-                throw new IllegalStateException(ex);
+            } catch (SQLException ex) {
+                throw new UncheckedSQLException(ex);
             }
         };
     }
 
     @Override
-    public void visit(Insert aChange) throws Exception {
+    public void visit(Insert aChange) {
         aChange.getData().stream()
                 .map(asTableDatumEntry(aChange.getEntity()))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
@@ -167,7 +168,7 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
     }
 
     @Override
-    public void visit(Update aChange) throws Exception {
+    public void visit(Update aChange) {
         Map<String, List<NamedValue>> updatesKeys = aChange.getKeys().stream()
                 .map(asTableDatumEntry(aChange.getEntity()))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
@@ -198,10 +199,9 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
      * foreign keys rather than via this multi tables deletion.
      *
      * @param aDeletion Deletion command to delete from all underlying tables of an entity
-     * @throws Exception If problems occur while generating statements for deletion.
      */
     @Override
-    public void visit(Delete aDeletion) throws Exception {
+    public void visit(Delete aDeletion) {
         aDeletion.getKeys().stream()
                 .map(asTableDatumEntry(aDeletion.getEntity()))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
@@ -220,20 +220,16 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
     }
 
     @Override
-    public void visit(Command aChange) throws Exception {
+    public void visit(Command aChange) {
         logEntries.add(new GeneratedStatement(
                 aChange.getCommand(),
                 Collections.unmodifiableList(aChange.getParameters().stream()
                         .map(cv -> {
-                            try {
-                                Parameter p = entitiesHost.resolveParameter(aChange.getEntity(), cv.getName());
-                                if (cv.getValue() != null && ApplicationTypes.GEOMETRY_TYPE_NAME.equals(p.getType())) {
-                                    return new NamedGeometryValue(cv.getName(), cv.getValue());
-                                } else {
-                                    return new NamedJdbcValue(cv.getName(), cv.getValue(), JdbcDataProvider.calcJdbcType(p.getType(), cv.getValue()), null);
-                                }
-                            } catch (Exception ex) {
-                                throw new IllegalStateException(ex);
+                            Parameter p = entitiesHost.resolveParameter(aChange.getEntity(), cv.getName());
+                            if (cv.getValue() != null && ApplicationDataTypes.GEOMETRY_TYPE_NAME.equals(p.getType())) {
+                                return new NamedGeometryValue(cv.getName(), cv.getValue());
+                            } else {
+                                return new NamedJdbcValue(cv.getName(), cv.getValue(), JdbcDataProvider.calcJdbcType(p.getType(), cv.getValue()), null);
                             }
                         })
                         .collect(Collectors.toList())),

@@ -1,5 +1,6 @@
 package com.septima.handlers;
 
+import com.septima.NamedValue;
 import com.septima.RequestHandler;
 import com.septima.changes.*;
 import com.septima.client.DatabasesClient;

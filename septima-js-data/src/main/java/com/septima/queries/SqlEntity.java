@@ -1,10 +1,10 @@
 package com.septima.queries;
 
-import com.septima.ApplicationTypes;
+import com.septima.application.ApplicationDataTypes;
 import com.septima.Database;
 import com.septima.dataflow.DataProvider;
 import com.septima.metadata.Field;
-import com.septima.metadata.Parameter;
+import com.septima.Parameter;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -18,12 +18,11 @@ import java.util.regex.Pattern;
  * their values with type information. Provides a method compile() to transform
  * it to a SqlCompiledQuery replacing parameters names in the query text to "?"
  * placeholders accepted by JDBC, along with a vector of parameters values in
- * the right order. Method <code>compile()</code> recursively resolves the
- * queries reusing and parameters bindings.</p>
+ * the right order.
  *
  * @author mg
  */
-public class SqlQuery {
+public class SqlEntity {
 
     private static final String PARAMETER_NAME_REGEXP = "(?<=[^:]):{1}([A-za-z]\\w*\\b)";
     private final static Pattern PARAMETER_NAME_PATTERN = Pattern.compile(PARAMETER_NAME_REGEXP, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
@@ -52,7 +51,7 @@ public class SqlQuery {
      * @param aDatabase {@link Database} instance to use with the new query.
      * @param aSqlText  the Sql query text.
      */
-    public SqlQuery(Database aDatabase, String aSqlText) {
+    public SqlEntity(Database aDatabase, String aSqlText) {
         this(
                 aDatabase,
                 aSqlText,
@@ -69,21 +68,21 @@ public class SqlQuery {
         );
     }
 
-    public SqlQuery(Database aDatabase,
-                    String aSqlText,
-                    String aCustomSqlText,
-                    String aEntityName,
-                    boolean aReadonly,
-                    boolean aCommand,
-                    boolean aProcedure,
-                    boolean aPublicAccess,
-                    String aTitle,
-                    int aPageSize,
-                    Map<String, Parameter> aParams,
-                    Map<String, Field> aFields,
-                    Set<String> aWritable,
-                    Set<String> aReadRoles,
-                    Set<String> aWriteRoles
+    public SqlEntity(Database aDatabase,
+                     String aSqlText,
+                     String aCustomSqlText,
+                     String aEntityName,
+                     boolean aReadonly,
+                     boolean aCommand,
+                     boolean aProcedure,
+                     boolean aPublicAccess,
+                     String aTitle,
+                     int aPageSize,
+                     Map<String, Parameter> aParams,
+                     Map<String, Field> aFields,
+                     Set<String> aWritable,
+                     Set<String> aReadRoles,
+                     Set<String> aWriteRoles
     ) {
         database = aDatabase;
         sqlText = aSqlText;
@@ -168,7 +167,7 @@ public class SqlQuery {
      * <p>
      * The compilation process includes replacing named parameters binding like
      * ":param1" in SQL query text with JDBC "?" placeholders and filling the
-     * vector of parameters values according to each parameter occurance in the
+     * vector of parameters values according to each parameter occurrence in the
      * query.</p>
      * <p>
      * <p>
@@ -176,11 +175,11 @@ public class SqlQuery {
      * any PreparedStatement object.</p>
      *
      * @return Compiled Sql query.
-     * @throws Exception Thrown if any problems with this {@link SqlQuery} occur while compilation, e.g. empty Sql text.
      */
-    public SqlCompiledQuery compile() throws Exception {
-        if (sqlText == null || sqlText.isEmpty()) {
-            throw new Exception("Empty sql query strings are not supported");
+    public SqlCompiledQuery compile() {
+        Objects.requireNonNull(sqlText, "Sql query text missing.");
+        if (sqlText.isEmpty()) {
+            throw new IllegalStateException("Empty Sql query text is not supported");
         }
         String dialect = database.getSqlDriver().getDialect();
         boolean postgreSQL = dialect.toLowerCase().contains("postgre"); // TODO: Think about how to avoid this hack
@@ -202,10 +201,9 @@ public class SqlQuery {
                         p.getDescription(),
                         p.getType(),
                         p.getValue(),
-                        p.isModified(),
                         p.getMode()
                 ));
-                m.appendReplacement(withoutStringsSegment, postgreSQL && ApplicationTypes.DATE_TYPE_NAME.equals(p.getType()) ? "?::timestamp" : "?");
+                m.appendReplacement(withoutStringsSegment, postgreSQL && ApplicationDataTypes.DATE_TYPE_NAME.equals(p.getType()) ? "?::timestamp" : "?");
             }
             m.appendTail(withoutStringsSegment);
             withoutStrings[i] = withoutStringsSegment.toString();
@@ -214,7 +212,15 @@ public class SqlQuery {
                 compiledSb.append(sm.group(0));
             }
         }
-        return new SqlCompiledQuery(database, entityName, compiledSb.toString(), compiledParams, fields, pageSize, procedure);
+        return new SqlCompiledQuery(
+                database,
+                entityName,
+                compiledSb.toString(),
+                compiledParams,
+                procedure,
+                pageSize,
+                fields
+        );
     }
 
     protected static Map<String, Parameter> extractParameters(String sqlText) {
@@ -224,7 +230,7 @@ public class SqlQuery {
             Matcher matcher = pattern.matcher(sqlText);
             while (matcher.find()) {
                 String paramName = sqlText.substring(matcher.start() + 1, matcher.end());
-                Parameter parameter = new Parameter(paramName, "", ApplicationTypes.STRING_TYPE_NAME);
+                Parameter parameter = new Parameter(paramName, "", ApplicationDataTypes.STRING_TYPE_NAME);
                 params.put(parameter.getName(), parameter);
             }
         }

@@ -5,7 +5,7 @@
  */
 package com.septima.queries;
 
-import com.septima.DataSources;
+import com.septima.jdbc.DataSources;
 import com.septima.client.resourcepool.BearResourcePool;
 import com.septima.client.resourcepool.GeneralResourceProvider;
 import com.septima.client.settings.DbConnectionSettings;

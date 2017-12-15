@@ -1,6 +1,7 @@
 package com.septima.changes;
 
-import java.util.ArrayList;
+import com.septima.NamedValue;
+
 import java.util.List;
 
 /**
@@ -9,21 +10,18 @@ import java.util.List;
 public class Command extends Change implements Change.Applicable {
 
     /**
-     * Compiled sql clause with linear parameters in form of (?, ?, ?).
+     * Compiled Sql clause with linear parameters in form of (?, ?, ?).
      */
     private final String clause;
     /**
      * Compiled and not unique collection of parameters.
      */
-    private final List<NamedValue> parameters = new ArrayList<>();
+    private final List<NamedValue> parameters;
 
-    public Command(String aEntityName) {
-        this(aEntityName, null);
-    }
-
-    public Command(String aEntityName, String aClause) {
+    public Command(String aEntityName, String aClause, List<NamedValue> aParameters) {
         super(aEntityName);
         clause = aClause;
+        parameters = aParameters;
     }
 
     public String getCommand() {
@@ -31,7 +29,7 @@ public class Command extends Change implements Change.Applicable {
     }
 
     @Override
-    public void accept(ApplicableChangeVisitor aChangeVisitor) throws Exception {
+    public void accept(ApplicableChangeVisitor aChangeVisitor) {
         aChangeVisitor.visit(this);
     }
 

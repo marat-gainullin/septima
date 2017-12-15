@@ -6,11 +6,11 @@ package com.septima.changes;
  */
 public interface TransferableChangeVisitor {
 
-    void visit(Insert aChange) throws Exception;
+    void visit(Insert aChange) ;
 
-    void visit(Update aChange) throws Exception;
+    void visit(Update aChange) ;
 
-    void visit(Delete aChange) throws Exception;
+    void visit(Delete aChange) ;
 
-    void visit(CommandRequest aChange) throws Exception;
+    void visit(CommandRequest aChange) ;
 }

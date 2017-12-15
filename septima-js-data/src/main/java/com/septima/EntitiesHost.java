@@ -1,7 +1,8 @@
 package com.septima;
 
 import com.septima.metadata.Field;
-import com.septima.metadata.Parameter;
+
+import java.sql.SQLException;
 
 
 /**
@@ -10,7 +11,7 @@ import com.septima.metadata.Parameter;
  */
 public interface EntitiesHost {
 
-    public Field resolveField(String aEntityName, String aFieldName) throws Exception;
+    Field resolveField(String aEntityName, String aFieldName) throws SQLException;
     
-    public Parameter resolveParameter(String aEntityName, String aParamName) throws Exception;
+    Parameter resolveParameter(String aEntityName, String aParamName);
 }

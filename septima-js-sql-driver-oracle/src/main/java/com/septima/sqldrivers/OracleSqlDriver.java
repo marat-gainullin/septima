@@ -1,6 +1,6 @@
 package com.septima.sqldrivers;
 
-import com.septima.changes.NamedJdbcValue;
+import com.septima.jdbc.NamedJdbcValue;
 import com.septima.metadata.ForeignKey;
 import com.septima.metadata.JdbcColumn;
 import com.septima.metadata.PrimaryKey;
@@ -34,12 +34,10 @@ public class OracleSqlDriver extends SqlDriver {
     private static final Character ESCAPE = '"';
 
     private static final OracleTypesResolver resolver = new OracleTypesResolver();
-    private static final String SET_SCHEMA_CLAUSE = "alter session set current_schema = %s";
     private static final String GET_SCHEMA_CLAUSE = "SELECT sys_context('USERENV', 'CURRENT_SCHEMA') FROM DUAL";
     private static final String CREATE_SCHEMA_CLAUSE = "CREATE USER %s IDENTIFIED BY %s";
     private static final String RENAME_FIELD_SQL_PREFIX = "alter table %s rename column %s to %s";
     private static final String MODIFY_FIELD_SQL_PREFIX = "alter table %s modify ";
-    private static final String DEFAULT_OBJECT_TYPE_NAME = "SYS.ANYDATA";
 
     @Override
     public String getDialect() {

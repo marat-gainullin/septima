@@ -1,5 +1,7 @@
 package com.septima.changes;
 
+import com.septima.NamedValue;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,12 +17,12 @@ public class Insert extends Change implements Change.Applicable, Change.Transfer
     }
 
     @Override
-    public void accept(TransferableChangeVisitor aChangeVisitor) throws Exception {
+    public void accept(TransferableChangeVisitor aChangeVisitor) {
         aChangeVisitor.visit(this);
     }
 
     @Override
-    public void accept(ApplicableChangeVisitor aChangeVisitor) throws Exception {
+    public void accept(ApplicableChangeVisitor aChangeVisitor) {
         aChangeVisitor.visit(this);
     }
 

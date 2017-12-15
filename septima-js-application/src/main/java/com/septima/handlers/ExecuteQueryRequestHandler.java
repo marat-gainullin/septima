@@ -7,7 +7,7 @@ package com.septima.handlers;
 import com.septima.RequestHandler;
 import com.septima.client.SqlQuery;
 import com.septima.login.AnonymousPrincipal;
-import com.septima.metadata.Parameter;
+import com.septima.Parameter;
 import com.septima.client.threetier.requests.ExecuteQueryRequest;
 import com.septima.script.Scripts;
 import com.septima.SeptimaApplication;

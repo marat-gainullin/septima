@@ -5,11 +5,11 @@ import net.sf.jsqlparser.expression.NamedParameter;
 
 import java.util.Map;
 
-public class ParametersRename extends SyntaxTreeVisitor {
+public class RenameParameters extends SyntaxTreeVisitor {
 
     private final Map<String, String> newNames;
 
-    public ParametersRename(Map<String, String> aNewNames){
+    RenameParameters(Map<String, String> aNewNames){
         newNames = aNewNames;
     }
 

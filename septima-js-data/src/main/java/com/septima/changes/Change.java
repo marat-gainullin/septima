@@ -17,7 +17,7 @@ public abstract class Change {
      */
     public interface Applicable extends Generic {
 
-        void accept(ApplicableChangeVisitor aChangeVisitor) throws Exception;
+        void accept(ApplicableChangeVisitor aChangeVisitor) ;
     }
 
     /**
@@ -27,7 +27,7 @@ public abstract class Change {
      */
     public interface Transferable extends Generic {
 
-        void accept(TransferableChangeVisitor aChangeVisitor) throws Exception;
+        void accept(TransferableChangeVisitor aChangeVisitor) ;
     }
 
     private final String entityName;

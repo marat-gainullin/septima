@@ -1,4 +1,6 @@
-package com.septima.changes;
+package com.septima.jdbc;
+
+import com.septima.NamedValue;
 
 /**
  *

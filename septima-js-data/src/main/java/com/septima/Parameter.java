@@ -1,4 +1,4 @@
-package com.septima.metadata;
+package com.septima;
 
 import java.sql.ParameterMetaData;
 
@@ -7,16 +7,44 @@ import java.sql.ParameterMetaData;
  * It holds information about field as the <code>Field</code> class
  * and additional information about parameter mode, value and default value.
  *
- * TODO: Remove 'Field' inheritance (add 'name' and 'type' fields explicitly), maybe 'mode' and 'modified' fields too.
- * TODO: Maybe remove this class at all and use Change.Value instead it?
- *
  * @author mg
  */
-public class Parameter extends Field {
+public class Parameter {
 
-    private final int mode;
-    private boolean modified;
+    public enum Mode {
+        In,
+        Out,
+        InOut,
+        Unknown;
 
+        public static Mode of(int aJdbcMode){
+            if(aJdbcMode == ParameterMetaData.parameterModeIn){
+                return In;
+            } else if(aJdbcMode == ParameterMetaData.parameterModeOut) {
+                return Out;
+            } else if(aJdbcMode == ParameterMetaData.parameterModeInOut){
+                return InOut;
+            } else {
+                return Unknown;
+            }
+        }
+        public static int toJdbc(Mode aMode){
+            if(aMode == In){
+                return ParameterMetaData.parameterModeIn;
+            } else if(aMode == Out) {
+                return ParameterMetaData.parameterModeOut;
+            } else if(aMode == InOut){
+                return ParameterMetaData.parameterModeInOut;
+            } else {
+                return ParameterMetaData.parameterModeUnknown;
+            }
+        }
+    }
+
+    private final String name;
+    private final Mode mode;
+    private final String description;
+    private final String type;
     private Object value;
 
     /**
@@ -46,14 +74,28 @@ public class Parameter extends Field {
      * @param aType        Type name of the created parameter.
      */
     public Parameter(String aName, String aDescription, String aType) {
-        this(aName, aDescription, aType, null, false, ParameterMetaData.parameterModeIn);
+        this(aName, aDescription, aType, null, Mode.In);
     }
 
-    public Parameter(String aName, String aDescription, String aType, Object aValue, boolean aModified, int aMode) {
-        super(aName, aDescription, aType);
+    public Parameter(String aName, String aDescription, String aType, Object aValue, Mode aMode) {
+        super();
+        name = aName;
         value = aValue;
-        modified = aModified;
+        description = aDescription;
+        type = aType;
         mode = aMode;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getType() {
+        return type;
     }
 
     /**
@@ -61,40 +103,25 @@ public class Parameter extends Field {
      *
      * @return Parameter's mode.
      */
-    public int getMode() {
+    public Mode getMode() {
         return mode;
     }
 
-    /**
-     * Returns parameter's value.
-     *
-     * @return Parameter's value.
-     */
     public Object getValue() {
         return value;
     }
 
-    /**
-     * Sets the value of the parameter.
-     *
-     * @param aValue A value to be set as the parameter's value.
-     */
-    public void setValue(Object aValue) {
-        if (value != aValue) {
-            value = aValue;
-            modified = true;
-        }
+    public void setValue(Object value) {
+        this.value = value;
     }
-
-    /**
+/*
      * Gets parameter's value as a String, whether it feasible. The result
      * exists only for non-null values and some simple types.
      *
      * @return String representing Parameter's value, this value can be used to
      * set the value using <code>setValueByString()</code>.
-     * @throws Exception if parameter's value not to be converted.
 
-    public String getValueAsString() throws Exception {
+    public String getValueAsString() {
     if (getValue() != null) {
     if (getValue() instanceof java.math.BigDecimal
     || getValue() instanceof Float
@@ -115,12 +142,11 @@ public class Parameter extends Field {
     }
      */
 
-    /**
+    /*
      * Sets the value of the parameter using a String in the format compatible
      * with <code>getValueAsString()</code> method.
      *
-     * @throws Exception if operation fails.
-    public void setValueByString(String aValue) throws Exception {
+    public void setValueByString(String aValue) {
     if (aValue != null) {
     if (getType() != null) {
     if (getTypeInfo().javaClassName.equals(String.class.getName())) {
@@ -150,13 +176,4 @@ public class Parameter extends Field {
     }
     }
      */
-
-    public boolean isModified() {
-        return modified;
-    }
-
-    public void setModified(boolean aValue) {
-        modified = aValue;
-    }
-
 }

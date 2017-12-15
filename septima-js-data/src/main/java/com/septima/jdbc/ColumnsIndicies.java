@@ -1,4 +1,4 @@
-package com.septima.dataflow;
+package com.septima.jdbc;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;

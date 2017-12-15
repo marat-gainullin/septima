@@ -1,4 +1,4 @@
-package com.septima.changes;
+package com.septima;
 
 /**
  * Holds a typed value for some change in a changes log. 

@@ -1,23 +1,25 @@
-package com.septima;
+package com.septima.application;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.septima.Database;
+import com.septima.EntitiesHost;
+import com.septima.Parameter;
 import com.septima.dataflow.DataProvider;
+import com.septima.jdbc.DataSources;
+import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
 import com.septima.metadata.ForeignKey;
 import com.septima.metadata.JdbcColumn;
-import com.septima.metadata.Parameter;
-import com.septima.queries.SqlQuery;
+import com.septima.queries.SqlEntity;
 import com.septima.queries.InlineEntities;
 import com.septima.sqldrivers.resolvers.TypesResolver;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.StringReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -27,8 +29,10 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.SelectItems;
 import net.sf.jsqlparser.FromItems;
+import net.sf.jsqlparser.UncheckedJSQLParserException;
 import net.sf.jsqlparser.parser.*;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
@@ -41,13 +45,13 @@ import net.sf.jsqlparser.util.deparser.StatementDeParser;
  */
 public class ApplicationEntities implements EntitiesHost {
 
-    private static final String CANT_LOAD_NULL_MSG = "Entity name missing.";
-    private static final String LOADING_QUERY_MSG = "Loading stored query '%s'.";
-    private static final String LOADED_QUERY_MSG = "Stored query '%s' loaded.";
+    private static final String ENTITY_NAME_MISSING_MSG = "Entity name missing.";
+    private static final String LOADING_QUERY_MSG = "Loading entity '%s'.";
+    private static final String LOADED_QUERY_MSG = "Entity '%s' loaded.";
 
     private final Database database;
     private final Path applicationPath;
-    private final Map<String, SqlQuery> entities = new ConcurrentHashMap<>();
+    private final Map<String, SqlEntity> entities = new ConcurrentHashMap<>();
     private final boolean aliasesToTableNames;
 
     public ApplicationEntities(Database aDatabase, Path aApplicationPath, boolean aAliasesToTableNames) {
@@ -57,21 +61,30 @@ public class ApplicationEntities implements EntitiesHost {
         aliasesToTableNames = aAliasesToTableNames;
     }
 
-    public SqlQuery loadEntity(String aEntityName) throws Exception {
+    public SqlEntity loadEntity(String aEntityName) {
+        Objects.requireNonNull(aEntityName, ENTITY_NAME_MISSING_MSG);
         return entities.computeIfAbsent(aEntityName, entityName -> {
-            Logger.getLogger(ApplicationEntities.class.getName()).finer(String.format(LOADING_QUERY_MSG, aEntityName));
-            String entityJsonFileName = aEntityName.replace(".", File.separator) + ".sql.json";
-            File entityJsonFile = applicationPath.resolve(entityJsonFileName).toFile();
-            SqlQuery entity = constructEntity(aEntityName, readEntitySql(aEntityName), entityJsonFile);
-            Logger.getLogger(ApplicationEntities.class.getName()).finer(String.format(LOADED_QUERY_MSG, aEntityName));
-            return entity;
+            try {
+                Logger.getLogger(ApplicationEntities.class.getName()).finer(String.format(LOADING_QUERY_MSG, aEntityName));
+                String entityJsonFileName = aEntityName.replace(".", File.separator) + ".sql.json";
+                File entityJsonFile = applicationPath.resolve(entityJsonFileName).toFile();
+                SqlEntity entity = constructEntity(aEntityName, readEntitySql(aEntityName), entityJsonFile);
+                Logger.getLogger(ApplicationEntities.class.getName()).finer(String.format(LOADED_QUERY_MSG, aEntityName));
+                return entity;
+            } catch (IOException ex) {
+                throw new UncheckedIOException(ex);
+            } catch (JSQLParserException ex) {
+                throw new UncheckedJSQLParserException(ex);
+            } catch (SQLException ex) {
+                throw new UncheckedSQLException(ex);
+            }
         });
     }
 
     @Override
-    public Parameter resolveParameter(String aEntityName, String aParamName) throws Exception {
+    public Parameter resolveParameter(String aEntityName, String aParamName) {
         if (aEntityName != null) {
-            SqlQuery entity = loadEntity(aEntityName);
+            SqlEntity entity = loadEntity(aEntityName);
             if (entity != null) {
                 return entity.getParameters().get(aParamName);
             } else {
@@ -83,9 +96,9 @@ public class ApplicationEntities implements EntitiesHost {
     }
 
     @Override
-    public Field resolveField(String anEntityName, String aFieldName) throws Exception {
+    public Field resolveField(String anEntityName, String aFieldName) throws SQLException {
         if (anEntityName != null) {
-            SqlQuery query = loadEntity(anEntityName);
+            SqlEntity query = loadEntity(anEntityName);
             if (query != null) {
                 Map<String, Field> fields = query.getFields();
                 Field resolved = fields.get(aFieldName);
@@ -106,7 +119,7 @@ public class ApplicationEntities implements EntitiesHost {
         }
     }
 
-    private Map<String, Field> tableColumnsToApplicationFields(Table aTable) throws Exception {
+    private Map<String, Field> tableColumnsToApplicationFields(Table aTable) throws SQLException {
         Map<String, JdbcColumn> tableFields = database.getMetadata()
                 .getTable(aTable.getWholeTableName())
                 .orElse(Map.of());
@@ -138,21 +151,18 @@ public class ApplicationEntities implements EntitiesHost {
                 .collect(Collectors.toMap(Field::getName, Function.identity()));
     }
 
-    private String readEntitySql(String aEntityName) throws Exception {
-        if (aEntityName != null) {
-            String entitySqlFileName = aEntityName.replace(".", File.separator) + ".sql";
-            File mainQueryFile = applicationPath.resolve(entitySqlFileName).toFile();
-            if (mainQueryFile.exists()) {
-                if (!mainQueryFile.isDirectory()) {
-                    return new String(Files.readAllBytes(mainQueryFile.toPath()), StandardCharsets.UTF_8);
-                } else {
-                    throw new IllegalStateException(entitySqlFileName + "' at path: " + applicationPath + " is a directory.");
-                }
+    private String readEntitySql(String aEntityName) throws IOException {
+        Objects.requireNonNull(aEntityName, ENTITY_NAME_MISSING_MSG);
+        String entitySqlFileName = aEntityName.replace(".", File.separator) + ".sql";
+        File mainQueryFile = applicationPath.resolve(entitySqlFileName).toFile();
+        if (mainQueryFile.exists()) {
+            if (!mainQueryFile.isDirectory()) {
+                return new String(Files.readAllBytes(mainQueryFile.toPath()), StandardCharsets.UTF_8);
             } else {
-                throw new FileNotFoundException("Can't find '" + entitySqlFileName + "' from path: " + applicationPath);
+                throw new FileNotFoundException(entitySqlFileName + "' at path: " + applicationPath + " is a directory.");
             }
         } else {
-            throw new NullPointerException(CANT_LOAD_NULL_MSG);
+            throw new FileNotFoundException("Can't find '" + entitySqlFileName + "' from path: " + applicationPath);
         }
     }
 
@@ -175,8 +185,8 @@ public class ApplicationEntities implements EntitiesHost {
             String type = typeNode != null && typeNode.isTextual() ? typeNode.asText(parameter.getType()) : parameter.getType();
             JsonNode descriptionNode = parameterNode.get("description");
             String description = descriptionNode != null && descriptionNode.isTextual() ? descriptionNode.asText(parameter.getDescription()) : parameter.getDescription();
-            JsonNode defaultValueNode = parameterNode.get("value");
-            String defaultValue = defaultValueNode != null && defaultValueNode.isTextual() ? defaultValueNode.asText() : null;
+            // JsonNode defaultValueNode = parameterNode.get("value");
+            // String defaultValue = defaultValueNode != null && defaultValueNode.isTextual() ? defaultValueNode.asText() : null;
             params.put(parameterName, new Parameter(
                     parameterName,
                     description,
@@ -278,7 +288,8 @@ public class ApplicationEntities implements EntitiesHost {
         return read;
     }
 
-    private SqlQuery constructEntity(String anEntityName, String entitySql, File entityJsonFile) throws Exception {
+    private SqlEntity constructEntity(String anEntityName, String entitySql, File entityJsonFile) throws IOException, JSQLParserException, SQLException {
+        Objects.requireNonNull(anEntityName, ENTITY_NAME_MISSING_MSG);
         JsonNode entityDocument = parseEntitySettings(entityJsonFile);
         JsonNode procedureNode = entityDocument != null ? entityDocument.get("procedure") : null;
         boolean procedure = procedureNode != null && procedureNode.asBoolean();
@@ -345,7 +356,7 @@ public class ApplicationEntities implements EntitiesHost {
                 publicAccess = false;
                 pageSize = DataProvider.NO_PAGING_PAGE_SIZE;
             }
-            return new SqlQuery(
+            return new SqlEntity(
                     database,
                     sqlWithSubQueries,
                     customSql,
@@ -367,7 +378,7 @@ public class ApplicationEntities implements EntitiesHost {
         }
     }
 
-    private Map<String, Field> resolveFieldsBySyntax(Statement parsedQuery) throws Exception {
+    private Map<String, Field> resolveFieldsBySyntax(Statement parsedQuery) throws SQLException {
         if (parsedQuery instanceof Select) {
             Select select = (Select) parsedQuery;
             return resolveOutputFieldsFromSources(select.getSelectBody());
@@ -376,7 +387,7 @@ public class ApplicationEntities implements EntitiesHost {
         }
     }
 
-    private Map<String, Field> resolveOutputFieldsFromSources(SelectBody aSelectBody) throws Exception {
+    private Map<String, Field> resolveOutputFieldsFromSources(SelectBody aSelectBody) throws SQLException {
         Map<String, Field> fields = new LinkedHashMap<>();
         Map<String, FromItem> sources = FromItems.find(FromItems.ToCase.LOWER, aSelectBody);
         for (SelectItem selectItem : SelectItems.find(aSelectBody)) {
@@ -414,16 +425,16 @@ public class ApplicationEntities implements EntitiesHost {
                     if (!selectExpressionItem.getAliasName().isEmpty()) {
                         Field field = new Field(selectExpressionItem.getAliasName());
                         fields.put(field.getName(), field);
-                    } else {
-                        // Unnamed expression fields will be replaced by fact fields during data receiving from a database
-                    }
+                    } //else {
+                    // Unnamed expression fields will be replaced by fact fields during data receiving from a database
+                    //}
                 }
             }
         }
         return fields;
     }
 
-    private Field asAliasedField(Field resolved, Column column, String alias, FromItem source) throws Exception {
+    private Field asAliasedField(Field resolved, Column column, String alias, FromItem source) {
         return new Field(
                 alias != null && !alias.isEmpty() ? alias : column.getColumnName(),
                 resolved.getDescription(),
@@ -438,41 +449,33 @@ public class ApplicationEntities implements EntitiesHost {
         );
     }
 
-    private Field resolveFieldBySource(Column column, String alias, FromItem source) {
-        try {
-            if (source instanceof Table) {
-                Map<String, Field> tableFields = tableColumnsToApplicationFields((Table) source);
-                Field resolved = tableFields.getOrDefault(column.getColumnName(), new Field(column.getColumnName()));
-                return asAliasedField(resolved, column, alias, source);
-            } else if (source instanceof SubSelect) {
-                Map<String, Field> subFields = resolveOutputFieldsFromSources(((SubSelect) source).getSelectBody());
-                Field resolved = subFields.getOrDefault(column.getColumnName(), new Field(column.getColumnName()));
-                return asAliasedField(resolved, column, alias, source);
-            } else {
-                return new Field(column.getColumnName());
-            }
-        } catch (Exception ex) {
-            throw new IllegalStateException(ex);
+    private Field resolveFieldBySource(Column column, String alias, FromItem source) throws SQLException {
+        if (source instanceof Table) {
+            Map<String, Field> tableFields = tableColumnsToApplicationFields((Table) source);
+            Field resolved = tableFields.getOrDefault(column.getColumnName(), new Field(column.getColumnName()));
+            return asAliasedField(resolved, column, alias, source);
+        } else if (source instanceof SubSelect) {
+            Map<String, Field> subFields = resolveOutputFieldsFromSources(((SubSelect) source).getSelectBody());
+            Field resolved = subFields.getOrDefault(column.getColumnName(), new Field(column.getColumnName()));
+            return asAliasedField(resolved, column, alias, source);
+        } else {
+            return new Field(column.getColumnName());
         }
     }
 
-    private boolean isFieldInSource(Column column, FromItem source) {
-        try {
-            if (source instanceof Table) {
-                Map<String, Field> tableFields = tableColumnsToApplicationFields((Table) source);
-                return tableFields.containsKey(column.getColumnName());
-            } else if (source instanceof SubSelect) {
-                Map<String, Field> subFields = resolveOutputFieldsFromSources(((SubSelect) source).getSelectBody());
-                return subFields.containsKey(column.getColumnName());
-            } else {
-                return false;
-            }
-        } catch (Exception ex) {
-            throw new IllegalStateException(ex);
+    private boolean isFieldInSource(Column column, FromItem source) throws SQLException {
+        if (source instanceof Table) {
+            Map<String, Field> tableFields = tableColumnsToApplicationFields((Table) source);
+            return tableFields.containsKey(column.getColumnName());
+        } else if (source instanceof SubSelect) {
+            Map<String, Field> subFields = resolveOutputFieldsFromSources(((SubSelect) source).getSelectBody());
+            return subFields.containsKey(column.getColumnName());
+        } else {
+            return false;
         }
     }
 
-    private Field resolveFieldByColumnExpression(Column column, String alias, Map<String, FromItem> aSources) throws Exception {
+    private Field resolveFieldByColumnExpression(Column column, String alias, Map<String, FromItem> aSources) throws SQLException {
         if (column.getTable() != null &&
                 column.getTable().getWholeTableName() != null &&
                 !column.getTable().getWholeTableName().isEmpty()) {
@@ -492,9 +495,21 @@ public class ApplicationEntities implements EntitiesHost {
              * Замечание: Таблица или подзапрос может быть указан как имя настоящей таблицы или как алиас таблицы или подзапроса.
              */
             return aSources.values().stream()
-                    .dropWhile(source -> !isFieldInSource(column, source))
+                    .dropWhile(source -> {
+                        try {
+                            return !isFieldInSource(column, source);
+                        } catch (SQLException ex) {
+                            throw new UncheckedSQLException(ex);
+                        }
+                    })
                     .findFirst()
-                    .map(source -> resolveFieldBySource(column, alias, source))
+                    .map(source -> {
+                        try {
+                            return resolveFieldBySource(column, alias, source);
+                        } catch (SQLException ex) {
+                            throw new UncheckedSQLException(ex);
+                        }
+                    })
                     .orElse(new Field(alias != null && !alias.isEmpty() ? alias : column.getColumnName()));
         }
     }

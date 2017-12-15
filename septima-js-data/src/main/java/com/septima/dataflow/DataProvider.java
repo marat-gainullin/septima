@@ -1,22 +1,21 @@
 package com.septima.dataflow;
 
-import com.septima.metadata.Parameter;
+import com.septima.Parameter;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * This interface is intended to serve as base contract for data
- * quering/fetching/reading and than applying changes to variety of unknown and
+ * querying/fetching/reading and than applying changes to variety of unknown and
  * mystery sources/recipients.
  *
  * @author mg
  */
 public interface DataProvider extends AutoCloseable {
 
-    int NO_PAGING_PAGE_SIZE = -1;
 
     /**
      * Returns back-end entity identifier. It might be a database table, or ORM
@@ -33,27 +32,20 @@ public interface DataProvider extends AutoCloseable {
      *
      * @param aParams Parameters values, ordered with some unknown criteria. If
      * data can't be achieved, in some circumstances, this method must return
-     * at least an empty Rowset instance. Values from this parameter collection
+     * at least an empty collection. Values from this parameter collection
      * are applied one by one in the straight order.
-     * @param onSuccess
-     * @param onFailure
-     * @return Data collection, retrieved from the source.
-     * @throws java.lang.Exception
+     * @return Future with data collection, retrieved from the source.
      * @see Parameter
      */
-    Collection<Map<String, Object>> refresh(List<Parameter> aParams, Consumer<Collection<Map<String, Object>>> onSuccess, Consumer<Exception> onFailure) throws Exception;
+    CompletableFuture<Collection<Map<String, Object>>> pull(List<Parameter> aParams);
 
     /**
      * Fetches a next page of data from an abstract data source.
      *
-     * @param onSuccess
-     * @param onFailure
      * @return Data collection instance, containing data, retrieved from the source while
      * fetching a page.
-     * @throws Exception
-     * @see DataProviderNotPagedException
      */
-    Collection<Map<String, Object>> nextPage(Consumer<Collection<Map<String, Object>>> onSuccess, Consumer<Exception> onFailure) throws Exception;
+    CompletableFuture<Collection<Map<String, Object>>> nextPage() throws NotPagedException;
 
     /**
      * Returns page size for paged flow providers.
@@ -65,4 +57,5 @@ public interface DataProvider extends AutoCloseable {
 
     boolean isProcedure();
 
+    int NO_PAGING_PAGE_SIZE = -1;
 }

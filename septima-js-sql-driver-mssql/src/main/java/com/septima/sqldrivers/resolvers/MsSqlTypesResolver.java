@@ -1,6 +1,6 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.ApplicationTypes;
+import com.septima.application.ApplicationDataTypes;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,38 +15,38 @@ import java.util.Set;
 public class MsSqlTypesResolver implements TypesResolver {
 
     private static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
-        put("varchar", ApplicationTypes.STRING_TYPE_NAME);
-        put("numeric", ApplicationTypes.NUMBER_TYPE_NAME);
-        put("decimal", ApplicationTypes.NUMBER_TYPE_NAME);
-        put("money", ApplicationTypes.NUMBER_TYPE_NAME);
-        put("bit", ApplicationTypes.BOOLEAN_TYPE_NAME);
-        put("datetime", ApplicationTypes.DATE_TYPE_NAME);
-        put("int", ApplicationTypes.NUMBER_TYPE_NAME);
-        put("smallint", ApplicationTypes.NUMBER_TYPE_NAME);
-        put("tinyint", ApplicationTypes.NUMBER_TYPE_NAME);
-        put("bigint", ApplicationTypes.NUMBER_TYPE_NAME);
-        put("real", ApplicationTypes.NUMBER_TYPE_NAME);
-        put("float", ApplicationTypes.NUMBER_TYPE_NAME);
-        put("smallmoney", ApplicationTypes.NUMBER_TYPE_NAME);
-        put("tinyint identity", ApplicationTypes.NUMBER_TYPE_NAME);
-        put("bigint identity", ApplicationTypes.NUMBER_TYPE_NAME);
-        put("numeric identity", ApplicationTypes.NUMBER_TYPE_NAME);
-        put("decimal identity", ApplicationTypes.NUMBER_TYPE_NAME);
-        put("int identity", ApplicationTypes.NUMBER_TYPE_NAME);
-        put("smallint identity", ApplicationTypes.NUMBER_TYPE_NAME);
-        put("nvarchar", ApplicationTypes.STRING_TYPE_NAME);
-        put("char", ApplicationTypes.STRING_TYPE_NAME);
-        put("nchar", ApplicationTypes.STRING_TYPE_NAME);
+        put("varchar", ApplicationDataTypes.STRING_TYPE_NAME);
+        put("numeric", ApplicationDataTypes.NUMBER_TYPE_NAME);
+        put("decimal", ApplicationDataTypes.NUMBER_TYPE_NAME);
+        put("money", ApplicationDataTypes.NUMBER_TYPE_NAME);
+        put("bit", ApplicationDataTypes.BOOLEAN_TYPE_NAME);
+        put("datetime", ApplicationDataTypes.DATE_TYPE_NAME);
+        put("int", ApplicationDataTypes.NUMBER_TYPE_NAME);
+        put("smallint", ApplicationDataTypes.NUMBER_TYPE_NAME);
+        put("tinyint", ApplicationDataTypes.NUMBER_TYPE_NAME);
+        put("bigint", ApplicationDataTypes.NUMBER_TYPE_NAME);
+        put("real", ApplicationDataTypes.NUMBER_TYPE_NAME);
+        put("float", ApplicationDataTypes.NUMBER_TYPE_NAME);
+        put("smallmoney", ApplicationDataTypes.NUMBER_TYPE_NAME);
+        put("tinyint identity", ApplicationDataTypes.NUMBER_TYPE_NAME);
+        put("bigint identity", ApplicationDataTypes.NUMBER_TYPE_NAME);
+        put("numeric identity", ApplicationDataTypes.NUMBER_TYPE_NAME);
+        put("decimal identity", ApplicationDataTypes.NUMBER_TYPE_NAME);
+        put("int identity", ApplicationDataTypes.NUMBER_TYPE_NAME);
+        put("smallint identity", ApplicationDataTypes.NUMBER_TYPE_NAME);
+        put("nvarchar", ApplicationDataTypes.STRING_TYPE_NAME);
+        put("char", ApplicationDataTypes.STRING_TYPE_NAME);
+        put("nchar", ApplicationDataTypes.STRING_TYPE_NAME);
 
-        put("smalldatetime", ApplicationTypes.DATE_TYPE_NAME);
-        put("datetime2", ApplicationTypes.DATE_TYPE_NAME);
-        put("date", ApplicationTypes.DATE_TYPE_NAME);
-        put("time", ApplicationTypes.DATE_TYPE_NAME);
-        put("text", ApplicationTypes.STRING_TYPE_NAME);
-        put("ntext", ApplicationTypes.STRING_TYPE_NAME);
-        put("uniqueidentifier", ApplicationTypes.STRING_TYPE_NAME);
-        put("sysname", ApplicationTypes.STRING_TYPE_NAME);
-        put("xml", ApplicationTypes.STRING_TYPE_NAME);
+        put("smalldatetime", ApplicationDataTypes.DATE_TYPE_NAME);
+        put("datetime2", ApplicationDataTypes.DATE_TYPE_NAME);
+        put("date", ApplicationDataTypes.DATE_TYPE_NAME);
+        put("time", ApplicationDataTypes.DATE_TYPE_NAME);
+        put("text", ApplicationDataTypes.STRING_TYPE_NAME);
+        put("ntext", ApplicationDataTypes.STRING_TYPE_NAME);
+        put("uniqueidentifier", ApplicationDataTypes.STRING_TYPE_NAME);
+        put("sysname", ApplicationDataTypes.STRING_TYPE_NAME);
+        put("xml", ApplicationDataTypes.STRING_TYPE_NAME);
         put("image", null);
         put("sql_variant", null);
         put("varbinary", null);
@@ -79,8 +79,8 @@ public class MsSqlTypesResolver implements TypesResolver {
     }};
 
     @Override
-    public String toApplicationType(int aJdbcType, String aRDBMSType) {
-        return aRDBMSType != null ? rdbmsTypes2ApplicationTypes.get(aRDBMSType.toLowerCase()) : null;
+    public String toApplicationType(int aJdbcType, String aRdbmsTypeName) {
+        return aRdbmsTypeName != null ? rdbmsTypes2ApplicationTypes.get(aRdbmsTypeName.toLowerCase()) : null;
     }
 
     @Override

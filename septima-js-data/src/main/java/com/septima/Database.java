@@ -1,7 +1,10 @@
 package com.septima;
 
+import com.septima.application.ApplicationDataProvider;
 import com.septima.changes.Change;
 import com.septima.dataflow.StatementsGenerator;
+import com.septima.jdbc.DataSources;
+import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
 import com.septima.sqldrivers.SqlDriver;
 
@@ -14,6 +17,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -61,42 +65,50 @@ public class Database {
         return futureExecutor;
     }
 
-    public ApplicationDataProvider createDataProvider(String aEntityName, String aSqlClause, Map<String, Field> aExpectedFields) throws Exception {
-        return new ApplicationDataProvider(metadata.getSqlDriver(), aEntityName, dataSource, jdbcPerformer, aSqlClause, aExpectedFields);
+    public ApplicationDataProvider createDataProvider(String aEntityName, String aSqlClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
+        return new ApplicationDataProvider(
+                metadata.getSqlDriver(),
+                aEntityName,
+                dataSource,
+                jdbcPerformer,
+                futureExecutor,
+                aSqlClause,
+                aProcedure,
+                aPageSize,
+                aExpectedFields
+        );
     }
 
     public CompletableFuture<Integer> commit(List<Change.Applicable> aChangeLog) {
-        assert aChangeLog != null;
-        CompletableFuture<Integer> commiting = new CompletableFuture<>();
+        Objects.requireNonNull(aChangeLog);
+        CompletableFuture<Integer> committing = new CompletableFuture<>();
         jdbcPerformer.accept(() -> {
-            try {
-                try(Connection connection = dataSource.getConnection()) {
-                    boolean autoCommit = connection.getAutoCommit();
-                    connection.setAutoCommit(false);
-                    try {
-                        List<StatementsGenerator.GeneratedStatement> statements = new ArrayList<>();
-                        for (Change.Applicable change : aChangeLog) {
-                            StatementsGenerator generator = new StatementsGenerator(entitiesHost, metadata, sqlDriver);
-                            change.accept(generator);
-                            statements.addAll(generator.getLogEntries());
-                        }
-                        int affected = riddleStatements(statements, connection);
-                        commiting.completeAsync(() -> affected, futureExecutor);
-                    } catch (Exception ex) {
-                        connection.rollback();
-                        throw ex;
-                    } finally {
-                        connection.setAutoCommit(autoCommit);
+            try (Connection connection = dataSource.getConnection()) {
+                boolean autoCommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+                try {
+                    List<StatementsGenerator.GeneratedStatement> statements = new ArrayList<>();
+                    for (Change.Applicable change : aChangeLog) {
+                        StatementsGenerator generator = new StatementsGenerator(entitiesHost, metadata, sqlDriver);
+                        change.accept(generator);
+                        statements.addAll(generator.getLogEntries());
                     }
+                    int affected = riddleStatements(statements, connection);
+                    committing.completeAsync(() -> affected, futureExecutor);
+                } catch (SQLException | UncheckedSQLException ex) {
+                    connection.rollback();
+                    throw ex;
+                } finally {
+                    connection.setAutoCommit(autoCommit);
                 }
-            } catch (Exception ex) {
-                futureExecutor.execute(() -> commiting.completeExceptionally(ex));
+            } catch (SQLException | UncheckedSQLException ex) {
+                futureExecutor.execute(() -> committing.completeExceptionally(ex));
             }
         });
-        return commiting;
+        return committing;
     }
 
-    private static int riddleStatements(List<StatementsGenerator.GeneratedStatement> aStatements, Connection aConnection) throws Exception {
+    private static int riddleStatements(List<StatementsGenerator.GeneratedStatement> aStatements, Connection aConnection) throws SQLException {
         int rowsAffected = 0;
         if (!aStatements.isEmpty()) {
             List<StatementsGenerator.GeneratedStatement> errorStatements = new ArrayList<>();
@@ -104,7 +116,7 @@ public class Database {
             for (StatementsGenerator.GeneratedStatement entry : aStatements) {
                 try {
                     rowsAffected += entry.apply(aConnection);
-                } catch (Exception ex) {
+                } catch (SQLException | UncheckedSQLException ex) {
                     errorStatements.add(entry);
                     errors.add(ex.getMessage());
                     Logger.getLogger(DataSources.class.getName()).log(Level.WARNING, ex.getMessage());
@@ -119,25 +131,22 @@ public class Database {
         return rowsAffected;
     }
 
-    private static DataSource obtainDataSource(String aDataSourceName) throws Exception {
-        if (aDataSourceName != null && !aDataSourceName.isEmpty()) {
-            Context initContext = new InitialContext();
-            try {
-                // J2EE servers
-                return (DataSource) initContext.lookup(aDataSourceName);
-            } catch (NamingException ex) {
-                // Apache Tomcat component's JNDI context
-                Context envContext = (Context) initContext.lookup("java:/comp/env"); //NOI18N
-                return (DataSource) envContext.lookup(aDataSourceName);
-            }
-        } else {
-            throw new NamingException("Data source name missing.");
+    private static DataSource obtainDataSource(String aDataSourceName) throws NamingException {
+        Objects.requireNonNull(aDataSourceName, "Data source name missing.");
+        Context initContext = new InitialContext();
+        try {
+            // J2EE servers
+            return (DataSource) initContext.lookup(aDataSourceName);
+        } catch (NamingException ex) {
+            // Apache Tomcat component's JNDI context
+            Context envContext = (Context) initContext.lookup("java:/comp/env"); //NOI18N
+            return (DataSource) envContext.lookup(aDataSourceName);
         }
     }
 
-    public static Database of(final String aDataSourceName, EntitiesHost aEntitiesHost, Consumer<Runnable> aJdbcPerformer, Executor aFutureExecutor) throws Exception {
-        assert aDataSourceName != null : "aDataSourceName ia required argument";
-        assert aJdbcPerformer != null : "aJdbcPerformer ia required argument";
+    public static Database of(final String aDataSourceName, EntitiesHost aEntitiesHost, Consumer<Runnable> aJdbcPerformer, Executor aFutureExecutor) {
+        Objects.requireNonNull(aDataSourceName, "aDataSourceName ia required argument");
+        Objects.requireNonNull(aJdbcPerformer, "aJdbcPerformer ia required argument");
         return DATABASES.computeIfAbsent(aDataSourceName, dsn -> {
             try {
                 DataSource ds = obtainDataSource(aDataSourceName);
@@ -149,8 +158,10 @@ public class Database {
                         aJdbcPerformer,
                         aFutureExecutor
                 );
-            } catch (Exception ex) {
+            } catch (NamingException ex) {
                 throw new IllegalStateException(ex);
+            } catch (SQLException ex) {
+                throw new UncheckedSQLException(ex);
             }
         });
     }

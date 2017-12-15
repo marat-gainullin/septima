@@ -4,6 +4,7 @@ import com.septima.*;
 import com.septima.Indexer;
 import com.septima.indexer.ScriptDocument;
 import com.septima.Requests;
+import com.septima.jdbc.DataSources;
 import com.septima.script.JsObjectException;
 import com.septima.script.Scripts;
 import com.septima.util.IdGenerator;

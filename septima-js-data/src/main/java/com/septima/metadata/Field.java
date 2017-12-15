@@ -1,6 +1,6 @@
 package com.septima.metadata;
 
-import com.septima.ApplicationTypes;
+import com.septima.application.ApplicationDataTypes;
 
 /**
  * This class is table field representation. It holds information about field
@@ -49,7 +49,7 @@ public class Field {
      * @param aDescription Description of the created field.
      */
     public Field(String aName, String aDescription) {
-        this(aName, aDescription, ApplicationTypes.STRING_TYPE_NAME);
+        this(aName, aDescription, ApplicationDataTypes.STRING_TYPE_NAME);
     }
 
     public Field(String aName, String aDescription, String aType) {
@@ -148,16 +148,16 @@ public class Field {
         Object value;
         if (type != null) {
             switch (type) {
-                case ApplicationTypes.NUMBER_TYPE_NAME:
+                case ApplicationDataTypes.NUMBER_TYPE_NAME:
                     value = IdGenerator.genId();
                     break;
-                case ApplicationTypes.STRING_TYPE_NAME:
+                case ApplicationDataTypes.STRING_TYPE_NAME:
                     value = IdGenerator.genStringId();
                     break;
-                case ApplicationTypes.DATE_TYPE_NAME:
+                case ApplicationDataTypes.DATE_TYPE_NAME:
                     value = new Date();
                     break;
-                case ApplicationTypes.BOOLEAN_TYPE_NAME:
+                case ApplicationDataTypes.BOOLEAN_TYPE_NAME:
                     value = false;
                     break;
                 default:

@@ -1,8 +1,9 @@
 package com.septima.dataflow;
 
-import com.septima.ApplicationTypes;
+import com.septima.application.ApplicationDataTypes;
+import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
-import com.septima.metadata.Parameter;
+import com.septima.Parameter;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -10,7 +11,8 @@ import java.math.BigInteger;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,26 +27,27 @@ import javax.sql.DataSource;
  */
 public abstract class JdbcDataProvider implements DataProvider {
 
+    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+    private static final Logger queriesLogger = Logger.getLogger(JdbcDataProvider.class.getName());
+
     public interface ResultSetProcessor<T> {
         T apply(ResultSet aData) throws SQLException;
     }
 
-    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-    private static final String BAD_NEXTPAGE_REFRESH_CHAIN_MSG = "The call of nextPage() method is allowed only for paged flow providers as the subsequent calls in the refresh() -> nextPage() -> nextPage() -> ... calls chain";
-    private static final Logger queriesLogger = Logger.getLogger(JdbcDataProvider.class.getName());
-
     private final String clause;
     private final DataSource dataSource;
-    private final Consumer<Runnable> asyncDataPuller;
     private final boolean procedure;
-    private final int pageSize;
+
+    protected final Consumer<Runnable> asyncDataPuller;
+    protected final Executor futureExecutor;
+    protected final int pageSize;
 
     protected final Map<String, Field> expectedFields;
 
-
-    private ResultSet lowLevelResults;
     private Connection lowLevelConnection;
     private PreparedStatement lowLevelStatement;
+
+    protected ResultSet lowLevelResults;
 
     /**
      * A flow dataSource, intended to support jdbc data sources.
@@ -58,15 +61,16 @@ public abstract class JdbcDataProvider implements DataProvider {
      * @param aExpectedFields  Fields, expected by Septima according to metadata analysis.
      * @see DataSource
      */
-    public JdbcDataProvider(DataSource aDataSource, Consumer<Runnable> aAsyncDataPuller, String aClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
+    public JdbcDataProvider(DataSource aDataSource, Consumer<Runnable> aAsyncDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
         super();
         assert aClause != null : "Flow provider cant't exist without a selecting sql clause";
         assert aDataSource != null : "Flow provider can't exist without a data source";
+        dataSource = aDataSource;
+        asyncDataPuller = aAsyncDataPuller;
+        futureExecutor = aFutureExecutor;
         clause = aClause;
         procedure = aProcedure;
         pageSize = aPageSize;
-        dataSource = aDataSource;
-        asyncDataPuller = aAsyncDataPuller;
         expectedFields = aExpectedFields;
     }
 
@@ -75,7 +79,7 @@ public abstract class JdbcDataProvider implements DataProvider {
         return pageSize;
     }
 
-    private boolean isPaged() {
+    protected boolean isPaged() {
         return pageSize > 0;
     }
 
@@ -84,74 +88,104 @@ public abstract class JdbcDataProvider implements DataProvider {
         return procedure;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Collection<Map<String, Object>> nextPage(Consumer<Collection<Map<String, Object>>> onSuccess, Consumer<Exception> onFailure) throws Exception {
-        if (!isPaged() || lowLevelResults == null) {
-            throw new DataProviderNotPagedException(BAD_NEXTPAGE_REFRESH_CHAIN_MSG);
-        } else {
-            ResultSetReader reader = obtainJdbcReader();
-            Callable<Collection<Map<String, Object>>> doWork = () -> {
+    protected <T> CompletableFuture<T> select(List<Parameter> aParams, ResultSetProcessor<T> aProcessor) {
+        CompletableFuture<T> fetching = new CompletableFuture<>();
+        if (isPaged()) {
+            endPaging();
+        }
+        asyncDataPuller.accept(() -> {
+            try {
+                String sqlClause = clause;
+                Connection connection = dataSource.getConnection();
                 try {
-                    return reader.readRowset(lowLevelResults, pageSize);
-                } catch (SQLException ex) {
-                    throw new DataProviderFailedException(ex);
+                    PreparedStatement statement = getFlowStatement(connection, sqlClause);
+                    try {
+                        Map<Integer, Integer> assignedJdbcTypes = new HashMap<>();
+                        for (int i = 1; i <= aParams.size(); i++) {
+                            Parameter param = aParams.get(i - 1);
+                            int assignedJdbcType = assignParameter(param, statement, i, connection);
+                            assignedJdbcTypes.put(i, assignedJdbcType);
+                        }
+                        logQuery(sqlClause, aParams, assignedJdbcTypes);
+                        ResultSet results;
+                        if (procedure) {
+                            assert statement instanceof CallableStatement;
+                            CallableStatement cStmt = (CallableStatement) statement;
+                            cStmt.execute();
+                            // let's return parameters
+                            for (int i = 1; i <= aParams.size(); i++) {
+                                Parameter param = aParams.get(i - 1);
+                                acceptOutParameter(param, cStmt, i, connection);
+                            }
+                            // let's return a ResultSet
+                            results = cStmt.getResultSet();
+                        } else {
+                            results = statement.executeQuery();
+                        }
+                        try {
+                            T processed = aProcessor.apply(results/* may be null*/);
+                            fetching.completeAsync(() -> processed, futureExecutor);
+                        } finally {
+                            if (isPaged()) {
+                                lowLevelResults = results;/* may be null*/
+                            } else {
+                            /* may be null because of CallableStatement*/
+                                if (results != null) {
+                                    results.close();
+                                }
+                            }
+                        }
+                    } finally {
+                        if (lowLevelResults != null) {
+                            // Paged statements can't be closed, because of ResultSet existence.
+                            lowLevelStatement = statement;
+                        } else {
+                            statement.close();
+                        }
+                    }
                 } finally {
-                    if (lowLevelResults.isClosed() || lowLevelResults.isAfterLast()) {
-                        endPaging();
+                    if (lowLevelStatement != null) {
+                        // Paged connections can't be closed, because of ResultSet existence.
+                        lowLevelConnection = connection;
+                    } else {
+                        connection.close();
                     }
                 }
-            };
-            if (onSuccess != null) {
-                asyncDataPuller.accept(() -> {
-                    try {
-                        Collection<Map<String, Object>> rs = doWork.call();
-                        try {
-                            onSuccess.accept(rs);
-                        } catch (Exception ex) {
-                            Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    } catch (Exception ex) {
-                        if (onFailure != null) {
-                            onFailure.accept(ex);
-                        }
-                    }
-                });
-                return null;
-            } else {
-                return doWork.call();
+            } catch (SQLException | UncheckedSQLException ex) {
+                futureExecutor.execute(() -> fetching.completeExceptionally(ex));
             }
-        }
+        });
+        return fetching;
     }
 
-    protected abstract ResultSetReader obtainJdbcReader();
-
-    private void endPaging() throws Exception {
+    protected void endPaging() {
         assert isPaged();
         close();
     }
 
     @Override
-    public void close() throws Exception {
-        if (lowLevelResults != null) {
-            lowLevelResults.close();
-            // See refresh method, hacky statement closing.
+    public void close() {
+        try {
+            if (lowLevelResults != null) {
+                lowLevelResults.close();
+                lowLevelResults = null;
+            }
+            // See pull method, hacky statement closing.
             if (lowLevelStatement != null) {
                 lowLevelStatement.close();
+                lowLevelStatement = null;
             }
-            // See refresh method, hacky connection closing.
+            // See pull method, hacky connection closing.
             if (lowLevelConnection != null) {
                 lowLevelConnection.close();
+                lowLevelConnection = null;
             }
-            lowLevelResults = null;
-            lowLevelStatement = null;
-            lowLevelConnection = null;
+        } catch (SQLException ex) {
+            throw new UncheckedSQLException(ex);
         }
     }
 
-    public static int assumeJdbcType(Object aValue) {
+    static int assumeJdbcType(Object aValue) {
         int jdbcType;
         if (aValue instanceof CharSequence) {
             jdbcType = Types.VARCHAR;
@@ -298,7 +332,7 @@ public abstract class JdbcDataProvider implements DataProvider {
                 value = null;
             }
             return value;
-        } catch (IOException ex) {
+        } catch (IOException | UncheckedIOException ex) {
             throw new SQLException(ex);
         }
     }
@@ -318,7 +352,7 @@ public abstract class JdbcDataProvider implements DataProvider {
                 case Types.OTHER:
                     try {
                         aStmt.setObject(aParameterIndex, aValue, aParameterJdbcType);
-                    } catch (Exception ex) {
+                    } catch (SQLException | UncheckedSQLException ex) {
                         aStmt.setNull(aParameterIndex, aParameterJdbcType, aParameterSqlTypeName);
                         Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
                     }
@@ -326,7 +360,7 @@ public abstract class JdbcDataProvider implements DataProvider {
                 case Types.STRUCT:
                     try {
                         aStmt.setObject(aParameterIndex, aValue, Types.STRUCT);
-                    } catch (Exception ex) {
+                    } catch (SQLException | UncheckedSQLException ex) {
                         aStmt.setNull(aParameterIndex, aParameterJdbcType, aParameterSqlTypeName);
                         Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
                     }
@@ -576,7 +610,7 @@ public abstract class JdbcDataProvider implements DataProvider {
                 } else {
                     aStmt.setNull(aParameterIndex, aParameterJdbcType);
                 }
-            } catch (SQLException ex) {
+            } catch (SQLException | UncheckedSQLException ex) {
                 aStmt.setNull(aParameterIndex, aParameterJdbcType, aParameterSqlTypeName);
             }
         }
@@ -584,116 +618,6 @@ public abstract class JdbcDataProvider implements DataProvider {
     }
 
     private static final String FALLED_TO_NULL_MSG = "Some value falled to null while tranferring to a database. May be it''s class is unsupported: {0}";
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Collection<Map<String, Object>> refresh(List<Parameter> aParams, Consumer<Collection<Map<String, Object>>> onSuccess, Consumer<Exception> onFailure) throws Exception {
-        return select(aParams, (ResultSet rs) -> {
-            if (rs != null) {
-                ResultSetReader reader = obtainJdbcReader();
-                return reader.readRowset(rs, pageSize);
-            } else {
-                return new ArrayList<>();
-            }
-        }, onSuccess, onFailure);
-    }
-
-    public <T> T select(List<Parameter> aParams, ResultSetProcessor<T> aProcessor, Consumer<T> onSuccess, Consumer<Exception> onFailure) throws Exception {
-        if (lowLevelResults != null) {
-            assert isPaged();
-            // Let's abort paging process
-            endPaging();
-        }
-        Callable<T> doWork = () -> {
-            String sqlClause = clause;
-            Connection connection = dataSource.getConnection();
-            if (connection != null) {
-                try {
-                    PreparedStatement stmt = getFlowStatement(connection, sqlClause);
-                    if (stmt != null) {
-                        try {
-                            Map<Integer, Integer> assignedJdbcTypes = new HashMap<>();
-                            for (int i = 1; i <= aParams.size(); i++) {
-                                Parameter param = aParams.get(i - 1);
-                                int assignedJdbcType = assignParameter(param, stmt, i, connection);
-                                assignedJdbcTypes.put(i, assignedJdbcType);
-                            }
-                            logQuery(sqlClause, aParams, assignedJdbcTypes);
-                            ResultSet rs;
-                            if (procedure) {
-                                assert stmt instanceof CallableStatement;
-                                CallableStatement cStmt = (CallableStatement) stmt;
-                                cStmt.execute();
-                                // let's return parameters
-                                for (int i = 1; i <= aParams.size(); i++) {
-                                    Parameter param = aParams.get(i - 1);
-                                    acceptOutParameter(param, cStmt, i, connection);
-                                }
-                                // let's return a ResultSet
-                                rs = cStmt.getResultSet();
-                            } else {
-                                rs = stmt.executeQuery();
-                            }
-                            if (rs != null) {
-                                try {
-                                    return aProcessor.apply(rs);
-                                } finally {
-                                    if (isPaged()) {
-                                        lowLevelResults = rs;
-                                    } else {
-                                        rs.close();
-                                    }
-                                }
-                            } else {
-                                return aProcessor.apply(null);
-                            }
-                        } catch (SQLException ex) {
-                            throw new DataProviderFailedException(ex);
-                        } finally {
-                            if (isPaged()) {
-                                // Paged statements can't be closed, because of ResultSet existance.
-                                lowLevelStatement = stmt;
-                            } else {
-                                stmt.close();
-                            }
-                        }
-                    } else {
-                        return null;
-                    }
-                } finally {
-                    if (isPaged()) {
-                        // Paged connections can't be closed, because of ResultSet existance.
-                        lowLevelConnection = connection;
-                    } else {
-                        connection.close();
-                    }
-                }
-            } else {
-                return null;
-            }
-        };
-        if (onSuccess != null) {
-            asyncDataPuller.accept(() -> {
-                try {
-                    T processed = doWork.call();
-                    try {
-                        onSuccess.accept(processed);
-                    } catch (Exception ex) {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                } catch (Exception ex) {
-                    if (onFailure != null) {
-                        onFailure.accept(ex);
-                    }
-                }
-            });
-            return null;
-        } else {
-            return doWork.call();
-        }
-    }
 
     private static void logQuery(String sqlClause, List<Parameter> aParams, Map<Integer, Integer> aAssignedJdbcTypes) {
         if (queriesLogger.isLoggable(Level.FINE)) {
@@ -703,7 +627,7 @@ public abstract class JdbcDataProvider implements DataProvider {
                 for (int i = 1; i <= aParams.size(); i++) {
                     Parameter param = aParams.get(i - 1);
                     Object paramValue = param.getValue();
-                    if (paramValue != null && ApplicationTypes.DATE_TYPE_NAME.equals(param.getType())) {
+                    if (paramValue != null && ApplicationDataTypes.DATE_TYPE_NAME.equals(param.getType())) {
                         java.util.Date dateValue = (java.util.Date) paramValue;
                         SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
                         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -718,25 +642,25 @@ public abstract class JdbcDataProvider implements DataProvider {
     }
 
     protected void acceptOutParameter(Parameter aParameter, CallableStatement aStatement, int aParameterIndex, Connection aConnection) throws SQLException {
-        if (aParameter.getMode() == ParameterMetaData.parameterModeOut
-                || aParameter.getMode() == ParameterMetaData.parameterModeInOut) {
+        if (aParameter.getMode() == Parameter.Mode.Out
+                || aParameter.getMode() == Parameter.Mode.InOut) {
             try {
                 Object outedParamValue = get(aStatement, aParameterIndex);
                 aParameter.setValue(outedParamValue);
-            } catch (SQLException ex) {
+            } catch (SQLException | UncheckedSQLException ex) {
                 String pType = aParameter.getType();
                 if (pType != null) {
                     switch (pType) {
-                        case ApplicationTypes.STRING_TYPE_NAME:
+                        case ApplicationDataTypes.STRING_TYPE_NAME:
                             aParameter.setValue(aStatement.getString(aParameterIndex));
                             break;
-                        case ApplicationTypes.NUMBER_TYPE_NAME:
+                        case ApplicationDataTypes.NUMBER_TYPE_NAME:
                             aParameter.setValue(aStatement.getDouble(aParameterIndex));
                             break;
-                        case ApplicationTypes.DATE_TYPE_NAME:
+                        case ApplicationDataTypes.DATE_TYPE_NAME:
                             aParameter.setValue(aStatement.getDate(aParameterIndex));
                             break;
-                        case ApplicationTypes.BOOLEAN_TYPE_NAME:
+                        case ApplicationDataTypes.BOOLEAN_TYPE_NAME:
                             aParameter.setValue(aStatement.getBoolean(aParameterIndex));
                             break;
                         default:
@@ -762,7 +686,7 @@ public abstract class JdbcDataProvider implements DataProvider {
         try {
             jdbcType = aStatement.getParameterMetaData().getParameterType(aParameterIndex);
             sqlTypeName = aStatement.getParameterMetaData().getParameterTypeName(aParameterIndex);
-        } catch (SQLException ex) {
+        } catch (SQLException | UncheckedSQLException ex) {
          */
         if (paramValue != null || aParameter.getType() == null) {
             jdbcType = assumeJdbcType(paramValue);
@@ -782,16 +706,16 @@ public abstract class JdbcDataProvider implements DataProvider {
     public static int calcJdbcType(String aType, Object aParamValue) {
         int jdbcType;
         switch (aType) {
-            case ApplicationTypes.STRING_TYPE_NAME:
+            case ApplicationDataTypes.STRING_TYPE_NAME:
                 jdbcType = java.sql.Types.VARCHAR;
                 break;
-            case ApplicationTypes.NUMBER_TYPE_NAME:
+            case ApplicationDataTypes.NUMBER_TYPE_NAME:
                 jdbcType = java.sql.Types.DOUBLE;
                 break;
-            case ApplicationTypes.DATE_TYPE_NAME:
+            case ApplicationDataTypes.DATE_TYPE_NAME:
                 jdbcType = java.sql.Types.TIMESTAMP;
                 break;
-            case ApplicationTypes.BOOLEAN_TYPE_NAME:
+            case ApplicationDataTypes.BOOLEAN_TYPE_NAME:
                 jdbcType = java.sql.Types.BOOLEAN;
                 break;
             default:
@@ -801,8 +725,8 @@ public abstract class JdbcDataProvider implements DataProvider {
     }
 
     protected void checkOutParameter(Parameter param, PreparedStatement stmt, int aParameterIndex, int jdbcType) throws SQLException {
-        if (procedure && (param.getMode() == ParameterMetaData.parameterModeOut
-                || param.getMode() == ParameterMetaData.parameterModeInOut)) {
+        if (procedure && (param.getMode() == Parameter.Mode.Out
+                || param.getMode() == Parameter.Mode.InOut)) {
             assert stmt instanceof CallableStatement;
             CallableStatement cStmt = (CallableStatement) stmt;
             cStmt.registerOutParameter(aParameterIndex, jdbcType);
@@ -819,16 +743,12 @@ public abstract class JdbcDataProvider implements DataProvider {
      * @return StatementResourceDescriptor instance, provided according to sql
      * clause.
      */
-    private PreparedStatement getFlowStatement(Connection aConnection, String aClause) throws DataProviderFailedException {
-        try {
-            assert aConnection != null;
-            if (procedure) {
-                return aConnection.prepareCall(aClause);
-            } else {
-                return aConnection.prepareStatement(aClause);
-            }
-        } catch (Exception ex) {
-            throw new DataProviderFailedException(ex);
+    private PreparedStatement getFlowStatement(Connection aConnection, String aClause) throws SQLException {
+        assert aConnection != null;
+        if (procedure) {
+            return aConnection.prepareCall(aClause);
+        } else {
+            return aConnection.prepareStatement(aClause);
         }
     }
 

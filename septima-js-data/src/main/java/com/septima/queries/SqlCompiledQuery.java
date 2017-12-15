@@ -1,31 +1,29 @@
 package com.septima.queries;
 
 import com.septima.Database;
-import com.septima.ApplicationDataProvider;
+import com.septima.application.ApplicationDataProvider;
+import com.septima.jdbc.UncheckedSQLException;
 import com.septima.changes.Command;
-import com.septima.changes.NamedValue;
-import com.septima.dataflow.DataProvider;
+import com.septima.NamedValue;
 import com.septima.dataflow.JdbcDataProvider;
 import com.septima.metadata.Field;
-import com.septima.metadata.Parameter;
+import com.septima.Parameter;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
- * A compiled SQL query.
+ * A compiled Sql query.
  * <p>
  * <p>An instance of this class contains JDBC-compliant SQL query text with "?"
  * placeholders for parameters and all parameters values.</p>
  *
- * @author pk, mg
+ * @author mg
  */
 public class SqlCompiledQuery {
 
@@ -33,31 +31,19 @@ public class SqlCompiledQuery {
     private final String entityName;
     private final String sqlClause;
     private final List<Parameter> parameters;
-    private final Map<String, Field> expectedFields;
     private final boolean procedure;
     private final int pageSize;
+    private final Map<String, Field> expectedFields;
 
-    SqlCompiledQuery(Database aDatabase, String aSqlClause) {
-        this(aDatabase, aSqlClause, List.of());
-    }
-
-    SqlCompiledQuery(Database aDatabase, String aSqlClause, List<Parameter> aParams) {
-        this(aDatabase, aSqlClause, aParams, Map.of());
-    }
-
-    SqlCompiledQuery(Database aDatabase, String aSqlClause, List<Parameter> aParams, Map<String, Field> aExpectedFields) {
-        this(aDatabase, null, aSqlClause, aParams, aExpectedFields, DataProvider.NO_PAGING_PAGE_SIZE, false);
-    }
-
-    SqlCompiledQuery(Database aDatabase, String aEntityName, String aSqlClause, List<Parameter> aParams, Map<String, Field> aExpectedFields, int aPageSize, boolean aProcedure) {
+    SqlCompiledQuery(Database aDatabase, String aEntityName, String aSqlClause, List<Parameter> aParams, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
         super();
+        database = aDatabase;
+        entityName = aEntityName;
         sqlClause = aSqlClause;
         parameters = aParams;
-        entityName = aEntityName;
-        expectedFields = aExpectedFields;
-        database = aDatabase;
-        pageSize = aPageSize;
         procedure = aProcedure;
+        pageSize = aPageSize;
+        expectedFields = aExpectedFields;
     }
 
     public boolean isProcedure() {
@@ -70,42 +56,34 @@ public class SqlCompiledQuery {
 
     /**
      * Executes query and returns results regardless of procedure flag.
+     * It uses query's own parameters.
      */
-    public <T> T executeQuery(JdbcDataProvider.ResultSetProcessor<T> aResultSetProcessor, Executor aCallbacksExecutor, Consumer<T> onSuccess, Consumer<Exception> onFailure) throws Exception {
-        if (database != null) {
-            ApplicationDataProvider flow = database.createDataProvider(entityName, sqlClause, expectedFields);
-            flow.setPageSize(pageSize);
-            flow.setProcedure(procedure);
-            return flow.<T>select(parameters, aResultSetProcessor, onSuccess != null ? (T t) -> {
-                aCallbacksExecutor.execute(() -> {
-                    onSuccess.accept(t);
-                });
-            } : null, onFailure != null ? (Exception ex) -> {
-                aCallbacksExecutor.execute(() -> {
-                    onFailure.accept(ex);
-                });
-            } : null);
-        } else {
-            return null;
-        }
+    public CompletableFuture<Collection<Map<String, Object>>> executeQuery() {
+        return executeQuery(parameters);
+    }
+
+    /**
+     * Executes query and returns results regardless of procedure flag.
+     */
+    public CompletableFuture<Collection<Map<String, Object>>> executeQuery(List<Parameter> aParameters) {
+        Objects.requireNonNull(database);
+        Objects.requireNonNull(aParameters);
+        ApplicationDataProvider dataProvider = database.createDataProvider(entityName, sqlClause, procedure, pageSize, expectedFields);
+        return dataProvider.pull(aParameters);
     }
 
     public Command prepareCommand() {
-        Command command = new Command(entityName, sqlClause);
-        for (int i = 0; i < parameters.size(); i++) {
-            Parameter param = parameters.get(i);
-            command.getParameters().add(new NamedValue(param.getName(), param.getValue()));
-        }
-        return command;
+        return prepareCommand(parameters);
     }
 
-    public Command prepareCommand(Map<String, NamedValue> aParameters) {
-        Command command = new Command(entityName, sqlClause);
-        for (int i = 0; i < parameters.size(); i++) {
-            Parameter param = parameters.get(i);
-            command.getParameters().add(aParameters.get(param.getName()));
-        }
-        return command;
+    public Command prepareCommand(List<Parameter> aParameters) {
+        Objects.requireNonNull(aParameters);
+        return new Command(
+                entityName,
+                sqlClause,
+                Collections.unmodifiableList(aParameters.stream()
+                .map(parameter -> new NamedValue(parameter.getName(), parameter.getValue()))
+                .collect(Collectors.toList())));
     }
 
     public CompletableFuture<Integer> executeUpdate() {
@@ -127,7 +105,7 @@ public class SqlCompiledQuery {
                                 int rowsAffected = stmt.executeUpdate();
                                 connection.commit();
                                 updating.completeAsync(() -> rowsAffected, database.getFutureExecutor());
-                            } catch (SQLException ex) {
+                            } catch (SQLException | UncheckedSQLException ex) {
                                 connection.rollback();
                                 throw ex;
                             }
@@ -136,7 +114,7 @@ public class SqlCompiledQuery {
                         connection.setAutoCommit(autoCommit);
                     }
                 }
-            } catch (Exception ex) {
+            } catch (SQLException | UncheckedSQLException ex) {
                 database.getFutureExecutor().execute(() -> {
                     updating.completeExceptionally(ex);
                 });

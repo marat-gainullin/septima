@@ -1,4 +1,4 @@
-package com.septima;
+package com.septima.jdbc;
 
 import com.septima.sqldrivers.SqlDriver;
 
@@ -30,13 +30,13 @@ public class DataSources {
 //        jdbc.awaitTermination(30L, TimeUnit.SECONDS);
     }
 
-    public static String getDataSourceSchema(DataSource aDataSource) throws Exception {
+    public static String getDataSourceSchema(DataSource aDataSource) throws SQLException {
         try (Connection conn = aDataSource.getConnection()) {
             return schemaByConnection(conn);
         }
     }
 
-    public static SqlDriver getDataSourceSqlDriver(DataSource aDataSource) throws Exception {
+    public static SqlDriver getDataSourceSqlDriver(DataSource aDataSource) throws SQLException {
         try (Connection conn = aDataSource.getConnection()) {
             return sqlDriverByConnection(conn);
         }

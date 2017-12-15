@@ -1,10 +1,10 @@
-package com.septima;
+package com.septima.application;
 
 /**
  *
  * @author mg
  */
-public class ApplicationTypes {
+public class ApplicationDataTypes {
 
     public static final String GEOMETRY_TYPE_NAME = "Geometry";//NOI18N
     public static final String STRING_TYPE_NAME = "String";//NOI18N
