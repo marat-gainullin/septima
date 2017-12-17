@@ -136,7 +136,7 @@ public class ApplicationEntities implements EntitiesHost {
                                  * источник поля до таблицы чтобы восстановиит связи по
                                  * ключам. Здесь это делается исключительно ради очень
                                  * специального использования фабрики в дизайнере запросов.
-                                 * TODO: Add to data model a test with dereference of tables of different schemas and default schema
+                                 * TODO: Add a test with dereference of tables from different schemas, including default schema
                                  */
                                 aliasesToTableNames &&
                                         aTable.getAlias() != null && aTable.getAlias().getName() != null && !aTable.getAlias().getName().isEmpty() ?

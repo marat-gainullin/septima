@@ -1,14 +1,10 @@
 package com.septima.queries;
 
-import com.septima.jdbc.DataSources;
-import com.septima.client.TestConstants;
-import com.septima.script.Scripts;
+import com.septima.TestConstants;
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Test;
 
 /**
  *
@@ -16,40 +12,30 @@ import org.junit.Test;
  */
 public class SqlEntityTest {
 
-    public static final String PARAM2_VALUE = "qwerty";
+    private static final String PARAM2_VALUE = "qwerty";
     private static final String TWO_PARAMS_QUERY = "select * from ATABLE where FIELD1 > :param1 and FIELD2 = :param2 or FIELD1 < :param1";
-    private static DatabasesWithResource resource;
 
     public SqlEntityTest() {
     }
 
     @BeforeClass
     public static void init() throws Exception {
-        String url = System.getProperty(TestConstants.DATASOURCE_URL_1);
+        String url = System.getProperty(TestConstants.DATA_SOURCE_URL);
         if (url == null) {
-            throw new IllegalStateException(TestConstants.DATASOURCE_URL_1 + TestConstants.PROPERTY_ERROR);
+            throw new IllegalStateException(TestConstants.DATA_SOURCE_URL + TestConstants.PROPERTY_ERROR);
         }
-        String user = System.getProperty(TestConstants.DATASOURCE_USER_1);
+        String user = System.getProperty(TestConstants.DATA_SOURCE_USER);
         if (user == null) {
-            throw new IllegalStateException(TestConstants.DATASOURCE_USER_1 + TestConstants.PROPERTY_ERROR);
+            throw new IllegalStateException(TestConstants.DATA_SOURCE_USER + TestConstants.PROPERTY_ERROR);
         }
-        String passwd = System.getProperty(TestConstants.DATASOURCE_PASSWORD_1);
+        String passwd = System.getProperty(TestConstants.DATA_SOURCE_PASSWORD);
         if (passwd == null) {
-            throw new IllegalStateException(TestConstants.DATASOURCE_PASSWORD_1 + TestConstants.PROPERTY_ERROR);
+            throw new IllegalStateException(TestConstants.DATA_SOURCE_PASSWORD + TestConstants.PROPERTY_ERROR);
         }
-        String schema = System.getProperty(TestConstants.DATASOURCE_SCHEMA_1);
+        String schema = System.getProperty(TestConstants.DATA_SOURCE_SCHEMA);
         if (schema == null) {
-            throw new IllegalStateException(TestConstants.DATASOURCE_SCHEMA_1 + TestConstants.PROPERTY_ERROR);
+            throw new IllegalStateException(TestConstants.DATA_SOURCE_SCHEMA + TestConstants.PROPERTY_ERROR);
         }
-
-        DbConnectionSettings settings = new DbConnectionSettings();
-        settings.setUrl(url);
-        settings.setUser(user);
-        settings.setPassword(passwd);
-        settings.setSchema(schema);
-        settings.setMaxConnections(1);
-        settings.setMaxStatements(1);
-        resource = new DatabasesWithResource(settings);
     }
 
     @AfterClass
@@ -63,27 +49,27 @@ public class SqlEntityTest {
     @After
     public void tearDown() {
     }
-
+/*
     @Test
     public void testCreation() {
-        SqlEntity b = new SqlEntity((DataSources) null);
-        assertNull(b.getSqlText());
-        assertTrue(b.getParametersBinds().isEmpty());
-        b.setSqlText(TWO_PARAMS_QUERY);
-        assertEquals(b.getSqlText(), TWO_PARAMS_QUERY);
-        assertTrue(b.getParametersBinds().isEmpty());
-        b.putParameter("param1", Scripts.NUMBER_TYPE_NAME, 1);
-        b.putParameter("param2", Scripts.STRING_TYPE_NAME, PARAM2_VALUE);
-        assertEquals(2, b.getParameters().getParametersCount());
+        SqlEntity b.sql = new SqlEntity((DataSources) null);
+        assertNull(b.sql.getSqlText());
+        assertTrue(b.sql.getParametersBinds().isEmpty());
+        b.sql.setSqlText(TWO_PARAMS_QUERY);
+        assertEquals(b.sql.getSqlText(), TWO_PARAMS_QUERY);
+        assertTrue(b.sql.getParametersBinds().isEmpty());
+        b.sql.putParameter("param1", Scripts.NUMBER_TYPE_NAME, 1);
+        b.sql.putParameter("param2", Scripts.STRING_TYPE_NAME, PARAM2_VALUE);
+        assertEquals(2, b.sql.getParameters().getParametersCount());
     }
 
     @Test
     public void testCompiling() throws Exception {
-        SqlEntity b = new SqlEntity(resource.getClient());
-        b.setSqlText(TWO_PARAMS_QUERY);
-        b.putParameter("param1", Scripts.NUMBER_TYPE_NAME, 1);
-        b.putParameter("param2", Scripts.STRING_TYPE_NAME, PARAM2_VALUE);
-        SqlCompiledQuery q = b.compile();
+        SqlEntity b.sql = new SqlEntity(resource.getClient());
+        b.sql.setSqlText(TWO_PARAMS_QUERY);
+        b.sql.putParameter("param1", Scripts.NUMBER_TYPE_NAME, 1);
+        b.sql.putParameter("param2", Scripts.STRING_TYPE_NAME, PARAM2_VALUE);
+        SqlCompiledQuery q = b.sql.compile();
         assertEquals(q.getSqlClause(), "select * from ATABLE where FIELD1 > ? and FIELD2 = ? or FIELD1 < ?");
         assertEquals(3, q.getParameters().getParametersCount());
         assertEquals(Scripts.NUMBER_TYPE_NAME, q.getParameters().get(1).getType());
@@ -93,4 +79,5 @@ public class SqlEntityTest {
         assertEquals(Scripts.NUMBER_TYPE_NAME, q.getParameters().get(3).getType());
         assertEquals(1, q.getParameters().get(3).getValue());
     }
+    */
 }

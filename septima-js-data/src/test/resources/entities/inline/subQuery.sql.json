@@ -1,0 +1,7 @@
+{
+  "parameters": {
+    "Param1": {
+      "type": "Number"
+    }
+  }
+}

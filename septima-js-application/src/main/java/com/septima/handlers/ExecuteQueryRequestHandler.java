@@ -26,7 +26,7 @@ public class ExecuteQueryRequestHandler extends RequestHandler<ExecuteQueryReque
 
     public static final String PUBLIC_ACCESS_DENIED_MSG = "Public access to entity %s is denied.";
     public static final String ACCESS_DENIED_MSG = "Access denied to entity %s for user %s";
-    public static final String MISSING_QUERY_MSG = "Entity %s not found neither in application folder, nor in hand-constructed queries.";
+    public static final String MISSING_QUERY_MSG = "Entity %s not found neither in application folder, nor in hand-constructed columns.";
 
     public ExecuteQueryRequestHandler(SeptimaApplication aServerCore, ExecuteQueryRequest aRequest) {
         super(aServerCore, aRequest);

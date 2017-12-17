@@ -17,7 +17,7 @@ public class Field {
     private final String name;
     private final String description;
     /**
-     * In queries, such as select t1.f1 as f11, t2.f1 as f21 to preserve output fields' names unique,
+     * In columns, such as select t1.f1 as f11, t2.f1 as f21 to preserve output fields' names unique,
      * but be able to generate right update sql clauses for multiple tables.
      */
     private final String originalName;

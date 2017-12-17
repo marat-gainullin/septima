@@ -1,0 +1,21 @@
+{
+  "parameters": {
+    "P1": {
+      "type": "String"
+    },
+    "P2": {
+      "type": "String"
+    },
+    "P3": {
+      "type": "String"
+    },
+    "P4": {
+      "type": "Number",
+      "binds": {
+        "141456693523166": [
+          "Param1"
+        ]
+      }
+    }
+  }
+}

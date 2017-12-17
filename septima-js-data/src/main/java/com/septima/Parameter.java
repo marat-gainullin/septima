@@ -3,7 +3,7 @@ package com.septima;
 import java.sql.ParameterMetaData;
 
 /**
- * This class is a parameter specification for queries.
+ * This class is a parameter specification for columns.
  * It holds information about field as the <code>Field</code> class
  * and additional information about parameter mode, value and default value.
  *

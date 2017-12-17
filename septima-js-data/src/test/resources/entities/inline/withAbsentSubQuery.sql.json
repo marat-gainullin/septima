@@ -1,0 +1,10 @@
+{
+  "parameters": {
+    "P2": {
+      "type": "String"
+    },
+    "P3": {
+      "type": "String"
+    }
+  }
+}

@@ -25,7 +25,7 @@ public class ApplicationDataProvider extends JdbcDataProvider {
     private final String entityName;
     private final SqlDriver sqlDriver;
 
-    ApplicationDataProvider(SqlDriver aSqlDriver, String aEntityName, DataSource aDataSource, Consumer<Runnable> aDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
+    public ApplicationDataProvider(SqlDriver aSqlDriver, String aEntityName, DataSource aDataSource, Consumer<Runnable> aDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
         super(aDataSource, aDataPuller, aFutureExecutor, aClause, aProcedure, aPageSize, aExpectedFields);
         entityName = aEntityName;
         sqlDriver = aSqlDriver;

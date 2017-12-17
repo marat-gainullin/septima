@@ -21,7 +21,7 @@ Applications creation, editing, deployment, debugging and maintenance all may be
 The Platypus.js plugins for NetBeans IDE include the following development tools:
 
 * Database structure visual editor.
-* Sql queries visual editor.
+* Sql columns visual editor.
 * JavaScript code editor.
 * ORM configuration visual editor.
 * User interface forms visual editor.
@@ -31,7 +31,7 @@ The platform offers a set of features, making development process extremely prod
 * AMD JavaScript modules loader on server side.
 * Server side JavaScript modules within IoC paradigm with LPC (Local procedure calls) asynchronous interactions.
 * Parallel execution scheme of JavaScript code using standard Java thread pools.
-* Sql queries with named parameters and Sql clauses reuse.
+* Sql columns with named parameters and Sql clauses reuse.
 * ORM (Object-Relation Mapping) for JavaScript with automatic inter-entities references resolving. 
 * The UI widgets which directly interact with the data model, allowing implementation of a CRUD (Create-Read-Update-Delete) user interface with visual configuration and without or just a little coding.
 * Built-in security support, including users authentication and authorization, constraints of access to application resources.
