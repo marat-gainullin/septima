@@ -1,0 +1,67 @@
+{
+  "title": "Custom orders",
+  "sql": "select o.*, co.body::json from orders o inner join customOrders co on(o.id = co.order_id)",
+  "command": true,
+  "procedure": true,
+  "readonly": true,
+  "public": true,
+  "pageSize": 10,
+  "parameters": {
+    "quantity": {
+      "type": "Number",
+      "description": "Количество",
+      "value": "Simon",
+      "binds": {
+        "details": [
+          "qty",
+          "qty1",
+          "qty2"
+        ],
+        "details1": [
+          "qty"
+        ],
+        "details2": [
+          "qty1",
+          "qty2"
+        ]
+      },
+      "out": true
+    }
+  },
+  "fields": {
+    "id": {
+      "key": true,
+      "type": "Number",
+      "description": "Количество"
+    },
+    "name": {
+      "nullable": false
+    },
+    "sum": {
+      "description": "Aggregated column",
+      "type": "Number"
+    },
+    "orderer_id": {
+      "originalName": "orderer_id",
+      "tableName": "orderers",
+      "description": "Orderers entity reference",
+      "type": "Number",
+      "reference": {
+        "entity": "orderers"
+      }
+    }
+  },
+  "writable": [
+    "orders"
+  ],
+  "roles": {
+    "read": [
+      "disp",
+      "mech"
+    ],
+    "write": [
+      "disp",
+      "mech"
+    ]
+  }
+}
