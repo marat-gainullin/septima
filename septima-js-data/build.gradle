@@ -8,6 +8,7 @@ dependencies{
     compile project(':septima-js-sql-parser'),
             'com.fasterxml.jackson.core:jackson-core:2.9.2',
             'com.fasterxml.jackson.core:jackson-databind:2.9.2'
+    testCompile 'com.h2database:h2:1.4.193'
 
     h2 'com.h2database:h2:1.4.193',
        'com.vividsolutions:jts:1.13'
