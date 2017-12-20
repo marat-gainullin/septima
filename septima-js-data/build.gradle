@@ -4,16 +4,25 @@ configurations {
     h2
 }
 
-dependencies{
+dependencies {
     compile project(':septima-js-sql-parser'),
             'com.fasterxml.jackson.core:jackson-core:2.9.2',
             'com.fasterxml.jackson.core:jackson-databind:2.9.2'
     testCompile 'com.h2database:h2:1.4.193'
 
     h2 'com.h2database:h2:1.4.193',
-       'com.vividsolutions:jts:1.13'
-    testRuntime 'com.h2database:h2:1.4.193',
-       'com.vividsolutions:jts:1.13'
+            'com.vividsolutions:jts:1.13'
+    testRuntime project(':septima-js-sql-driver-db2'),
+            project(':septima-js-sql-driver-h2'),
+            project(':septima-js-sql-driver-mssql'),
+            project(':septima-js-sql-driver-mysql'),
+            project(':septima-js-sql-driver-postgresql'),
+            project(':septima-js-sql-driver-oracle'),
+            'com.hynnet:oracle-driver-ojdbc6:12.1.0.1',
+            'org.postgresql:postgresql:42.1.4',
+            'org.postgis:postgis-jdbc:2.1.0',
+            'com.h2database:h2:1.4.193',
+            'com.vividsolutions:jts:1.13'
 }
 
 def appDirName = "${projectDir}/src/test/resources/columns"
@@ -33,6 +42,7 @@ task buildH2(type: Copy) {
 }
 
 task fillTestBase(type: JavaExec) {
+    delete testBasesDirectory
     classpath fileTree(h2Dir)
     main 'org.h2.tools.RunScript'
     args '-url', dataSourceUrl, '-user', dataSourceUser, '-password', dataSourcePassword, '-script', "${projectDir}/src/test/resources/septima.sql"
@@ -63,10 +73,9 @@ test {
     systemProperties["testsource.url"] = file(appDirName).toURI().toURL()
 }
 
-task coverage(){
+task coverage() {
     doLast {
         java.awt.Desktop.desktop.browse jacocoTestReport.reports.html.entryPoint.toURI()
     }
 }
 coverage.dependsOn jacocoTestReport
-

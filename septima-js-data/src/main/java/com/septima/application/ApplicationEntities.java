@@ -49,16 +49,20 @@ public class ApplicationEntities implements EntitiesHost {
     private static final String LOADING_QUERY_MSG = "Loading entity '%s'.";
     private static final String LOADED_QUERY_MSG = "Entity '%s' loaded.";
 
-    private final Database database;
     private final Path applicationPath;
+    private final String defaultDataSource;
     private final Map<String, SqlEntity> entities = new ConcurrentHashMap<>();
     private final boolean aliasesToTableNames;
 
-    public ApplicationEntities(Database aDatabase, Path aApplicationPath, boolean aAliasesToTableNames) {
+    public ApplicationEntities(Path aApplicationPath, String aDefaultDataSource, boolean aAliasesToTableNames) {
         super();
-        database = aDatabase;
         applicationPath = aApplicationPath;
+        defaultDataSource = aDefaultDataSource;
         aliasesToTableNames = aAliasesToTableNames;
+    }
+
+    public String getDefaultDataSource() {
+        return defaultDataSource;
     }
 
     public SqlEntity loadEntity(String aEntityName) {
@@ -98,16 +102,16 @@ public class ApplicationEntities implements EntitiesHost {
     @Override
     public Field resolveField(String anEntityName, String aFieldName) throws SQLException {
         if (anEntityName != null) {
-            SqlEntity query = loadEntity(anEntityName);
-            if (query != null) {
-                Map<String, Field> fields = query.getFields();
+            SqlEntity entity = loadEntity(anEntityName);
+            if (entity != null) {
+                Map<String, Field> fields = entity.getFields();
                 Field resolved = fields.get(aFieldName);
                 String resolvedTableName = resolved != null && resolved.getTableName() != null ? resolved.getTableName().toLowerCase() : null;
                 return resolvedTableName != null &&
-                        (query.getWritable().isEmpty() || query.getWritable().contains(resolvedTableName)) ? resolved : null;
+                        (entity.getWritable().isEmpty() || entity.getWritable().contains(resolvedTableName)) ? resolved : null;
             } else {
                 // It seems, that anEntityName is a table name...
-                Map<String, JdbcColumn> fields = database.getMetadata().getTable(anEntityName)
+                Map<String, JdbcColumn> fields = Database.of(defaultDataSource).getMetadata().getTableColumns(anEntityName)
                         .orElseGet(() -> {
                             Logger.getLogger(DataSources.class.getName()).log(Level.WARNING, "Can't find fields for entity '{0}'", anEntityName);
                             return Map.of();
@@ -119,9 +123,9 @@ public class ApplicationEntities implements EntitiesHost {
         }
     }
 
-    private Map<String, Field> tableColumnsToApplicationFields(Table aTable) throws SQLException {
+    private Map<String, Field> tableColumnsToApplicationFields(Database database, Table aTable) throws SQLException {
         Map<String, JdbcColumn> tableFields = database.getMetadata()
-                .getTable(aTable.getWholeTableName())
+                .getTableColumns(aTable.getWholeTableName())
                 .orElse(Map.of());
         TypesResolver typesResolver = database.getSqlDriver().getTypesResolver();
         return tableFields.values().stream()
@@ -136,7 +140,7 @@ public class ApplicationEntities implements EntitiesHost {
                                  * источник поля до таблицы чтобы восстановиит связи по
                                  * ключам. Здесь это делается исключительно ради очень
                                  * специального использования фабрики в дизайнере запросов.
-                                 * TODO: Add a test with dereference of tables from different schemas, including default schema
+                                 * TODO: Add a test with dereference indices tables from different schemas, including default schema
                                  */
                                 aliasesToTableNames &&
                                         aTable.getAlias() != null && aTable.getAlias().getName() != null && !aTable.getAlias().getName().isEmpty() ?
@@ -264,7 +268,7 @@ public class ApplicationEntities implements EntitiesHost {
                                     referencedKey != null && !referencedKey.isEmpty() ?
                                     new ForeignKey(
                                             null, entityName, fieldName, null,
-                                            ForeignKey.ForeignKeyRule.NOACTION, ForeignKey.ForeignKeyRule.NOACTION, false,
+                                            ForeignKey.ForeignKeyRule.NO_ACTION, ForeignKey.ForeignKeyRule.NO_ACTION, false,
                                             null, referencedEntity, referencedKey, null)
                                     : field.getFk()
                     )
@@ -288,52 +292,53 @@ public class ApplicationEntities implements EntitiesHost {
         return read;
     }
 
-    private SqlEntity constructEntity(String anEntityName, String entitySql, File entityJsonFile) throws IOException, JSQLParserException, SQLException {
+    private SqlEntity constructEntity(String anEntityName, String anEntitySql, File anEntityJsonFile) throws IOException, JSQLParserException, SQLException {
         Objects.requireNonNull(anEntityName, ENTITY_NAME_MISSING_MSG);
-        JsonNode entityDocument = parseEntitySettings(entityJsonFile);
-        JsonNode procedureNode = entityDocument != null ? entityDocument.get("procedure") : null;
-        boolean procedure = procedureNode != null && procedureNode.asBoolean();
+        Objects.requireNonNull(anEntitySql, "anEntitySql is required argument");
+        Objects.requireNonNull(anEntityJsonFile, "anEntityJsonFile is required argument");
 
-        Map<String, Parameter> params = new LinkedHashMap<>();
-        // subQueryName, subQueryParameterName, parameterName
-        Map<String, Map<String, String>> paramsBinds = new HashMap<>();
-        JsonNode paramsNode = entityDocument != null ? entityDocument.get("parameters") : null;
-        if (paramsNode != null && paramsNode.isObject()) {
-            paramsNode.fields().forEachRemaining(parameterReader(params, paramsBinds));
-        }
+        if (!anEntitySql.isEmpty()) {
+            JsonNode entityDocument = parseEntitySettings(anEntityJsonFile);
 
-        String title;
-        String customSql;
-        boolean command;
-        boolean readonly;
-        boolean publicAccess;
-        int pageSize;
+            JsonNode dataSourceNode = entityDocument != null ? entityDocument.get("source") : null;
+            String dataSource = dataSourceNode != null && dataSourceNode.isTextual() ? dataSourceNode.asText() : defaultDataSource;
+            Database database = Database.of(dataSource);
+            JsonNode procedureNode = entityDocument != null ? entityDocument.get("procedure") : null;
+            boolean procedure = procedureNode != null && procedureNode.asBoolean();
 
-        if (entitySql != null && !entitySql.isEmpty()) {
+            Map<String, Parameter> params = new LinkedHashMap<>();
+            // subQueryName, subQueryParameterName, parameterName
+            Map<String, Map<String, String>> paramsBinds = new HashMap<>();
+            JsonNode paramsNode = entityDocument != null ? entityDocument.get("parameters") : null;
+            if (paramsNode != null && paramsNode.isObject()) {
+                paramsNode.fields().forEachRemaining(parameterReader(params, paramsBinds));
+            }
+
+            JsonNode titleNode = entityDocument != null ? entityDocument.get("title") : null;
+            String title = titleNode != null && titleNode.isTextual() ? titleNode.asText() : anEntityName;
+            JsonNode sqlNode = entityDocument != null ? entityDocument.get("sql") : null;
+            String customSql = sqlNode != null && sqlNode.isTextual() ? sqlNode.asText() : null;
+            JsonNode commandNode = entityDocument != null ? entityDocument.get("command") : null;
+            boolean command = commandNode != null && commandNode.asBoolean();
+            JsonNode readonlyNode = entityDocument != null ? entityDocument.get("readonly") : null;
+            boolean readonly = readonlyNode != null && readonlyNode.asBoolean();
+            JsonNode publicNode = entityDocument != null ? entityDocument.get("public") : null;
+            boolean publicAccess = publicNode != null && publicNode.asBoolean();
+            JsonNode pageSizeNode = entityDocument != null ? entityDocument.get("pageSize") : null;
+            int pageSize = pageSizeNode != null && pageSizeNode.isInt() ? pageSizeNode.asInt(DataProvider.NO_PAGING_PAGE_SIZE) : DataProvider.NO_PAGING_PAGE_SIZE;
+
             CCJSqlParserManager parserManager = new CCJSqlParserManager();
-            Statement querySyntax = parserManager.parse(new StringReader(entitySql));
+            Statement querySyntax = parserManager.parse(new StringReader(anEntitySql));
 
             InlineEntities.to(querySyntax, this, paramsBinds);
             String sqlWithSubQueries = StatementDeParser.assemble(querySyntax);
-            Map<String, Field> fields = resolveFieldsBySyntax(querySyntax);
+            Map<String, Field> fields = resolveFieldsBySyntax(database, querySyntax);
 
             Set<String> writable = new HashSet<>();
             Set<String> readRoles = new HashSet<>();
             Set<String> writeRoles = new HashSet<>();
 
             if (entityDocument != null) {
-                JsonNode titleNode = entityDocument.get("title");
-                title = titleNode != null && titleNode.isTextual() ? titleNode.asText() : anEntityName;
-                JsonNode sqlNode = entityDocument.get("sql");
-                customSql = sqlNode != null && sqlNode.isTextual() ? sqlNode.asText() : null;
-                JsonNode commandNode = entityDocument.get("command");
-                command = commandNode != null && commandNode.asBoolean();
-                JsonNode readonlyNode = entityDocument.get("readonly");
-                readonly = readonlyNode != null && readonlyNode.asBoolean();
-                JsonNode publicNode = entityDocument.get("public");
-                publicAccess = publicNode != null && publicNode.asBoolean();
-                JsonNode pageSizeNode = entityDocument.get("pageSize");
-                pageSize = pageSizeNode != null && pageSizeNode.isInt() ? pageSizeNode.asInt(DataProvider.NO_PAGING_PAGE_SIZE) : DataProvider.NO_PAGING_PAGE_SIZE;
                 JsonNode fieldsNode = entityDocument.get("fields");
                 if (fieldsNode != null) {
                     fieldsNode.fields().forEachRemaining(fieldReader(fields, anEntityName));
@@ -347,14 +352,6 @@ public class ApplicationEntities implements EntitiesHost {
                     JsonNode writeRolesNode = rolesNode.get("write");
                     writeRoles.addAll(jsonStringArrayToSet(writeRolesNode));
                 }
-            } else {
-                title = anEntityName;
-                customSql = null;
-                readonly = false;
-                command = false;
-                procedure = false;
-                publicAccess = false;
-                pageSize = DataProvider.NO_PAGING_PAGE_SIZE;
             }
             return new SqlEntity(
                     database,
@@ -378,26 +375,26 @@ public class ApplicationEntities implements EntitiesHost {
         }
     }
 
-    private Map<String, Field> resolveFieldsBySyntax(Statement parsedQuery) throws SQLException {
+    private Map<String, Field> resolveFieldsBySyntax(Database database, Statement parsedQuery) throws SQLException {
         if (parsedQuery instanceof Select) {
             Select select = (Select) parsedQuery;
-            return resolveOutputFieldsFromSources(select.getSelectBody());
+            return resolveOutputFieldsFromSources(database, select.getSelectBody());
         } else {
             return Map.of();
         }
     }
 
-    private Map<String, Field> resolveOutputFieldsFromSources(SelectBody aSelectBody) throws SQLException {
+    private Map<String, Field> resolveOutputFieldsFromSources(Database database, SelectBody aSelectBody) throws SQLException {
         Map<String, Field> fields = new LinkedHashMap<>();
         Map<String, FromItem> sources = FromItems.find(FromItems.ToCase.LOWER, aSelectBody);
         for (SelectItem selectItem : SelectItems.find(aSelectBody)) {
             if (selectItem instanceof AllColumns) {// *
                 for (FromItem source : sources.values()) {
                     if (source instanceof Table) {
-                        Map<String, Field> tableFields = tableColumnsToApplicationFields((Table) source);
+                        Map<String, Field> tableFields = tableColumnsToApplicationFields(database, (Table) source);
                         fields.putAll(tableFields);
                     } else if (source instanceof SubSelect) {
-                        Map<String, Field> subSelectFields = resolveOutputFieldsFromSources(((SubSelect) source).getSelectBody());
+                        Map<String, Field> subSelectFields = resolveOutputFieldsFromSources(database, ((SubSelect) source).getSelectBody());
                         fields.putAll(subSelectFields);
                     }
                 }
@@ -406,17 +403,17 @@ public class ApplicationEntities implements EntitiesHost {
                 assert cols.getTable() != null : "<table>.* syntax must lead to .getTable() != null";
                 FromItem source = sources.get(cols.getTable().getWholeTableName().toLowerCase());
                 if (source instanceof Table) {
-                    Map<String, Field> tableFields = tableColumnsToApplicationFields((Table) source);
+                    Map<String, Field> tableFields = tableColumnsToApplicationFields(database, (Table) source);
                     fields.putAll(tableFields);
                 } else if (source instanceof SubSelect) {
-                    Map<String, Field> subSelectFields = resolveOutputFieldsFromSources(((SubSelect) source).getSelectBody());
+                    Map<String, Field> subSelectFields = resolveOutputFieldsFromSources(database, ((SubSelect) source).getSelectBody());
                     fields.putAll(subSelectFields);
                 }
             } else {
                 assert selectItem instanceof SelectExpressionItem;
                 SelectExpressionItem selectExpressionItem = (SelectExpressionItem) selectItem;
                 if (selectExpressionItem.getExpression() instanceof Column) {
-                    Field field = resolveFieldByColumnExpression((Column) selectExpressionItem.getExpression(), selectExpressionItem.getAliasName(), sources);
+                    Field field = resolveFieldByColumnExpression(database, (Column) selectExpressionItem.getExpression(), selectExpressionItem.getAliasName(), sources);
                     fields.put(field.getName(), field);
                 } else {
                     /*
@@ -449,13 +446,13 @@ public class ApplicationEntities implements EntitiesHost {
         );
     }
 
-    private Field resolveFieldBySource(Column column, String alias, FromItem source) throws SQLException {
+    private Field resolveFieldBySource(Database database, Column column, String alias, FromItem source) throws SQLException {
         if (source instanceof Table) {
-            Map<String, Field> tableFields = tableColumnsToApplicationFields((Table) source);
+            Map<String, Field> tableFields = tableColumnsToApplicationFields(database, (Table) source);
             Field resolved = tableFields.getOrDefault(column.getColumnName(), new Field(column.getColumnName()));
             return asAliasedField(resolved, column, alias, source);
         } else if (source instanceof SubSelect) {
-            Map<String, Field> subFields = resolveOutputFieldsFromSources(((SubSelect) source).getSelectBody());
+            Map<String, Field> subFields = resolveOutputFieldsFromSources(database, ((SubSelect) source).getSelectBody());
             Field resolved = subFields.getOrDefault(column.getColumnName(), new Field(column.getColumnName()));
             return asAliasedField(resolved, column, alias, source);
         } else {
@@ -463,19 +460,19 @@ public class ApplicationEntities implements EntitiesHost {
         }
     }
 
-    private boolean isFieldInSource(Column column, FromItem source) throws SQLException {
+    private boolean isFieldInSource(Database database, Column column, FromItem source) throws SQLException {
         if (source instanceof Table) {
-            Map<String, Field> tableFields = tableColumnsToApplicationFields((Table) source);
+            Map<String, Field> tableFields = tableColumnsToApplicationFields(database, (Table) source);
             return tableFields.containsKey(column.getColumnName());
         } else if (source instanceof SubSelect) {
-            Map<String, Field> subFields = resolveOutputFieldsFromSources(((SubSelect) source).getSelectBody());
+            Map<String, Field> subFields = resolveOutputFieldsFromSources(database, ((SubSelect) source).getSelectBody());
             return subFields.containsKey(column.getColumnName());
         } else {
             return false;
         }
     }
 
-    private Field resolveFieldByColumnExpression(Column column, String alias, Map<String, FromItem> aSources) throws SQLException {
+    private Field resolveFieldByColumnExpression(Database database, Column column, String alias, Map<String, FromItem> aSources) throws SQLException {
         if (column.getTable() != null &&
                 column.getTable().getWholeTableName() != null &&
                 !column.getTable().getWholeTableName().isEmpty()) {
@@ -485,7 +482,7 @@ public class ApplicationEntities implements EntitiesHost {
              * самостоятельно.
              */
             FromItem source = aSources.get(column.getTable().getWholeTableName().toLowerCase());
-            return resolveFieldBySource(column, alias, source);
+            return resolveFieldBySource(database, column, alias, source);
         } else {
             /*
              * Часто бывает, что таблица из которого берется поле не указана.
@@ -497,7 +494,7 @@ public class ApplicationEntities implements EntitiesHost {
             return aSources.values().stream()
                     .dropWhile(source -> {
                         try {
-                            return !isFieldInSource(column, source);
+                            return !isFieldInSource(database, column, source);
                         } catch (SQLException ex) {
                             throw new UncheckedSQLException(ex);
                         }
@@ -505,7 +502,7 @@ public class ApplicationEntities implements EntitiesHost {
                     .findFirst()
                     .map(source -> {
                         try {
-                            return resolveFieldBySource(column, alias, source);
+                            return resolveFieldBySource(database, column, alias, source);
                         } catch (SQLException ex) {
                             throw new UncheckedSQLException(ex);
                         }

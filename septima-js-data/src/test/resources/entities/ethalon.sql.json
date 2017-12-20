@@ -1,6 +1,7 @@
 {
   "title": "Custom orders",
   "sql": "select o.*, co.body::json from orders o inner join customOrders co on(o.id = co.order_id)",
+  "source": "h2",
   "command": true,
   "procedure": true,
   "readonly": true,

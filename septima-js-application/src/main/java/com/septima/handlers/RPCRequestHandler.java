@@ -17,8 +17,8 @@ import java.util.function.Consumer;
  */
 public class RPCRequestHandler extends RequestHandler<RPCRequest, RPCRequest.Response> {
 
-    public static final String EXECUTING_METHOD_TRACE_MSG = "Executing method {0} of module {1}";
-    public static final String MODEL_SAVE_ERROR_MSG = "While attempting to save model of unactual server module %s";
+    public static final String EXECUTING_METHOD_TRACE_MSG = "Executing method {0} indices module {1}";
+    public static final String MODEL_SAVE_ERROR_MSG = "While attempting to save model indices unactual server module %s";
     public static final String MODULE_MISSING_MSG = "No module %s";
     public static final String METHOD_MISSING_MSG = "No method %s in module %s";
     public static final String RERUN_MSG = "About to re-run server module {0}";

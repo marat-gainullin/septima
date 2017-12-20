@@ -6,6 +6,7 @@ import com.septima.dataflow.StatementsGenerator;
 import com.septima.jdbc.DataSources;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
+import com.septima.metadata.JdbcColumn;
 import com.septima.sqldrivers.SqlDriver;
 
 import javax.naming.Context;
@@ -18,10 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.function.Consumer;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,16 +32,19 @@ public class Database {
     private final Metadata metadata;
     private final SqlDriver sqlDriver;
     private final EntitiesHost entitiesHost;
-    private final Consumer<Runnable> jdbcPerformer;
+    private final Executor jdbcPerformer;
     private final Executor futureExecutor;
 
-    private Database(DataSource aDataSource, Metadata aMetadata, SqlDriver aSqlDriver, EntitiesHost aEntitiesHost, Consumer<Runnable> aJdbcPerfomrer, Executor aFuturesExecutor) {
+    private Database(DataSource aDataSource, Metadata aMetadata, SqlDriver aSqlDriver, EntitiesHost aEntitiesHost, Executor aJdbcPerformer, Executor aFuturesExecutor) {
+        Objects.requireNonNull(aDataSource, "aDataSource is required argument");
+        Objects.requireNonNull(aJdbcPerformer, "aJdbcPerformer is required argument");
+        Objects.requireNonNull(aFuturesExecutor, "aFuturesExecutor is required argument");
         dataSource = aDataSource;
         metadata = aMetadata;
         sqlDriver = aSqlDriver;
-        jdbcPerformer = aJdbcPerfomrer;
+        jdbcPerformer = aJdbcPerformer;
         futureExecutor = aFuturesExecutor;
-        entitiesHost = aEntitiesHost;
+        entitiesHost = aEntitiesHost != null ? aEntitiesHost : new TablesEntities();
     }
 
     public DataSource getDataSource() {
@@ -57,7 +59,7 @@ public class Database {
         return sqlDriver;
     }
 
-    public Consumer<Runnable> getJdbcPerformer() {
+    public Executor getJdbcPerformer() {
         return jdbcPerformer;
     }
 
@@ -82,7 +84,7 @@ public class Database {
     public CompletableFuture<Integer> commit(List<Change.Applicable> aChangeLog) {
         Objects.requireNonNull(aChangeLog);
         CompletableFuture<Integer> committing = new CompletableFuture<>();
-        jdbcPerformer.accept(() -> {
+        jdbcPerformer.execute(() -> {
             try (Connection connection = dataSource.getConnection()) {
                 boolean autoCommit = connection.getAutoCommit();
                 connection.setAutoCommit(false);
@@ -144,7 +146,38 @@ public class Database {
         }
     }
 
-    public static Database of(final String aDataSourceName, EntitiesHost aEntitiesHost, Consumer<Runnable> aJdbcPerformer, Executor aFutureExecutor) {
+    public static Database of(final String aDataSourceName) {
+        return of(
+                aDataSourceName,
+                32
+        );
+    }
+
+    public static Database of(final String aDataSourceName, int aMaxParallelQueries) {
+        return of(
+                aDataSourceName,
+                jdbcTasksPerformer(Math.max(1, aMaxParallelQueries))
+        );
+    }
+
+    public static Database of(final String aDataSourceName, Executor aJdbcPerformer) {
+        return of(
+                aDataSourceName,
+                aJdbcPerformer,
+                ForkJoinPool.commonPool()
+        );
+    }
+
+    public static Database of(final String aDataSourceName, Executor aJdbcPerformer, Executor aFutureExecutor) {
+        return of(
+                aDataSourceName,
+                aJdbcPerformer,
+                aFutureExecutor,
+                null
+        );
+    }
+
+    public static Database of(final String aDataSourceName, Executor aJdbcPerformer, Executor aFutureExecutor, EntitiesHost aEntitiesHost) {
         Objects.requireNonNull(aDataSourceName, "aDataSourceName ia required argument");
         Objects.requireNonNull(aJdbcPerformer, "aJdbcPerformer ia required argument");
         return DATABASES.computeIfAbsent(aDataSourceName, dsn -> {
@@ -164,5 +197,40 @@ public class Database {
                 throw new UncheckedSQLException(ex);
             }
         });
+    }
+
+    public static ExecutorService jdbcTasksPerformer(final int aMaxParallelQueries) {
+        AtomicLong threadNumber = new AtomicLong();
+        ThreadPoolExecutor jdbcProcessor = new ThreadPoolExecutor(aMaxParallelQueries, aMaxParallelQueries,
+                3L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(),
+                r -> new Thread(r, "jdbc-" + threadNumber.incrementAndGet()));
+        jdbcProcessor.allowCoreThreadTimeOut(true);
+        return jdbcProcessor;
+//        jdbc.shutdown();
+//        jdbc.awaitTermination(30L, TimeUnit.SECONDS);
+    }
+
+    private class TablesEntities implements EntitiesHost {
+
+        @Override
+        public Parameter resolveParameter(String aEntityName, String aParamName) {
+            return null;
+        }
+
+        @Override
+        public Field resolveField(String anEntityName, String aFieldName) throws SQLException {
+            if (anEntityName != null) {
+                Map<String, JdbcColumn> fields = metadata.getTableColumns(anEntityName)
+                        .orElseGet(() -> {
+                            Logger.getLogger(Database.class.getName()).log(Level.WARNING, "Can't find fields for entity '{0}'", anEntityName);
+                            return Map.of();
+                        });
+                return fields.get(aFieldName);
+            } else {
+                return null;
+            }
+        }
+
     }
 }

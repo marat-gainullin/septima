@@ -1,27 +1,27 @@
-CREATE TABLE mtd_users
+create table app_users
 (
-  usr_name character varying(200) NOT NULL,
+  usr_name character varying(200) not null,
   usr_passwd character varying(200),
   usr_form character varying(200),
   usr_context character varying(200),
   usr_roles character varying(200),
   usr_phone character varying(200),
   usr_email character varying(200),
-  CONSTRAINT mtd_users_pk PRIMARY KEY (usr_name)
+  constraint app_users_pk primary key (usr_name)
 )
 #GO
-CREATE TABLE mtd_groups
+create table app_users_groups
 (
-    usr_name VARCHAR(200) NOT NULL,
-    group_name VARCHAR(200) NOT NULL
+    usr_name varchar(200) not null,
+    group_name varchar(200) not null
 )
 #GO
-ALTER TABLE mtd_groups
-    ADD CONSTRAINT MTD_GROUPS_USERS_FK FOREIGN KEY(USR_NAME) REFERENCES MTD_USERS(USR_NAME) ON DELETE CASCADE ON UPDATE CASCADE 
+alter table app_users_groups
+    add constraint app_users_groups_users_fk foreign key(usr_name) references app_users(usr_name) on delete cascade on update cascade
 #GO
-insert into mtd_users (USR_NAME, USR_PASSWD)
-    VALUES ('admin', 'abe6db4c9f5484fae8d79f2e868a673c')
+insert into app_users (usr_name, usr_passwd)
+    values ('admin', 'abe6db4c9f5484fae8d79f2e868a673c')
 #GO
-insert into mtd_groups (USR_NAME, GROUP_NAME)
-    VALUES ('admin', 'admin')
+insert into app_users_groups (usr_name, group_name)
+    values ('admin', 'admin')
 #GO

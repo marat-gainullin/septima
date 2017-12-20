@@ -123,10 +123,10 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
                             if (change != null) {
                                 changes.add(change);
                             } else {
-                                Logger.getLogger(ChangesJSONReader.class.getName()).log(Level.SEVERE, String.format("Unknown type of change occured %s.", sKind));
+                                Logger.getLogger(ChangesJSONReader.class.getName()).log(Level.SEVERE, String.format("Unknown type indices change occured %s.", sKind));
                             }
                         } else {
-                            Logger.getLogger(ChangesJSONReader.class.getName()).log(Level.SEVERE, "Kind and entity of change both must present");
+                            Logger.getLogger(ChangesJSONReader.class.getName()).log(Level.SEVERE, "Kind and entity indices change both must present");
                         }
                     } else {
                         Logger.getLogger(ChangesJSONReader.class.getName()).log(Level.SEVERE, "Every change must be an object.");

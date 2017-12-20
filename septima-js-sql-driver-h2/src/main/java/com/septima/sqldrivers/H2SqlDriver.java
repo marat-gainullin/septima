@@ -7,31 +7,25 @@ import com.septima.sqldrivers.resolvers.H2TypesResolver;
 import com.septima.sqldrivers.resolvers.TypesResolver;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Wrapper;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author vv
+ * @author mg
  */
 public class H2SqlDriver extends SqlDriver {
 
     private static final String H2_DIALECT = "H2";
-    private static final Character ESCAPE = '`';
+    private static final char ESCAPE = '`';
 
     private TypesResolver resolver = new H2TypesResolver();
-    private static final int[] h2ErrorCodes = {};
-    private static final String[] platypusErrorMessages = {};
-    private static final String SET_SCHEMA_CLAUSE = "SET SCHEMA %s";
     private static final String GET_SCHEMA_CLAUSE = "SELECT SCHEMA()";
     private static final String CREATE_SCHEMA_CLAUSE = "CREATE SCHEMA IF NOT EXISTS %s";
     private static final String SQL_CREATE_EMPTY_TABLE = "CREATE TABLE %s (%s DECIMAL(18,0) NOT NULL PRIMARY KEY)";
     private static final String SQL_CREATE_TABLE_COMMENT = "COMMENT ON TABLE %s IS '%s'";
     private static final String SQL_CREATE_COLUMN_COMMENT = "COMMENT ON COLUMN %s IS '%s'";
     private static final String SQL_DROP_TABLE = "DROP TABLE %s";
-    private static final String SQL_CREATE_INDEX = "CREATE %s INDEX %s ON %s (%s)";
-    private static final String SQL_DROP_INDEX = "DROP INDEX %s";
     private static final String SQL_ADD_PK = "ALTER TABLE %s ADD %s PRIMARY KEY (%s)";
     private static final String SQL_DROP_PK = "ALTER TABLE %s DROP PRIMARY KEY";
     private static final String SQL_ADD_FK = "ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s) %s";
@@ -90,7 +84,7 @@ public class H2SqlDriver extends SqlDriver {
      * {@inheritDoc}
      */
     @Override
-    public String[] getSql4CreateColumnComment(String aOwnerName, String aTableName, String aFieldName, String aDescription) {
+    public String[] getSqls4CreateColumnComment(String aOwnerName, String aTableName, String aFieldName, String aDescription) {
         String fullName = escapeNameIfNeeded(aTableName) + "." + escapeNameIfNeeded(aFieldName);
         if (aOwnerName != null && !aOwnerName.isEmpty()) {
             fullName = escapeNameIfNeeded(aOwnerName) + "." + fullName;
@@ -133,15 +127,6 @@ public class H2SqlDriver extends SqlDriver {
      * {@inheritDoc}
      */
     @Override
-    public String getSql4DropIndex(String aSchemaName, String aTableName, String aIndexName) {
-        String indexName = makeFullName(aSchemaName, aIndexName);
-        return String.format(SQL_DROP_INDEX, indexName);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getSql4DropFkConstraint(String aSchemaName, ForeignKey aFk) {
         String constraintName = escapeNameIfNeeded(aFk.getCName());
         String tableName = makeFullName(aSchemaName, aFk.getTable());
@@ -152,20 +137,21 @@ public class H2SqlDriver extends SqlDriver {
      * {@inheritDoc}
      */
     @Override
-    public String[] getSql4CreatePkConstraint(String aSchemaName, List<PrimaryKey> listPk) {
+    public String[] getSqls4CreatePkConstraint(String aSchemaName, List<PrimaryKey> listPk) {
 
         if (listPk != null && listPk.size() > 0) {
             PrimaryKey pk = listPk.get(0);
             String tableName = pk.getTable();
             String pkTableName = makeFullName(aSchemaName, tableName);
-            String pkName = escapeNameIfNeeded(generatePkName(tableName, PKEY_NAME_SUFFIX));
-            String pkColumnName = escapeNameIfNeeded(pk.getField());
+            String pkName = escapeNameIfNeeded(tableName + PRIMARY_KEY_NAME_SUFFIX);
+
+            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getField()));
             for (int i = 1; i < listPk.size(); i++) {
                 pk = listPk.get(i);
-                pkColumnName += ", " + escapeNameIfNeeded(pk.getField());
+                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getField()));
             }
             return new String[]{
-                    String.format(SQL_ADD_PK, pkTableName, "CONSTRAINT " + pkName, pkColumnName)
+                    String.format(SQL_ADD_PK, pkTableName, "CONSTRAINT " + pkName, pkColumnName.toString())
             };
         }
         return null;
@@ -184,33 +170,23 @@ public class H2SqlDriver extends SqlDriver {
      * {@inheritDoc}
      */
     @Override
-    public String getSql4CreateFkConstraint(String aSchemaName, ForeignKey aFk) {
-        List<ForeignKey> fkList = new ArrayList<>();
-        fkList.add(aFk);
-        return getSql4CreateFkConstraint(aSchemaName, fkList);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getSql4CreateFkConstraint(String aSchemaName, List<ForeignKey> listFk) {
         if (listFk != null && listFk.size() > 0) {
             ForeignKey fk = listFk.get(0);
-            String fkTableName = makeFullName(aSchemaName, fk.getTable());
-            String fkName = fk.getCName();
-            String fkColumnName = escapeNameIfNeeded(fk.getField());
-
             PrimaryKey pk = fk.getReferee();
-            String pkSchemaName = pk.getSchema();
+            String fkTableName = makeFullName(aSchemaName, fk.getTable());
             String pkTableName = makeFullName(aSchemaName, pk.getTable());
-            String pkColumnName = escapeNameIfNeeded(pk.getField());
+            String fkName = fk.getCName();
+
+            // String pkSchemaName = pk.getSchema();
+            StringBuilder fkColumnName = new StringBuilder(escapeNameIfNeeded(fk.getField()));
+            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getField()));
 
             for (int i = 1; i < listFk.size(); i++) {
                 fk = listFk.get(i);
                 pk = fk.getReferee();
-                fkColumnName += ", " + escapeNameIfNeeded(fk.getField());
-                pkColumnName += ", " + escapeNameIfNeeded(pk.getField());
+                fkColumnName.append(", ").append(escapeNameIfNeeded(fk.getField()));
+                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getField()));
             }
 
             String fkRule = "";
@@ -218,14 +194,14 @@ public class H2SqlDriver extends SqlDriver {
                 case CASCADE:
                     fkRule += " ON UPDATE CASCADE";
                     break;
-                case NOACTION:
-//                case SETDEFAULT:
+                case NO_ACTION:
+//                case SET_DEFAULT:
                     fkRule += " ON UPDATE NO ACTION";
                     break;
-                case SETDEFAULT:
+                case SET_DEFAULT:
                     fkRule += " ON UPDATE SET DEFAULT";
                     break;
-                case SETNULL:
+                case SET_NULL:
                     fkRule += " ON UPDATE SET NULL";
                     break;
             }
@@ -233,43 +209,20 @@ public class H2SqlDriver extends SqlDriver {
                 case CASCADE:
                     fkRule += " ON DELETE CASCADE";
                     break;
-                case NOACTION:
-//                case SETDEFAULT:
+                case NO_ACTION:
+//                case SET_DEFAULT:
                     fkRule += " ON DELETE NO ACTION";
                     break;
-                case SETDEFAULT:
+                case SET_DEFAULT:
                     fkRule += " ON DELETE SET DEFAULT";
                     break;
-                case SETNULL:
+                case SET_NULL:
                     fkRule += " ON DELETE SET NULL";
                     break;
             }
-            return String.format(SQL_ADD_FK, fkTableName, fkName.isEmpty() ? "" : escapeNameIfNeeded(fkName), fkColumnName, pkTableName, pkColumnName, fkRule);
+            return String.format(SQL_ADD_FK, fkTableName, fkName.isEmpty() ? "" : escapeNameIfNeeded(fkName), fkColumnName.toString(), pkTableName, pkColumnName.toString(), fkRule);
         }
         return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getSql4CreateIndex(String aSchemaName, String aTableName, TableIndex aIndex) {
-        assert aIndex.getColumns().size() > 0 : "index definition must consist of at least 1 column";
-        String tableName = makeFullName(aSchemaName, aTableName);
-        String fieldsList = aIndex.getColumns().stream()
-                .map(column -> new StringBuilder(escapeNameIfNeeded(column.getColumnName()))
-                        .append(!column.isAscending() ? " DESC" : ""))
-                .reduce((s1, s2) -> new StringBuilder()
-                        .append(s1)
-                        .append(", ")
-                        .append(s2))
-                .map(StringBuilder::toString)
-                .orElse("");
-        return String.format(SQL_CREATE_INDEX,
-                (aIndex.isUnique() ? "UNIQUE " : "") + (aIndex.isHashed() ? "HASH " : ""),
-                escapeNameIfNeeded(aIndex.getName()),
-                tableName,
-                fieldsList);
     }
 
     /**
@@ -279,23 +232,6 @@ public class H2SqlDriver extends SqlDriver {
     public String getSql4EmptyTableCreation(String aSchemaName, String aTableName, String aPkFieldName) {
         String fullName = makeFullName(aSchemaName, aTableName);
         return String.format(SQL_CREATE_EMPTY_TABLE, fullName, escapeNameIfNeeded(aPkFieldName));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String parseException(Exception ex) {
-        if (ex instanceof SQLException) {
-            SQLException sqlEx = (SQLException) ex;
-            int errorCode = sqlEx.getErrorCode();
-            for (int i = 0; i < h2ErrorCodes.length; i++) {
-                if (errorCode == h2ErrorCodes[i]) {
-                    return platypusErrorMessages[i];
-                }
-            }
-        }
-        return ex.getLocalizedMessage();
     }
 
     private String getFieldTypeDefinition(JdbcColumn aField) {
@@ -338,7 +274,7 @@ public class H2SqlDriver extends SqlDriver {
      * {@inheritDoc}
      */
     @Override
-    public String[] getSqls4ModifyingField(String aSchemaName, String aTableName, JdbcColumn aOldFieldMd, JdbcColumn aNewFieldMd) {
+    public String[] getSqls4FieldModify(String aSchemaName, String aTableName, JdbcColumn aOldFieldMd, JdbcColumn aNewFieldMd) {
         assert aOldFieldMd.getName().toLowerCase().equals(aNewFieldMd.getName().toLowerCase());
         List<String> sql = new ArrayList<>();
 
@@ -383,14 +319,14 @@ public class H2SqlDriver extends SqlDriver {
      * {@inheritDoc}
      */
     @Override
-    public String[] getSqls4RenamingField(String aSchemaName, String aTableName, String aOldFieldName, JdbcColumn aNewFieldMd) {
+    public String[] getSqls4FieldRename(String aSchemaName, String aTableName, String aOldFieldName, JdbcColumn aNewFieldMd) {
         String fullTableName = makeFullName(aSchemaName, aTableName);
         String renameSQL = String.format(SQL_RENAME_COLUMN, fullTableName, escapeNameIfNeeded(aOldFieldName), escapeNameIfNeeded(aNewFieldMd.getName()));
         return new String[]{renameSQL};
     }
 
     @Override
-    public String[] getSqls4AddingField(String aSchemaName, String aTableName, JdbcColumn aField) {
+    public String[] getSqls4FieldAdd(String aSchemaName, String aTableName, JdbcColumn aField) {
         String fullTableName = makeFullName(aSchemaName, aTableName);
         return new String[]{
                 String.format(SqlDriver.ADD_FIELD_SQL_PREFIX, fullTableName) + getSql4FieldDefinition(aField)
@@ -398,17 +334,17 @@ public class H2SqlDriver extends SqlDriver {
     }
 
     @Override
-    public Character getEscape() {
+    public char getEscape() {
         return ESCAPE;
     }
 
     @Override
-    public NamedJdbcValue convertGeometry(String aValue, Connection aConnection) throws SQLException {
+    public NamedJdbcValue convertGeometry(String aValue, Connection aConnection) {
         return null;
     }
 
     @Override
-    public String readGeometry(Wrapper aRs, int aColumnIndex, Connection aConnection) throws SQLException {
+    public String readGeometry(Wrapper aRs, int aColumnIndex, Connection aConnection) {
         return null;
     }
 }

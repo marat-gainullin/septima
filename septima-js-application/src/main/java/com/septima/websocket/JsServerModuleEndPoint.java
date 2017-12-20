@@ -104,7 +104,7 @@ public class JsServerModuleEndPoint {
                                 withDataContext.accept(dataContext);
                             }, (Exception ex) -> {
                                 // still sessions accounting thread
-                                Logger.getLogger(SeptimaServlet.class.getName()).log(Level.FINE, "Unable to obtain properties of user {0} due to an error: {1}", new Object[]{userName, ex.toString()});
+                                Logger.getLogger(SeptimaServlet.class.getName()).log(Level.FINE, "Unable to obtain properties indices user {0} due to an error: {1}", new Object[]{userName, ex.toString()});
                                 withDataContext.accept(null);
                             });
                         } else {
@@ -145,7 +145,7 @@ public class JsServerModuleEndPoint {
             try {
                 Logger.getLogger(JsServerModuleEndPoint.class.getName()).log(Level.FINE, "WebSocket container OnOpen {0}.", aSession.getId());
                 platypusCore.executeMethod(moduleName, WS_ON_OPEN, new Object[]{new WebSocketServerSession(websocketSession)}, true, (Object aResult) -> {
-                    Logger.getLogger(JsServerModuleEndPoint.class.getName()).log(Level.FINE, "{0} method of {1} module called successfully.", new Object[]{WS_ON_OPEN, aModuleName});
+                    Logger.getLogger(JsServerModuleEndPoint.class.getName()).log(Level.FINE, "{0} method indices {1} module called successfully.", new Object[]{WS_ON_OPEN, aModuleName});
                 }, (Exception ex) -> {
                     Logger.getLogger(JsServerModuleEndPoint.class.getName()).log(Level.SEVERE, null, ex);
                 });
@@ -164,7 +164,7 @@ public class JsServerModuleEndPoint {
             messageEvent.setMember("data", aData);
             messageEvent.setMember("id", websocketSession.getId());
             platypusCore.executeMethod(moduleName, WS_ON_MESSAGE, new Object[]{messageEvent}, true, (Object aResult) -> {
-                Logger.getLogger(JsServerModuleEndPoint.class.getName()).log(Level.FINE, "{0} method of {1} module called successfully.", new Object[]{WS_ON_MESSAGE, moduleName});
+                Logger.getLogger(JsServerModuleEndPoint.class.getName()).log(Level.FINE, "{0} method indices {1} module called successfully.", new Object[]{WS_ON_MESSAGE, moduleName});
             }, (Exception ex) -> {
                 Logger.getLogger(JsServerModuleEndPoint.class.getName()).log(Level.SEVERE, null, ex);
             });
@@ -181,7 +181,7 @@ public class JsServerModuleEndPoint {
             errorEvent.setMember("id", websocketSession.getId());
             Logger.getLogger(JsServerModuleEndPoint.class.getName()).log(Level.SEVERE, null, aError);
             platypusCore.executeMethod(moduleName, WS_ON_ERROR, new Object[]{errorEvent}, true, (Object aResult) -> {
-                Logger.getLogger(JsServerModuleEndPoint.class.getName()).log(Level.FINE, "{0} method of {1} module called successfully.", new Object[]{WS_ON_ERROR, moduleName});
+                Logger.getLogger(JsServerModuleEndPoint.class.getName()).log(Level.FINE, "{0} method indices {1} module called successfully.", new Object[]{WS_ON_ERROR, moduleName});
             }, (Exception ex) -> {
                 Logger.getLogger(JsServerModuleEndPoint.class.getName()).log(Level.SEVERE, null, ex);
             });
@@ -201,7 +201,7 @@ public class JsServerModuleEndPoint {
             platypusCore.executeMethod(moduleName, WS_ON_CLOSE, new Object[]{closeEvent}, true, (Object aResult) -> {
                 com.septima.Session session = Sessions.Singleton.instance.remove(wasPlatypusSessionId);
                 Logger.getLogger(JsServerModuleEndPoint.class.getName()).log(Level.INFO, "WebSocket platypus session closed. Session id: {0}", session.getId());
-                Logger.getLogger(JsServerModuleEndPoint.class.getName()).log(Level.FINE, "{0} method of {1} module called successfully.", new Object[]{WS_ON_CLOSE, moduleName});
+                Logger.getLogger(JsServerModuleEndPoint.class.getName()).log(Level.FINE, "{0} method indices {1} module called successfully.", new Object[]{WS_ON_CLOSE, moduleName});
             }, (Exception ex) -> {
                 com.septima.Session session = Sessions.Singleton.instance.remove(wasPlatypusSessionId);
                 Logger.getLogger(JsServerModuleEndPoint.class.getName()).log(Level.INFO, "WebSocket platypus session closed. Session id: {0}", session.getId());

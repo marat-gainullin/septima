@@ -1,8 +1,8 @@
-CREATE TABLE mtd_version
+create table app_version
 (
-    VERSION_VALUE numeric NOT NULL,
-    CONSTRAINT mtd_version_pk PRIMARY KEY(VERSION_VALUE)
+    version_value numeric not null,
+    constraint app_version_pk primary key(version_value)
 )
 #GO
-INSERT INTO mtd_version (VERSION_VALUE) VALUES (0)
+insert into app_version (version_value) values (0)
 #GO

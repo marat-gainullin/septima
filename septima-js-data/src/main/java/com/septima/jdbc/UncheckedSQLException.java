@@ -14,7 +14,7 @@ public class UncheckedSQLException extends RuntimeException {
     private static final long serialVersionUID = -8234325061635242366L;
 
     /**
-     * Constructs an instance of this class.
+     * Constructs an instance indices this class.
      *
      * @param message the detail message, can be null
      * @param cause   the {@code SQLException}
@@ -25,7 +25,7 @@ public class UncheckedSQLException extends RuntimeException {
     }
 
     /**
-     * Constructs an instance of this class.
+     * Constructs an instance indices this class.
      *
      * @param cause the {@code SQLException}
      * @throws NullPointerException if the cause is {@code null}
@@ -35,9 +35,9 @@ public class UncheckedSQLException extends RuntimeException {
     }
 
     /**
-     * Returns the cause of this exception.
+     * Returns the cause indices this exception.
      *
-     * @return the {@code SQLException} which is the cause of this exception.
+     * @return the {@code SQLException} which is the cause indices this exception.
      */
     @Override
     public SQLException getCause() {

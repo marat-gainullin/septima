@@ -7,26 +7,30 @@ import com.septima.metadata.Field;
 import com.septima.Parameter;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A Sql query with name-bound parameters.
- * <p>
- * <p>
- * This class represents a SQL query which text contains named parameters, and
- * their values with type information. Provides a method compile() to transform
- * it to a SqlCompiledQuery replacing parameters names in the query text to "?"
- * placeholders accepted by JDBC, along with a vector of parameters values in
+ * A Sql based entity with named parameters.
+ *
+ * This class represents SQL based entity which sql text contains named parameters.
+ * Also, it contains parameters' values and type information.
+ * It provides a method toQuery() to transform
+ * it to a SqlQuery replacing parameters names in the query text with "?"
+ * placeholders accepted by JDBC, along with parameters values list in
  * the right order.
  *
  * @author mg
  */
 public class SqlEntity {
 
-    private static final String PARAMETER_NAME_REGEXP = "(?<=[^:]):{1}([A-za-z]\\w*\\b)";
-    private final static Pattern PARAMETER_NAME_PATTERN = Pattern.compile(PARAMETER_NAME_REGEXP, Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
-    private final static Pattern STRINGS_PATTERN = Pattern.compile("'[^']*'", Pattern.MULTILINE);
+    private static final Pattern NAMED_PARAMETER = Pattern.compile("(?<=[^:]):[a-z]\\w*\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern STRING_LITERAL = Pattern.compile("'[^']*'");
+    private static final Pattern MULTILINE_COMMENT = Pattern.compile("/\\*.*\\*/", Pattern.DOTALL);
+    private static final Pattern LINE_COMMENT = Pattern.compile("--.*$", Pattern.MULTILINE);
 
     private final Database database;
     private final String sqlText;
@@ -45,16 +49,16 @@ public class SqlEntity {
     private final Set<String> writeRoles;
 
     /**
-     * Creates an instance of Query with given SQL query text. Leaves the
+     * Creates an instance indices Query with given SQL query text. Leaves the
      * parameters map empty.
      *
      * @param aDatabase {@link Database} instance to use with the new query.
-     * @param aSqlText  the Sql query text.
+     * @param aSql      the Sql query text.
      */
-    public SqlEntity(Database aDatabase, String aSqlText) {
+    public SqlEntity(Database aDatabase, String aSql) {
         this(
                 aDatabase,
-                aSqlText,
+                aSql,
                 null,
                 null,
                 false,
@@ -63,14 +67,14 @@ public class SqlEntity {
                 false,
                 null,
                 DataProvider.NO_PAGING_PAGE_SIZE,
-                Map.of(), Map.of(),
+                Collections.unmodifiableMap(extractParameters(aSql)), Map.of(),
                 Set.of(), Set.of(), Set.of()
         );
     }
 
     public SqlEntity(Database aDatabase,
-                     String aSqlText,
-                     String aCustomSqlText,
+                     String aSql,
+                     String aCustomSql,
                      String aEntityName,
                      boolean aReadonly,
                      boolean aCommand,
@@ -84,9 +88,16 @@ public class SqlEntity {
                      Set<String> aReadRoles,
                      Set<String> aWriteRoles
     ) {
+        Objects.requireNonNull(aDatabase, "aDatabase is required argument");
+        Objects.requireNonNull(aSql, "aSql is required argument");
+        Objects.requireNonNull(aParams, "aParams is required argument");
+        Objects.requireNonNull(aFields, "aFields is required argument");
+        Objects.requireNonNull(aWritable, "aWritable is required argument");
+        Objects.requireNonNull(aReadRoles, "aReadRoles is required argument");
+        Objects.requireNonNull(aWriteRoles, "aWriteRoles is required argument");
         database = aDatabase;
-        sqlText = aSqlText;
-        customSqlText = aCustomSqlText;
+        sqlText = aSql;
+        customSqlText = aCustomSql;
         entityName = aEntityName;
         readonly = aReadonly;
         command = aCommand;
@@ -161,61 +172,38 @@ public class SqlEntity {
         return entityName;
     }
 
-    /**
-     * Compiles the SQL query.
-     * <p>
-     * <p>
-     * The compilation process includes replacing named parameters binding like
-     * ":param1" in SQL query text with JDBC "?" placeholders and filling the
-     * vector of parameters values according to each parameter occurrence in the
-     * query.</p>
-     * <p>
-     * <p>
-     * The returned object is able to assign parameters values stored in it to
-     * any PreparedStatement object.</p>
-     *
-     * @return Compiled Sql query.
-     */
-    public SqlCompiledQuery compile() {
+    public SqlQuery toQuery() {
         Objects.requireNonNull(sqlText, "Sql query text missing.");
         if (sqlText.isEmpty()) {
             throw new IllegalStateException("Empty Sql query text is not supported");
         }
+        if (customSqlText != null && !customSqlText.isEmpty()) {
+            Logger.getLogger(SqlEntity.class.getName()).log(Level.INFO, "Entity sql was substituted with customSql while compiling entity {0}", entityName);
+        }
+        List<Parameter> compiledParams = new ArrayList<>(params.size());
         String dialect = database.getSqlDriver().getDialect();
         boolean postgreSQL = dialect.toLowerCase().contains("postgre"); // TODO: Think about how to avoid this hack
-        List<Parameter> compiledParams = new ArrayList<>(params.size());
-        StringBuilder compiledSb = new StringBuilder();
-        Matcher sm = STRINGS_PATTERN.matcher(sqlText);
-        String[] withoutStrings = sqlText.split("('[^']*')");
-        for (int i = 0; i < withoutStrings.length; i++) {
-            Matcher m = PARAMETER_NAME_PATTERN.matcher(withoutStrings[i]);
-            StringBuffer withoutStringsSegment = new StringBuffer();
-            while (m.find()) {
-                String paramName = m.group(1);
-                Parameter p = params.getOrDefault(
-                        paramName,
-                        new Parameter(paramName)/* null for unbound parameters*/
-                );
-                compiledParams.add(new Parameter(
-                        p.getName(),
-                        p.getDescription(),
-                        p.getType(),
-                        p.getValue(),
-                        p.getMode()
-                ));
-                m.appendReplacement(withoutStringsSegment, postgreSQL && ApplicationDataTypes.DATE_TYPE_NAME.equals(p.getType()) ? "?::timestamp" : "?");
-            }
-            m.appendTail(withoutStringsSegment);
-            withoutStrings[i] = withoutStringsSegment.toString();
-            compiledSb.append(withoutStrings[i]);
-            if (sm.find()) {
-                compiledSb.append(sm.group(0));
-            }
-        }
-        return new SqlCompiledQuery(
+        String jdbcSql = riddleParameters(
+                customSqlText != null && !customSqlText.isEmpty() ? customSqlText : sqlText,
+                paramName -> {
+                    Parameter p = params.getOrDefault(
+                            paramName,
+                            new Parameter(paramName)/* null and string type for unbound parameters*/
+                    );
+                    compiledParams.add(new Parameter(
+                            p.getName(),
+                            p.getDescription(),
+                            p.getType(),
+                            p.getValue(),
+                            p.getMode()
+                    ));
+                    return postgreSQL && ApplicationDataTypes.DATE_TYPE_NAME.equals(p.getType()) ? "?::timestamp" : "?";
+                }
+        );
+        return new SqlQuery(
                 database,
                 entityName,
-                compiledSb.toString(),
+                jdbcSql,
                 compiledParams,
                 procedure,
                 pageSize,
@@ -223,16 +211,50 @@ public class SqlEntity {
         );
     }
 
-    protected static Map<String, Parameter> extractParameters(String sqlText) {
+    private static String riddleParameters(String aSource, Function<String, String> parameterHandler) {
+        return reassemble(
+                aSource,
+                MULTILINE_COMMENT,
+                interMultilineCommentsSegment -> reassemble(
+                        interMultilineCommentsSegment,
+                        LINE_COMMENT,
+                        interLineCommentsSegment -> reassemble(
+                                interLineCommentsSegment,
+                                STRING_LITERAL,
+                                interStringSegment -> reassemble(
+                                        interStringSegment,
+                                        NAMED_PARAMETER,
+                                        Function.identity(),
+                                        paramName -> parameterHandler.apply(paramName.substring(1))).toString(),
+                                Function.identity()).toString(),
+                        Function.identity()).toString(),
+                Function.identity()).toString();
+    }
+
+    private static StringBuilder reassemble(String aText, Pattern pattern, Function<String, String> replaceInterSegment, Function<String, String> replaceSegment) {
+        Matcher matcher = pattern.matcher(aText);
+        StringBuilder assembly = new StringBuilder();
+        int lastPosition = 0;
+        String interSegment;
+        while (matcher.find()) {
+            interSegment = aText.substring(lastPosition, matcher.start());
+            String segment = aText.substring(matcher.start(), matcher.end());
+            lastPosition = matcher.end();
+            assembly.append(replaceInterSegment.apply((interSegment)));
+            assembly.append(replaceSegment.apply(segment));
+        }
+        interSegment = aText.substring(lastPosition, aText.length());
+        assembly.append(replaceInterSegment.apply((interSegment)));
+        return assembly;
+    }
+
+    private static Map<String, Parameter> extractParameters(String aSource) {
         Map<String, Parameter> params = new LinkedHashMap<>();
-        if (sqlText != null && !sqlText.isEmpty()) {
-            Pattern pattern = Pattern.compile(PARAMETER_NAME_REGEXP, Pattern.CASE_INSENSITIVE);
-            Matcher matcher = pattern.matcher(sqlText);
-            while (matcher.find()) {
-                String paramName = sqlText.substring(matcher.start() + 1, matcher.end());
-                Parameter parameter = new Parameter(paramName, "", ApplicationDataTypes.STRING_TYPE_NAME);
-                params.put(parameter.getName(), parameter);
-            }
+        if (aSource != null && !aSource.isEmpty()) {
+            riddleParameters(aSource, paramName -> {
+                params.put(paramName, new Parameter(paramName, null, ApplicationDataTypes.STRING_TYPE_NAME));
+                return paramName;
+            });
         }
         return params;
     }

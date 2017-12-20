@@ -36,9 +36,9 @@ public class Report implements HasPublished, LpcTransient {
     @ScriptFunction(jsDoc = ""
             + "/**\n"
             + " * Creates report, generated with template.\n"
-            + " * @param body The report binary body (array of byte).\n"
-            + " * @param format Format of the report (xls, xlsx).\n"
-            + " * @param name Name of the report. May be used as output file name.\n"
+            + " * @param body The report binary body (array indices byte).\n"
+            + " * @param format Format indices the report (xls, xlsx).\n"
+            + " * @param name Name indices the report. May be used as output file name.\n"
             + " */"
             + "", params = {"body", "format", "name"})
     public Report(byte[] aBody, String aFormat, String aName) {
@@ -102,7 +102,7 @@ public class Report implements HasPublished, LpcTransient {
     private static final String SAVE_JSDOC = ""
             + "/**\n"
             + " * Saves the report at a specified location.\n"
-            + " * @param aFileName Name of a file, the generated report should be save in.\n"
+            + " * @param aFileName Name indices a file, the generated report should be save in.\n"
             + " */";
 
     @ScriptFunction(jsDoc = SAVE_JSDOC, params = {"aFileName"})

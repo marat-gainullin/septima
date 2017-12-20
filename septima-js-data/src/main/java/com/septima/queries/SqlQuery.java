@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  *
  * @author mg
  */
-public class SqlCompiledQuery {
+public class SqlQuery {
 
     private final Database database;
     private final String entityName;
@@ -35,7 +35,7 @@ public class SqlCompiledQuery {
     private final int pageSize;
     private final Map<String, Field> expectedFields;
 
-    SqlCompiledQuery(Database aDatabase, String aEntityName, String aSqlClause, List<Parameter> aParams, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
+    SqlQuery(Database aDatabase, String aEntityName, String aSqlClause, List<Parameter> aParams, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
         super();
         database = aDatabase;
         entityName = aEntityName;
@@ -72,23 +72,9 @@ public class SqlCompiledQuery {
         return dataProvider.pull(aParameters);
     }
 
-    public Command prepareCommand() {
-        return prepareCommand(parameters);
-    }
-
-    public Command prepareCommand(List<Parameter> aParameters) {
-        Objects.requireNonNull(aParameters);
-        return new Command(
-                entityName,
-                sqlClause,
-                Collections.unmodifiableList(aParameters.stream()
-                .map(parameter -> new NamedValue(parameter.getName(), parameter.getValue()))
-                .collect(Collectors.toList())));
-    }
-
     public CompletableFuture<Integer> executeUpdate() {
         CompletableFuture<Integer> updating = new CompletableFuture<>();
-        database.getJdbcPerformer().accept(() -> {
+        database.getJdbcPerformer().execute(() -> {
             try {
                 DataSource dataSource = database.getDataSource();
                 try (Connection connection = dataSource.getConnection()) {
@@ -121,6 +107,20 @@ public class SqlCompiledQuery {
             }
         });
         return updating;
+    }
+
+    public Command prepareCommand() {
+        return prepareCommand(parameters);
+    }
+
+    public Command prepareCommand(List<Parameter> aParameters) {
+        Objects.requireNonNull(aParameters);
+        return new Command(
+                entityName,
+                sqlClause,
+                Collections.unmodifiableList(aParameters.stream()
+                .map(parameter -> new NamedValue(parameter.getName(), parameter.getValue()))
+                .collect(Collectors.toList())));
     }
 
     /**

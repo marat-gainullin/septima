@@ -1,6 +1,5 @@
 package com.septima;
 
-import com.septima.jdbc.ColumnsIndicies;
 import com.septima.jdbc.DataSources;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.*;
@@ -16,6 +15,9 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.sql.DataSource;
 
 /**
@@ -23,124 +25,90 @@ import javax.sql.DataSource;
  */
 public class Metadata implements StatementsGenerator.TablesContainer {
 
-    private static final String JDBCFKS_FKTABLE_SCHEM = "FKTABLE_SCHEM";
-    private static final String JDBCFKS_FKTABLE_NAME = "FKTABLE_NAME";
-    private static final String JDBCFKS_FKCOLUMN_NAME = "FKCOLUMN_NAME";
-    private static final String JDBCFKS_FK_NAME = "FK_NAME";
-    private static final String JDBCFKS_FKUPDATE_RULE = "UPDATE_RULE";
-    private static final String JDBCFKS_FKDELETE_RULE = "DELETE_RULE";
-    private static final String JDBCFKS_FKDEFERRABILITY = "DEFERRABILITY";
-    private static final String JDBCFKS_FKPKTABLE_SCHEM = "PKTABLE_SCHEM";
-    private static final String JDBCFKS_FKPKTABLE_NAME = "PKTABLE_NAME";
-    private static final String JDBCFKS_FKPKCOLUMN_NAME = "PKCOLUMN_NAME";
-    private static final String JDBCFKS_FKPK_NAME = "PK_NAME";
-    private static final String JDBCCOLS_TABLE_SCHEM = "TABLE_SCHEM";
-    private static final String JDBCCOLS_TABLE_NAME = "TABLE_NAME";
-    //private static final String JDBCCOLS_TABLE_DESC = "TABLE_DESCRIPTION";
-    private static final String JDBCCOLS_COLUMN_NAME = "COLUMN_NAME";
-    private static final String JDBCCOLS_REMARKS = "REMARKS";
-    private static final String JDBCCOLS_DATA_TYPE = "DATA_TYPE";
-    private static final String JDBCCOLS_TYPE_NAME = "TYPE_NAME";
-    //private static final String JDBCCOLS_TABLE_TYPE = "TABLE_TYPE";
-    private static final String JDBCCOLS_COLUMN_SIZE = "COLUMN_SIZE";
-    private static final String JDBCCOLS_DECIMAL_DIGITS = "DECIMAL_DIGITS";
-    private static final String JDBCCOLS_NUM_PREC_RADIX = "NUM_PREC_RADIX";
-    private static final String JDBCCOLS_NULLABLE = "NULLABLE";
-    private static final String JDBCPKS_TABLE_SCHEM = JDBCCOLS_TABLE_SCHEM;
-    private static final String JDBCPKS_TABLE_NAME = JDBCCOLS_TABLE_NAME;
-    private static final String JDBCPKS_COLUMN_NAME = JDBCCOLS_COLUMN_NAME;
-    private static final String JDBCPKS_CONSTRAINT_NAME = "PK_NAME";
-    //private static final String JDBCIDX_TABLE_SCHEM = JDBCCOLS_TABLE_SCHEM;
-    //private static final String JDBCIDX_TABLE_NAME = JDBCCOLS_TABLE_NAME;
-    private static final String JDBCIDX_COLUMN_NAME = JDBCCOLS_COLUMN_NAME;
-    private static final String JDBCIDX_NON_UNIQUE = "NON_UNIQUE";      //boolean => Can index values be non-unique. false when TYPE is tableIndexStatistic
-    //private static final String JDBCIDX_INDEX_QUALIFIER = "INDEX_QUALIFIER"; //String => index catalog (may be null); null when TYPE is tableIndexStatistic
-    private static final String JDBCIDX_INDEX_NAME = "INDEX_NAME";      //String => index name; null when TYPE is tableIndexStatistic
-    private static final String JDBCIDX_TYPE = "TYPE";            //short => index type:
-    //private static final String JDBCIDX_PRIMARY_KEY = "IS_PKEY";
-    //private static final String JDBCIDX_FOREIGN_KEY = "FKEY_NAME";
-    //tableIndexStatistic - this identifies table statistics that are returned in conjuction with a table's index descriptions
-    //tableIndexClustered - this is a clustered index
-    //tableIndexHashed - this is a hashed index
-    //tableIndexOther - this is some other style of index
-    private static final String JDBCIDX_ORDINAL_POSITION = "ORDINAL_POSITION";//short => column sequence number within index; zero when TYPE is tableIndexStatistic
-    private static final String JDBCIDX_ASC_OR_DESC = "ASC_OR_DESC";//String => column sort sequence, "A" => ascending, "D" => descending, may be null if sort sequence is not supported; null when TYPE is tableIndexStatistic
-    //private static final String JDBCPKS_TABLE_CAT_FIELD_NAME = "TABLE_CAT";
-    //private static final String JDBCPKS_TABLE_TYPE_FIELD_NAME = "TABLE_TYPE";
-    private static final String JDBCPKS_TABLE_TYPE_TABLE = "TABLE";
-    private static final String JDBCPKS_TABLE_TYPE_VIEW = "VIEW";
+    private static final String JDBC_FK_TABLE_SCHEMA = "FKTABLE_SCHEM";
+    private static final String JDBC_FK_TABLE_NAME = "FKTABLE_NAME";
+    private static final String JDBC_FK_COLUMN_NAME = "FKCOLUMN_NAME";
+    private static final String JDBC_FK_CONSTRAINT_NAME = "FK_NAME";
+    private static final String JDBC_FK_UPDATE_RULE = "UPDATE_RULE";
+    private static final String JDBC_FK_DELETE_RULE = "DELETE_RULE";
+    private static final String JDBC_FK_DEFERRABILITY = "DEFERRABILITY";
+    private static final String JDBC_FK_PK_TABLE_SCHEMA = "PKTABLE_SCHEM";
+    private static final String JDBC_FK_PK_TABLE_NAME = "PKTABLE_NAME";
+    private static final String JDBC_FK_PK_COLUMN_NAME = "PKCOLUMN_NAME";
+    private static final String JDBC_TABLE_SCHEMA = "TABLE_SCHEM";
+    private static final String JDBC_TABLE_NAME = "TABLE_NAME";
+    private static final String JDBC_COLUMN_NAME = "COLUMN_NAME";
+    private static final String JDBC_REMARKS = "REMARKS";
+    private static final String JDBC_DATA_TYPE = "DATA_TYPE";
+    private static final String JDBC_TYPE_NAME = "TYPE_NAME";
+    private static final String JDBC_COLUMN_SIZE = "COLUMN_SIZE";
+    private static final String JDBC_DECIMAL_DIGITS = "DECIMAL_DIGITS";
+    private static final String JDBC_NUMBER_PRECISION_RADIX = "NUM_PREC_RADIX";
+    private static final String JDBC_NULLABLE = "NULLABLE";
+    private static final String JDBC_PK_CONSTRAINT_NAME = "PK_NAME";
 
-    private static class CaseInsensitiveSet extends HashSet<String> {
+    private static class CaseInsensitiveSet extends AbstractSet<String> {
 
-        private String keyToLowerCase(String aKey) {
+        private static String keyToLowerCase(String aKey) {
             return aKey != null ? aKey.toLowerCase() : null;
+        }
+
+        private Set<String> delegate;
+
+        CaseInsensitiveSet(Set<String> aDelegate) {
+            super();
+            Objects.requireNonNull(aDelegate, "aDelegate is required argument");
+            delegate = aDelegate;
+        }
+
+        @Override
+        public Iterator<String> iterator() {
+            return delegate.iterator();
+        }
+
+        @Override
+        public int size() {
+            return delegate.size();
         }
 
         @Override
         public boolean add(String s) {
-            return super.add(keyToLowerCase(s));
+            return delegate.add(keyToLowerCase(s));
         }
 
         @Override
         public boolean addAll(Collection<? extends String> c) {
-            return c.stream()
-                    .map(e -> super.add(keyToLowerCase(e)))
-                    .anyMatch(b -> b);
+            return delegate.addAll(c.stream()
+                    .map(CaseInsensitiveSet::keyToLowerCase)
+                    .collect(Collectors.toSet()));
         }
 
         @Override
         public boolean remove(Object o) {
-            return super.remove(keyToLowerCase((String) o));
+            return delegate.remove(keyToLowerCase((String) o));
         }
 
         @Override
         public boolean removeAll(Collection<?> c) {
-            return c.stream()
-                    .map(e -> super.remove(keyToLowerCase((String) e)))
-                    .anyMatch(b -> b);
+            return delegate.removeAll(c.stream()
+                    .map(o -> keyToLowerCase((String) o))
+                    .collect(Collectors.toSet()));
         }
 
         @Override
         public boolean contains(Object o) {
-            return super.contains(keyToLowerCase((String) o));
+            return delegate.contains(keyToLowerCase((String) o));
         }
 
         @Override
         public boolean containsAll(Collection<?> c) {
             return c.stream()
-                    .allMatch(e -> super.contains(keyToLowerCase((String) e)));
-        }
-    }
-
-    private static class CaseInsensitiveMap<V> extends LinkedHashMap<String, V> {
-
-        private String keyToLowerCase(String aKey) {
-            return aKey != null ? aKey.toLowerCase() : null;
-        }
-
-        @Override
-        public V get(Object key) {
-            return super.get(keyToLowerCase((String) key));
-        }
-
-        @Override
-        public V put(String key, V value) {
-            return super.put(keyToLowerCase(key), value);
-        }
-
-        @Override
-        public V remove(Object key) {
-            return super.remove(keyToLowerCase((String) key));
-        }
-
-        @Override
-        public boolean containsKey(Object key) {
-            return super.containsKey(keyToLowerCase((String) key));
+                    .allMatch(e -> delegate.contains(keyToLowerCase((String) e)));
         }
 
     }
 
-    private static class ConcurrentCaseInsensitiveMap<V> extends ConcurrentHashMap<String, V> {
+    private static class CaseInsensitiveMap<V> extends AbstractMap<String, V> {
 
         private static final AtomicLong sequence = new AtomicLong();
 
@@ -150,34 +118,77 @@ public class Metadata implements StatementsGenerator.TablesContainer {
             return aKey != null ? aKey.toLowerCase() : nullKey;
         }
 
+        private Map<String, V> delegate;
+
+        CaseInsensitiveMap(Map<String, V> aDelegate) {
+            delegate = aDelegate;
+        }
+
+        @Override
+        public Set<Entry<String, V>> entrySet() {
+            return delegate.entrySet();
+        }
+
         @Override
         public V get(Object key) {
-            return super.get(keyToLowerCase((String) key));
+            return delegate.get(keyToLowerCase((String) key));
+        }
+
+        @Override
+        public V getOrDefault(Object key, V defaultValue) {
+            return delegate.getOrDefault(keyToLowerCase((String) key), defaultValue);
         }
 
         @Override
         public V put(String key, V value) {
-            return super.put(keyToLowerCase(key), value);
+            return delegate.put(keyToLowerCase(key), value);
+        }
+
+        @Override
+        public V putIfAbsent(String key, V value) {
+            return delegate.putIfAbsent(keyToLowerCase(key), value);
         }
 
         @Override
         public V remove(Object key) {
-            return super.remove(keyToLowerCase((String) key));
+            return delegate.remove(keyToLowerCase((String) key));
+        }
+
+        @Override
+        public void putAll(Map<? extends String, ? extends V> m) {
+            m.forEach((k, v) -> delegate.put(keyToLowerCase(k), v));
         }
 
         @Override
         public boolean containsKey(Object key) {
-            return super.containsKey(keyToLowerCase((String) key));
+            return delegate.containsKey(keyToLowerCase((String) key));
         }
 
+        @Override
+        public V compute(String key, BiFunction<? super String, ? super V, ? extends V> remappingFunction) {
+            return delegate.compute(keyToLowerCase(key), remappingFunction);
+        }
+
+        @Override
+        public V computeIfAbsent(String key, Function<? super String, ? extends V> mappingFunction) {
+            return delegate.computeIfAbsent(keyToLowerCase(key), mappingFunction);
+        }
+
+        @Override
+        public V computeIfPresent(String key, BiFunction<? super String, ? super V, ? extends V> remappingFunction) {
+            return delegate.computeIfPresent(keyToLowerCase(key), remappingFunction);
+        }
+
+        @Override
+        public V merge(String key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+            return delegate.merge(keyToLowerCase(key), value, remappingFunction);
+        }
     }
 
     private final DataSource dataSource;
     private final Set<String> schemas;
     // Schema, Table, Field
-    private final Map<String, Map<String, Map<String, JdbcColumn>>> schemasTablesColumns = new ConcurrentCaseInsensitiveMap<>();
-    // Schema, Table, Index
-    private final Map<String, Map<String, Map<String, TableIndex>>> schemasTablesIndexes = new ConcurrentCaseInsensitiveMap<>();
+    private final Map<String, Map<String, Map<String, JdbcColumn>>> schemasTablesColumns = new CaseInsensitiveMap<>(new ConcurrentHashMap<>());
     private final String defaultSchema;
     private final SqlDriver sqlDriver;
 
@@ -189,7 +200,8 @@ public class Metadata implements StatementsGenerator.TablesContainer {
     }
 
     public static Metadata of(DataSource aDataSource) throws SQLException {
-        Set<String> schemas = new CaseInsensitiveSet();
+        Objects.requireNonNull(aDataSource, "aDataSource is required argument");
+        Set<String> schemas = new CaseInsensitiveSet(new HashSet<>());
         try (Connection conn = aDataSource.getConnection()) {
             try (ResultSet r = conn.getMetaData().getSchemas()) {
                 while (r.next()) {
@@ -221,20 +233,21 @@ public class Metadata implements StatementsGenerator.TablesContainer {
     }
 
     @Override
-    public Optional<Map<String, JdbcColumn>> getTable(String aQualifiedTableName) throws SQLException {
+    public Optional<Map<String, JdbcColumn>> getTableColumns(String aQualifiedTableName) throws SQLException {
         String schema = schemaName(aQualifiedTableName);
         if (schema != null && !schema.isEmpty() && schemas.contains(schema) && !schemasTablesColumns.containsKey(schema)) {
             fillTablesBySchema(schema);
         }
         return Optional
                 .ofNullable(schemasTablesColumns.get(schema))
-                .map(tables -> tables.get(tableName(aQualifiedTableName)));
+                .map(tables -> tables.get(tableName(aQualifiedTableName)))
+                .map(Collections::unmodifiableMap);
     }
 
     public void refreshTable(String aQualifiedTableName) throws SQLException {
         String schema = schemaName(aQualifiedTableName);
         String table = tableName(aQualifiedTableName);
-        Map<String, Map<String, JdbcColumn>> tables = schemasTablesColumns.computeIfAbsent(schema, sn -> new CaseInsensitiveMap<>());
+        Map<String, Map<String, JdbcColumn>> tables = schemasTablesColumns.computeIfAbsent(schema, sn -> new CaseInsensitiveMap<>(new LinkedHashMap<>()));
         tables.put(table, queryTableColumns(schema, table));
     }
 
@@ -245,38 +258,12 @@ public class Metadata implements StatementsGenerator.TablesContainer {
                 .orElse(false);
     }
 
-    public boolean containsTableIndexes(String aQualifiedTableName) {
-        return Optional
-                .ofNullable(schemasTablesIndexes.get(schemaName(aQualifiedTableName)))
-                .map(indexes -> indexes.containsKey(tableName(aQualifiedTableName)))
-                .orElse(false);
-    }
-
     /**
      * Fills tables metadata with fields, comments, keys (pk and fk) by connection
      * default schema.
      */
     private void fillTablesByDefaultSchema() throws SQLException {
         fillTablesBySchema(defaultSchema);
-    }
-
-    private Map<String, String> readTablesNames(String aSchema4Sql) throws SQLException {
-        try (Connection conn = dataSource.getConnection()) {
-            try (ResultSet r = conn.getMetaData().getTables(null, aSchema4Sql, null, new String[]{JDBCPKS_TABLE_TYPE_TABLE, JDBCPKS_TABLE_TYPE_VIEW})) {
-                Map<String, Integer> colIndicies = ColumnsIndicies.of(r.getMetaData());
-                int colTableName = colIndicies.get(JDBCCOLS_TABLE_NAME);
-                int colRemarks = colIndicies.get(JDBCCOLS_REMARKS);
-                assert colTableName > 0;
-                assert colRemarks > 0;
-                Map<String, String> tNames = new CaseInsensitiveMap<>();
-                while (r.next()) {
-                    String tableName = r.getString(colTableName);
-                    String remarks = r.getString(colRemarks);
-                    tNames.put(tableName, remarks);
-                }
-                return tNames;
-            }
-        }
     }
 
     /**
@@ -289,26 +276,8 @@ public class Metadata implements StatementsGenerator.TablesContainer {
         schemasTablesColumns.put(aSchema, querySchemaColumns(aSchema));
     }
 
-    /**
-     * Fills indexes metadata.
-     *
-     * @param aSchema A schema for which we should achieve metadata information.
-     *                If it is null, connection default schema is used
-     * @param aTable  Table indexes to be fetched for.
-     */
-    public void fillIndexes(final String aSchema, final String aTable) {
-        final Map<String, Map<String, TableIndex>> tablesIndexes = schemasTablesIndexes.computeIfAbsent(aSchema, sn -> new CaseInsensitiveMap<>());
-        tablesIndexes.computeIfAbsent(aTable, tableName -> {
-            try {
-                return queryTableIndexes(aSchema, tableName);
-            } catch (SQLException ex) {
-                throw new UncheckedSQLException(ex);
-            }
-        });
-    }
-
     private Map<String, JdbcColumn> queryTableColumns(String aSchema, String aTable) throws SQLException {
-        return queryTablesColumns(aSchema, aTable).getOrDefault(aTable, new CaseInsensitiveMap<>());
+        return queryTablesColumns(aSchema, aTable).getOrDefault(aTable, new CaseInsensitiveMap<>(new LinkedHashMap<>()));
     }
 
     private Map<String, Map<String, JdbcColumn>> querySchemaColumns(String aSchema) throws SQLException {
@@ -339,23 +308,23 @@ public class Metadata implements StatementsGenerator.TablesContainer {
     }
 
     private static Map<String, Map<String, JdbcColumn>> readTablesColumns(ResultSet r, DatabaseMetaData meta, String schema, SqlDriver sqlDriver) throws SQLException {
-        Map<String, Map<String, PrimaryKey>> tablesPks = new CaseInsensitiveMap<>();
-        Map<String, Map<String, ForeignKey>> tablesFks = new CaseInsensitiveMap<>();
-        Map<String, Map<String, JdbcColumn>> tablesColumns = new CaseInsensitiveMap<>();
+        Map<String, Map<String, PrimaryKey>> tablesPks = new CaseInsensitiveMap<>(new LinkedHashMap<>());
+        Map<String, Map<String, ForeignKey>> tablesFks = new CaseInsensitiveMap<>(new LinkedHashMap<>());
+        Map<String, Map<String, JdbcColumn>> tablesColumns = new CaseInsensitiveMap<>(new LinkedHashMap<>());
         if (r != null) {
-            Map<String, Integer> colIndicies = ColumnsIndicies.of(r.getMetaData());
-            int colTableName = colIndicies.get(JDBCCOLS_TABLE_NAME);
-            int colColumnName = colIndicies.get(JDBCCOLS_COLUMN_NAME);
-            int colRemarks = colIndicies.get(JDBCCOLS_REMARKS);
-            int colDataType = colIndicies.get(JDBCCOLS_DATA_TYPE);
-            int colTypeName = colIndicies.get(JDBCCOLS_TYPE_NAME);
-            int colColumnSize = colIndicies.get(JDBCCOLS_COLUMN_SIZE);
-            int colDecimalDigits = colIndicies.get(JDBCCOLS_DECIMAL_DIGITS);
-            int colNumPrecRadix = colIndicies.get(JDBCCOLS_NUM_PREC_RADIX);
-            int colNullable = colIndicies.get(JDBCCOLS_NULLABLE);
+            Map<String, Integer> colIndices = columnsIndices(r.getMetaData());
+            int colTableName = colIndices.get(JDBC_TABLE_NAME);
+            int colColumnName = colIndices.get(JDBC_COLUMN_NAME);
+            int colRemarks = colIndices.get(JDBC_REMARKS);
+            int colDataType = colIndices.get(JDBC_DATA_TYPE);
+            int colTypeName = colIndices.get(JDBC_TYPE_NAME);
+            int colColumnSize = colIndices.get(JDBC_COLUMN_SIZE);
+            int colDecimalDigits = colIndices.get(JDBC_DECIMAL_DIGITS);
+            int colNumPrecRadix = colIndices.get(JDBC_NUMBER_PRECISION_RADIX);
+            int colNullable = colIndices.get(JDBC_NULLABLE);
             while (r.next()) {
                 String fTableName = r.getString(colTableName);
-                Map<String, JdbcColumn> columns = tablesColumns.computeIfAbsent(fTableName, tn -> new CaseInsensitiveMap<>());
+                Map<String, JdbcColumn> columns = tablesColumns.computeIfAbsent(fTableName, tn -> new CaseInsensitiveMap<>(new LinkedHashMap<>()));
                 String fName = r.getString(colColumnName);
                 String fDescription = r.getString(colRemarks);
                 String rdbmsTypeName = r.getString(colTypeName);
@@ -369,14 +338,14 @@ public class Metadata implements StatementsGenerator.TablesContainer {
 
                 Map<String, PrimaryKey> pks = tablesPks.computeIfAbsent(fTableName, tn -> {
                     try {
-                        return queryTablePrimaryKeys(meta, schema, tn);
+                        return queryTablePrimaryKeys(meta, schema, fTableName);
                     } catch (SQLException ex) {
                         throw new UncheckedSQLException(ex);
                     }
                 });
                 Map<String, ForeignKey> fks = tablesFks.computeIfAbsent(fTableName, tn -> {
                     try {
-                        return queryTableForeignKeys(meta, schema, tn);
+                        return queryTableForeignKeys(meta, schema, fTableName);
                     } catch (SQLException ex) {
                         throw new UncheckedSQLException(ex);
                     }
@@ -405,137 +374,82 @@ public class Metadata implements StatementsGenerator.TablesContainer {
 
     private static Map<String, PrimaryKey> queryTablePrimaryKeys(DatabaseMetaData meta, String schema, String table) throws SQLException {
         try (ResultSet r = meta.getPrimaryKeys(null, schema, table)) {
-            return readTablesPrimaryKeys(r).getOrDefault(table, new CaseInsensitiveMap<>());
+            return readTablesPrimaryKeys(r).getOrDefault(table, new CaseInsensitiveMap<>(new LinkedHashMap<>()));
         }
     }
 
     private static Map<String, ForeignKey> queryTableForeignKeys(DatabaseMetaData meta, String schema, String table) throws SQLException {
         try (ResultSet r = meta.getImportedKeys(null, schema, table)) {
-            return readTablesForeignKeys(r).getOrDefault(table, new CaseInsensitiveMap<>());
+            return readTablesForeignKeys(r).getOrDefault(table, new CaseInsensitiveMap<>(new LinkedHashMap<>()));
         }
     }
 
     private static Map<String, Map<String, PrimaryKey>> readTablesPrimaryKeys(ResultSet r) throws SQLException {
-        Map<String, Map<String, PrimaryKey>> tablesKeys = new CaseInsensitiveMap<>();
+        Map<String, Map<String, PrimaryKey>> tablesKeys = new CaseInsensitiveMap<>(new LinkedHashMap<>());
         if (r != null) {
-            Map<String, Integer> colsIndicies = ColumnsIndicies.of(r.getMetaData());
-            int colTableSchem = colsIndicies.get(JDBCPKS_TABLE_SCHEM);
-            int colTableName = colsIndicies.get(JDBCPKS_TABLE_NAME);
-            int colColumnName = colsIndicies.get(JDBCPKS_COLUMN_NAME);
-            int colConstraintName = colsIndicies.get(JDBCPKS_CONSTRAINT_NAME);
+            Map<String, Integer> colsIndices = columnsIndices(r.getMetaData());
+            int colTableSchema = colsIndices.get(JDBC_TABLE_SCHEMA);
+            int colTableName = colsIndices.get(JDBC_TABLE_NAME);
+            int colColumnName = colsIndices.get(JDBC_COLUMN_NAME);
+            int colConstraintName = colsIndices.get(JDBC_PK_CONSTRAINT_NAME);
             while (r.next()) {
-                String lpkSchema = r.getString(colTableSchem);
+                String lpkSchema = r.getString(colTableSchema);
                 String lpkTableName = r.getString(colTableName);
                 String lpkField = r.getString(colColumnName);
                 String lpkName = r.getString(colConstraintName);
-                Map<String, PrimaryKey> tableKeys = tablesKeys.computeIfAbsent(lpkTableName, tn -> new CaseInsensitiveMap<>());
-                tableKeys.put(lpkTableName, new PrimaryKey(lpkSchema, lpkTableName, lpkField, lpkName));
+                Map<String, PrimaryKey> tableKeys = tablesKeys.computeIfAbsent(lpkTableName, tn -> new CaseInsensitiveMap<>(new LinkedHashMap<>()));
+                tableKeys.put(lpkField, new PrimaryKey(lpkSchema, lpkTableName, lpkField, lpkName));
             }
         }
         return tablesKeys;
     }
 
     private static Map<String, Map<String, ForeignKey>> readTablesForeignKeys(ResultSet r) throws SQLException {
-        Map<String, Map<String, ForeignKey>> tablesKeys = new CaseInsensitiveMap<>();
+        Map<String, Map<String, ForeignKey>> tablesKeys = new CaseInsensitiveMap<>(new LinkedHashMap<>());
         if (r != null) {
-            Map<String, Integer> colsIndicies = ColumnsIndicies.of(r.getMetaData());
-            int colFkTableSchem = colsIndicies.get(JDBCFKS_FKTABLE_SCHEM);
-            int colFkTableName = colsIndicies.get(JDBCFKS_FKTABLE_NAME);
-            int colFkColumnName = colsIndicies.get(JDBCFKS_FKCOLUMN_NAME);
-            int colFkName = colsIndicies.get(JDBCFKS_FK_NAME);
-            int colFkUpdateRule = colsIndicies.get(JDBCFKS_FKUPDATE_RULE);
-            int colFkDeleteRule = colsIndicies.get(JDBCFKS_FKDELETE_RULE);
-            int colFkDeferrability = colsIndicies.get(JDBCFKS_FKDEFERRABILITY);
+            Map<String, Integer> colsIndices = columnsIndices(r.getMetaData());
+            int colFkTableSchema = colsIndices.get(JDBC_FK_TABLE_SCHEMA);
+            int colFkTableName = colsIndices.get(JDBC_FK_TABLE_NAME);
+            int colFkColumnName = colsIndices.get(JDBC_FK_COLUMN_NAME);
+            int colFkName = colsIndices.get(JDBC_FK_CONSTRAINT_NAME);
+            int colFkUpdateRule = colsIndices.get(JDBC_FK_UPDATE_RULE);
+            int colFkDeleteRule = colsIndices.get(JDBC_FK_DELETE_RULE);
+            int colFkDeferrability = colsIndices.get(JDBC_FK_DEFERRABILITY);
             //
-            int colFkPkTableSchem = colsIndicies.get(JDBCFKS_FKPKTABLE_SCHEM);
-            int colFkPkTableName = colsIndicies.get(JDBCFKS_FKPKTABLE_NAME);
-            int colFkPkColumnName = colsIndicies.get(JDBCFKS_FKPKCOLUMN_NAME);
-            int colFkPkName = colsIndicies.get(JDBCFKS_FKPK_NAME);
+            int colFkPkTableSchema = colsIndices.get(JDBC_FK_PK_TABLE_SCHEMA);
+            int colFkPkTableName = colsIndices.get(JDBC_FK_PK_TABLE_NAME);
+            int colFkPkColumnName = colsIndices.get(JDBC_FK_PK_COLUMN_NAME);
+            int colFkPkName = colsIndices.get(JDBC_PK_CONSTRAINT_NAME);
             while (r.next()) {
-                String lfkSchema = r.getString(colFkTableSchem);
+                String lfkSchema = r.getString(colFkTableSchema);
                 String lfkTableName = r.getString(colFkTableName);
                 String lfkField = r.getString(colFkColumnName);
                 String lfkName = r.getString(colFkName);
                 short lfkUpdateRule = r.getShort(colFkUpdateRule);
                 short lfkDeleteRule = r.getShort(colFkDeleteRule);
-                short lfkDeferability = r.getShort(colFkDeferrability);
+                short lfkDeferrability = r.getShort(colFkDeferrability);
                 //
-                String lpkSchema = r.getString(colFkPkTableSchem);
+                String lpkSchema = r.getString(colFkPkTableSchema);
                 String lpkTableName = r.getString(colFkPkTableName);
                 String lpkField = r.getString(colFkPkColumnName);
                 String lpkName = r.getString(colFkPkName);
                 //
-                Map<String, ForeignKey> tableKeys = tablesKeys.computeIfAbsent(lfkTableName, tn -> new CaseInsensitiveMap<>());
+                Map<String, ForeignKey> tableKeys = tablesKeys.computeIfAbsent(lfkTableName, tn -> new CaseInsensitiveMap<>(new LinkedHashMap<>()));
                 tableKeys.put(lfkField, new ForeignKey(lfkSchema, lfkTableName, lfkField, lfkName,
-                        ForeignKey.ForeignKeyRule.valueOf(lfkUpdateRule), ForeignKey.ForeignKeyRule.valueOf(lfkDeleteRule), lfkDeferability == 5,
+                        ForeignKey.ForeignKeyRule.valueOf(lfkUpdateRule), ForeignKey.ForeignKeyRule.valueOf(lfkDeleteRule), lfkDeferrability == 5,
                         lpkSchema, lpkTableName, lpkField, lpkName));
             }
         }
         return tablesKeys;
     }
 
-    public Optional<Map<String, TableIndex>> getTableIndexes(String aQualifiedTableName) {
-        Map<String, Map<String, TableIndex>> tablesIndexes = schemasTablesIndexes.get(schemaName(aQualifiedTableName));
-        return Optional.ofNullable(tablesIndexes.get(tableName(aQualifiedTableName)));
-    }
-
-    private Map<String, TableIndex> queryTableIndexes(String aSchema, String aTable) throws SQLException {
-        Map<String, TableIndex> indexSpecs = new CaseInsensitiveMap<>();
-        String schema4Sql = aSchema != null && !aSchema.isEmpty() ? aSchema : defaultSchema;
-        try (Connection conn = dataSource.getConnection()) {
-            try (ResultSet r = conn.getMetaData().getIndexInfo(null, schema4Sql, aTable, false, false)) {
-                Map<String, Integer> idxs = ColumnsIndicies.of(r.getMetaData());
-                int colIndexName = idxs.get(JDBCIDX_INDEX_NAME);
-                int colNonUnique = idxs.get(JDBCIDX_NON_UNIQUE);
-                int colType = idxs.get(JDBCIDX_TYPE);
-                //int colTableName = idxs.get(JDBCIDX_TABLE_NAME);
-                int colColumnName = idxs.get(JDBCIDX_COLUMN_NAME);
-                int colAscOrDesc = idxs.get(JDBCIDX_ASC_OR_DESC);
-                int colOrdinalPosition = idxs.get(JDBCIDX_ORDINAL_POSITION);
-                String idxName = null;
-                Set<TableIndex.Column> columns = new LinkedHashSet<>();
-                boolean clustered = false;
-                boolean unique = false;
-                boolean hashed = false;
-                while (r.next()) {
-                    //String tableName = r.getString(JDBCIDX_TABLE_NAME);
-                    idxName = r.getString(colIndexName);
-                    if (!r.wasNull()) {
-                        unique = r.getBoolean(colNonUnique);
-                        short type = r.getShort(colType);
-                        switch (type) {
-                            case DatabaseMetaData.tableIndexClustered:
-                                clustered = true;
-                                break;
-                            case DatabaseMetaData.tableIndexHashed:
-                                hashed = true;
-                                break;
-                            case DatabaseMetaData.tableIndexStatistic:
-                                break;
-                            case DatabaseMetaData.tableIndexOther:
-                                break;
-                        }
-                        String sColumnName = r.getString(colColumnName);
-                        if (!r.wasNull()) {
-                            String sAsc = r.getString(colAscOrDesc);
-                            if (!r.wasNull()) {
-                                sAsc = null;
-                            }
-                            short sPosition = r.getShort(colOrdinalPosition);
-                            columns.add(new TableIndex.Column(
-                                    sColumnName,
-                                    sAsc == null || sAsc.toLowerCase().equals("a"),
-                                    (int) sPosition
-                            ));
-                        }
-                    }
-                }
-                if (idxName != null) {
-                    indexSpecs.put(idxName, new TableIndex(idxName, clustered, hashed, unique, columns));
-                }
-            }
+    private static Map<String, Integer> columnsIndices(ResultSetMetaData metaData) throws SQLException {
+        final Map<String, Integer> indices = new CaseInsensitiveMap<>(new HashMap<>());
+        for (int i = 1; i <= metaData.getColumnCount(); i++) {
+            String asName = metaData.getColumnLabel(i);
+            String name = asName != null && !asName.isEmpty() ? asName : metaData.getColumnName(i);
+            indices.put(name.toLowerCase(), i);
         }
-        return indexSpecs;
+        return indices;
     }
-
 }

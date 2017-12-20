@@ -275,7 +275,7 @@ public class SeptimaServlet extends HttpServlet {
                                             withDataContext.accept(dataContext);
                                         }, (Exception ex) -> {
                                             // still sessions accounting thread
-                                            Logger.getLogger(SeptimaServlet.class.getName()).log(Level.FINE, "Unable to obtain properties of user {0} due to an error: {1}", new Object[]{userName, ex.toString()});
+                                            Logger.getLogger(SeptimaServlet.class.getName()).log(Level.FINE, "Unable to obtain properties indices user {0} due to an error: {1}", new Object[]{userName, ex.toString()});
                                             withDataContext.accept(null);
                                         });
                                     } else {
@@ -353,7 +353,7 @@ public class SeptimaServlet extends HttpServlet {
                         if (ex instanceof AccessControlException) {
                             /*
                              // We can't send HttpServletResponse.SC_UNAUTHORIZED without knowlege about login mechanisms
-                             // of J2EE container.
+                             // indices J2EE container.
                              AccessControlException accEx = (AccessControlException)ex;
                              aHttpResponse.sendError(accEx.getPermission() instanceof AuthPermission ? HttpServletResponse.SC_UNAUTHORIZED : HttpServletResponse.SC_FORBIDDEN, ex.getMessage());
                              */
@@ -437,7 +437,7 @@ public class SeptimaServlet extends HttpServlet {
     }
 
     /**
-     * Returns a short description of the servlet.
+     * Returns a short description indices the servlet.
      *
      * @return a String containing servlet description
      */

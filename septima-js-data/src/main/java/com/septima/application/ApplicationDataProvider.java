@@ -20,12 +20,12 @@ import javax.sql.DataSource;
 
 public class ApplicationDataProvider extends JdbcDataProvider {
 
-    private static final String BAD_PULL_NEXT_PAGE_CHAIN_MSG = "The call of nextPage() method is allowed only for paged data providers as the subsequent calls in the pull() -> nextPage() -> nextPage() -> ... calls chain";
+    private static final String BAD_PULL_NEXT_PAGE_CHAIN_MSG = "The call indices nextPage() method is allowed only for paged data providers as the subsequent calls in the pull() -> nextPage() -> nextPage() -> ... calls chain";
 
     private final String entityName;
     private final SqlDriver sqlDriver;
 
-    public ApplicationDataProvider(SqlDriver aSqlDriver, String aEntityName, DataSource aDataSource, Consumer<Runnable> aDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
+    public ApplicationDataProvider(SqlDriver aSqlDriver, String aEntityName, DataSource aDataSource, Executor aDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
         super(aDataSource, aDataPuller, aFutureExecutor, aClause, aProcedure, aPageSize, aExpectedFields);
         entityName = aEntityName;
         sqlDriver = aSqlDriver;
@@ -64,7 +64,7 @@ public class ApplicationDataProvider extends JdbcDataProvider {
             throw new NotPagedException(BAD_PULL_NEXT_PAGE_CHAIN_MSG);
         } else {
             CompletableFuture<Collection<Map<String, Object>>> fetching = new CompletableFuture<>();
-            asyncDataPuller.accept(() -> {
+            asyncDataPuller.execute(() -> {
                 try {
                     ResultSetReader reader = new ResultSetReader(
                             expectedFields,

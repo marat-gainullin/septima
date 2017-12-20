@@ -1,46 +1,29 @@
 package com.septima.queries;
 
-import com.septima.TestConstants;
-import com.septima.metadata.Field;
+import com.septima.TestDataSource;
 import org.junit.*;
 
-import static org.junit.Assert.*;
+import javax.naming.NamingException;
 
 /**
  * @author mg
  */
 public class ApplicationEntitiesTest {
 
-    public ApplicationEntitiesTest() {
-    }
-
     private static String rn2n(String withRn) {
         return withRn.replace("\r\n", "\n").replace("\n\r", "\n").replace("\r", "\n");
     }
 
     @BeforeClass
-    public static void setUpClass() throws Exception {
-        String url = System.getProperty(TestConstants.DATA_SOURCE_URL);
-        if (url == null) {
-            throw new IllegalStateException(TestConstants.DATA_SOURCE_URL + TestConstants.PROPERTY_ERROR);
-        }
-        String user = System.getProperty(TestConstants.DATA_SOURCE_USER);
-        if (user == null) {
-            throw new IllegalStateException(TestConstants.DATA_SOURCE_USER + TestConstants.PROPERTY_ERROR);
-        }
-        String passwd = System.getProperty(TestConstants.DATA_SOURCE_PASSWORD);
-        if (passwd == null) {
-            throw new IllegalStateException(TestConstants.DATA_SOURCE_PASSWORD + TestConstants.PROPERTY_ERROR);
-        }
-        String schema = System.getProperty(TestConstants.DATA_SOURCE_SCHEMA);
-        if (schema == null) {
-            throw new IllegalStateException(TestConstants.DATA_SOURCE_SCHEMA + TestConstants.PROPERTY_ERROR);
-        }
-        String sourceURL = System.getProperty(TestConstants.TEST_SOURCE_URL);
-        if (sourceURL == null) {
-            throw new IllegalStateException(TestConstants.TEST_SOURCE_URL + TestConstants.PROPERTY_ERROR);
-        }
+    public static void setupDataSource() throws NamingException {
+        TestDataSource.bind();
     }
+
+    @Test
+    public void threeLayerParameters(){
+    }
+
+
 /*
     @Test
     public void inlineSubQueries() throws Exception {
@@ -58,7 +41,7 @@ public class ApplicationEntitiesTest {
         for (int i = 0; i < testQuery.getFields().getFieldsCount(); i++) {
             Field fieldMtd = testQuery.getFields().get(i + 1);
             assertNotNull(fieldMtd);
-            // Jdbc driver of oracle <= ojdbc6 doesn't support remarks for tables and for columns
+            // Jdbc driver indices oracle <= ojdbc6 doesn't support remarks for tables and for columns
 //            if (i == 0 || i == 5) {
 //                assertNotNull(fieldMtd.getDescription());
 //            } else {
@@ -84,7 +67,33 @@ public class ApplicationEntitiesTest {
         for (int i = 0; i < testQuery.getFields().getFieldsCount(); i++) {
             Field fieldMtd = testQuery.getFields().get(i + 1);
             assertNotNull(fieldMtd);
-            // Jdbc friver of oracle <= ojdbc6 does not support remarks for tables and for columns
+            // Jdbc friver indices oracle <= ojdbc6 does not support remarks for tables and for columns
+//            if (i == 0 || i == 5) {
+//                assertNotNull(fieldMtd.getDescription());
+//            } else {
+//                assertNull(fieldMtd.getDescription());
+//            }
+        }
+        assertEquals(4, testQuery.getParameters().getParametersCount());
+    }
+
+    @Test
+    public void inlineAbsentSubQueries() throws Exception {
+        LocalQueriesProxy queriesProxy = new LocalQueriesProxy(resource.getClient(), indexer);
+        SqlEntity testQuery = queriesProxy.getQuery("bad_schema", null, null, null);
+        assertEquals(rn2n(""
+                        + "SELECT T0.ORDER_NO, 'Some text', TABLE1.ID, TABLE1.F1, TABLE1.F3, T0.AMOUNT FROM TABLE1, TABLE2,\n"
+                        + "(Select goodOrder.ORDER_ID as ORDER_NO, goodOrder.AMOUNT, customers.CUSTOMER_NAME as CUSTOMER \n"
+                        + "From GOODORDER goodOrder\n"
+                        + " Inner Join CUSTOMER customers on (goodOrder.CUSTOMER = customers.CUSTOMER_ID)\n"
+                        + " and (goodOrder.AMOUNT > customers.CUSTOMER_NAME)\n"
+                        + " Where :P4 = goodOrder.GOOD)  T0  WHERE ((TABLE2.FIELDA<TABLE1.F1) AND (:P2=TABLE1.F3)) AND (:P3=T0.AMOUNT)\n"),
+                rn2n(testQuery.getSqlText()));
+        assertEquals(6, testQuery.getFields().getFieldsCount());
+        for (int i = 0; i < testQuery.getFields().getFieldsCount(); i++) {
+            Field fieldMtd = testQuery.getFields().get(i + 1);
+            assertNotNull(fieldMtd);
+            // Jdbc friver indices oracle <= ojdbc6 does not support remarks for tables and for columns
 //            if (i == 0 || i == 5) {
 //                assertNotNull(fieldMtd.getDescription());
 //            } else {

@@ -8,9 +8,6 @@ public class JdbcColumn extends Field {
     private final int size;
     private final int scale;
     private final int precision;
-    /**
-     * {@code true} is the default.
-     */
     private final boolean signed;
     private final String schemaName;
     private final int jdbcType;

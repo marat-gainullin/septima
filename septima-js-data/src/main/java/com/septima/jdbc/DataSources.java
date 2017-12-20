@@ -18,18 +18,6 @@ public class DataSources {
         super();
     }
 
-    public static ExecutorService newJdbcTasksPerformer(final int aMaxParallelQueries) {
-        AtomicLong threadNumber = new AtomicLong();
-        ThreadPoolExecutor jdbcProcessor = new ThreadPoolExecutor(aMaxParallelQueries, aMaxParallelQueries,
-                3L, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(),
-                r -> new Thread(r, "jdbc-" + threadNumber.incrementAndGet()));
-        jdbcProcessor.allowCoreThreadTimeOut(true);
-        return jdbcProcessor;
-//        jdbc.shutdown();
-//        jdbc.awaitTermination(30L, TimeUnit.SECONDS);
-    }
-
     public static String getDataSourceSchema(DataSource aDataSource) throws SQLException {
         try (Connection conn = aDataSource.getConnection()) {
             return schemaByConnection(conn);

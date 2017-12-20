@@ -4,7 +4,6 @@ import com.septima.jdbc.NamedJdbcValue;
 import com.septima.metadata.ForeignKey;
 import com.septima.metadata.JdbcColumn;
 import com.septima.metadata.PrimaryKey;
-import com.septima.metadata.TableIndex;
 import com.septima.sqldrivers.resolvers.OracleTypesResolver;
 import com.septima.sqldrivers.resolvers.TypesResolver;
 import com.vividsolutions.jts.geom.Geometry;
@@ -31,13 +30,17 @@ import org.geotools.data.oracle.sdo.GeometryConverter;
 public class OracleSqlDriver extends SqlDriver {
 
     private static final String ORACLE_DIALECT = "Oracle";
-    private static final Character ESCAPE = '"';
+    private static final char ESCAPE = '"';
 
     private static final OracleTypesResolver resolver = new OracleTypesResolver();
     private static final String GET_SCHEMA_CLAUSE = "SELECT sys_context('USERENV', 'CURRENT_SCHEMA') FROM DUAL";
     private static final String CREATE_SCHEMA_CLAUSE = "CREATE USER %s IDENTIFIED BY %s";
     private static final String RENAME_FIELD_SQL_PREFIX = "alter table %s rename column %s to %s";
     private static final String MODIFY_FIELD_SQL_PREFIX = "alter table %s modify ";
+
+    public OracleSqlDriver(){
+        super();
+    }
 
     @Override
     public String getDialect() {
@@ -60,12 +63,7 @@ public class OracleSqlDriver extends SqlDriver {
         aPkFieldName = escapeNameIfNeeded(aPkFieldName);
         return "CREATE TABLE " + fullName + " ("
                 + aPkFieldName + " NUMBER NOT NULL,"
-                + "CONSTRAINT " + escapeNameIfNeeded(generatePkName(aTableName, PKEY_NAME_SUFFIX)) + " PRIMARY KEY (" + aPkFieldName + "))";
-    }
-
-    @Override
-    public String parseException(Exception ex) {
-        return ex.getLocalizedMessage();
+                + "CONSTRAINT " + escapeNameIfNeeded(aTableName + PRIMARY_KEY_NAME_SUFFIX) + " PRIMARY KEY (" + aPkFieldName + "))";
     }
 
     private String getFieldTypeDefinition(JdbcColumn aField) {
@@ -108,13 +106,6 @@ public class OracleSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String getSql4CreateFkConstraint(String aSchemaName, ForeignKey aFk) {
-        List<ForeignKey> fkList = new ArrayList<>();
-        fkList.add(aFk);
-        return getSql4CreateFkConstraint(aSchemaName, fkList);
-    }
-
-    @Override
     public String getSql4GetSchema() {
         return GET_SCHEMA_CLAUSE;
     }
@@ -123,7 +114,7 @@ public class OracleSqlDriver extends SqlDriver {
      * {@inheritDoc}
      */
     @Override
-    public String[] getSqls4ModifyingField(String aSchemaName, String aTableName, JdbcColumn aOldFieldMd, JdbcColumn aNewField) {
+    public String[] getSqls4FieldModify(String aSchemaName, String aTableName, JdbcColumn aOldFieldMd, JdbcColumn aNewField) {
         List<String> sqls = new ArrayList<>();
         String fullTableName = makeFullName(aSchemaName, aTableName);
         String updateDefinition = String.format(MODIFY_FIELD_SQL_PREFIX, fullTableName) + escapeNameIfNeeded(aOldFieldMd.getName()) + " ";
@@ -157,7 +148,7 @@ public class OracleSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String[] getSqls4RenamingField(String aSchemaName, String aTableName, String aOldFieldName, JdbcColumn aNewFieldMd) {
+    public String[] getSqls4FieldRename(String aSchemaName, String aTableName, String aOldFieldName, JdbcColumn aNewFieldMd) {
         String fullTableName = makeFullName(aSchemaName, aTableName);
         String sqlText = String.format(RENAME_FIELD_SQL_PREFIX, fullTableName, escapeNameIfNeeded(aOldFieldName), escapeNameIfNeeded(aNewFieldMd.getName()));
         return new String[]{
@@ -166,7 +157,7 @@ public class OracleSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String[] getSql4CreateColumnComment(String aOwnerName, String aTableName, String aFieldName, String aDescription) {
+    public String[] getSqls4CreateColumnComment(String aOwnerName, String aTableName, String aFieldName, String aDescription) {
         String ownerName = escapeNameIfNeeded(aOwnerName);
         String tableName = escapeNameIfNeeded(aTableName);
         String fieldName = escapeNameIfNeeded(aFieldName);
@@ -192,36 +183,6 @@ public class OracleSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String getSql4DropIndex(String aSchemaName, String aTableName, String aIndexName) {
-        return "drop index " + makeFullName(aSchemaName, aIndexName);
-    }
-
-    @Override
-    public String getSql4CreateIndex(String aSchemaName, String aTableName, TableIndex aIndex) {
-        assert aIndex.getColumns().size() > 0 : "index definition must consist of at least 1 column";
-        String indexName = makeFullName(aSchemaName, aIndex.getName());
-        String tableName = makeFullName(aSchemaName, aTableName);
-        String modifier = "";
-        /*
-         * if(aIndex.isClustered()) modifier = "clustered"; else
-         */
-        if (aIndex.isUnique()) {
-            modifier = "unique";
-        } else if (aIndex.isHashed()) {
-            modifier = "bitmap";
-        }
-        String fieldsList = aIndex.getColumns().stream()
-                .map(column -> new StringBuilder(escapeNameIfNeeded(column.getColumnName())))
-                .reduce((s1, s2) -> new StringBuilder()
-                        .append(s1)
-                        .append(", ")
-                        .append(s2))
-                .map(StringBuilder::toString)
-                .orElse("");
-        return "create " + modifier + " index " + indexName + " on " + tableName + "( " + fieldsList + " )";
-    }
-
-    @Override
     public String getSql4CreateSchema(String aSchemaName, String aPassword) {
         if (aSchemaName == null || aSchemaName.isEmpty()) {
             throw new IllegalArgumentException("Schema name is null or empty.");
@@ -242,20 +203,20 @@ public class OracleSqlDriver extends SqlDriver {
     public String getSql4CreateFkConstraint(String aSchemaName, List<ForeignKey> listFk) {
         if (listFk != null && listFk.size() > 0) {
             ForeignKey fk = listFk.get(0);
-            String fkTableName = makeFullName(aSchemaName, fk.getTable());
-            String fkName = fk.getCName();
-            String fkColumnName = escapeNameIfNeeded(fk.getField());
-
             PrimaryKey pk = fk.getReferee();
-            String pkSchemaName = pk.getSchema();
+            String fkTableName = makeFullName(aSchemaName, fk.getTable());
             String pkTableName = makeFullName(aSchemaName, pk.getTable());
-            String pkColumnName = escapeNameIfNeeded(pk.getField());
+            String fkName = fk.getCName();
+
+            // String pkSchemaName = pk.getSchema();
+            StringBuilder fkColumnName = new StringBuilder(escapeNameIfNeeded(fk.getField()));
+            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getField()));
 
             for (int i = 1; i < listFk.size(); i++) {
                 fk = listFk.get(i);
                 pk = fk.getReferee();
-                fkColumnName += ", " + escapeNameIfNeeded(fk.getField());
-                pkColumnName += ", " + escapeNameIfNeeded(pk.getField());
+                fkColumnName.append(", ").append(escapeNameIfNeeded(fk.getField()));
+                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getField()));
             }
 
             String fkRule = "";
@@ -263,38 +224,38 @@ public class OracleSqlDriver extends SqlDriver {
                 case CASCADE:
                     fkRule += " ON DELETE CASCADE ";
                     break;
-                case NOACTION:
-                case SETDEFAULT:
+                case NO_ACTION:
+                case SET_DEFAULT:
 //                    fkRule += " ON DELETE NO ACTION ";
                     break;
-//                case SETDEFAULT:
+//                case SET_DEFAULT:
 //                    break;
-                case SETNULL:
+                case SET_NULL:
                     fkRule += " ON DELETE SET NULL ";
                     break;
             }
-            if (fk.getDeferrable()) {
+            if (fk.isDeferrable()) {
                 fkRule += " DEFERRABLE INITIALLY DEFERRED";
             }
             return String.format("ALTER TABLE %s ADD (CONSTRAINT %s"
-                    + " FOREIGN KEY (%s) REFERENCES %s (%s) %s)", fkTableName, fkName.isEmpty() ? "" : escapeNameIfNeeded(fkName), fkColumnName, pkTableName, pkColumnName, fkRule);
+                    + " FOREIGN KEY (%s) REFERENCES %s (%s) %s)", fkTableName, fkName.isEmpty() ? "" : escapeNameIfNeeded(fkName), fkColumnName.toString(), pkTableName, pkColumnName.toString(), fkRule);
         }
         return null;
     }
 
     @Override
-    public String[] getSql4CreatePkConstraint(String aSchemaName, List<PrimaryKey> listPk) {
+    public String[] getSqls4CreatePkConstraint(String aSchemaName, List<PrimaryKey> listPk) {
         if (listPk != null && listPk.size() > 0) {
             PrimaryKey pk = listPk.get(0);
             String tableName = pk.getTable();
-            String pkName = escapeNameIfNeeded(generatePkName(tableName, PKEY_NAME_SUFFIX));
-            String pkColumnName = escapeNameIfNeeded(pk.getField());
+            String pkName = escapeNameIfNeeded(tableName + PRIMARY_KEY_NAME_SUFFIX);
+            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getField()));
             for (int i = 1; i < listPk.size(); i++) {
                 pk = listPk.get(i);
-                pkColumnName += ", " + escapeNameIfNeeded(pk.getField());
+                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getField()));
             }
             return new String[]{
-                    String.format("ALTER TABLE %s ADD CONSTRAINT %s PRIMARY KEY (%s)", makeFullName(aSchemaName, tableName), pkName, pkColumnName)
+                    String.format("ALTER TABLE %s ADD CONSTRAINT %s PRIMARY KEY (%s)", makeFullName(aSchemaName, tableName), pkName, pkColumnName.toString())
             };
         }
         return null;
@@ -306,7 +267,7 @@ public class OracleSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String[] getSqls4AddingField(String aSchemaName, String aTableName, JdbcColumn aField) {
+    public String[] getSqls4FieldAdd(String aSchemaName, String aTableName, JdbcColumn aField) {
         return new String[]{
                 String.format(SqlDriver.ADD_FIELD_SQL_PREFIX, makeFullName(aSchemaName, aTableName)) +
                         getSql4FieldDefinition(aField)
@@ -314,7 +275,7 @@ public class OracleSqlDriver extends SqlDriver {
     }
 
     @Override
-    public Character getEscape() {
+    public char getEscape() {
         return ESCAPE;
     }
 

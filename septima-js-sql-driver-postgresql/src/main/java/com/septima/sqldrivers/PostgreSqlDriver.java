@@ -22,13 +22,11 @@ import org.postgis.PGgeometry;
 public class PostgreSqlDriver extends SqlDriver {
 
     private static final String POSTGRES_DIALECT = "Postgres";
-    private static final Character ESCAPE = '"';
+    private static final char ESCAPE = '"';
 
     private static final PostgreTypesResolver resolver = new PostgreTypesResolver();
-    private static final String SET_SCHEMA_CLAUSE = "set search_path = %s,public";
     private static final String GET_SCHEMA_CLAUSE = "select current_schema()";
     private static final String CREATE_SCHEMA_CLAUSE = "CREATE SCHEMA %s";
-    private static final String DEF_OTHER_TYPE_NAME = "point";
     private static final String RENAME_FIELD_SQL_PREFIX = "alter table %s rename column %s to %s";
     private static final String MODIFY_FIELD_SQL_PREFIX = "alter table %s alter ";
 
@@ -53,7 +51,7 @@ public class PostgreSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String[] getSql4CreateColumnComment(String aOwnerName, String aTableName, String aFieldName, String aDescription) {
+    public String[] getSqls4CreateColumnComment(String aOwnerName, String aTableName, String aFieldName, String aDescription) {
         String ownerName = escapeNameIfNeeded(aOwnerName);
         String tableName = escapeNameIfNeeded(aTableName);
         String fieldName = escapeNameIfNeeded(aFieldName);
@@ -79,48 +77,10 @@ public class PostgreSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String getSql4DropIndex(String aSchemaName, String aTableName, String aIndexName) {
-        return "drop index " + makeFullName(aSchemaName, aIndexName);
-    }
-
-    @Override
-    public String getSql4CreateIndex(String aSchemaName, String aTableName, TableIndex aIndex) {
-        assert aIndex.getColumns().size() > 0 : "index definition must consist of at least 1 column";
-        String indexName = escapeNameIfNeeded(aIndex.getName());
-        String tableName = makeFullName(aSchemaName, aTableName);
-        String modifier = "";
-        if (aIndex.isUnique()) {
-            modifier = "unique";
-        }
-        String methodClause = "";
-        if (aIndex.isHashed()) {
-            methodClause = " using hash ";
-        }
-        String fieldsList = aIndex.getColumns().stream()
-                .map(column -> new StringBuilder(
-                        escapeNameIfNeeded(column.getColumnName())
-                ))
-                .reduce((s1, s2) -> new StringBuilder()
-                        .append(s1)
-                        .append(", ")
-                        .append(s2))
-                .map(StringBuilder::toString)
-                .orElse("");
-        return "create " + modifier + " index " + indexName + " on " + tableName + " " + methodClause + " ( " + fieldsList + " )";
-    }
-
-    @Override
     public String getSql4DropFkConstraint(String aSchemaName, ForeignKey aFk) {
         String constraintName = escapeNameIfNeeded(aFk.getCName());
         String tableName = makeFullName(aSchemaName, aFk.getTable());
         return "alter table " + tableName + " drop constraint " + constraintName + " cascade";
-    }
-
-    @Override
-    public String getSql4CreateFkConstraint(String aSchemaName, ForeignKey aFk) {
-        List<ForeignKey> fkList = new ArrayList<>();
-        fkList.add(aFk);
-        return getSql4CreateFkConstraint(aSchemaName, fkList);
     }
 
     @Override
@@ -129,7 +89,7 @@ public class PostgreSqlDriver extends SqlDriver {
         String pkFieldName = escapeNameIfNeeded(aPkFieldName);
         return "CREATE TABLE " + fullName + " ("
                 + pkFieldName + " NUMERIC NOT NULL,"
-                + "CONSTRAINT " + escapeNameIfNeeded(generatePkName(aTableName, PKEY_NAME_SUFFIX)) + " PRIMARY KEY (" + pkFieldName + "))";
+                + "CONSTRAINT " + escapeNameIfNeeded(aTableName + PRIMARY_KEY_NAME_SUFFIX) + " PRIMARY KEY (" + pkFieldName + "))";
     }
 
     private String getFieldTypeDefinition(JdbcColumn aField) {
@@ -170,7 +130,7 @@ public class PostgreSqlDriver extends SqlDriver {
      * {@inheritDoc}
      */
     @Override
-    public String[] getSqls4ModifyingField(String aSchemaName, String aTableName, JdbcColumn aOldFieldMd, JdbcColumn aNewFieldMd) {
+    public String[] getSqls4FieldModify(String aSchemaName, String aTableName, JdbcColumn aOldFieldMd, JdbcColumn aNewFieldMd) {
         List<String> sqls = new ArrayList<>();
         String fullTableName = makeFullName(aSchemaName, aTableName);
         String fieldName = escapeNameIfNeeded(aOldFieldMd.getName());
@@ -205,18 +165,13 @@ public class PostgreSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String[] getSqls4RenamingField(String aSchemaName, String aTableName, String aOldFieldName, JdbcColumn aNewFieldMd) {
+    public String[] getSqls4FieldRename(String aSchemaName, String aTableName, String aOldFieldName, JdbcColumn aNewFieldMd) {
         return new String[]{
                 String.format(RENAME_FIELD_SQL_PREFIX,
                         makeFullName(aSchemaName, aTableName),
                         escapeNameIfNeeded(aOldFieldName),
                         escapeNameIfNeeded(aNewFieldMd.getName()))
         };
-    }
-
-    @Override
-    public String parseException(Exception ex) {
-        return ex.getMessage();
     }
 
     @Override
@@ -238,20 +193,20 @@ public class PostgreSqlDriver extends SqlDriver {
     public String getSql4CreateFkConstraint(String aSchemaName, List<ForeignKey> listFk) {
         if (listFk != null && listFk.size() > 0) {
             ForeignKey fk = listFk.get(0);
-            String fkTableName = makeFullName(aSchemaName, fk.getTable());
-            String fkName = fk.getCName();
-            String fkColumnName = escapeNameIfNeeded(fk.getField());
-
             PrimaryKey pk = fk.getReferee();
-            String pkSchemaName = pk.getSchema();
+            String fkTableName = makeFullName(aSchemaName, fk.getTable());
             String pkTableName = makeFullName(aSchemaName, pk.getTable());
-            String pkColumnName = escapeNameIfNeeded(pk.getField());
+            String fkName = fk.getCName();
+
+            // String pkSchemaName = pk.getSchema();
+            StringBuilder fkColumnName = new StringBuilder(escapeNameIfNeeded(fk.getField()));
+            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getField()));
 
             for (int i = 1; i < listFk.size(); i++) {
                 fk = listFk.get(i);
                 pk = fk.getReferee();
-                fkColumnName += ", " + escapeNameIfNeeded(fk.getField());
-                pkColumnName += ", " + escapeNameIfNeeded(pk.getField());
+                fkColumnName.append(", ").append(escapeNameIfNeeded(fk.getField()));
+                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getField()));
             }
 
             String fkRule = "";
@@ -259,13 +214,13 @@ public class PostgreSqlDriver extends SqlDriver {
                 case CASCADE:
                     fkRule += " ON UPDATE CASCADE ";
                     break;
-                case NOACTION:
+                case NO_ACTION:
                     fkRule += " ON UPDATE no action";
                     break;
-                case SETDEFAULT:
+                case SET_DEFAULT:
                     fkRule += " ON UPDATE set default";
                     break;
-                case SETNULL:
+                case SET_NULL:
                     fkRule += " ON UPDATE set null";
                     break;
             }
@@ -273,39 +228,39 @@ public class PostgreSqlDriver extends SqlDriver {
                 case CASCADE:
                     fkRule += " ON DELETE CASCADE ";
                     break;
-                case NOACTION:
+                case NO_ACTION:
                     fkRule += " ON DELETE no action ";
                     break;
-                case SETDEFAULT:
+                case SET_DEFAULT:
                     fkRule += " ON DELETE set default ";
                     break;
-                case SETNULL:
+                case SET_NULL:
                     fkRule += " ON DELETE set null ";
                     break;
             }
-            if (fk.getDeferrable()) {
+            if (fk.isDeferrable()) {
                 fkRule += " DEFERRABLE INITIALLY DEFERRED";
             }
             return String.format("ALTER TABLE %s ADD CONSTRAINT %s"
-                    + " FOREIGN KEY (%s) REFERENCES %s (%s) %s", fkTableName, fkName.isEmpty() ? "" : escapeNameIfNeeded(fkName), fkColumnName, pkTableName, pkColumnName, fkRule);
+                    + " FOREIGN KEY (%s) REFERENCES %s (%s) %s", fkTableName, fkName.isEmpty() ? "" : escapeNameIfNeeded(fkName), fkColumnName.toString(), pkTableName, pkColumnName.toString(), fkRule);
         }
         return null;
     }
 
     @Override
-    public String[] getSql4CreatePkConstraint(String aSchemaName, List<PrimaryKey> listPk) {
+    public String[] getSqls4CreatePkConstraint(String aSchemaName, List<PrimaryKey> listPk) {
         if (listPk != null && listPk.size() > 0) {
             PrimaryKey pk = listPk.get(0);
             String tableName = pk.getTable();
             String pkTableName = makeFullName(aSchemaName, tableName);
-            String pkName = escapeNameIfNeeded(generatePkName(tableName, PKEY_NAME_SUFFIX));
-            String pkColumnName = escapeNameIfNeeded(pk.getField());
+            String pkName = escapeNameIfNeeded(tableName + PRIMARY_KEY_NAME_SUFFIX);
+            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getField()));
             for (int i = 1; i < listPk.size(); i++) {
                 pk = listPk.get(i);
-                pkColumnName += ", " + escapeNameIfNeeded(pk.getField());
+                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getField()));
             }
             return new String[]{
-                    String.format("ALTER TABLE %s ADD CONSTRAINT %s PRIMARY KEY (%s)", pkTableName, pkName, pkColumnName)
+                    String.format("ALTER TABLE %s ADD CONSTRAINT %s PRIMARY KEY (%s)", pkTableName, pkName, pkColumnName.toString())
             };
         }
         return null;
@@ -317,7 +272,7 @@ public class PostgreSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String[] getSqls4AddingField(String aSchemaName, String aTableName, JdbcColumn aField) {
+    public String[] getSqls4FieldAdd(String aSchemaName, String aTableName, JdbcColumn aField) {
         String fullTableName = makeFullName(aSchemaName, aTableName);
         return new String[]{
                 String.format(SqlDriver.ADD_FIELD_SQL_PREFIX, fullTableName) + getSql4FieldDefinition(aField)
@@ -325,7 +280,7 @@ public class PostgreSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String[] getSql4DroppingField(String aSchemaName, String aTableName, String aFieldName) {
+    public String[] getSql4FieldDrop(String aSchemaName, String aTableName, String aFieldName) {
         String fullTableName = escapeNameIfNeeded(aTableName);
         if (aSchemaName != null && !aSchemaName.isEmpty()) {
             fullTableName = escapeNameIfNeeded(aSchemaName) + "." + fullTableName;
@@ -336,7 +291,7 @@ public class PostgreSqlDriver extends SqlDriver {
     }
 
     @Override
-    public Character getEscape() {
+    public char getEscape() {
         return ESCAPE;
     }
 

@@ -1,83 +1,154 @@
 package com.septima.queries;
 
-import com.septima.TestConstants;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
+import com.septima.Database;
+import com.septima.TestDataSource;
+import com.septima.dataflow.DataProvider;
 import org.junit.BeforeClass;
+import org.junit.Test;
+
+import javax.naming.NamingException;
+import javax.xml.crypto.Data;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static org.junit.Assert.*;
 
 /**
- *
- * @author pk
+ * @author mg
  */
 public class SqlEntityTest {
 
-    private static final String PARAM2_VALUE = "qwerty";
-    private static final String TWO_PARAMS_QUERY = "select * from ATABLE where FIELD1 > :param1 and FIELD2 = :param2 or FIELD1 < :param1";
-
-    public SqlEntityTest() {
-    }
-
     @BeforeClass
-    public static void init() throws Exception {
-        String url = System.getProperty(TestConstants.DATA_SOURCE_URL);
-        if (url == null) {
-            throw new IllegalStateException(TestConstants.DATA_SOURCE_URL + TestConstants.PROPERTY_ERROR);
-        }
-        String user = System.getProperty(TestConstants.DATA_SOURCE_USER);
-        if (user == null) {
-            throw new IllegalStateException(TestConstants.DATA_SOURCE_USER + TestConstants.PROPERTY_ERROR);
-        }
-        String passwd = System.getProperty(TestConstants.DATA_SOURCE_PASSWORD);
-        if (passwd == null) {
-            throw new IllegalStateException(TestConstants.DATA_SOURCE_PASSWORD + TestConstants.PROPERTY_ERROR);
-        }
-        String schema = System.getProperty(TestConstants.DATA_SOURCE_SCHEMA);
-        if (schema == null) {
-            throw new IllegalStateException(TestConstants.DATA_SOURCE_SCHEMA + TestConstants.PROPERTY_ERROR);
-        }
+    public static void setupDataSource() throws NamingException {
+        TestDataSource.bind();
     }
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-/*
-    @Test
-    public void testCreation() {
-        SqlEntity b.sql = new SqlEntity((DataSources) null);
-        assertNull(b.sql.getSqlText());
-        assertTrue(b.sql.getParametersBinds().isEmpty());
-        b.sql.setSqlText(TWO_PARAMS_QUERY);
-        assertEquals(b.sql.getSqlText(), TWO_PARAMS_QUERY);
-        assertTrue(b.sql.getParametersBinds().isEmpty());
-        b.sql.putParameter("param1", Scripts.NUMBER_TYPE_NAME, 1);
-        b.sql.putParameter("param2", Scripts.STRING_TYPE_NAME, PARAM2_VALUE);
-        assertEquals(2, b.sql.getParameters().getParametersCount());
+    @Test(expected = IllegalStateException.class)
+    public void sqlEntityEmptySql() {
+        SqlEntity entity = new SqlEntity(Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)),
+                "",
+                null,
+                "",
+                false,
+                false,
+                false,
+                false,
+                "",
+                DataProvider.NO_PAGING_PAGE_SIZE,
+                Map.of(), Map.of(),
+                Set.of(), Set.of(), Set.of()
+        );
+        entity.toQuery();
     }
 
     @Test
-    public void testCompiling() throws Exception {
-        SqlEntity b.sql = new SqlEntity(resource.getClient());
-        b.sql.setSqlText(TWO_PARAMS_QUERY);
-        b.sql.putParameter("param1", Scripts.NUMBER_TYPE_NAME, 1);
-        b.sql.putParameter("param2", Scripts.STRING_TYPE_NAME, PARAM2_VALUE);
-        SqlCompiledQuery q = b.sql.compile();
-        assertEquals(q.getSqlClause(), "select * from ATABLE where FIELD1 > ? and FIELD2 = ? or FIELD1 < ?");
-        assertEquals(3, q.getParameters().getParametersCount());
-        assertEquals(Scripts.NUMBER_TYPE_NAME, q.getParameters().get(1).getType());
-        assertEquals(1, q.getParameters().get(1).getValue());
-        assertEquals(Scripts.STRING_TYPE_NAME, q.getParameters().get(2).getType());
-        assertEquals(PARAM2_VALUE, q.getParameters().get(2).getValue());
-        assertEquals(Scripts.NUMBER_TYPE_NAME, q.getParameters().get(3).getType());
-        assertEquals(1, q.getParameters().get(3).getValue());
+    public void sqlEntityCustomSql() {
+        SqlEntity entity = new SqlEntity(Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)),
+                "select f1, f2 from table",
+                "select f1, f2::json from table",
+                "",
+                false,
+                false,
+                false,
+                false,
+                "",
+                DataProvider.NO_PAGING_PAGE_SIZE,
+                Map.of(), Map.of(),
+                Set.of(), Set.of(), Set.of()
+        );
+        SqlQuery query = entity.toQuery();
+        assertEquals("select f1, f2::json from table", query.getSqlClause());
     }
-    */
+
+    @Test
+    public void sqlEntityStructure() {
+        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
+        SqlEntity entity = new SqlEntity(database,
+                "select f1, f2 from table",
+                "select f1, f2::json from table",
+                "testEntity",
+                true,
+                true,
+                true,
+                true,
+                "Awesome sql based entity",
+                64,
+                Map.of(), Map.of(),
+                Set.of(), Set.of(), Set.of()
+        );
+        assertSame(database, entity.getDatabase());
+        assertEquals("select f1, f2 from table", entity.getSqlText());
+        assertEquals("select f1, f2::json from table", entity.getCustomSqlText());
+        assertEquals(true, entity.isReadonly());
+        assertEquals(true, entity.isCommand());
+        assertEquals(true, entity.isProcedure());
+        assertEquals(true, entity.isPublicAccess());
+        assertEquals("testEntity", entity.getEntityName());
+        assertEquals("Awesome sql based entity", entity.getTitle());
+        assertEquals(64, entity.getPageSize());
+        assertEquals(Map.of(), entity.getParameters());
+        assertEquals(Map.of(), entity.getFields());
+        assertEquals(Set.of(), entity.getWritable());
+        assertEquals(Set.of(), entity.getReadRoles());
+        assertEquals(Set.of(), entity.getWriteRoles());
+
+        SqlQuery query = entity.toQuery();
+        assertEquals("select f1, f2::json from table", query.getSqlClause());
+        assertEquals("testEntity", query.getEntityName());
+        assertEquals(64, query.getPageSize());
+        assertEquals(true, query.isProcedure());
+    }
+
+    @Test
+    public void namedParametersExtraction() {
+        SqlEntity entity = new SqlEntity(
+                Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)),
+                "select a.id::json, /*multil/i*ne \n com \r ment * /text :pp1 */'jj :pp2 ww' txt from assets a\n" +
+                        "-- line :comment text\r" +
+                        "-- line :comment text\n" +
+                        "-- line :comment text\r\n" +
+                        "-- line :comment text\n\r" +
+                        "where a.id = :id and a.o < :o and a.g < :o");
+        assertEquals(2, entity.getParameters().size());
+        assertArrayEquals(new String[]{
+                "id",
+                "o"
+        }, entity.getParameters().values().stream()
+                .map(p -> p.getName())
+                .collect(Collectors.toList())
+                .toArray(new String[]{}));
+    }
+
+    @Test
+    public void namedParametersToJdbcParameters() {
+        SqlEntity entity = new SqlEntity(
+                Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)),
+                "select a.id::json ajson, /*multil/i*ne \n" +
+                        " com \r" +
+                        " ment * /'jj '':pp ww' txt from assets a\n" +
+                        "-- line :comment text\r" +
+                        "-- line :comment text\n" +
+                        "-- line :comment text\r\n" +
+                        "where a.id = :id and a.o < :o and a.g < :o");
+        SqlQuery query = entity.toQuery();
+        assertEquals(3, query.getParameters().size());
+        assertEquals("select a.id::json ajson, /*multil/i*ne \n" +
+                " com \r" +
+                " ment * /'jj '':pp ww' txt from assets a\n" +
+                "-- line :comment text\r" +
+                "-- line :comment text\n" +
+                "-- line :comment text\r\n" +
+                "where a.id = ? and a.o < ? and a.g < ?", query.getSqlClause());
+        assertArrayEquals(new String[]{
+                "id",
+                "o",
+                "o"
+        }, query.getParameters().stream()
+                .map(p -> p.getName())
+                .collect(Collectors.toList())
+                .toArray(new String[]{}));
+    }
+
 }

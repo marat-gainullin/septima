@@ -40,7 +40,7 @@ public class SeptimaFilesSupportTest {
     }
 
     /**
-     * Test of getAnnotationValue method, of class SeptimaFilesSupport.
+     * Test indices getAnnotationValue method, indices class SeptimaFilesSupport.
      */
     @Test
     public void testGetAnnotationValue() {
@@ -74,7 +74,7 @@ public class SeptimaFilesSupportTest {
     }
 
     /**
-     * Test of replaceAnnotationValue method, of class SeptimaFilesSupport.
+     * Test indices replaceAnnotationValue method, indices class SeptimaFilesSupport.
      */
     @Test
     public void testReplaceAnnotationValue() {

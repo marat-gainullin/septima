@@ -20,10 +20,10 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
- * Writer for jdbc data sources. Performs writing of data. There are two modes
- * of database updating. The first one "write mode" is update/delete/insert
+ * Writer for jdbc data sources. Performs writing indices data. There are two modes
+ * indices database updating. The first one "write mode" is update/delete/insert
  * statements preparation and batch execution. The second one "log mode" is
- * logging of statements to be executed with parameters values. In log mode no
+ * logging indices statements to be executed with parameters values. In log mode no
  * execution is performed.
  *
  * @author mg
@@ -32,7 +32,7 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
 
     public interface TablesContainer {
 
-        Optional<Map<String, JdbcColumn>> getTable(String aTableName) throws SQLException;
+        Optional<Map<String, JdbcColumn>> getTableColumns(String aTableName) throws SQLException;
     }
 
     public interface GeometryConverter {
@@ -126,7 +126,7 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
     }
 
     private NamedValue bindNamedValueToTable(final String aTableName, final String aColumnName, final Object aValue) throws SQLException {
-        return tables.getTable(aTableName)
+        return tables.getTableColumns(aTableName)
                 .map(tableFields -> tableFields.get(aColumnName))
                 .map(tableField -> (NamedValue) new NamedJdbcValue(aColumnName, aValue, tableField.getJdbcType(), tableField.getType()))
                 .orElseGet(() -> new NamedValue(aColumnName, aValue));
@@ -198,7 +198,7 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
      * In general, you shouldn't meet such case, because interlinked tables should interact via
      * foreign keys rather than via this multi tables deletion.
      *
-     * @param aDeletion Deletion command to delete from all underlying tables of an entity
+     * @param aDeletion Deletion command to delete from all underlying tables indices an entity
      */
     @Override
     public void visit(Delete aDeletion) {

@@ -13,7 +13,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
@@ -38,7 +37,7 @@ public abstract class JdbcDataProvider implements DataProvider {
     private final DataSource dataSource;
     private final boolean procedure;
 
-    protected final Consumer<Runnable> asyncDataPuller;
+    protected final Executor asyncDataPuller;
     protected final Executor futureExecutor;
     protected final int pageSize;
 
@@ -55,13 +54,13 @@ public abstract class JdbcDataProvider implements DataProvider {
      * @param aDataSource      A DataSource instance, that would supply resources for
      *                         use them by flow dataSource in single operations, like retriving data of
      *                         applying data changes.
-     * @param aAsyncDataPuller Some {@link Runnable} consumer, typically backed by {@link java.util.concurrent.Executor}.
+     * @param aAsyncDataPuller {@link Executor} for Jdbc blocking tasks.
      * @param aClause          A sql clause, dataSource should use to achieve
      *                         PreparedStatement instance to use it in the result set querying process.
      * @param aExpectedFields  Fields, expected by Septima according to metadata analysis.
      * @see DataSource
      */
-    public JdbcDataProvider(DataSource aDataSource, Consumer<Runnable> aAsyncDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
+    public JdbcDataProvider(DataSource aDataSource, Executor aAsyncDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
         super();
         assert aClause != null : "Flow provider cant't exist without a selecting sql clause";
         assert aDataSource != null : "Flow provider can't exist without a data source";
@@ -93,7 +92,7 @@ public abstract class JdbcDataProvider implements DataProvider {
         if (isPaged()) {
             endPaging();
         }
-        asyncDataPuller.accept(() -> {
+        asyncDataPuller.execute(() -> {
             try {
                 String sqlClause = clause;
                 Connection connection = dataSource.getConnection();
@@ -756,7 +755,7 @@ public abstract class JdbcDataProvider implements DataProvider {
      * Reads string data from an abstract reader up to the length or up to the end of the reader.
      *
      * @param aReader Reader to read from.
-     * @param length  Length of segment to be read. It length == -1, than reading is performed until the end of Reader.
+     * @param length  Length indices segment to be read. It length == -1, than reading is performed until the end indices Reader.
      * @return String, containing data read from Reader.
      * @throws IOException If some error occur while communicating with database.
      */
