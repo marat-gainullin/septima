@@ -1,5 +1,14 @@
 package net.sf.jsqlparser.test.create;
 
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.SeptimaSqlParser;
+import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
+import net.sf.jsqlparser.statement.create.table.CreateTable;
+import net.sf.jsqlparser.statement.create.table.Index;
+import net.sf.jsqlparser.test.TestException;
+import net.sf.jsqlparser.test.tablesfinder.TablesNamesFinder;
+import org.junit.Test;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -9,19 +18,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.parser.CCJSqlParserManager;
-import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
-import net.sf.jsqlparser.statement.create.table.CreateTable;
-import net.sf.jsqlparser.statement.create.table.Index;
-import net.sf.jsqlparser.test.TestException;
-import net.sf.jsqlparser.test.tablesfinder.TablesNamesFinder;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class CreateTableTest {
 
-    CCJSqlParserManager parserManager = new CCJSqlParserManager();
+    SeptimaSqlParser parserManager = new SeptimaSqlParser();
 
     @Test
     public void testCreateTable() throws JSQLParserException {
@@ -30,10 +31,10 @@ public class CreateTableTest {
                 + "PRIMARY KEY (mycol2, mycol)) type = myisam";
         CreateTable createTable = (CreateTable) parserManager.parse(new StringReader(statement));
         assertEquals(2, createTable.getColumnDefinitions().size());
-        assertEquals("mycol", ((ColumnDefinition) createTable.getColumnDefinitions().get(0)).getColumnName());
-        assertEquals("mycol2", ((ColumnDefinition) createTable.getColumnDefinitions().get(1)).getColumnName());
-        assertEquals("PRIMARY KEY", ((Index) createTable.getIndexes().get(0)).getType());
-        assertEquals("mycol", ((Index) createTable.getIndexes().get(0)).getColumnsNames().get(1));
+        assertEquals("mycol", createTable.getColumnDefinitions().get(0).getColumnName());
+        assertEquals("mycol2", createTable.getColumnDefinitions().get(1).getColumnName());
+        assertEquals("PRIMARY KEY", createTable.getIndexes().get(0).getType());
+        assertEquals("mycol", createTable.getIndexes().get(0).getColumnsNames().get(1));
         assertEquals(statement, "" + createTable);
     }
 

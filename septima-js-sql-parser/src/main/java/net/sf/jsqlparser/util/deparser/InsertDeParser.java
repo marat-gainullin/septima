@@ -53,7 +53,7 @@ public class InsertDeParser implements ItemsListVisitor {
                 .append(insert.getCommentInto() != null ? " " + insert.getCommentInto() + ExpressionDeParser.LINE_SEPARATOR : "").append(" into ")
                 .append(insert.getTable().getComment() != null ? insert.getTable().getComment() + " " + ExpressionDeParser.LINE_SEPARATOR : "").append(insert.getTable().getWholeTableName());
         if (insert.getColumns() != null) {
-            buffer.append(insert.getCommentBeforeColums() != null ? insert.getCommentBeforeColums() + " " : "")
+            buffer.append(insert.getCommentBeforeColumns() != null ? insert.getCommentBeforeColumns() + " " : "")
                     .append(ExpressionDeParser.LINE_SEPARATOR).append("(");
             int columnsCounter = 0;
             for (int i = 0; i < insert.getColumns().size(); i++) {
@@ -69,7 +69,7 @@ public class InsertDeParser implements ItemsListVisitor {
                     }
                 }
             }
-            buffer.append(insert.getCommentAfterColums() != null ? insert.getCommentAfterColums() + " " + ExpressionDeParser.LINE_SEPARATOR : "").append(")");
+            buffer.append(insert.getCommentAfterColumns() != null ? insert.getCommentAfterColumns() + " " + ExpressionDeParser.LINE_SEPARATOR : "").append(")");
         }
         if (insert.isUseValues()) {
             buffer.append(insert.getCommentValues() != null ? " " + insert.getCommentValues() : "")

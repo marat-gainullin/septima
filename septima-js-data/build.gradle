@@ -25,7 +25,7 @@ dependencies {
             'com.vividsolutions:jts:1.13'
 }
 
-def appDirName = "${projectDir}/src/test/resources/columns"
+def appDirName = "${projectDir}/src/test/resources"
 def h2Dir = "${buildDir}/h2"
 def testBasesDirectory = "${buildDir}/test-databases"
 def dataSourceName = 'septima'
@@ -64,13 +64,13 @@ fillTestBase.finalizedBy eraseTestBase
 eraseTestBase.mustRunAfter test
 
 test {
-    forkEvery = 1
+    // forkEvery = 1
     systemProperties["datasource.name"] = dataSourceName
     systemProperties["datasource.url"] = dataSourceUrl
     systemProperties["datasource.user"] = dataSourceUser
     systemProperties["datasource.password"] = dataSourcePassword
     systemProperties["datasource.schema"] = dataSourceSchema
-    systemProperties["testsource.url"] = file(appDirName).toURI().toURL()
+    systemProperties["testsource.path"] = appDirName
 }
 
 task coverage() {

@@ -1,0 +1,22 @@
+{
+  "title": "Custom orders with overriden fields",
+  "source": "septima",
+  "fields": {
+    "id": {
+      "key": true,
+      "type": "Number",
+      "description": "Newly added key"
+    },
+    "order_id": {
+      "key": false,
+      "type": "String",
+      "description": "Disabled key",
+      "tableName": "un-existent-table",
+      "nullable": false,
+      "reference": {
+        "entity": "orderers",
+        "key": "id"
+      }
+    }
+  }
+}

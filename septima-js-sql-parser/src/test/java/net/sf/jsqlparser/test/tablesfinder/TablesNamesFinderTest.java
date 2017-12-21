@@ -1,8 +1,6 @@
 package net.sf.jsqlparser.test.tablesfinder;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.URL;
@@ -12,15 +10,15 @@ import java.util.List;
 import java.util.StringTokenizer;
 import static junit.framework.TestCase.assertEquals;
 
-import net.sf.jsqlparser.parser.CCJSqlParserManager;
+import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.test.TestException;
-import net.sf.jsqlparser.test.simpleparsing.CCJSqlParserManagerTest;
+import net.sf.jsqlparser.test.simpleparsing.SeptimaSqlParserTest;
 import org.junit.Test;
 
 public class TablesNamesFinderTest {
 
-    CCJSqlParserManager pm = new CCJSqlParserManager();
+    SeptimaSqlParser pm = new SeptimaSqlParser();
 
     @Test
     public void testRUBiSTableList() throws Exception {
@@ -110,6 +108,6 @@ public class TablesNamesFinderTest {
     }
 
     private String getLine(BufferedReader in) throws Exception {
-        return CCJSqlParserManagerTest.getLine(in);
+        return SeptimaSqlParserTest.getLine(in);
     }
 }

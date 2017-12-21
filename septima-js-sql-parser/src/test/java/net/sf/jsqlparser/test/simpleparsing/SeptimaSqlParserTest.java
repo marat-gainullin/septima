@@ -1,29 +1,27 @@
 package net.sf.jsqlparser.test.simpleparsing;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.net.URL;
-
 import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.parser.CCJSqlParserManager;
+import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.test.TestException;
 import org.junit.Test;
 
-public class CCJSqlParserManagerTest {
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.net.URL;
+
+public class SeptimaSqlParserTest {
 
     @Test
     public void testParse() throws Exception {
-        CCJSqlParserManager parserManager = new CCJSqlParserManager();
+        SeptimaSqlParser parserManager = new SeptimaSqlParser();
         URL simpleParsing = Thread.currentThread().getContextClassLoader().getResource("simple_parsing.txt");
         try (BufferedReader in = new BufferedReader(new InputStreamReader(simpleParsing.openStream()))) {
             String statement = "";
             while (true) {
                 try {
-                    statement = CCJSqlParserManagerTest.getStatement(in);
+                    statement = SeptimaSqlParserTest.getStatement(in);
                     if (statement == null) {
                         break;
                     }
@@ -40,7 +38,7 @@ public class CCJSqlParserManagerTest {
     public static String getStatement(BufferedReader in) throws Exception {
         StringBuffer buf = new StringBuffer();
         String line = null;
-        while ((line = CCJSqlParserManagerTest.getLine(in)) != null) {
+        while ((line = SeptimaSqlParserTest.getLine(in)) != null) {
 
             if (line.length() == 0) {
                 break;

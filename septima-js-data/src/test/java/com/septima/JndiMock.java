@@ -14,7 +14,7 @@ public class JndiMock implements InitialContextFactory {
 
     private class InitialMemoryContext implements Context {
 
-        private String nameToDots(Name name) {
+        private String nameToSlashes(Name name) {
             Iterator<String> names = name.getAll().asIterator();
             return Stream.generate(() -> names.hasNext() ? names.next() : null)
                     .map(s -> new StringBuilder())
@@ -32,15 +32,21 @@ public class JndiMock implements InitialContextFactory {
         }
 
         public Object lookup(Name name) throws NamingException {
-            return binds.get(nameToDots(name));
+            if (!binds.containsKey(nameToSlashes(name))) {
+                throw new NamingException(nameToSlashes(name) + " is not bound");
+            }
+            return binds.get(nameToSlashes(name));
         }
 
         public Object lookup(String name) throws NamingException {
+            if (!binds.containsKey(name)) {
+                throw new NamingException(name + " is not bound");
+            }
             return binds.get(name);
         }
 
         public void bind(Name name, Object obj) throws NamingException {
-            binds.put(nameToDots(name), obj);
+            binds.put(nameToSlashes(name), obj);
         }
 
         public void bind(String name, Object obj) throws NamingException {
@@ -48,7 +54,7 @@ public class JndiMock implements InitialContextFactory {
         }
 
         public void rebind(Name name, Object obj) throws NamingException {
-            binds.put(nameToDots(name), obj);
+            binds.put(nameToSlashes(name), obj);
         }
 
         public void rebind(String name, Object obj) throws NamingException {

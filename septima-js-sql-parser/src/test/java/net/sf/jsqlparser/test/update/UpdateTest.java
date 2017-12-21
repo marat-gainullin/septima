@@ -8,14 +8,14 @@ import net.sf.jsqlparser.expression.JdbcParameter;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
-import net.sf.jsqlparser.parser.CCJSqlParserManager;
+import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.update.Update;
 import org.junit.Test;
 
 public class UpdateTest {
 
-    CCJSqlParserManager parserManager = new CCJSqlParserManager();
+    SeptimaSqlParser parserManager = new SeptimaSqlParser();
 
     @Test
     public void testUpdate() throws JSQLParserException {

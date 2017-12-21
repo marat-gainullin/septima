@@ -1,4 +1,4 @@
-package net.sf.jsqlparser;
+package net.sf.jsqlparser.syntax;
 
 import java.util.Collections;
 import java.util.HashMap;

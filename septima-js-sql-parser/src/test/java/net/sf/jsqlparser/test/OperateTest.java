@@ -8,7 +8,7 @@ package net.sf.jsqlparser.test;
 import java.io.StringReader;
 import java.util.Map;
 
-import net.sf.jsqlparser.FromItems;
+import net.sf.jsqlparser.syntax.FromItems;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.FromItem;

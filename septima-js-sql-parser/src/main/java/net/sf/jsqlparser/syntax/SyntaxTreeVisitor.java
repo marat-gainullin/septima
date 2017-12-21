@@ -1,4 +1,4 @@
-package net.sf.jsqlparser;
+package net.sf.jsqlparser.syntax;
 
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.*;

@@ -1,14 +1,13 @@
 package com.septima.queries;
 
 import com.septima.Database;
+import com.septima.Parameter;
 import com.septima.TestDataSource;
 import com.septima.dataflow.DataProvider;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.naming.NamingException;
-import javax.xml.crypto.Data;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -116,7 +115,7 @@ public class SqlEntityTest {
                 "id",
                 "o"
         }, entity.getParameters().values().stream()
-                .map(p -> p.getName())
+                .map(Parameter::getName)
                 .collect(Collectors.toList())
                 .toArray(new String[]{}));
     }
@@ -146,7 +145,7 @@ public class SqlEntityTest {
                 "o",
                 "o"
         }, query.getParameters().stream()
-                .map(p -> p.getName())
+                .map(Parameter::getName)
                 .collect(Collectors.toList())
                 .toArray(new String[]{}));
     }

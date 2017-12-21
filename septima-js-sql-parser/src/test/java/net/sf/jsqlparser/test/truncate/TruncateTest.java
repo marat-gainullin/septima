@@ -3,13 +3,13 @@ package net.sf.jsqlparser.test.truncate;
 import java.io.StringReader;
 
 import static junit.framework.TestCase.*;
-import net.sf.jsqlparser.parser.CCJSqlParserManager;
+import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.statement.truncate.Truncate;
 import org.junit.Test;
 
 public class TruncateTest {
 
-    private final CCJSqlParserManager parserManager = new CCJSqlParserManager();
+    private final SeptimaSqlParser parserManager = new SeptimaSqlParser();
 
     @Test
     public void testTruncate() throws Exception {

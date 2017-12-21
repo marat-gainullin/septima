@@ -95,7 +95,7 @@ Class ParseException</H2>
 java.lang.Object
   <IMG SRC="../../../../resources/inherit.gif" ALT="extended by ">java.lang.Throwable
       <IMG SRC="../../../../resources/inherit.gif" ALT="extended by ">java.lang.Exception
-          <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>net.sf.jsqlparser.parser.ParseException</B>
+          <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>ParseException</B>
 </PRE>
 <DL>
 <DT><B>All Implemented Interfaces:</B> <DD>java.io.Serializable</DD>
@@ -117,7 +117,7 @@ This exception is thrown when parse errors are encountered.
 
 <P>
 <DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../serialized-form.html#net.sf.jsqlparser.parser.ParseException">Serialized Form</A></DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../serialized-form.html#ParseException">Serialized Form</A></DL>
 <HR>
 
 <P>
@@ -194,7 +194,7 @@ This exception is thrown when parse errors are encountered.
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Constructor with message.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><B><A HREF="../../../../net/sf/jsqlparser/parser/ParseException.html#ParseException(net.sf.jsqlparser.parser.Token, int[][], java.lang.String[])">ParseException</A></B>(<A HREF="../../../../net/sf/jsqlparser/parser/Token.html" title="class in net.sf.jsqlparser.parser">Token</A>&nbsp;currentTokenVal,
+<TD><CODE><B><A HREF="../../../../net/sf/jsqlparser/parser/ParseException.html#ParseException(Token, int[][], java.lang.String[])">ParseException</A></B>(<A HREF="../../../../net/sf/jsqlparser/parser/Token.html" title="class in net.sf.jsqlparser.parser">Token</A>&nbsp;currentTokenVal,
                int[][]&nbsp;expectedTokenSequencesVal,
                java.lang.String[]&nbsp;tokenImageVal)</CODE>
 
@@ -225,7 +225,7 @@ This exception is thrown when parse errors are encountered.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>private static&nbsp;java.lang.String</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../net/sf/jsqlparser/parser/ParseException.html#initialise(net.sf.jsqlparser.parser.Token, int[][], java.lang.String[])">initialise</A></B>(<A HREF="../../../../net/sf/jsqlparser/parser/Token.html" title="class in net.sf.jsqlparser.parser">Token</A>&nbsp;currentToken,
+<TD><CODE><B><A HREF="../../../../net/sf/jsqlparser/parser/ParseException.html#initialise(Token, int[][], java.lang.String[])">initialise</A></B>(<A HREF="../../../../net/sf/jsqlparser/parser/Token.html" title="class in net.sf.jsqlparser.parser">Token</A>&nbsp;currentToken,
            int[][]&nbsp;expectedTokenSequences,
            java.lang.String[]&nbsp;tokenImage)</CODE>
 
@@ -275,7 +275,7 @@ private static final long <B>serialVersionUID</B></PRE>
  class changes.
 <P>
 <DL>
-<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#net.sf.jsqlparser.parser.ParseException.serialVersionUID">Constant Field Values</A></DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../constant-values.html#ParseException.serialVersionUID">Constant Field Values</A></DL>
 </DL>
 <HR>
 
@@ -342,7 +342,7 @@ protected java.lang.String <B>eol</B></PRE>
 </TR>
 </TABLE>
 
-<A NAME="ParseException(net.sf.jsqlparser.parser.Token, int[][], java.lang.String[])"><!-- --></A><H3>
+<A NAME="ParseException(Token, int[][], java.lang.String[])"><!-- --></A><H3>
 ParseException</H3>
 <PRE>
 public <B>ParseException</B>(<A HREF="../../../../net/sf/jsqlparser/parser/Token.html" title="class in net.sf.jsqlparser.parser">Token</A>&nbsp;currentTokenVal,
@@ -392,7 +392,7 @@ public <B>ParseException</B>(java.lang.String&nbsp;message)</PRE>
 </TR>
 </TABLE>
 
-<A NAME="initialise(net.sf.jsqlparser.parser.Token, int[][], java.lang.String[])"><!-- --></A><H3>
+<A NAME="initialise(Token, int[][], java.lang.String[])"><!-- --></A><H3>
 initialise</H3>
 <PRE>
 private static java.lang.String <B>initialise</B>(<A HREF="../../../../net/sf/jsqlparser/parser/Token.html" title="class in net.sf.jsqlparser.parser">Token</A>&nbsp;currentToken,

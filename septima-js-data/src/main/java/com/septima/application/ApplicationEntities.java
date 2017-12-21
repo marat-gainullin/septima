@@ -3,7 +3,7 @@ package com.septima.application;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.septima.Database;
-import com.septima.EntitiesHost;
+import com.septima.Entities;
 import com.septima.Parameter;
 import com.septima.dataflow.DataProvider;
 import com.septima.jdbc.DataSources;
@@ -11,9 +11,20 @@ import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
 import com.septima.metadata.ForeignKey;
 import com.septima.metadata.JdbcColumn;
-import com.septima.queries.SqlEntity;
 import com.septima.queries.InlineEntities;
+import com.septima.queries.SqlEntity;
 import com.septima.sqldrivers.resolvers.TypesResolver;
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.JSqlParser;
+import net.sf.jsqlparser.SeptimaSqlParser;
+import net.sf.jsqlparser.UncheckedJSQLParserException;
+import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.schema.Table;
+import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.select.*;
+import net.sf.jsqlparser.syntax.FromItems;
+import net.sf.jsqlparser.syntax.SelectItems;
+import net.sf.jsqlparser.util.deparser.StatementDeParser;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -29,21 +40,10 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.SelectItems;
-import net.sf.jsqlparser.FromItems;
-import net.sf.jsqlparser.UncheckedJSQLParserException;
-import net.sf.jsqlparser.parser.*;
-import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.select.*;
-import net.sf.jsqlparser.util.deparser.StatementDeParser;
-
 /**
  * @author mg
  */
-public class ApplicationEntities implements EntitiesHost {
+public class ApplicationEntities implements Entities {
 
     private static final String ENTITY_NAME_MISSING_MSG = "Entity name missing.";
     private static final String LOADING_QUERY_MSG = "Loading entity '%s'.";
@@ -54,11 +54,19 @@ public class ApplicationEntities implements EntitiesHost {
     private final Map<String, SqlEntity> entities = new ConcurrentHashMap<>();
     private final boolean aliasesToTableNames;
 
+    public ApplicationEntities(Path aApplicationPath, String aDefaultDataSource) {
+        this(aApplicationPath, aDefaultDataSource, false);
+    }
+
     public ApplicationEntities(Path aApplicationPath, String aDefaultDataSource, boolean aAliasesToTableNames) {
         super();
         applicationPath = aApplicationPath;
         defaultDataSource = aDefaultDataSource;
         aliasesToTableNames = aAliasesToTableNames;
+    }
+
+    public Path getApplicationPath() {
+        return applicationPath;
     }
 
     public String getDefaultDataSource() {
@@ -70,7 +78,7 @@ public class ApplicationEntities implements EntitiesHost {
         return entities.computeIfAbsent(aEntityName, entityName -> {
             try {
                 Logger.getLogger(ApplicationEntities.class.getName()).finer(String.format(LOADING_QUERY_MSG, aEntityName));
-                String entityJsonFileName = aEntityName.replace(".", File.separator) + ".sql.json";
+                String entityJsonFileName = aEntityName + ".sql.json";
                 File entityJsonFile = applicationPath.resolve(entityJsonFileName).toFile();
                 SqlEntity entity = constructEntity(aEntityName, readEntitySql(aEntityName), entityJsonFile);
                 Logger.getLogger(ApplicationEntities.class.getName()).finer(String.format(LOADED_QUERY_MSG, aEntityName));
@@ -129,7 +137,7 @@ public class ApplicationEntities implements EntitiesHost {
                 .orElse(Map.of());
         TypesResolver typesResolver = database.getSqlDriver().getTypesResolver();
         return tableFields.values().stream()
-                .map((JdbcColumn column) -> new Field(
+                .map(column -> new Field(
                                 column.getName(),
                                 column.getDescription(),
                                 column.getOriginalName(),
@@ -157,7 +165,7 @@ public class ApplicationEntities implements EntitiesHost {
 
     private String readEntitySql(String aEntityName) throws IOException {
         Objects.requireNonNull(aEntityName, ENTITY_NAME_MISSING_MSG);
-        String entitySqlFileName = aEntityName.replace(".", File.separator) + ".sql";
+        String entitySqlFileName = aEntityName + ".sql";
         File mainQueryFile = applicationPath.resolve(entitySqlFileName).toFile();
         if (mainQueryFile.exists()) {
             if (!mainQueryFile.isDirectory()) {
@@ -189,12 +197,16 @@ public class ApplicationEntities implements EntitiesHost {
             String type = typeNode != null && typeNode.isTextual() ? typeNode.asText(parameter.getType()) : parameter.getType();
             JsonNode descriptionNode = parameterNode.get("description");
             String description = descriptionNode != null && descriptionNode.isTextual() ? descriptionNode.asText(parameter.getDescription()) : parameter.getDescription();
-            // JsonNode defaultValueNode = parameterNode.get("value");
-            // String defaultValue = defaultValueNode != null && defaultValueNode.isTextual() ? defaultValueNode.asText() : null;
+            JsonNode valueNode = parameterNode.get("value");
+            String value = valueNode != null && valueNode.isTextual() ? valueNode.asText() : null;
+            JsonNode outNode = parameterNode.get("out");
+            boolean out = outNode != null && outNode.isBoolean() && outNode.asBoolean();
             params.put(parameterName, new Parameter(
                     parameterName,
                     description,
-                    type
+                    type,
+                    value,
+                    out ? Parameter.Mode.InOut : Parameter.Mode.In
             ));
             // Binds
             JsonNode bindsNode = parameterNode.get("binds");
@@ -208,7 +220,7 @@ public class ApplicationEntities implements EntitiesHost {
                                 for (int i = 0; i < subQueryParamsNode.size(); i++) {
                                     JsonNode subQueryParamNode = subQueryParamsNode.get(i);
                                     if (subQueryParamNode.isTextual()) {
-                                        Map<String, String> subToOuterParams = paramsBinds.computeIfAbsent(subQueryName, sqn -> Map.of());
+                                        Map<String, String> subToOuterParams = paramsBinds.computeIfAbsent(subQueryName, sqn -> new HashMap<>());
                                         subToOuterParams.put(subQueryParamNode.asText(), parameterName);
                                     }
                                 }
@@ -327,10 +339,10 @@ public class ApplicationEntities implements EntitiesHost {
             JsonNode pageSizeNode = entityDocument != null ? entityDocument.get("pageSize") : null;
             int pageSize = pageSizeNode != null && pageSizeNode.isInt() ? pageSizeNode.asInt(DataProvider.NO_PAGING_PAGE_SIZE) : DataProvider.NO_PAGING_PAGE_SIZE;
 
-            CCJSqlParserManager parserManager = new CCJSqlParserManager();
-            Statement querySyntax = parserManager.parse(new StringReader(anEntitySql));
+            JSqlParser sqlParser = new SeptimaSqlParser();
+            Statement querySyntax = sqlParser.parse(new StringReader(anEntitySql));
 
-            InlineEntities.to(querySyntax, this, paramsBinds);
+            InlineEntities.to(querySyntax, this, paramsBinds, anEntityJsonFile.getParentFile().toPath());
             String sqlWithSubQueries = StatementDeParser.assemble(querySyntax);
             Map<String, Field> fields = resolveFieldsBySyntax(database, querySyntax);
 

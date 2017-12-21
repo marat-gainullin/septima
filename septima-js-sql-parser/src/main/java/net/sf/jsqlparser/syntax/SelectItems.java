@@ -1,4 +1,4 @@
-package net.sf.jsqlparser;
+package net.sf.jsqlparser.syntax;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,39 +1,29 @@
 package net.sf.jsqlparser.test.select;
 
-import java.io.StringReader;
 import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.expression.BinaryExpression;
-import net.sf.jsqlparser.expression.DoubleValue;
-import net.sf.jsqlparser.expression.Function;
-import net.sf.jsqlparser.expression.LongValue;
-import net.sf.jsqlparser.expression.StringValue;
-import net.sf.jsqlparser.expression.TimeValue;
-import net.sf.jsqlparser.expression.TimestampValue;
+import net.sf.jsqlparser.SeptimaSqlParser;
+import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
-import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.select.AllTableColumns;
-import net.sf.jsqlparser.statement.select.Join;
-import net.sf.jsqlparser.statement.select.OrderByElement;
-import net.sf.jsqlparser.statement.select.PlainSelect;
-import net.sf.jsqlparser.statement.select.Select;
-import net.sf.jsqlparser.statement.select.SelectExpressionItem;
-import net.sf.jsqlparser.statement.select.Union;
+import net.sf.jsqlparser.statement.select.*;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
 import net.sf.jsqlparser.util.deparser.SelectDeParser;
 import net.sf.jsqlparser.util.deparser.StatementDeParser;
-import static org.junit.Assert.*;
 import org.junit.Test;
+
+import java.io.StringReader;
+
+import static org.junit.Assert.*;
 
 public class SelectTest {
 
-    CCJSqlParserManager parserManager = new CCJSqlParserManager();
+    SeptimaSqlParser parserManager = new SeptimaSqlParser();
 
     @Test
     public void testTableAlias() throws JSQLParserException {
@@ -94,12 +84,10 @@ public class SelectTest {
         statement = "select top 5 foo from bar";
         select = (Select) parserManager.parse(new StringReader(statement));
         assertEquals(5, ((PlainSelect) select.getSelectBody()).getTop().getRowCount());
-
-
     }
 
     @Test
-    public void testCirilicChars() throws JSQLParserException {
+    public void testCyrilicChars() throws JSQLParserException {
         String statement =
                 "/*привет*/ SELECT /*sdfsf*/ * FROM /*sdfs*/ моятаблица WHERE моятаблица.col = 9 /*ksjdf*/";
         Select select = (Select) parserManager.parse(new StringReader(statement));
@@ -364,9 +352,6 @@ public class SelectTest {
     public void testFrom() throws JSQLParserException {
         String statement =
                 "SELECT * FROM mytable as mytable0, mytable1 alias_tab1, mytable2 as alias_tab2, (SELECT * FROM mytable3) AS mytable4 WHERE mytable.col = 9";
-        String statementToString =
-                "SELECT * FROM mytable as mytable0, mytable1 as alias_tab1, mytable2 as alias_tab2, (SELECT * FROM mytable3) AS mytable4 WHERE mytable.col = 9";
-
         PlainSelect plainSelect = (PlainSelect) ((Select) parserManager.parse(new StringReader(statement))).getSelectBody();
         assertEquals(3, plainSelect.getJoins().size());
         assertEquals("mytable0", ((Table) plainSelect.getFromItem()).getAlias().getName());
@@ -374,7 +359,20 @@ public class SelectTest {
         assertEquals("alias_tab2", ((Join) plainSelect.getJoins().get(1)).getRightItem().getAlias().getName());
         assertEquals("mytable4", ((Join) plainSelect.getJoins().get(2)).getRightItem().getAlias().getName());
         assertEquals(statement.toUpperCase(), plainSelect.toString().toUpperCase());
+    }
 
+    @Test
+    public void testHashRefs() throws JSQLParserException {
+        String statement =
+                "SELECT * FROM mytable as mytable0, #.my/-t/a.b-l/e.1 alias_tab1, mytable2 as alias_tab2, (SELECT * FROM mytable3) AS mytable4 WHERE mytable.col = 9";
+        PlainSelect plainSelect = (PlainSelect) ((Select) parserManager.parse(new StringReader(statement))).getSelectBody();
+        assertEquals(3, plainSelect.getJoins().size());
+        assertEquals("mytable0", ((Table) plainSelect.getFromItem()).getAlias().getName());
+        assertEquals("#.my/-t/a.b-l/e.1", ((Table)((Join) plainSelect.getJoins().get(0)).getRightItem()).getName());
+        assertEquals("alias_tab1", ((Join) plainSelect.getJoins().get(0)).getRightItem().getAlias().getName());
+        assertEquals("alias_tab2", ((Join) plainSelect.getJoins().get(1)).getRightItem().getAlias().getName());
+        assertEquals("mytable4", ((Join) plainSelect.getJoins().get(2)).getRightItem().getAlias().getName());
+        assertEquals(statement.toUpperCase(), plainSelect.toString().toUpperCase());
     }
 
     @Test

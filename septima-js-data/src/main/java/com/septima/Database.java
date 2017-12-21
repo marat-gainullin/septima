@@ -7,12 +7,14 @@ import com.septima.jdbc.DataSources;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
 import com.septima.metadata.JdbcColumn;
+import com.septima.queries.SqlEntity;
 import com.septima.sqldrivers.SqlDriver;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -31,11 +33,11 @@ public class Database {
     private final DataSource dataSource;
     private final Metadata metadata;
     private final SqlDriver sqlDriver;
-    private final EntitiesHost entitiesHost;
+    private final Entities entities;
     private final Executor jdbcPerformer;
     private final Executor futureExecutor;
 
-    private Database(DataSource aDataSource, Metadata aMetadata, SqlDriver aSqlDriver, EntitiesHost aEntitiesHost, Executor aJdbcPerformer, Executor aFuturesExecutor) {
+    private Database(DataSource aDataSource, Metadata aMetadata, SqlDriver aSqlDriver, Entities aEntities, Executor aJdbcPerformer, Executor aFuturesExecutor) {
         Objects.requireNonNull(aDataSource, "aDataSource is required argument");
         Objects.requireNonNull(aJdbcPerformer, "aJdbcPerformer is required argument");
         Objects.requireNonNull(aFuturesExecutor, "aFuturesExecutor is required argument");
@@ -44,7 +46,7 @@ public class Database {
         sqlDriver = aSqlDriver;
         jdbcPerformer = aJdbcPerformer;
         futureExecutor = aFuturesExecutor;
-        entitiesHost = aEntitiesHost != null ? aEntitiesHost : new TablesEntities();
+        entities = aEntities != null ? aEntities : new TablesEntities();
     }
 
     public DataSource getDataSource() {
@@ -91,7 +93,7 @@ public class Database {
                 try {
                     List<StatementsGenerator.GeneratedStatement> statements = new ArrayList<>();
                     for (Change.Applicable change : aChangeLog) {
-                        StatementsGenerator generator = new StatementsGenerator(entitiesHost, metadata, sqlDriver);
+                        StatementsGenerator generator = new StatementsGenerator(entities, metadata, sqlDriver);
                         change.accept(generator);
                         statements.addAll(generator.getLogEntries());
                     }
@@ -134,23 +136,17 @@ public class Database {
     }
 
     private static DataSource obtainDataSource(String aDataSourceName) throws NamingException {
-        Objects.requireNonNull(aDataSourceName, "Data source name missing.");
+        Objects.requireNonNull(aDataSourceName, "aDataSourceName is required argument");
         Context initContext = new InitialContext();
         try {
-            // J2EE servers
             return (DataSource) initContext.lookup(aDataSourceName);
-        } catch (NamingException ex) {
-            // Apache Tomcat component's JNDI context
-            Context envContext = (Context) initContext.lookup("java:/comp/env"); //NOI18N
-            return (DataSource) envContext.lookup(aDataSourceName);
+        } finally {
+            initContext.close();
         }
     }
 
     public static Database of(final String aDataSourceName) {
-        return of(
-                aDataSourceName,
-                32
-        );
+        return of(aDataSourceName, 32);
     }
 
     public static Database of(final String aDataSourceName, int aMaxParallelQueries) {
@@ -177,7 +173,7 @@ public class Database {
         );
     }
 
-    public static Database of(final String aDataSourceName, Executor aJdbcPerformer, Executor aFutureExecutor, EntitiesHost aEntitiesHost) {
+    public static Database of(final String aDataSourceName, Executor aJdbcPerformer, Executor aFutureExecutor, Entities aEntities) {
         Objects.requireNonNull(aDataSourceName, "aDataSourceName ia required argument");
         Objects.requireNonNull(aJdbcPerformer, "aJdbcPerformer ia required argument");
         return DATABASES.computeIfAbsent(aDataSourceName, dsn -> {
@@ -187,7 +183,7 @@ public class Database {
                         ds,
                         Metadata.of(ds),
                         DataSources.getDataSourceSqlDriver(ds),
-                        aEntitiesHost,
+                        aEntities,
                         aJdbcPerformer,
                         aFutureExecutor
                 );
@@ -211,7 +207,12 @@ public class Database {
 //        jdbc.awaitTermination(30L, TimeUnit.SECONDS);
     }
 
-    private class TablesEntities implements EntitiesHost {
+    private class TablesEntities implements Entities {
+
+        @Override
+        public SqlEntity loadEntity(String aEntityName) {
+            return null;
+        }
 
         @Override
         public Parameter resolveParameter(String aEntityName, String aParamName) {
@@ -232,5 +233,9 @@ public class Database {
             }
         }
 
+        @Override
+        public Path getApplicationPath() {
+            return null;
+        }
     }
 }

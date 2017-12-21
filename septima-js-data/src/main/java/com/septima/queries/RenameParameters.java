@@ -1,6 +1,6 @@
 package com.septima.queries;
 
-import net.sf.jsqlparser.SyntaxTreeVisitor;
+import net.sf.jsqlparser.syntax.SyntaxTreeVisitor;
 import net.sf.jsqlparser.expression.NamedParameter;
 
 import java.util.Map;

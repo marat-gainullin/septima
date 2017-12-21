@@ -3,14 +3,14 @@ package net.sf.jsqlparser.test.delete;
 import java.io.StringReader;
 
 import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.parser.CCJSqlParserManager;
+import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.statement.delete.Delete;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
 public class DeleteTest {
 
-    CCJSqlParserManager parserManager = new CCJSqlParserManager();
+    SeptimaSqlParser parserManager = new SeptimaSqlParser();
 
     @Test
     public void testDelete() throws JSQLParserException {

@@ -10,7 +10,7 @@ import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.Statement;
 import java.io.StringReader;
 import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.parser.CCJSqlParserManager;
+import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
 import net.sf.jsqlparser.util.deparser.StatementDeParser;
@@ -23,11 +23,11 @@ import static org.junit.Assert.*;
  */
 public class GeneralTest {
 
-    protected CCJSqlParserManager parserManager;
+    protected SeptimaSqlParser parserManager;
 
     @Before
     public void setup() {
-        parserManager = new CCJSqlParserManager();
+        parserManager = new SeptimaSqlParser();
     }
 
     @Test

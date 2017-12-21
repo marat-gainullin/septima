@@ -1,0 +1,12 @@
+{
+  "parameters": {
+    "b_id": {
+      "type": "Number"
+    },
+    "binds": {
+      "entities_inline_simple_c": [
+        "c_id"
+      ]
+    }
+  }
+}

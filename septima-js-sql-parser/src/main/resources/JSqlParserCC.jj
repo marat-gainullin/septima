@@ -1,5 +1,4 @@
 /* ================================================================
-/* ================================================================
  * JSQLParser : java based sql parser 
  * ================================================================
  *
@@ -248,21 +247,17 @@ TOKEN: /* SQL Keywords. prefixed with K_ to avoid name clashes */
 
 TOKEN : /* Numeric Constants */
 {
-	< S_DOUBLE: ((<S_INTEGER>)? "." <S_INTEGER> ( ["e","E"] ([ "-","+"])? <S_INTEGER> )? 
-				|
-				(<S_INTEGER>)+ (".")? ["e","E"] ([ "-","+"])? (<S_INTEGER>)+
-				)>
+	    < S_DOUBLE: ((<S_INTEGER>)? "." <S_INTEGER> ( ["e","E"] ([ "-","+"])? <S_INTEGER> )?
+				     |
+				     (<S_INTEGER>)+ (".")? ["e","E"] ([ "-","+"])? (<S_INTEGER>)+
+				    )
+		>
   | 	< S_INTEGER: ( <DIGIT> )+ >
   | 	< #DIGIT: ["0" - "9"] >
 
 }
 
-TOKEN : 
-{
-   <S_CROSS: "#">
-}
-
-SPECIAL_TOKEN: 
+SPECIAL_TOKEN:
 {
    <LINE_COMMENT: "--"(~["\r","\n"])*>
 |  <MULTI_LINE_COMMENT: "/*" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
@@ -270,9 +265,49 @@ SPECIAL_TOKEN:
 
 TOKEN:
 {
-    < S_IDENTIFIER: ( <S_CROSS> | <LETTER> ) + ( <DIGIT> | <LETTER> |<SPECIAL_CHARS>)* >
-|   < #LETTER: [
+    < SEMICOLON: ";" >
 
+   |< PERCENT: "%" >
+   |< LSQPAREN: "[" >
+   |< RSQPAREN: "]" >
+   |< TILDA: "~" >
+   |< EXCLAMATION: "!" >
+   |< AT: "@" >
+   |< DOLLAR: "$" >
+   |< SINGLEQUOTE: "'" >
+   |< DOUBLEQUOTE: "\"" >
+   |< BACKQUOTE: "`" >
+   |< BACKSLASH: "\\" >
+
+   |< EQUALS: "=" >
+   |< COMMA: "," >
+   |< LPAREN: "(" >
+   |< RPAREN: ")" >
+   |< DOT: "." >
+   |< MULTIPLY: "*" >
+   |< HOOK: "?" >
+   |< GT: ">" >
+   |< LT: "<" >
+   |< GE: ">=" >
+   |< LE: "<=" >
+   |< NOTEQUAL1: "<>" >
+   |< NOTEQUAL2: "!=" >
+   |< ATAT: "@@" >
+   |< OR: "||" >
+   |< BITWISEOR: "|" >
+   |< BITWISEAND: "&" >
+   |< ADD: "+" >
+   |< MINUS: "-" >
+   |< DIVIDE: "/" >
+   |< XOR: "^" >
+   |< COLON: ":" >
+   |< DATELITERAL: "{d" >
+   |< TIMELITERAL: "{t" >
+   |< TIMESTAMPLITERAL: "{ts" >
+   |< ESCAPEDLITEARL: "{fn" >
+   |< LITERALBEGIN: "{" >
+   |< LITERALEND: "}" >
+   |< #LETTER: [
          "A"-"Z",
          "_",
          "a"-"z",
@@ -543,56 +578,16 @@ TOKEN:
          "\uffe0"-"\uffe1",
          "\uffe5"-"\uffe6"
 
-] >
-|   < #SPECIAL_CHARS: "$" | "_">
-|   < S_CHAR_LITERAL: "'" (~["'"])* "'" ("'" (~["'"])* "'")*>
-|   < S_QUOTED_IDENTIFIER: "\"" (~["\n","\r","\""])* "\"" | ("`" (~["\n","\r","`"])* "`") >
-}
-
-TOKEN:
-{
-    < SEMICOLON: ";" >
-
-   |< PERCENT: "%" >
-   |< LSQPAREN: "[" >
-   |< RSQPAREN: "]" >
-   |< TILDA: "~" >
-   |< EXCLAMATION: "!" >
-   |< AT: "@" >
-   |< DOLLAR: "$" >
-   |< SINGLEQUOTE: "'" >
-   |< DOUBLEQUOTE: "\"" >
-   |< BACKQUOTE: "`" >
-   |< BACKSLASH: "\\" >
-
-   |< EQUALS: "=" >
-   |< COMMA: "," >
-   |< LPAREN: "(" >
-   |< RPAREN: ")" >
-   |< DOT: "." >
-   |< MULTIPLY: "*" >
-   |< HOOK: "?" >
-   |< GT: ">" >
-   |< LT: "<" >
-   |< GE: ">=" >
-   |< LE: "<=" >
-   |< NOTEQUAL1: "<>" >
-   |< NOTEQUAL2: "!=" >
-   |< ATAT: "@@" >
-   |< OR: "||" >
-   |< BITWISEOR: "|" >
-   |< BITWISEAND: "&" >
-   |< ADD: "+" >
-   |< MINUS: "-" >
-   |< DIVIDE: "/" >
-   |< XOR: "^" >
-   |< COLON: ":" >
-   |< DATELITERAL: "{d" >
-   |< TIMELITERAL: "{t" >
-   |< TIMESTAMPLITERAL: "{ts" >
-   |< ESCAPEDLITEARL: "{fn" >
-   |< LITERALBEGIN: "{" >
-   |< LITERALEND: "}" >
+     ] >
+   |< #SPECIAL_CHARS: "$"
+        | "_" >
+   |< S_CHAR_LITERAL: "'" (~["'"])* "'" ("'" (~["'"])* "'")* >
+   |< S_QUOTED_IDENTIFIER:
+          "\"" (~["\n","\r","\""])* "\""
+        | ("`" (~["\n","\r","`"])* "`") >
+   |< S_IDENTIFIER:
+          <LETTER> (<DIGIT> | <LETTER> | <SPECIAL_CHARS>)*
+        | "#" (<DIGIT> | <LETTER> | <DIVIDE> | <DOT> | <MINUS> | <SPECIAL_CHARS>)+ >
 }
 
 Statement Statement():
@@ -634,18 +629,18 @@ Statement Statement():
 
 
 Update Update():
-{ 
+{
 	Update update = new Update(); 
 	Table table = null;
 	Expression where = null;
 	Column tableColumn = null;
-	List<Expression> expList = new ArrayList<>();
-	List<Column> columns = new ArrayList<>();
+	List<Expression> expList = new ArrayList();
+	List<Column> columns = new ArrayList();
 	Expression value = null;
     Alias alias = null;
 	Token tk = null;
-	List<String> commentsComma = new ArrayList<>();
-	List<String> commentsEqaulas = new ArrayList<>();
+	List<String> commentsComma = new ArrayList();
+	List<String> commentsEqaulas = new ArrayList();
 }
 {
     //<K_UPDATE> table=TableWithAlias()
@@ -704,14 +699,14 @@ Replace Replace():
 	Column tableColumn = null;
 	Expression value = null;
 	
-	List<Column> columns = new ArrayList<>();
-	List<Expression> expList = new ArrayList<>();
+	List<Column> columns = new ArrayList();
+	List<Expression> expList = new ArrayList();
 	ItemsList itemsList = null;
 	Expression exp = null;
 	Token tk = null;
-	List<String> commentEquals = new ArrayList<>();
-	List<String> commentComma = new ArrayList<>();
-	List<String> commentItems= new ArrayList<>();
+	List<String> commentEquals = new ArrayList();
+	List<String> commentComma = new ArrayList();
+	List<String> commentItems= new ArrayList();
 	SubSelect subSelect = null;
 }
 {
@@ -838,11 +833,11 @@ Insert Insert():
 	Insert insert = new Insert(); 
 	Table table = null;
 	Column tableColumn = null;
-	List<Column> columns = new ArrayList<>(); 
-	List<String> columnsComments = new ArrayList<>();
-	List<Expression> primaryExpList = new ArrayList<>();
+	List<Column> columns = new ArrayList(); 
+	List<String> columnsComments = new ArrayList();
+	List<Expression> primaryExpList = new ArrayList();
 	ItemsList itemsList = null;
-	List<String> itemsListComments = new ArrayList<>();
+	List<String> itemsListComments = new ArrayList();
 	Expression exp = null;
 	SubSelect subSel = new SubSelect();
 	Token tk = null;
@@ -881,7 +876,7 @@ Insert Insert():
 		{if (tk.specialToken != null) {
           insert.setCommentAfterColumns(tk.specialToken.image);
          } 
-         insert.setColumsComment(columnsComments); 	 
+         insert.setColumnsComment(columnsComments);
         }
 		]
 	
@@ -1108,15 +1103,15 @@ PlainSelect PlainSelect():
 	List<SelectItem> distinctOn = null;
 	Expression where = null;
 	List<OrderByElement> orderByElements;
-	List<GroupByColumnReference> groupByColumnReferences = null;
+	List<Expression> groupByColumnReferences = null;
 	Expression having = null;
 	Limit limit = null;
 	Top top = null;
     Connect connect = null;
 	Token tk = null;
     Into into = null;	
-	List<String> commentCommaDistinct = new ArrayList<>();
-	List<String> commentCommaSelect = new ArrayList<>();
+	List<String> commentCommaDistinct = new ArrayList();
+	List<String> commentCommaSelect = new ArrayList();
 }
 {
     tk=<K_SELECT> 
@@ -1203,11 +1198,11 @@ Union Union():
 	List<OrderByElement> orderByElements = null;
 	Limit limit = null;
 	PlainSelect select = null;
-	List<PlainSelect> selects = new ArrayList<>();
+	List<PlainSelect> selects = new ArrayList();
 	UnionTypes typeUnion = null;
-	List<UnionTypes> typeUnions = new ArrayList<>();
-	List<String> commentBeginBracket = new ArrayList<>();
-	List<String> commentEndBracket = new ArrayList<>();
+	List<UnionTypes> typeUnions = new ArrayList();
+	List<String> commentBeginBracket = new ArrayList();
+	List<String> commentEndBracket = new ArrayList();
 	Token tk = null;
 /*
 this is not 100% right, since multiple UNION could have different ALL/DISTINCT clauses...
@@ -1418,7 +1413,7 @@ WithItem WithItem():
 	List<SelectItem> selectItems = null;
 	SelectBody selectBody = null;
 	Token tk = null;
-	List<String> commentComma = new ArrayList<>();
+	List<String> commentComma = new ArrayList();
 }
 {
 	 name=RelObjectName() { 
@@ -1460,7 +1455,7 @@ WithItem WithItem():
 
 List<SelectItem> SelectItemsList(List<String> commas):
 { 
-	List<SelectItem> selectItemsList = new ArrayList<>();
+	List<SelectItem> selectItemsList = new ArrayList();
 	SelectItem selectItem = null; 
 	Token tk = null;
 }
@@ -1547,8 +1542,8 @@ Into IntoClause():
 {
   Into into = new Into();
   Token tk = null;
-  List<String> commentComma = new ArrayList<>();
-  List<Table> tables = new ArrayList<>();
+  List<String> commentComma = new ArrayList();
+  List<Table> tables = new ArrayList();
   Table table = null;
 }
 {
@@ -1640,7 +1635,7 @@ SubJoin SubJoin():
 
 List<Join> JoinsList():
 {
-	List<Join> joinsList = new ArrayList<>();
+	List<Join> joinsList = new ArrayList();
 	Join join = null; 
 }
 {
@@ -1807,9 +1802,9 @@ Connect ConnectClause():
 List<Expression> GroupByColumnReferences(PlainSelect select):
 {
 	Expression columnReference = null;
-	List<Expression> columnReferences = new ArrayList<>();
+	List<Expression> columnReferences = new ArrayList();
 	Token tk = null;
-	List<String> commentComma = new ArrayList<>();
+	List<String> commentComma = new ArrayList();
 	String group = null;
 	String by = null;
 }
@@ -1858,10 +1853,10 @@ Expression Having(PlainSelect select):
 
 List<OrderByElement> OrderByElements(SelectBody sel):
 { 
-	List<OrderByElement> orderByList = new ArrayList<>();
+	List<OrderByElement> orderByList = new ArrayList();
 	OrderByElement orderByElement = null;
 	Token tk = null;
-	List<String> commentComma = new ArrayList<>();
+	List<String> commentComma = new ArrayList();
 	String order = null;
 	String by = null;
 }
@@ -2355,7 +2350,7 @@ Expression InExpression() :
 	String commentBeginBrakcet = null;
 	String commentEndBrakcet = null;
 	SubSelect subSel = null;
-	List<String> commentComma = new ArrayList<>();
+	List<String> commentComma = new ArrayList();
 }
 {
 	leftExpression=SimpleExpression()
@@ -2536,8 +2531,8 @@ Expression ExistsExpression():
 ExpressionList SQLExpressionList():
 {
 	ExpressionList retval = new ExpressionList();
-	List<Expression> expressions = new ArrayList<>();
-	List<String> comments = new ArrayList<>();
+	List<Expression> expressions = new ArrayList();
+	List<String> comments = new ArrayList();
 	Expression expr = null;
 	Token tk = null;
 }
@@ -2559,8 +2554,8 @@ ExpressionList SQLExpressionList():
 ExpressionList SimpleExpressionList():
 {
 	ExpressionList retval = new ExpressionList();
-	List<Expression> expressions = new ArrayList<>();
-	List<String> comments = new ArrayList<>();
+	List<Expression> expressions = new ArrayList();
+	List<String> comments = new ArrayList();
 	Expression expr = null;
 	Token tk = null;
 }
@@ -3017,7 +3012,7 @@ Expression CaseWhenExpression():
 	CaseExpression caseExp = new CaseExpression();
 	Expression switchExp = null;
 	WhenClause clause;
-	List<WhenClause> whenClauses = new ArrayList<>();
+	List<WhenClause> whenClauses = new ArrayList();
 	Expression elseExp = null;
 	Token tk = null;
 }
@@ -3206,10 +3201,10 @@ CreateTable CreateTable():
 {
 	CreateTable createTable = new CreateTable();
 	Table table = null;
-	List<ColumnDefinition> columnDefinitions = new ArrayList<>();
+	List<ColumnDefinition> columnDefinitions = new ArrayList();
 	List<String> columnSpecs = null;
 	List<String> commentColumnSpecs = null;
-	List<String> tableOptions = new ArrayList<>();
+	List<String> tableOptions = new ArrayList();
 	Token columnName;
 	Token tk = null;
 	Token tk2 = null;
@@ -3217,16 +3212,16 @@ CreateTable CreateTable():
 	ColDataType colDataType = null;
 	String stringList = null;
 	ColumnDefinition coldef = null;
-	List<Index> indexes = new ArrayList<>();
-	List<String> commentsCommaIndexes = new ArrayList<>();
-	List<String> commentTableOptions = new ArrayList<>();
+	List<Index> indexes = new ArrayList();
+	List<String> commentsCommaIndexes = new ArrayList();
+	List<String> commentTableOptions = new ArrayList();
 	List<String> colNames = null;
 	Index index = null;
 	String parameter = null;
 	String commentColName = null;
 	Token tks = null;
-	List<String> createOptions = new ArrayList<>();
-	List<String> commentCreateOptions = new ArrayList<>();
+	List<String> createOptions = new ArrayList();
+	List<String> commentCreateOptions = new ArrayList();
 }
 {
 	tks=<K_CREATE> 
@@ -3257,8 +3252,8 @@ CreateTable CreateTable():
         }
 		colDataType = ColDataType()
 		{
-			columnSpecs = new ArrayList<>();
-			commentColumnSpecs = new ArrayList<>();
+			columnSpecs = new ArrayList();
+			commentColumnSpecs = new ArrayList();
 		}
 	
 		( parameter=CreateParameter(commentColumnSpecs) { columnSpecs.add(parameter); } )*
@@ -3552,9 +3547,9 @@ String AList():
 
 List<String> ColumnsNamesList(Index idx):
 {
-	List<String> retval = new ArrayList<>();
-	List<String> comments = new ArrayList<>();
-	List<String> commentsComma = new ArrayList<>();
+	List<String> retval = new ArrayList();
+	List<String> comments = new ArrayList();
+	List<String> commentsComma = new ArrayList();
 	Token tk = null;
 }
 {
@@ -3599,8 +3594,8 @@ Drop Drop():
 {
 	Drop drop = new Drop();
 	Token tk = null;
-	List<String> dropArgs = new ArrayList<>();
-	List<String> commentArgs = new ArrayList<>();
+	List<String> dropArgs = new ArrayList();
+	List<String> commentArgs = new ArrayList();
 }
 {
 	tk=<K_DROP>

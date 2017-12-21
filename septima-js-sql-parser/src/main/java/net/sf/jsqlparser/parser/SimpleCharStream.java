@@ -37,7 +37,7 @@ public class SimpleCharStream
   int bufsize;
   int available;
   int tokenBegin;
-/** Position in builder. */
+/** Position in buffer. */
   public int bufpos = -1;
   protected int bufline[];
   protected int bufcolumn[];
@@ -54,7 +54,7 @@ public class SimpleCharStream
   protected int maxNextCharInd = 0;
   protected int inBuf = 0;
   protected int tabSize = 8;
-  protected boolean trackLineColumn = false;
+  protected boolean trackLineColumn = true;
 
   public void setTabSize(int i) { tabSize = i; }
   public int getTabSize() { return tabSize; }
@@ -436,7 +436,7 @@ public class SimpleCharStream
     return ret;
   }
 
-  /** Reset builder when finished. */
+  /** Reset buffer when finished. */
   public void Done()
   {
     buffer = null;
@@ -492,6 +492,6 @@ public class SimpleCharStream
   }
 
   boolean getTrackLineColumn() { return trackLineColumn; }
-  void setTrackLineColumn(boolean trackLineColumn) { this.trackLineColumn = trackLineColumn; }
+  void setTrackLineColumn(boolean tlc) { trackLineColumn = tlc; }
 }
-/* JavaCC - OriginalChecksum=94dbb8ed6bdc27f7bd865f158796dfa8 (do not edit this line) */
+/* JavaCC - OriginalChecksum=f9ffd7306075fffe17471ff200634ab7 (do not edit this line) */

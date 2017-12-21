@@ -2,7 +2,7 @@ package net.sf.jsqlparser.test.select;
 
 import java.io.StringReader;
 
-import net.sf.jsqlparser.parser.CCJSqlParserManager;
+import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 import org.junit.Test;
 
@@ -11,7 +11,7 @@ public class MemoryTest {
     public static void main(String[] args) throws Exception {
         System.gc();
         System.out.println(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
-        CCJSqlParserManager parserManager = new CCJSqlParserManager();
+        SeptimaSqlParser parserManager = new SeptimaSqlParser();
 
         /*		String longQuery = new String(
         "select  *  from  (  SELECT  intermediate.id  as  id  ,  intermediate.date  as          "

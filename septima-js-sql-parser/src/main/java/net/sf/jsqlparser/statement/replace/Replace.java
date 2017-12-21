@@ -21,7 +21,6 @@
  */
 package net.sf.jsqlparser.statement.replace;
 
-import java.util.List;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.relational.ItemsList;
 import net.sf.jsqlparser.schema.Column;
@@ -29,6 +28,8 @@ import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.StatementVisitor;
 import net.sf.jsqlparser.statement.select.PlainSelect;
+
+import java.util.List;
 
 /**
  * The replace statement.
@@ -45,10 +46,10 @@ public class Replace implements Statement {
     private String commentInto;
     private String commentSet;
     private String commentValues;
-    private String commentBeforeColums;
-    private String commentAfterColums;
-    private List<String> commentCommaColums;
-    private List<String> commentEqlasColums;
+    private String commentBeforeColumns;
+    private String commentAfterColumns;
+    private List<String> commentCommaColumns;
+    private List<String> commentEqualsColumns;
     private List<String> commentCommaExpr;
     private List<String> commentCommaItems;
     private String commentBeforeItems;
@@ -127,13 +128,13 @@ public class Replace implements Statement {
             sql += (getCommentSet() != null ? " " + getCommentSet() : "") + " SET ";
             //each element from expressions match up with a column from columns.
             for (int i = 0, s = columns.size(); i < s; i++) {
-                sql += "" + columns.get(i) + (!commentEqlasColums.get(i).toString().isEmpty() ? " " + commentEqlasColums.get(i) + " " : "") + "=" + expressions.get(i);
+                sql += "" + columns.get(i) + (!commentEqualsColumns.get(i).toString().isEmpty() ? " " + commentEqualsColumns.get(i) + " " : "") + "=" + expressions.get(i);
                 sql += (i < s - 1) ? (!commentCommaExpr.get(i).toString().isEmpty() ? " " + commentCommaExpr.get(i) + " " : "") + ", " : "";
             }
         } else if (columns != null) {
             //the REPLACE mytab (col1, col2) [...] case
-            sql += " " + (getCommentBeforeColums() != null ? getCommentBeforeColums() + " " : "")
-                    + PlainSelect.getStringListWithCommaComment(columns, commentCommaColums, true, true, commentAfterColums);
+            sql += " " + (getCommentBeforeColumns() != null ? getCommentBeforeColumns() + " " : "")
+                    + PlainSelect.getStringListWithCommaComment(columns, commentCommaColumns, true, true, commentAfterColumns);
         }
 
         if (itemsList != null) {
@@ -218,59 +219,59 @@ public class Replace implements Statement {
     }
 
     /**
-     * @return the commentBeforeColums
+     * @return the commentBeforeColumns
      */
-    public String getCommentBeforeColums() {
-        return commentBeforeColums;
+    public String getCommentBeforeColumns() {
+        return commentBeforeColumns;
     }
 
     /**
-     * @param commentBeforeColums the commentBeforeColums to set
+     * @param commentBeforeColumns the commentBeforeColumns to set
      */
-    public void setCommentBeforeColums(String commentBeforeColums) {
-        this.commentBeforeColums = commentBeforeColums;
+    public void setCommentBeforeColumns(String commentBeforeColumns) {
+        this.commentBeforeColumns = commentBeforeColumns;
     }
 
     /**
-     * @return the commentAfterColums
+     * @return the commentAfterColumns
      */
-    public String getCommentAfterColums() {
-        return commentAfterColums;
+    public String getCommentAfterColumns() {
+        return commentAfterColumns;
     }
 
     /**
-     * @param commentAfterColums the commentAfterColums to set
+     * @param commentAfterColumns the commentAfterColumns to set
      */
-    public void setCommentAfterColums(String commentAfterColums) {
-        this.commentAfterColums = commentAfterColums;
+    public void setCommentAfterColumns(String commentAfterColumns) {
+        this.commentAfterColumns = commentAfterColumns;
     }
 
     /**
-     * @return the commentCommaColums
+     * @return the commentCommaColumns
      */
-    public List<String> getCommentCommaColums() {
-        return commentCommaColums;
+    public List<String> getCommentCommaColumns() {
+        return commentCommaColumns;
     }
 
     /**
-     * @param commentCommaColums the commentCommaColums to set
+     * @param commentCommaColumns the commentCommaColumns to set
      */
-    public void setCommentCommaColums(List<String> commentCommaColums) {
-        this.commentCommaColums = commentCommaColums;
+    public void setCommentCommaColumns(List<String> commentCommaColumns) {
+        this.commentCommaColumns = commentCommaColumns;
     }
 
     /**
-     * @return the commentEqlasColums
+     * @return the commentEqualsColumns
      */
-    public List<String> getCommentEqlasColums() {
-        return commentEqlasColums;
+    public List<String> getCommentEqualsColumns() {
+        return commentEqualsColumns;
     }
 
     /**
-     * @param commentEqlasColums the commentEqlasColums to set
+     * @param commentEqualsColumns the commentEqualsColumns to set
      */
-    public void setCommentEqlasColums(List<String> commentEqlasColums) {
-        this.commentEqlasColums = commentEqlasColums;
+    public void setCommentEqualsColumns(List<String> commentEqualsColumns) {
+        this.commentEqualsColumns = commentEqualsColumns;
     }
 
     /**

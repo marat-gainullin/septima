@@ -1,5 +1,15 @@
 package net.sf.jsqlparser.test.select;
 
+import junit.framework.TestCase;
+import junit.textui.TestRunner;
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.SeptimaSqlParser;
+import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.test.TestException;
+import net.sf.jsqlparser.test.simpleparsing.SeptimaSqlParserTest;
+import net.sf.jsqlparser.test.tablesfinder.TablesNamesFinder;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -9,45 +19,35 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import junit.framework.TestCase;
-import junit.textui.TestRunner;
-import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.parser.CCJSqlParserManager;
-import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.select.Select;
-import net.sf.jsqlparser.test.TestException;
-import net.sf.jsqlparser.test.simpleparsing.CCJSqlParserManagerTest;
-import net.sf.jsqlparser.test.tablesfinder.TablesNamesFinder;
-
-public class SpeedTest extends TestCase {
+public class PerformanceTest extends TestCase {
 
     private final static int NUM_REPS = 500;
-    private CCJSqlParserManager parserManager = new CCJSqlParserManager();
+    private SeptimaSqlParser parserManager = new SeptimaSqlParser();
 
-    public SpeedTest(String arg0) {
+    public PerformanceTest(String arg0) {
         super(arg0);
     }
 
     public void testSpeed() throws Exception {
-        // all the statements in testfiles/simple_parsing.txt
+        // all the statements in simple_parsing.txt
         URL simpleParsing = Thread.currentThread().getContextClassLoader().getResource("simple_parsing.txt");
         URL rubis = Thread.currentThread().getContextClassLoader().getResource("RUBiS-select-requests.txt");
         try (BufferedReader simpleParsingIn = new BufferedReader(new InputStreamReader(simpleParsing.openStream()));
                 BufferedReader rubisIn = new BufferedReader(new InputStreamReader(rubis.openStream()))) {
-            CCJSqlParserManagerTest d;
+            SeptimaSqlParserTest d;
             ArrayList statementsList = new ArrayList();
 
             while (true) {
-                String statement = CCJSqlParserManagerTest.getStatement(simpleParsingIn);
+                String statement = SeptimaSqlParserTest.getStatement(simpleParsingIn);
                 if (statement == null) {
                     break;
                 }
                 statementsList.add(statement);
             }
 
-            // all the statements in testfiles/RUBiS-select-requests.txt
+            // all the statements in RUBiS-select-requests.txt
             while (true) {
-                String line = CCJSqlParserManagerTest.getLine(rubisIn);
+                String line = SeptimaSqlParserTest.getLine(rubisIn);
                 if (line == null) {
                     break;
                 }
@@ -58,26 +58,26 @@ public class SpeedTest extends TestCase {
                 if (!line.equals("#begin")) {
                     break;
                 }
-                line = CCJSqlParserManagerTest.getLine(rubisIn);
+                line = SeptimaSqlParserTest.getLine(rubisIn);
                 StringBuilder buf = new StringBuilder(line);
                 while (true) {
-                    line = CCJSqlParserManagerTest.getLine(rubisIn);
+                    line = SeptimaSqlParserTest.getLine(rubisIn);
                     if (line.equals("#end")) {
                         break;
                     }
                     buf.append("\n");
                     buf.append(line);
                 }
-                if (!CCJSqlParserManagerTest.getLine(rubisIn).equals("true")) {
+                if (!SeptimaSqlParserTest.getLine(rubisIn).equals("true")) {
                     continue;
                 }
 
                 statementsList.add(buf.toString());
 
-                String cols = CCJSqlParserManagerTest.getLine(rubisIn);
-                String tables = CCJSqlParserManagerTest.getLine(rubisIn);
-                String whereCols = CCJSqlParserManagerTest.getLine(rubisIn);
-                String type = CCJSqlParserManagerTest.getLine(rubisIn);
+                String cols = SeptimaSqlParserTest.getLine(rubisIn);
+                String tables = SeptimaSqlParserTest.getLine(rubisIn);
+                String whereCols = SeptimaSqlParserTest.getLine(rubisIn);
+                String type = SeptimaSqlParserTest.getLine(rubisIn);
 
             }
 
@@ -138,6 +138,6 @@ public class SpeedTest extends TestCase {
     }
 
     public static void main(String[] args) {
-        TestRunner.run(SpeedTest.class);
+        TestRunner.run(PerformanceTest.class);
     }
 }

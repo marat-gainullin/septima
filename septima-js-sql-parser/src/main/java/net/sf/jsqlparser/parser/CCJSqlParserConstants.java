@@ -172,101 +172,99 @@ public interface CCJSqlParserConstants {
   /** RegularExpression Id. */
   int DIGIT = 74;
   /** RegularExpression Id. */
-  int S_CROSS = 75;
+  int LINE_COMMENT = 75;
   /** RegularExpression Id. */
-  int LINE_COMMENT = 76;
+  int MULTI_LINE_COMMENT = 76;
   /** RegularExpression Id. */
-  int MULTI_LINE_COMMENT = 77;
+  int SEMICOLON = 77;
   /** RegularExpression Id. */
-  int S_IDENTIFIER = 78;
+  int PERCENT = 78;
   /** RegularExpression Id. */
-  int LETTER = 79;
+  int LSQPAREN = 79;
   /** RegularExpression Id. */
-  int SPECIAL_CHARS = 80;
+  int RSQPAREN = 80;
   /** RegularExpression Id. */
-  int S_CHAR_LITERAL = 81;
+  int TILDA = 81;
   /** RegularExpression Id. */
-  int S_QUOTED_IDENTIFIER = 82;
+  int EXCLAMATION = 82;
   /** RegularExpression Id. */
-  int SEMICOLON = 83;
+  int AT = 83;
   /** RegularExpression Id. */
-  int PERCENT = 84;
+  int DOLLAR = 84;
   /** RegularExpression Id. */
-  int LSQPAREN = 85;
+  int SINGLEQUOTE = 85;
   /** RegularExpression Id. */
-  int RSQPAREN = 86;
+  int DOUBLEQUOTE = 86;
   /** RegularExpression Id. */
-  int TILDA = 87;
+  int BACKQUOTE = 87;
   /** RegularExpression Id. */
-  int EXCLAMATION = 88;
+  int BACKSLASH = 88;
   /** RegularExpression Id. */
-  int AT = 89;
+  int EQUALS = 89;
   /** RegularExpression Id. */
-  int DOLLAR = 90;
+  int COMMA = 90;
   /** RegularExpression Id. */
-  int SINGLEQUOTE = 91;
+  int LPAREN = 91;
   /** RegularExpression Id. */
-  int DOUBLEQUOTE = 92;
+  int RPAREN = 92;
   /** RegularExpression Id. */
-  int BACKQUOTE = 93;
+  int DOT = 93;
   /** RegularExpression Id. */
-  int BACKSLASH = 94;
+  int MULTIPLY = 94;
   /** RegularExpression Id. */
-  int EQUALS = 95;
+  int HOOK = 95;
   /** RegularExpression Id. */
-  int COMMA = 96;
+  int GT = 96;
   /** RegularExpression Id. */
-  int LPAREN = 97;
+  int LT = 97;
   /** RegularExpression Id. */
-  int RPAREN = 98;
+  int GE = 98;
   /** RegularExpression Id. */
-  int DOT = 99;
+  int LE = 99;
   /** RegularExpression Id. */
-  int MULTIPLY = 100;
+  int NOTEQUAL1 = 100;
   /** RegularExpression Id. */
-  int HOOK = 101;
+  int NOTEQUAL2 = 101;
   /** RegularExpression Id. */
-  int GT = 102;
+  int ATAT = 102;
   /** RegularExpression Id. */
-  int LT = 103;
+  int OR = 103;
   /** RegularExpression Id. */
-  int GE = 104;
+  int BITWISEOR = 104;
   /** RegularExpression Id. */
-  int LE = 105;
+  int BITWISEAND = 105;
   /** RegularExpression Id. */
-  int NOTEQUAL1 = 106;
+  int ADD = 106;
   /** RegularExpression Id. */
-  int NOTEQUAL2 = 107;
+  int MINUS = 107;
   /** RegularExpression Id. */
-  int ATAT = 108;
+  int DIVIDE = 108;
   /** RegularExpression Id. */
-  int OR = 109;
+  int XOR = 109;
   /** RegularExpression Id. */
-  int BITWISEOR = 110;
+  int COLON = 110;
   /** RegularExpression Id. */
-  int BITWISEAND = 111;
+  int DATELITERAL = 111;
   /** RegularExpression Id. */
-  int ADD = 112;
+  int TIMELITERAL = 112;
   /** RegularExpression Id. */
-  int MINUS = 113;
+  int TIMESTAMPLITERAL = 113;
   /** RegularExpression Id. */
-  int DIVIDE = 114;
+  int ESCAPEDLITEARL = 114;
   /** RegularExpression Id. */
-  int XOR = 115;
+  int LITERALBEGIN = 115;
   /** RegularExpression Id. */
-  int COLON = 116;
+  int LITERALEND = 116;
   /** RegularExpression Id. */
-  int DATELITERAL = 117;
+  int LETTER = 117;
   /** RegularExpression Id. */
-  int TIMELITERAL = 118;
+  int SPECIAL_CHARS = 118;
   /** RegularExpression Id. */
-  int TIMESTAMPLITERAL = 119;
+  int S_CHAR_LITERAL = 119;
   /** RegularExpression Id. */
-  int ESCAPEDLITEARL = 120;
+  int S_QUOTED_IDENTIFIER = 120;
   /** RegularExpression Id. */
-  int LITERALBEGIN = 121;
-  /** RegularExpression Id. */
-  int LITERALEND = 122;
+  int S_IDENTIFIER = 121;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -348,14 +346,8 @@ public interface CCJSqlParserConstants {
     "<S_DOUBLE>",
     "<S_INTEGER>",
     "<DIGIT>",
-    "\"#\"",
     "<LINE_COMMENT>",
     "<MULTI_LINE_COMMENT>",
-    "<S_IDENTIFIER>",
-    "<LETTER>",
-    "<SPECIAL_CHARS>",
-    "<S_CHAR_LITERAL>",
-    "<S_QUOTED_IDENTIFIER>",
     "\";\"",
     "\"%\"",
     "\"[\"",
@@ -396,6 +388,11 @@ public interface CCJSqlParserConstants {
     "\"{fn\"",
     "\"{\"",
     "\"}\"",
+    "<LETTER>",
+    "<SPECIAL_CHARS>",
+    "<S_CHAR_LITERAL>",
+    "<S_QUOTED_IDENTIFIER>",
+    "<S_IDENTIFIER>",
   };
 
 }

@@ -1,3 +1,3 @@
 Select
     *
-From #inline.cyclic.a1
+From #./a1

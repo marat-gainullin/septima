@@ -110,13 +110,13 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
     private static final String UPDATE_CLAUSE = "update %s set %s where %s";
 
     private final List<GeneratedStatement> logEntries = new ArrayList<>();
-    private final EntitiesHost entitiesHost;
+    private final Entities entities;
     private final TablesContainer tables;
     private final GeometryConverter geometryConverter;
 
-    public StatementsGenerator(EntitiesHost aEntitiesHost, TablesContainer aTables, GeometryConverter aGeometryConverter) {
+    public StatementsGenerator(Entities aEntities, TablesContainer aTables, GeometryConverter aGeometryConverter) {
         super();
-        entitiesHost = aEntitiesHost;
+        entities = aEntities;
         tables = aTables;
         geometryConverter = aGeometryConverter;
     }
@@ -135,7 +135,7 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
     private Function<NamedValue, Map.Entry<String, List<NamedValue>>> asTableDatumEntry(String aEntity) {
         return datum -> {
             try {
-                Field entityField = entitiesHost.resolveField(aEntity, datum.getName());
+                Field entityField = entities.resolveField(aEntity, datum.getName());
                 String keyColumnName = entityField.getOriginalName() != null ? entityField.getOriginalName() : entityField.getName();
                 NamedValue bound = ApplicationDataTypes.GEOMETRY_TYPE_NAME.equals(entityField.getType()) ?
                         new NamedGeometryValue(keyColumnName, datum.getValue()) :
@@ -225,7 +225,7 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
                 aChange.getCommand(),
                 Collections.unmodifiableList(aChange.getParameters().stream()
                         .map(cv -> {
-                            Parameter p = entitiesHost.resolveParameter(aChange.getEntity(), cv.getName());
+                            Parameter p = entities.resolveParameter(aChange.getEntity(), cv.getName());
                             if (cv.getValue() != null && ApplicationDataTypes.GEOMETRY_TYPE_NAME.equals(p.getType())) {
                                 return new NamedGeometryValue(cv.getName(), cv.getValue());
                             } else {

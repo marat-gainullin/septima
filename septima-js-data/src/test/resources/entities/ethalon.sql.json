@@ -1,7 +1,7 @@
 {
   "title": "Custom orders",
   "sql": "select o.*, co.body::json from orders o inner join customOrders co on(o.id = co.order_id)",
-  "source": "h2",
+  "source": "septima",
   "command": true,
   "procedure": true,
   "readonly": true,
@@ -10,7 +10,7 @@
   "parameters": {
     "quantity": {
       "type": "Number",
-      "description": "Количество",
+      "description": "Quantity desc",
       "value": "Simon",
       "binds": {
         "details": [
@@ -27,29 +27,6 @@
         ]
       },
       "out": true
-    }
-  },
-  "fields": {
-    "id": {
-      "key": true,
-      "type": "Number",
-      "description": "Количество"
-    },
-    "name": {
-      "nullable": false
-    },
-    "sum": {
-      "description": "Aggregated column",
-      "type": "Number"
-    },
-    "orderer_id": {
-      "originalName": "orderer_id",
-      "tableName": "orderers",
-      "description": "Orderers entity reference",
-      "type": "Number",
-      "reference": {
-        "entity": "orderers"
-      }
     }
   },
   "writable": [

@@ -93,7 +93,7 @@ net.sf.jsqlparser.parser</FONT>
 Class CCJSqlParserTokenManager</H2>
 <PRE>
 java.lang.Object
-  <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>net.sf.jsqlparser.parser.CCJSqlParserTokenManager</B>
+  <IMG SRC="../../../../resources/inherit.gif" ALT="extended by "><B>CCJSqlParserTokenManager</B>
 </PRE>
 <DL>
 <DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../net/sf/jsqlparser/parser/CCJSqlParserConstants.html" title="interface in net.sf.jsqlparser.parser">CCJSqlParserConstants</A></DD>
@@ -283,13 +283,13 @@ Token Manager.
 <B>Constructor Summary</B></FONT></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><B><A HREF="../../../../net/sf/jsqlparser/parser/CCJSqlParserTokenManager.html#CCJSqlParserTokenManager(net.sf.jsqlparser.parser.SimpleCharStream)">CCJSqlParserTokenManager</A></B>(<A HREF="../../../../net/sf/jsqlparser/parser/SimpleCharStream.html" title="class in net.sf.jsqlparser.parser">SimpleCharStream</A>&nbsp;stream)</CODE>
+<TD><CODE><B><A HREF="../../../../net/sf/jsqlparser/parser/CCJSqlParserTokenManager.html#CCJSqlParserTokenManager(SimpleCharStream)">CCJSqlParserTokenManager</A></B>(<A HREF="../../../../net/sf/jsqlparser/parser/SimpleCharStream.html" title="class in net.sf.jsqlparser.parser">SimpleCharStream</A>&nbsp;stream)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Constructor.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><B><A HREF="../../../../net/sf/jsqlparser/parser/CCJSqlParserTokenManager.html#CCJSqlParserTokenManager(net.sf.jsqlparser.parser.SimpleCharStream, int)">CCJSqlParserTokenManager</A></B>(<A HREF="../../../../net/sf/jsqlparser/parser/SimpleCharStream.html" title="class in net.sf.jsqlparser.parser">SimpleCharStream</A>&nbsp;stream,
+<TD><CODE><B><A HREF="../../../../net/sf/jsqlparser/parser/CCJSqlParserTokenManager.html#CCJSqlParserTokenManager(SimpleCharStream, int)">CCJSqlParserTokenManager</A></B>(<A HREF="../../../../net/sf/jsqlparser/parser/SimpleCharStream.html" title="class in net.sf.jsqlparser.parser">SimpleCharStream</A>&nbsp;stream,
                          int&nbsp;lexState)</CODE>
 
 <BR>
@@ -501,7 +501,7 @@ Token Manager.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../net/sf/jsqlparser/parser/CCJSqlParserTokenManager.html#ReInit(net.sf.jsqlparser.parser.SimpleCharStream)">ReInit</A></B>(<A HREF="../../../../net/sf/jsqlparser/parser/SimpleCharStream.html" title="class in net.sf.jsqlparser.parser">SimpleCharStream</A>&nbsp;stream)</CODE>
+<TD><CODE><B><A HREF="../../../../net/sf/jsqlparser/parser/CCJSqlParserTokenManager.html#ReInit(SimpleCharStream)">ReInit</A></B>(<A HREF="../../../../net/sf/jsqlparser/parser/SimpleCharStream.html" title="class in net.sf.jsqlparser.parser">SimpleCharStream</A>&nbsp;stream)</CODE>
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Reinitialise parser.</TD>
@@ -509,7 +509,7 @@ Token Manager.
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
 <CODE>&nbsp;void</CODE></FONT></TD>
-<TD><CODE><B><A HREF="../../../../net/sf/jsqlparser/parser/CCJSqlParserTokenManager.html#ReInit(net.sf.jsqlparser.parser.SimpleCharStream, int)">ReInit</A></B>(<A HREF="../../../../net/sf/jsqlparser/parser/SimpleCharStream.html" title="class in net.sf.jsqlparser.parser">SimpleCharStream</A>&nbsp;stream,
+<TD><CODE><B><A HREF="../../../../net/sf/jsqlparser/parser/CCJSqlParserTokenManager.html#ReInit(SimpleCharStream, int)">ReInit</A></B>(<A HREF="../../../../net/sf/jsqlparser/parser/SimpleCharStream.html" title="class in net.sf.jsqlparser.parser">SimpleCharStream</A>&nbsp;stream,
        int&nbsp;lexState)</CODE>
 
 <BR>
@@ -757,7 +757,7 @@ int <B>jjmatchedKind</B></PRE>
 </TR>
 </TABLE>
 
-<A NAME="CCJSqlParserTokenManager(net.sf.jsqlparser.parser.SimpleCharStream)"><!-- --></A><H3>
+<A NAME="CCJSqlParserTokenManager(SimpleCharStream)"><!-- --></A><H3>
 CCJSqlParserTokenManager</H3>
 <PRE>
 public <B>CCJSqlParserTokenManager</B>(<A HREF="../../../../net/sf/jsqlparser/parser/SimpleCharStream.html" title="class in net.sf.jsqlparser.parser">SimpleCharStream</A>&nbsp;stream)</PRE>
@@ -767,7 +767,7 @@ public <B>CCJSqlParserTokenManager</B>(<A HREF="../../../../net/sf/jsqlparser/pa
 </DL>
 <HR>
 
-<A NAME="CCJSqlParserTokenManager(net.sf.jsqlparser.parser.SimpleCharStream, int)"><!-- --></A><H3>
+<A NAME="CCJSqlParserTokenManager(SimpleCharStream, int)"><!-- --></A><H3>
 CCJSqlParserTokenManager</H3>
 <PRE>
 public <B>CCJSqlParserTokenManager</B>(<A HREF="../../../../net/sf/jsqlparser/parser/SimpleCharStream.html" title="class in net.sf.jsqlparser.parser">SimpleCharStream</A>&nbsp;stream,
@@ -1029,7 +1029,7 @@ private int <B>jjMoveNfa_0</B>(int&nbsp;startState,
 </DL>
 <HR>
 
-<A NAME="ReInit(net.sf.jsqlparser.parser.SimpleCharStream)"><!-- --></A><H3>
+<A NAME="ReInit(SimpleCharStream)"><!-- --></A><H3>
 ReInit</H3>
 <PRE>
 public void <B>ReInit</B>(<A HREF="../../../../net/sf/jsqlparser/parser/SimpleCharStream.html" title="class in net.sf.jsqlparser.parser">SimpleCharStream</A>&nbsp;stream)</PRE>
@@ -1059,7 +1059,7 @@ private void <B>ReInitRounds</B>()</PRE>
 </DL>
 <HR>
 
-<A NAME="ReInit(net.sf.jsqlparser.parser.SimpleCharStream, int)"><!-- --></A><H3>
+<A NAME="ReInit(SimpleCharStream, int)"><!-- --></A><H3>
 ReInit</H3>
 <PRE>
 public void <B>ReInit</B>(<A HREF="../../../../net/sf/jsqlparser/parser/SimpleCharStream.html" title="class in net.sf.jsqlparser.parser">SimpleCharStream</A>&nbsp;stream,

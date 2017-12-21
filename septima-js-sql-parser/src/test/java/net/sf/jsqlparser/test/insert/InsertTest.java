@@ -9,7 +9,7 @@ import net.sf.jsqlparser.expression.JdbcParameter;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
-import net.sf.jsqlparser.parser.CCJSqlParserManager;
+import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.insert.Insert;
@@ -19,7 +19,7 @@ import org.junit.Test;
 
 public class InsertTest extends TestCase {
 
-    CCJSqlParserManager parserManager = new CCJSqlParserManager();
+    SeptimaSqlParser parserManager = new SeptimaSqlParser();
 
     @Test
     public void testRegularInsert() throws JSQLParserException {

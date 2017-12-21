@@ -4,13 +4,13 @@ import java.io.StringReader;
 
 import junit.framework.TestCase;
 import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.parser.CCJSqlParserManager;
+import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.statement.drop.Drop;
 import org.junit.Test;
 
 public class DropTest extends TestCase {
 
-    CCJSqlParserManager parserManager = new CCJSqlParserManager();
+    SeptimaSqlParser parserManager = new SeptimaSqlParser();
 
     @Test
     public void testDrop() throws JSQLParserException {

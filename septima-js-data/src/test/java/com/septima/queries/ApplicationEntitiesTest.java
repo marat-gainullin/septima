@@ -1,9 +1,21 @@
 package com.septima.queries;
 
+import com.septima.Entities;
+import com.septima.Parameter;
 import com.septima.TestDataSource;
-import org.junit.*;
+import com.septima.application.ApplicationDataTypes;
+import com.septima.application.ApplicationEntities;
+import com.septima.metadata.Field;
+import net.sf.jsqlparser.JSQLParserException;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import javax.naming.NamingException;
+import java.io.File;
+import java.util.Set;
+
+import static org.junit.Assert.*;
 
 /**
  * @author mg
@@ -19,8 +31,149 @@ public class ApplicationEntitiesTest {
         TestDataSource.bind();
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void badDataSource() {
+        Entities entities = new ApplicationEntities(
+                new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+        );
+        entities.loadEntity("entities/bad-data-source");
+    }
+
+    /**
+     * If sql text is unparsable, then no special action are needed.
+     * User should provide parsable sql text and use customSql to get what he wants.
+     */
+    @Ignore
+    @Test(expected = JSQLParserException.class)
+    public void unparsableSqlText() {
+        Entities entities = new ApplicationEntities(
+                new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+        );
+        entities.loadEntity("entities/unparsable");
+    }
+
     @Test
-    public void threeLayerParameters(){
+    public void ethalonJsonContent() {
+        Entities entities = new ApplicationEntities(
+                new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+        );
+        SqlEntity entity = entities.loadEntity("entities/ethalon");
+        assertNotNull(entity);
+        assertEquals("entities/ethalon", entity.getEntityName());
+        assertEquals("Custom orders", entity.getTitle());
+        assertEquals("select o.*, co.body::json from orders o inner join customOrders co on(o.id = co.order_id)", entity.getCustomSqlText());
+        assertEquals("Select o.order_id id, o.amount amt, o.good goodik\n" +
+                ", o.customer orderer, o.field1 other \n" +
+                "From goodOrder o\n" +
+                " Inner Join customOrders co on (o.id = co.order_id)", rn2n(entity.getSqlText()));
+        assertTrue(entity.isCommand());
+        assertTrue(entity.isProcedure());
+        assertTrue(entity.isProcedure());
+        assertTrue(entity.isPublicAccess());
+        assertEquals(10, entity.getPageSize());
+        // Parameters
+        assertEquals(1, entity.getParameters().size());
+        Parameter quantity = entity.getParameters().get("quantity");
+        assertNotNull(quantity);
+        assertEquals(ApplicationDataTypes.NUMBER_TYPE_NAME, quantity.getType());
+        assertEquals("Quantity desc", quantity.getDescription());
+        assertEquals("Simon", quantity.getValue());
+        assertEquals(Parameter.Mode.InOut, quantity.getMode());
+        // Select o.order_id id, o.amount amt, o.good goodik, o.customer orderer, o.field1 other From ...
+        // Fields
+        assertEquals(5, entity.getFields().size());
+        Field order_id = entity.getFields().get("id");
+        assertNotNull(order_id);
+        assertEquals("id", order_id.getName());
+        assertEquals("ORDER_ID", order_id.getOriginalName());
+        assertTrue(order_id.isPk());
+        assertEquals("Ключик", order_id.getDescription());
+        assertEquals("GOODORDER", order_id.getTableName());
+        assertEquals("Number", order_id.getType());
+        assertNull(order_id.getFk());
+        Field amount = entity.getFields().get("amt");
+        assertNotNull(amount);
+        assertEquals("amt", amount.getName());
+        assertEquals("AMOUNT", amount.getOriginalName());
+        assertFalse(amount.isPk());
+        assertEquals("Количество товара", amount.getDescription());
+        assertEquals("GOODORDER", amount.getTableName());
+        assertEquals("Number", amount.getType());
+        assertNull(amount.getFk());
+        Field good = entity.getFields().get("goodik");
+        assertNotNull(good);
+        assertEquals("goodik", good.getName());
+        assertEquals("GOOD", good.getOriginalName());
+        assertEquals("Заказанный товар", good.getDescription());
+        assertEquals("GOODORDER", good.getTableName());
+        assertEquals("Number", good.getType());
+        assertNotNull(good.getFk());
+        Field customer = entity.getFields().get("orderer");
+        assertNotNull(customer);
+        assertEquals("orderer", customer.getName());
+        assertEquals("CUSTOMER", customer.getOriginalName());
+        assertEquals("Заказчик", customer.getDescription());
+        assertEquals("GOODORDER", customer.getTableName());
+        assertEquals("Number", customer.getType());
+        assertNotNull(customer.getFk());
+        Field field1 = entity.getFields().get("other");
+        assertNotNull(field1);
+        assertEquals("other", field1.getName());
+        assertEquals("FIELD1", field1.getOriginalName());
+        assertEquals("", field1.getDescription());
+        assertEquals("GOODORDER", field1.getTableName());
+        assertNull(field1.getType());
+        assertNull(field1.getFk());
+
+        assertEquals(Set.of("orders"), entity.getWritable());
+        assertEquals(Set.of("disp", "mech"), entity.getReadRoles());
+        assertEquals(Set.of("disp", "mech"), entity.getWriteRoles());
+    }
+
+    @Test
+    public void ethalonJsonMergedContent() {
+        Entities entities = new ApplicationEntities(
+                new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+        );
+        SqlEntity entity = entities.loadEntity("entities/ethalon-overriden-fields");
+        assertNotNull(entity);
+        // Fields
+        assertEquals(6, entity.getFields().size());
+        // Surrogate field
+        Field id = entity.getFields().get("id");
+        assertNotNull(id);
+        assertEquals("id", id.getName());
+        assertEquals("id", id.getOriginalName());
+        assertTrue(id.isPk());
+        assertEquals("Newly added key", id.getDescription());
+        assertEquals("Number", id.getType());
+        assertNull(id.getFk());
+        // Overriden field
+        Field order_id = entity.getFields().get("order_id");
+        assertNotNull(order_id);
+        assertEquals("order_id", order_id.getName());
+        assertEquals("ORDER_ID", order_id.getOriginalName());
+        assertFalse(order_id.isPk());
+        assertEquals("Disabled key", order_id.getDescription());
+        assertEquals("un-existent-table", order_id.getTableName());
+        assertFalse(order_id.isNullable());
+        assertEquals(ApplicationDataTypes.STRING_TYPE_NAME, order_id.getType());
+        assertNotNull(order_id.getFk());
+    }
+
+    @Test
+    public void twoLevelInline() {
+        Entities entities = new ApplicationEntities(
+                new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+        );
+        SqlEntity entity = entities.loadEntity("entities/inline/simple/a");
+        assertNotNull(entity);
+        assertEquals("", entity.getSqlText());
     }
 
 

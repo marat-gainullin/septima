@@ -21,13 +21,14 @@
  */
 package net.sf.jsqlparser.statement.insert;
 
-import java.util.List;
 import net.sf.jsqlparser.expression.operators.relational.ItemsList;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.StatementVisitor;
 import net.sf.jsqlparser.statement.select.PlainSelect;
+
+import java.util.List;
 
 /**
  * The insert statement. Every column name in
@@ -43,13 +44,13 @@ public class Insert implements Statement {
     private List<String> itemsListComments;
     private boolean useValues = true;
     private String comment;
-    private String endComment = new String();
+    private String endComment = "";
     private String commentInto;
     private String commentValues;
     private String commentItemsList;
     private String commentAfterItemsList;
-    private String commentBeforeColums;
-    private String commentAfterColums;
+    private String commentBeforeColumns;
+    private String commentAfterColumns;
 
     @Override
     public void accept(StatementVisitor statementVisitor) {
@@ -103,8 +104,8 @@ public class Insert implements Statement {
         String sql = getComment() != null ? getComment() + " " : "";
 
         sql += "INSERT" + (getCommentInto() != null ? " " + getCommentInto() : "") + " INTO ";
-        sql += table + (getCommentBeforeColums() != null ? " " + getCommentBeforeColums() + " " : " ");
-        sql += ((columns != null) ? PlainSelect.getStringListWithCommaComment(columns, columnsComment, true, true, commentAfterColums) + " " : "");
+        sql += table + (getCommentBeforeColumns() != null ? " " + getCommentBeforeColumns() + " " : " ");
+        sql += ((columns != null) ? PlainSelect.getStringListWithCommaComment(columns, columnsComment, true, true, commentAfterColumns) + " " : "");
 
         if (useValues) {
             sql += (getCommentValues() != null ? getCommentValues() + " " : "") + "VALUES " + (getCommentItemsList() != null ? getCommentItemsList() + " " : "") + itemsList + "";
@@ -182,17 +183,17 @@ public class Insert implements Statement {
     }
 
     /**
-     * @return the commentBeforeColums
+     * @return the commentBeforeColumns
      */
-    public String getCommentBeforeColums() {
-        return commentBeforeColums;
+    public String getCommentBeforeColumns() {
+        return commentBeforeColumns;
     }
 
     /**
-     * @param commentBeforeColums the commentBeforeColums to set
+     * @param commentBeforeColumns the commentBeforeColumns to set
      */
-    public void setCommentBeforeColums(String commentBeforeColums) {
-        this.commentBeforeColums = commentBeforeColums;
+    public void setCommentBeforeColumns(String commentBeforeColumns) {
+        this.commentBeforeColumns = commentBeforeColumns;
     }
 
     /**
@@ -210,17 +211,17 @@ public class Insert implements Statement {
     }
 
     /**
-     * @return the commentAfterColums
+     * @return the commentAfterColumns
      */
-    public String getCommentAfterColums() {
-        return commentAfterColums;
+    public String getCommentAfterColumns() {
+        return commentAfterColumns;
     }
 
     /**
-     * @param commentAfterColums the commentAfterColums to set
+     * @param commentAfterColumns the commentAfterColumns to set
      */
-    public void setCommentAfterColums(String commentAfterColums) {
-        this.commentAfterColums = commentAfterColums;
+    public void setCommentAfterColumns(String commentAfterColumns) {
+        this.commentAfterColumns = commentAfterColumns;
     }
 
     /**
