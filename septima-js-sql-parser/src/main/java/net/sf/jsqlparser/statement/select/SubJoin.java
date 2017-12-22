@@ -78,7 +78,7 @@ public class SubJoin implements FromItem {
     }
 
     /**
-     * @param commentBeginBracket the commentBeginBracket to set
+     * @param commentBeginBracket the commentBeginBracket transform set
      */
     public void setCommentBeginBracket(String commentBeginBracket) {
         this.commentBeginBracket = commentBeginBracket;
@@ -92,7 +92,7 @@ public class SubJoin implements FromItem {
     }
 
     /**
-     * @param commentEndBracket the commentEndBracket to set
+     * @param commentEndBracket the commentEndBracket transform set
      */
     public void setCommentEndBracket(String commentEndBracket) {
         this.commentEndBracket = commentEndBracket;

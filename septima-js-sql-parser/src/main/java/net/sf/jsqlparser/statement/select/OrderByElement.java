@@ -69,7 +69,7 @@ public class OrderByElement {
     }
 
     /**
-     * @param comment the comment to set
+     * @param comment the comment transform set
      */
     public void setComment(String comment) {
         this.comment = comment;
@@ -83,7 +83,7 @@ public class OrderByElement {
     }
 
     /**
-     * @param desc the desc to set
+     * @param desc the desc transform set
      */
     public void setDesc(boolean desc) {
         this.desc = desc;

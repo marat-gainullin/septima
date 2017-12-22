@@ -50,7 +50,7 @@ public class WhenClause implements Expression {
     }
 
     /**
-     * @param thenExpression The thenExpression to set.
+     * @param thenExpression The thenExpression transform set.
      */
     public void setThenExpression(Expression thenExpression) {
         this.thenExpression = thenExpression;
@@ -64,7 +64,7 @@ public class WhenClause implements Expression {
     }
 
     /**
-     * @param whenExpression The whenExpression to set.
+     * @param whenExpression The whenExpression transform set.
      */
     public void setWhenExpression(Expression whenExpression) {
         this.whenExpression = whenExpression;
@@ -83,7 +83,7 @@ public class WhenClause implements Expression {
     }
 
     /**
-     * @param commentWhen the commentWhen to set
+     * @param commentWhen the commentWhen transform set
      */
     public void setCommentWhen(String commentWhen) {
         this.commentWhen = commentWhen;
@@ -97,7 +97,7 @@ public class WhenClause implements Expression {
     }
 
     /**
-     * @param commentThen the commentThen to set
+     * @param commentThen the commentThen transform set
      */
     public void setCommentThen(String commentThen) {
         this.commentThen = commentThen;

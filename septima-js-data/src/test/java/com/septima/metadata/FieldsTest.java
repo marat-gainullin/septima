@@ -1,6 +1,6 @@
 package com.septima.metadata;
 
-import com.septima.application.ApplicationDataTypes;
+import com.septima.DataTypes;
 import org.junit.Test;
 
 import java.sql.Types;
@@ -13,7 +13,7 @@ public class FieldsTest {
     public void fieldConstructors() {
         Field field = new Field("test");
         assertEquals("test", field.getName());
-        assertEquals(ApplicationDataTypes.STRING_TYPE_NAME, field.getType());
+        assertEquals(DataTypes.STRING_TYPE_NAME, field.getType());
         assertEquals("test", field.getOriginalName());
         assertNull(field.getDescription());
         assertTrue(field.isNullable());
@@ -72,7 +72,7 @@ public class FieldsTest {
                 "test_schema",
                 Types.VARCHAR
         );
-        assertEquals("test_schema.test_table.test (test desc), primary key, foreign key to test_schema.test_table.test, VARCHAR, size 10, precision 2, scale 1000, signed, nullable", column.toString());
+        assertEquals("test_schema.test_table.test (test desc), primary key, foreign key transform test_schema.test_table.test, VARCHAR, size 10, precision 2, scale 1000, signed, nullable", column.toString());
     }
 
     @Test
@@ -118,7 +118,7 @@ public class FieldsTest {
                 "test_schema",
                 Types.VARCHAR
         );
-        assertEquals("test_schema.test_table.TEST (test desc), primary key, foreign key to test_schema.test_table.test, VARCHAR, size 10, precision 2, scale 1000, signed, nullable", column.toString());
+        assertEquals("test_schema.test_table.TEST (test desc), primary key, foreign key transform test_schema.test_table.test, VARCHAR, size 10, precision 2, scale 1000, signed, nullable", column.toString());
     }
 
     @Test
@@ -128,7 +128,7 @@ public class FieldsTest {
                 "test desc",
                 null,
                 "test_table",
-                ApplicationDataTypes.DATE_TYPE_NAME,
+                DataTypes.DATE_TYPE_NAME,
                 true,
                 true,
                 new ForeignKey(
@@ -137,7 +137,7 @@ public class FieldsTest {
                         "test_schema", "test_table", "test", "test_pk"
                 )
         );
-        assertEquals("test_table.test (test desc), primary key, foreign key to test_schema.test_table.test, Date, nullable", field.toString());
+        assertEquals("test_table.test (test desc), primary key, foreign key transform test_schema.test_table.test, Date, nullable", field.toString());
     }
 
     @Test
@@ -153,7 +153,7 @@ public class FieldsTest {
                 "test desc",
                 "TEST",
                 "test_table",
-                ApplicationDataTypes.DATE_TYPE_NAME,
+                DataTypes.DATE_TYPE_NAME,
                 true,
                 true,
                 new ForeignKey(
@@ -162,6 +162,6 @@ public class FieldsTest {
                         "test_schema", "test_table", "test", "test_pk"
                 )
         );
-        assertEquals("test_table.TEST (test desc), primary key, foreign key to test_schema.test_table.test, Date, nullable", field.toString());
+        assertEquals("test_table.TEST (test desc), primary key, foreign key transform test_schema.test_table.test, Date, nullable", field.toString());
     }
 }

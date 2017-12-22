@@ -45,7 +45,7 @@ public class UncheckedSQLException extends RuntimeException {
     }
 
     /**
-     * Called to read the object from a stream.
+     * Called transform read the object from a stream.
      *
      * @throws InvalidObjectException if the object is invalid or has a cause that is not
      *                                an {@code SQLException}

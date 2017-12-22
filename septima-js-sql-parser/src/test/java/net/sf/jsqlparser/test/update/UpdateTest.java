@@ -3,7 +3,7 @@ package net.sf.jsqlparser.test.update;
 import java.io.StringReader;
 import static junit.framework.TestCase.*;
 
-import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.JSqlParserException;
 import net.sf.jsqlparser.expression.JdbcParameter;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.StringValue;
@@ -18,7 +18,7 @@ public class UpdateTest {
     SeptimaSqlParser parserManager = new SeptimaSqlParser();
 
     @Test
-    public void testUpdate() throws JSQLParserException {
+    public void testUpdate() throws JSqlParserException {
         String statement = "UPDATE mytable set col1='as', col2=?, col3=565 Where o >= 3";
         Update update = (Update) parserManager.parse(new StringReader(statement));
         assertEquals("mytable", update.getTable().getName());
@@ -42,7 +42,7 @@ public class UpdateTest {
     }
     
     @Test
-    public void testUpdateWAlias() throws JSQLParserException {
+    public void testUpdateWAlias() throws JSqlParserException {
         String statement = "UPDATE table1 A SET A.column = 'XXX' WHERE A.cod_table = 'YYY'";
         Update update = (Update) parserManager.parse(new StringReader(statement));
     }

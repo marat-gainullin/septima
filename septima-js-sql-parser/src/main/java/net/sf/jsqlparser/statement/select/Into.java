@@ -31,7 +31,7 @@ public class Into {
     }
 
     /**
-     * @param commentsComma the commentsComma to set
+     * @param commentsComma the commentsComma transform set
      */
     public void setCommentsComma(List<String> commentsComma) {
         this.commentsComma = commentsComma;
@@ -45,7 +45,7 @@ public class Into {
     }
 
     /**
-     * @param tables the tables to set
+     * @param tables the tables transform set
      */
     public void setTables(List<Table> tables) {
         this.tables = tables;
@@ -59,7 +59,7 @@ public class Into {
     }
 
     /**
-     * @param commentInto the commentInto to set
+     * @param commentInto the commentInto transform set
      */
     public void setCommentInto(String commentInto) {
         this.commentInto = commentInto;

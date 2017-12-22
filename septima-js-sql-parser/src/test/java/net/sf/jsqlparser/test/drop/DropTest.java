@@ -3,7 +3,7 @@ package net.sf.jsqlparser.test.drop;
 import java.io.StringReader;
 
 import junit.framework.TestCase;
-import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.JSqlParserException;
 import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.statement.drop.Drop;
 import org.junit.Test;
@@ -13,7 +13,7 @@ public class DropTest extends TestCase {
     SeptimaSqlParser parserManager = new SeptimaSqlParser();
 
     @Test
-    public void testDrop() throws JSQLParserException {
+    public void testDrop() throws JSqlParserException {
         String statement =
                 "DROP TABLE mytab";
         Drop drop = (Drop) parserManager.parse(new StringReader(statement));
@@ -31,7 +31,7 @@ public class DropTest extends TestCase {
     }
     
     @Test
-    public void testComment() throws JSQLParserException {
+    public void testComment() throws JSqlParserException {
         String statement =
                 "/*90053*/ DROP /*erlgjter*/ TABLE /*weweporwepr*/ mytab /*wekljrhs*/ CAS /*erpuppwe*/ MAS /*eiortouei*/";
         Drop drop = (Drop) parserManager.parse(new StringReader(statement));

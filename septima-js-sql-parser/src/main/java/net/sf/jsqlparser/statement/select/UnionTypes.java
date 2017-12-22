@@ -75,7 +75,7 @@ public class UnionTypes {
     }
 
     /**
-     * @param union the union to set
+     * @param union the union transform set
      */
     public void setUnion(boolean union) {
         this.union = union;
@@ -89,7 +89,7 @@ public class UnionTypes {
     }
 
     /**
-     * @param except the except to set
+     * @param except the except transform set
      */
     public void setExcept(boolean except) {
         this.except = except;
@@ -103,7 +103,7 @@ public class UnionTypes {
     }
 
     /**
-     * @param intersect the intersect to set
+     * @param intersect the intersect transform set
      */
     public void setIntersect(boolean intersect) {
         this.intersect = intersect;
@@ -117,7 +117,7 @@ public class UnionTypes {
     }
 
     /**
-     * @param distinct the distinct to set
+     * @param distinct the distinct transform set
      */
     public void setDistinct(boolean distinct) {
         this.distinct = distinct;
@@ -131,7 +131,7 @@ public class UnionTypes {
     }
 
     /**
-     * @param all the all to set
+     * @param all the all transform set
      */
     public void setAll(boolean all) {
         this.all = all;
@@ -145,7 +145,7 @@ public class UnionTypes {
     }
 
     /**
-     * @param commentUnion the commentUnion to set
+     * @param commentUnion the commentUnion transform set
      */
     public void setCommentUnion(String commentUnion) {
         this.commentUnion = commentUnion;
@@ -159,7 +159,7 @@ public class UnionTypes {
     }
 
     /**
-     * @param commentAll the commentAll to set
+     * @param commentAll the commentAll transform set
      */
     public void setCommentAll(String commentAll) {
         this.commentAll = commentAll;

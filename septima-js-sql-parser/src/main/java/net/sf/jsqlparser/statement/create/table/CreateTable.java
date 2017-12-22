@@ -31,7 +31,7 @@ public class CreateTable implements Statement {
     }
 
     /**
-     * The name of the table to be created
+     * The name of the table transform be created
      */
     public Table getTable() {
         return table;
@@ -121,7 +121,7 @@ public class CreateTable implements Statement {
     }
 
     /**
-     * @param comment the comment to set
+     * @param comment the comment transform set
      */
     public void setComment(String comment) {
         this.comment = comment;
@@ -145,7 +145,7 @@ public class CreateTable implements Statement {
     }
 
     /**
-     * @param commentTable the commentTable to set
+     * @param commentTable the commentTable transform set
      */
     public void setCommentTable(String commentTable) {
         this.commentTable = commentTable;
@@ -159,7 +159,7 @@ public class CreateTable implements Statement {
     }
 
     /**
-     * @param commentBeginBracket the commentBeginBracket to set
+     * @param commentBeginBracket the commentBeginBracket transform set
      */
     public void setCommentBeginBracket(String commentBeginBracket) {
         this.commentBeginBracket = commentBeginBracket;
@@ -173,7 +173,7 @@ public class CreateTable implements Statement {
     }
 
     /**
-     * @param commentEndBracket the commentEndBracket to set
+     * @param commentEndBracket the commentEndBracket transform set
      */
     public void setCommentEndBracket(String commentEndBracket) {
         this.commentEndBracket = commentEndBracket;
@@ -187,7 +187,7 @@ public class CreateTable implements Statement {
     }
 
     /**
-     * @param commentCommaIndexes the commentCommaIndexes to set
+     * @param commentCommaIndexes the commentCommaIndexes transform set
      */
     public void setCommentCommaIndexes(List<String> commentCommaIndexes) {
         this.commentCommaIndexes = commentCommaIndexes;
@@ -201,7 +201,7 @@ public class CreateTable implements Statement {
     }
 
     /**
-     * @param commentTableOptions the commentTableOptions to set
+     * @param commentTableOptions the commentTableOptions transform set
      */
     public void setCommentTableOptions(List<String> commentTableOptions) {
         this.commentTableOptions = commentTableOptions;
@@ -215,7 +215,7 @@ public class CreateTable implements Statement {
     }
 
     /**
-     * @param createOptions the createOptions to set
+     * @param createOptions the createOptions transform set
      */
     public void setCreateOptions(List<String> createOptions) {
         this.createOptions = createOptions;
@@ -229,7 +229,7 @@ public class CreateTable implements Statement {
     }
 
     /**
-     * @param commentCreateOptions the commentCreateOptions to set
+     * @param commentCreateOptions the commentCreateOptions transform set
      */
     public void setCommentCreateOptions(List commentCreateOptions) {
         this.commentCreateOptions = commentCreateOptions;

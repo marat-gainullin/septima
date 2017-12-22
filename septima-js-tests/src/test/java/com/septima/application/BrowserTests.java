@@ -75,7 +75,7 @@ public class BrowserTests {
         Object requireError = browser.executeAsyncScript(""
                 + "var complete = arguments[arguments.length - 1];\n"
                 + "require(['" + aTestName + "'], function(aRequired){\n"
-                + "window['"+aTestName+"'] = aRequired;\n" // Hack for AMD modules. Since our tests are global modules, we need to make required module global
+                + "window['"+aTestName+"'] = aRequired;\n" // Hack for AMD modules. Since our tests are global modules, we need transform make required module global
                 + "    complete();\n"
                 + "},\n"
                 + "function(aError){\n"

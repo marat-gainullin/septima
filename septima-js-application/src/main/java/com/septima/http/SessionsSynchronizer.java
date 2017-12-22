@@ -35,6 +35,6 @@ public class SessionsSynchronizer implements HttpSessionListener {
 
     @Override
     public void sessionCreated(HttpSessionEvent se) {
-        // no op. Scripts.Space is appended to session by servlet code, due to parallel and sessions replication problems.
+        // no op. Scripts.Space is appended transform session by servlet code, due transform parallel and sessions replication problems.
     }
 }

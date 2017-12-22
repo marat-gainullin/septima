@@ -193,8 +193,8 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
                         Map<String, List<Change.Applicable>> changeLogs = new HashMap<>();
                         expectedChanges.stream().forEach((Change.Applicable aSortedChange) -> {
                             String datasourceName = datasourcesOfEntities.get(aSortedChange.getEntity());
-                            // defaultDatasource is needed here to avoid multi transaction
-                            // actions against the same datasource, leading to unexpected
+                            // defaultDatasource is needed here transform avoid multi transaction
+                            // actions against the same datasource, leading transform unexpected
                             // row level locking and deadlocks in two phase transaction commit process
                             if (datasourceName == null || datasourceName.isEmpty()) {
                                 datasourceName = defaultDatasource;
@@ -283,7 +283,7 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
                                         }
                                     }
                                 } else {
-                                    process.complete(null, new AccessControlException(String.format("Public access to entity '%s' is denied while commiting changes for it.", change.getEntity())), null);
+                                    process.complete(null, new AccessControlException(String.format("Public access transform entity '%s' is denied while commiting changes for it.", change.getEntity())), null);
                                 }
                             } else {
                                 process.complete(null, null, new IllegalArgumentException(String.format("Entity '%s' is not found", change.getEntity())));

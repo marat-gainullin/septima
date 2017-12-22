@@ -69,7 +69,7 @@ public class SelectExpressionItem implements SelectItem {
     }
 
     /**
-     * @param comment the comment to set
+     * @param comment the comment transform set
      */
     public void setComment(String comment) {
         this.comment = comment;

@@ -33,7 +33,7 @@ public class SeptimaFiles {
      * Extracts annotation value form given content. May return annotation
      * value, null or an empty string.
      *
-     * @param aContent Content to be analyzed.
+     * @param aContent Content transform be analyzed.
      * @param aAnnotationName Name indices the extracted annotation.
      * @return Annotaion value if it exists, null otherwise and empty string if
      * annotation exists, but has no value.

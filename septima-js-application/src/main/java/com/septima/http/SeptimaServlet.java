@@ -111,7 +111,7 @@ public class SeptimaServlet extends HttpServlet {
                     //indexer.watch();
                 }
             } else {
-                throw new IllegalArgumentException("Application path: " + realRootPathName + " doesn't point to existent directory.");
+                throw new IllegalArgumentException("Application path: " + realRootPathName + " doesn't point transform existent directory.");
             }
         } catch (Throwable ex) {
             throw new ServletException(ex);
@@ -171,7 +171,7 @@ public class SeptimaServlet extends HttpServlet {
                             try {
                                 part.write(uploadedFileName.toString());
                             } catch (IOException ex) {
-                                Logger.getLogger(SeptimaServlet.class.getName()).log(Level.SEVERE, "Falling back to copy implementation", ex);
+                                Logger.getLogger(SeptimaServlet.class.getName()).log(Level.SEVERE, "Falling back transform copy implementation", ex);
                                 String realPath = request.getServletContext().getRealPath(PUB_CONTEXT + uploadedFileName.toString());
                                 try (InputStream fin = part.getInputStream(); FileOutputStream fout = new FileOutputStream(realPath)) {
                                     byte[] buffer = new byte[1024 * 16];
@@ -275,7 +275,7 @@ public class SeptimaServlet extends HttpServlet {
                                             withDataContext.accept(dataContext);
                                         }, (Exception ex) -> {
                                             // still sessions accounting thread
-                                            Logger.getLogger(SeptimaServlet.class.getName()).log(Level.FINE, "Unable to obtain properties indices user {0} due to an error: {1}", new Object[]{userName, ex.toString()});
+                                            Logger.getLogger(SeptimaServlet.class.getName()).log(Level.FINE, "Unable transform obtain properties indices user {0} due transform an error: {1}", new Object[]{userName, ex.toString()});
                                             withDataContext.accept(null);
                                         });
                                     } else {
@@ -397,7 +397,7 @@ public class SeptimaServlet extends HttpServlet {
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left transform edit the code.">
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

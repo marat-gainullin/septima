@@ -21,9 +21,10 @@
  */
 package net.sf.jsqlparser.statement.select;
 
+import net.sf.jsqlparser.expression.Expression;
+
 import java.util.Iterator;
 import java.util.List;
-import net.sf.jsqlparser.expression.Expression;
 
 /**
  * The core of a "SELECT" statement (no UNION, no ORDER BY)
@@ -263,8 +264,8 @@ public class PlainSelect implements SelectBody {
      * separated. If the List is null or empty an empty string is returned.
      *
      * @param list list of objects with toString methods
-     * @param useComma true if the list has to be comma separated
-     * @param useBrackets true if the list has to be enclosed in brackets
+     * @param useComma true if the list has transform be comma separated
+     * @param useBrackets true if the list has transform be enclosed in brackets
      * @return comma separated list of the elements in the list
      */
     public static String getStringList(List list, boolean useComma, boolean useBrackets) {
@@ -295,9 +296,9 @@ public class PlainSelect implements SelectBody {
      * separated. If the List is null or empty an empty string is returned.
      *
      * @param list list of objects with toString methods
-     * @param comments comments to elements
-     * @param useComma true if the list has to be comma separated
-     * @param useBrackets true if the list has to be enclosed in brackets
+     * @param comments comments transform elements
+     * @param useComma true if the list has transform be comma separated
+     * @param useBrackets true if the list has transform be enclosed in brackets
      * @return comma separated list of the elements in the list
      */
     public static String getStringListWithComments(List list, List comments, boolean useComma, boolean useBrackets) {
@@ -328,9 +329,9 @@ public class PlainSelect implements SelectBody {
      * separated. If the List is null or empty an empty string is returned.
      *
      * @param list list of objects with toString methods
-     * @param comments comments to comma
-     * @param useComma true if the list has to be comma separated
-     * @param useBrackets true if the list has to be enclosed in brackets
+     * @param comments comments transform comma
+     * @param useComma true if the list has transform be comma separated
+     * @param useBrackets true if the list has transform be enclosed in brackets
      * @param endBracketComment comment before end bracket
      * @return comma separated list of the elements in the list
      */
@@ -364,9 +365,9 @@ public class PlainSelect implements SelectBody {
      *
      * @param list list of objects with toString methods
      * @param comments
-     * @param commentsComma commentsComma to comma
-     * @param useComma true if the list has to be comma separated
-     * @param useBrackets true if the list has to be enclosed in brackets
+     * @param commentsComma commentsComma transform comma
+     * @param useComma true if the list has transform be comma separated
+     * @param useBrackets true if the list has transform be enclosed in brackets
      * @param endBracketComment comment before end bracket
      * @return comma separated list of the elements in the list
      */
@@ -403,7 +404,7 @@ public class PlainSelect implements SelectBody {
     }
 
     /**
-     * @param comment the comment to set
+     * @param comment the comment transform set
      */
     public void setComment(String comment) {
         this.comment = comment;
@@ -417,7 +418,7 @@ public class PlainSelect implements SelectBody {
     }
 
     /**
-     * @param commentFrom the commentFrom to set
+     * @param commentFrom the commentFrom transform set
      */
     public void setCommentFrom(String commentFrom) {
         this.commentFrom = commentFrom;
@@ -431,7 +432,7 @@ public class PlainSelect implements SelectBody {
     }
 
     /**
-     * @param commentWhere the commentWhere to set
+     * @param commentWhere the commentWhere transform set
      */
     public void setCommentWhere(String commentWhere) {
         this.commentWhere = commentWhere;
@@ -445,7 +446,7 @@ public class PlainSelect implements SelectBody {
     }
 
     /**
-     * @param commentGroup the commentGroup to set
+     * @param commentGroup the commentGroup transform set
      */
     public void setCommentGroup(String commentGroup) {
         this.commentGroup = commentGroup;
@@ -459,7 +460,7 @@ public class PlainSelect implements SelectBody {
     }
 
     /**
-     * @param commentGroupBy the commentGroupBy to set
+     * @param commentGroupBy the commentGroupBy transform set
      */
     public void setCommentGroupBy(String commentGroupBy) {
         this.commentGroupBy = commentGroupBy;
@@ -473,7 +474,7 @@ public class PlainSelect implements SelectBody {
     }
 
     /**
-     * @param commentHaving the commentHaving to set
+     * @param commentHaving the commentHaving transform set
      */
     public void setCommentHaving(String commentHaving) {
         this.commentHaving = commentHaving;
@@ -487,7 +488,7 @@ public class PlainSelect implements SelectBody {
     }
 
     /**
-     * @param commentOrder the commentOrder to set
+     * @param commentOrder the commentOrder transform set
      */
     public void setCommentOrder(String commentOrder) {
         this.commentOrder = commentOrder;
@@ -501,7 +502,7 @@ public class PlainSelect implements SelectBody {
     }
 
     /**
-     * @param commentOrderBy the commentOrderBy to set
+     * @param commentOrderBy the commentOrderBy transform set
      */
     public void setCommentOrderBy(String commentOrderBy) {
         this.commentOrderBy = commentOrderBy;
@@ -515,7 +516,7 @@ public class PlainSelect implements SelectBody {
     }
 
     /**
-     * @param aValue the commentCommaOrderBy to set
+     * @param aValue the commentCommaOrderBy transform set
      */
     public void setCommentCommaOrderBy(List<String> aValue) {
         commentCommaOrderBy = aValue;
@@ -529,7 +530,7 @@ public class PlainSelect implements SelectBody {
     }
 
     /**
-     * @param aValue the commentCommaGroupBy to set
+     * @param aValue the commentCommaGroupBy transform set
      */
     public void setCommentCommaGroupBy(List<String> aValue) {
         commentCommaGroupBy = aValue;
@@ -543,7 +544,7 @@ public class PlainSelect implements SelectBody {
     }
 
     /**
-     * @param aValue the commentCommaItems to set
+     * @param aValue the commentCommaItems transform set
      */
     public void setCommentCommaItems(List<String> aValue) {
         commentCommaItems = aValue;

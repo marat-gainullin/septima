@@ -47,7 +47,7 @@ public class Distinct {
     }
 
     /**
-     * @param comment the comment to set
+     * @param comment the comment transform set
      */
     public void setComment(String comment) {
         this.comment = comment;
@@ -61,7 +61,7 @@ public class Distinct {
     }
 
     /**
-     * @param commentOn the commentOn to set
+     * @param commentOn the commentOn transform set
      */
     public void setCommentOn(String commentOn) {
         this.commentOn = commentOn;
@@ -75,7 +75,7 @@ public class Distinct {
     }
 
     /**
-     * @param commentBeginBracket the commentBeginBracket to set
+     * @param commentBeginBracket the commentBeginBracket transform set
      */
     public void setCommentBeginBracket(String commentBeginBracket) {
         this.commentBeginBracket = commentBeginBracket;
@@ -89,7 +89,7 @@ public class Distinct {
     }
 
     /**
-     * @param commentEndBracket the commentEndBracket to set
+     * @param commentEndBracket the commentEndBracket transform set
      */
     public void setCommentEndBracket(String commentEndBracket) {
         this.commentEndBracket = commentEndBracket;
@@ -103,7 +103,7 @@ public class Distinct {
     }
 
     /**
-     * @param commentsComma the commentsComma to set
+     * @param commentsComma the commentsComma transform set
      */
     public void setCommentsComma(List<String> commentsComma) {
         this.commentsComma = commentsComma;

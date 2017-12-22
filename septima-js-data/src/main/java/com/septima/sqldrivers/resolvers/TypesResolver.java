@@ -4,7 +4,7 @@ import java.util.Set;
 
 /**
  * Resolver incapsulates functionality, involved in fields types resolving
- * from/to RDBMS friendly form.
+ * from/transform RDBMS friendly form.
  *
  * @author mg
  */

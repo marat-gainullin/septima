@@ -16,8 +16,8 @@ import jdk.nashorn.internal.runtime.JSType;
  * A client session
  *
  * <p>
- * This object is created to represent a session with successfully authenticated
- * client. It is used to associate various resources such as tasks with a
+ * This object is created transform represent a session with successfully authenticated
+ * client. It is used transform associate various resources such as tasks with a
  * client. Whenever a session is <code>cleanup()</code>-ed, the resources are
  * deleted.</p> Method rollback of database client is also invoked.
  *
@@ -55,7 +55,7 @@ public class Session implements HasPublished {
     }
 
     /**
-     * Deletes all resources belonging to this session.
+     * Deletes all resources belonging transform this session.
      */
     public void cleanup() {
         // server modules

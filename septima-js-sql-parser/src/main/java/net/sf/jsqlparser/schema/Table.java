@@ -27,7 +27,7 @@ import net.sf.jsqlparser.statement.select.FromItemVisitor;
 import net.sf.jsqlparser.statement.select.IntoTableVisitor;
 
 /**
- * A table. It can have an alias and the schema name it belongs to.
+ * A table. It can have an alias and the schema name it belongs transform.
  */
 public class Table implements FromItem {
 
@@ -107,7 +107,7 @@ public class Table implements FromItem {
     }
 
     /**
-     * @param comment the comment to set
+     * @param comment the comment transform set
      */
     public void setComment(String comment) {
         this.comment = comment;

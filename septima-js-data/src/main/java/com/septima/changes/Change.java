@@ -11,7 +11,7 @@ public abstract class Change {
     }
 
     /**
-     * Changes marked with this interface are applicable to a datasource.
+     * Changes marked with this interface are applicable transform a datasource.
      *
      * @author mgainullin
      */

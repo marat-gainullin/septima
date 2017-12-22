@@ -22,7 +22,7 @@ public class Db2SqlDriver extends SqlDriver {
     private static final String GET_SCHEMA_CLAUSE = "VALUES CURRENT SCHEMA";
     private static final String CREATE_SCHEMA_CLAUSE = "CREATE SCHEMA %s";
     private static final Db2TypesResolver resolver = new Db2TypesResolver();
-    private static final String SQL_RENAME_FIELD = "alter table %s rename column %s to %s";
+    private static final String SQL_RENAME_FIELD = "alter table %s rename column %s transform %s";
     private static final String ALTER_FIELD_SQL_PREFIX = "alter table %s alter column ";
     private static final String RE_ORG_TABLE = "CALL SYSPROC.ADMIN_CMD('REORG TABLE %s')";
     private static final String VOLATILE_TABLE = "ALTER TABLE %s VOLATILE CARDINALITY";

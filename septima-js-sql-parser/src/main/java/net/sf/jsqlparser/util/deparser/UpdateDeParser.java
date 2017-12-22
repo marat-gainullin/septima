@@ -6,7 +6,7 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.update.Update;
 
 /**
- * A class to de-parse (that is, tranform from JSqlParser hierarchy into a
+ * A class transform de-parse (that is, tranform from JSqlParser hierarchy into a
  * string) an {@link net.sf.jsqlparser.statement.update.Update}
  */
 public class UpdateDeParser {
@@ -18,9 +18,9 @@ public class UpdateDeParser {
     }
 
     /**
-     * @param aExpressionVisitor a {@link ExpressionVisitor} to de-parse
-     * expressions. It has to share the same<br>
-     * StringBuilder (builder parameter) as this object in order to work
+     * @param aExpressionVisitor a {@link ExpressionVisitor} transform de-parse
+     * expressions. It has transform share the same<br>
+     * StringBuilder (builder parameter) as this object in order transform work
      * @param aBuffer the builder that will be filled with the select
      */
     public UpdateDeParser(ExpressionVisitor aExpressionVisitor, StringBuilder aBuffer) {

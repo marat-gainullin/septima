@@ -4,6 +4,7 @@ import com.septima.Database;
 import com.septima.Parameter;
 import com.septima.TestDataSource;
 import com.septima.dataflow.DataProvider;
+import com.septima.entities.SqlEntity;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

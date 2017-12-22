@@ -87,7 +87,7 @@ public class SubSelect implements FromItem, Expression, ItemsList {
     }
 
     /**
-     * @param commentBeginBracket the commentBeginBracket to set
+     * @param commentBeginBracket the commentBeginBracket transform set
      */
     public void setCommentBeginBracket(String commentBeginBracket) {
         this.commentBeginBracket = commentBeginBracket;
@@ -101,7 +101,7 @@ public class SubSelect implements FromItem, Expression, ItemsList {
     }
 
     /**
-     * @param commentEndBracket the commentEndBracket to set
+     * @param commentEndBracket the commentEndBracket transform set
      */
     public void setCommentEndBracket(String commentEndBracket) {
         this.commentEndBracket = commentEndBracket;
@@ -115,7 +115,7 @@ public class SubSelect implements FromItem, Expression, ItemsList {
     }
 
     /**
-     * @param replace the replace to set
+     * @param replace the replace transform set
      */
     public void setReplace(boolean replace) {
         this.replace = replace;

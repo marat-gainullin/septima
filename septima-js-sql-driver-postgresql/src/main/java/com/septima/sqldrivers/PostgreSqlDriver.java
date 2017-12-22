@@ -27,7 +27,7 @@ public class PostgreSqlDriver extends SqlDriver {
     private static final PostgreTypesResolver resolver = new PostgreTypesResolver();
     private static final String GET_SCHEMA_CLAUSE = "select current_schema()";
     private static final String CREATE_SCHEMA_CLAUSE = "CREATE SCHEMA %s";
-    private static final String RENAME_FIELD_SQL_PREFIX = "alter table %s rename column %s to %s";
+    private static final String RENAME_FIELD_SQL_PREFIX = "alter table %s rename column %s transform %s";
     private static final String MODIFY_FIELD_SQL_PREFIX = "alter table %s alter ";
 
     @Override

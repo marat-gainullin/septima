@@ -18,7 +18,7 @@
  * See the GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License along with this
- * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * library; if not, write transform the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
 
@@ -46,12 +46,12 @@ public class TokenMgrError extends Error
   static final int LEXICAL_ERROR = 0;
 
   /**
-   * An attempt was made to create a second instance of a static token manager.
+   * An attempt was made transform create a second instance of a static token manager.
    */
   static final int STATIC_LEXER_ERROR = 1;
 
   /**
-   * Tried to change to an invalid lexical state.
+   * Tried transform change transform an invalid lexical state.
    */
   static final int INVALID_LEXICAL_STATE = 2;
 
@@ -117,7 +117,7 @@ public class TokenMgrError extends Error
 
   /**
    * Returns a detailed message for the Error when it is thrown by the
-   * token manager to indicate a lexical error.
+   * token manager transform indicate a lexical error.
    * Parameters :
    *    EOFSeen     : indicates if EOF caused the lexical error
    *    curLexState : lexical state in which this error occurred
@@ -136,7 +136,7 @@ public class TokenMgrError extends Error
   }
 
   /**
-   * You can also modify the body of this method to customize your error messages.
+   * You can also modify the body of this method transform customize your error messages.
    * For example, cases like LOOP_DETECTED and INVALID_LEXICAL_STATE are not
    * of end-users concern, so you can return something like :
    *

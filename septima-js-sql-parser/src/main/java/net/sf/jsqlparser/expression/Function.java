@@ -61,9 +61,9 @@ public class Function implements Expression {
     }
 
     /**
-     * true if the parameter to the function is "*"
+     * true if the parameter transform the function is "*"
      *
-     * @return true if the parameter to the function is "*"
+     * @return true if the parameter transform the function is "*"
      */
     public boolean isAllColumns() {
         return allColumns;
@@ -88,7 +88,7 @@ public class Function implements Expression {
 
     /**
      * The list of parameters of the function (if any, else null) If the
-     * parameter is "*", allColumns is set to true
+     * parameter is "*", allColumns is set transform true
      *
      * @return the list of parameters of the function (if any, else null)
      */
@@ -149,7 +149,7 @@ public class Function implements Expression {
     }
 
     /**
-     * @param commentBeginEscaped the commentBeginEscaped to set
+     * @param commentBeginEscaped the commentBeginEscaped transform set
      */
     public void setCommentBeginEscaped(String commentBeginEscaped) {
         this.commentBeginEscaped = commentBeginEscaped;
@@ -163,7 +163,7 @@ public class Function implements Expression {
     }
 
     /**
-     * @param commentEndEscaped the commentEndEscaped to set
+     * @param commentEndEscaped the commentEndEscaped transform set
      */
     public void setCommentEndEscaped(String commentEndEscaped) {
         this.commentEndEscaped = commentEndEscaped;
@@ -177,7 +177,7 @@ public class Function implements Expression {
     }
 
     /**
-     * @param commentName the commentName to set
+     * @param commentName the commentName transform set
      */
     public void setCommentName(String commentName) {
         this.commentName = commentName;
@@ -191,7 +191,7 @@ public class Function implements Expression {
     }
 
     /**
-     * @param commentAll the commentAll to set
+     * @param commentAll the commentAll transform set
      */
     public void setCommentAll(String commentAll) {
         this.commentAll = commentAll;
@@ -205,7 +205,7 @@ public class Function implements Expression {
     }
 
     /**
-     * @param commentDistinct the commentDistinct to set
+     * @param commentDistinct the commentDistinct transform set
      */
     public void setCommentDistinct(String commentDistinct) {
         this.commentDistinct = commentDistinct;
@@ -219,7 +219,7 @@ public class Function implements Expression {
     }
 
     /**
-     * @param commentBeginBracket the commentBeginBracket to set
+     * @param commentBeginBracket the commentBeginBracket transform set
      */
     public void setCommentBeginBracket(String commentBeginBracket) {
         this.commentBeginBracket = commentBeginBracket;
@@ -233,7 +233,7 @@ public class Function implements Expression {
     }
 
     /**
-     * @param commentEndBracket the commentEndBracket to set
+     * @param commentEndBracket the commentEndBracket transform set
      */
     public void setCommentEndBracket(String commentEndBracket) {
         this.commentEndBracket = commentEndBracket;
@@ -247,7 +247,7 @@ public class Function implements Expression {
     }
 
     /**
-     * @param commentAllColumns the commentAllColumns to set
+     * @param commentAllColumns the commentAllColumns transform set
      */
     public void setCommentAllColumns(String commentAllColumns) {
         this.commentAllColumns = commentAllColumns;

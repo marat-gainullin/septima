@@ -124,7 +124,7 @@ public class Insert implements Statement {
     }
 
     /**
-     * @param comment the comment to set
+     * @param comment the comment transform set
      */
     public void setComment(String comment) {
         this.comment = comment;
@@ -148,7 +148,7 @@ public class Insert implements Statement {
     }
 
     /**
-     * @param commentInto the commentInto to set
+     * @param commentInto the commentInto transform set
      */
     public void setCommentInto(String commentInto) {
         this.commentInto = commentInto;
@@ -162,7 +162,7 @@ public class Insert implements Statement {
     }
 
     /**
-     * @param commentValues the commentValues to set
+     * @param commentValues the commentValues transform set
      */
     public void setCommentValues(String commentValues) {
         this.commentValues = commentValues;
@@ -176,7 +176,7 @@ public class Insert implements Statement {
     }
 
     /**
-     * @param commentItemsList the commentItemsList to set
+     * @param commentItemsList the commentItemsList transform set
      */
     public void setCommentItemsList(String commentItemsList) {
         this.commentItemsList = commentItemsList;
@@ -190,7 +190,7 @@ public class Insert implements Statement {
     }
 
     /**
-     * @param commentBeforeColumns the commentBeforeColumns to set
+     * @param commentBeforeColumns the commentBeforeColumns transform set
      */
     public void setCommentBeforeColumns(String commentBeforeColumns) {
         this.commentBeforeColumns = commentBeforeColumns;
@@ -204,7 +204,7 @@ public class Insert implements Statement {
     }
 
     /**
-     * @param columnsComment the columnsComment to set
+     * @param columnsComment the columnsComment transform set
      */
     public void setColumnsComment(List<String> columnsComment) {
         this.columnsComment = columnsComment;
@@ -218,7 +218,7 @@ public class Insert implements Statement {
     }
 
     /**
-     * @param commentAfterColumns the commentAfterColumns to set
+     * @param commentAfterColumns the commentAfterColumns transform set
      */
     public void setCommentAfterColumns(String commentAfterColumns) {
         this.commentAfterColumns = commentAfterColumns;
@@ -232,7 +232,7 @@ public class Insert implements Statement {
     }
 
     /**
-     * @param commentAfterItemsList the commentAfterItemsList to set
+     * @param commentAfterItemsList the commentAfterItemsList transform set
      */
     public void setCommentAfterItemsList(String commentAfterItemsList) {
         this.commentAfterItemsList = commentAfterItemsList;
@@ -246,7 +246,7 @@ public class Insert implements Statement {
     }
 
     /**
-     * @param itemsListComments the itemsListComments to set
+     * @param itemsListComments the itemsListComments transform set
      */
     public void setItemsListComments(List<String> itemsListComments) {
         this.itemsListComments = itemsListComments;

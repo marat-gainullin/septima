@@ -102,7 +102,7 @@ public abstract class BinaryExpression implements Expression {
     }
 
     /**
-     * @param commentNot the commentNot to set
+     * @param commentNot the commentNot transform set
      */
     public void setCommentNot(String commentNot) {
         this.commentNot = commentNot;
@@ -116,7 +116,7 @@ public abstract class BinaryExpression implements Expression {
     }
 
     /**
-     * @param commentLeftPrior the commentLeftPrior to set
+     * @param commentLeftPrior the commentLeftPrior transform set
      */
     public void setCommentLeftPrior(String commentLeftPrior) {
         this.commentLeftPrior = commentLeftPrior;
@@ -130,7 +130,7 @@ public abstract class BinaryExpression implements Expression {
     }
 
     /**
-     * @param commentRightPrior the commentRightPrior to set
+     * @param commentRightPrior the commentRightPrior transform set
      */
     public void setCommentRightPrior(String commentRightPrior) {
         this.commentRightPrior = commentRightPrior;

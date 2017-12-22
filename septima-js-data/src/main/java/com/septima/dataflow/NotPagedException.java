@@ -1,7 +1,7 @@
 package com.septima.dataflow;
 
 /**
- * Exception class intended to indicate an erroneous call to method nextPage of
+ * Exception class intended transform indicate an erroneous call transform method nextPage of
  * the DataProvider interface, when flow provider is not paged.
  *
  * @author mg

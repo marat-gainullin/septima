@@ -3,7 +3,7 @@ package net.sf.jsqlparser.test.insert;
 import java.io.StringReader;
 
 import junit.framework.TestCase;
-import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.JSqlParserException;
 import net.sf.jsqlparser.expression.DoubleValue;
 import net.sf.jsqlparser.expression.JdbcParameter;
 import net.sf.jsqlparser.expression.LongValue;
@@ -22,7 +22,7 @@ public class InsertTest extends TestCase {
     SeptimaSqlParser parserManager = new SeptimaSqlParser();
 
     @Test
-    public void testRegularInsert() throws JSQLParserException {
+    public void testRegularInsert() throws JSqlParserException {
         String statement = "INSERT INTO mytable (col1, col2, col3) VALUES (?, 'sadfsd', 234)";
         Insert insert = (Insert) parserManager.parse(new StringReader(statement));
         assertEquals("mytable", insert.getTable().getName());
@@ -46,7 +46,7 @@ public class InsertTest extends TestCase {
     }
     
     @Test
-    public void testComment() throws JSQLParserException {
+    public void testComment() throws JSqlParserException {
         String statement =
                 "/*90053*/ INSERT /*erte*/ INTO /*jkl;kl;*/ mytable /*dfgdg*/ (/*24242*/ col1 /*werfwer*/, /*24242*/ col2 /*werwerw*/, /*24242*/ col3 /*werwerw*/ ) /*werfsfs*/ VALUES /*weruwer*/ (/**/ ? /**/, /**/ 'sadfsd' /**/, /**/ 234 /**/ ) /*eiortouei*/";
         Insert insert = (Insert) parserManager.parse(new StringReader(statement));
@@ -58,7 +58,7 @@ public class InsertTest extends TestCase {
     }
     
     @Test
-    public void testInsertFromSelect() throws JSQLParserException {
+    public void testInsertFromSelect() throws JSqlParserException {
         String statement = "INSERT INTO mytable t (col1, col2, col3) SELECT * FROM mytable2";
         Insert insert = (Insert) parserManager.parse(new StringReader(statement));
         assertEquals("mytable", insert.getTable().getName());

@@ -1,6 +1,6 @@
 package net.sf.jsqlparser.test.select;
 
-import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.JSqlParserException;
 import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.Multiplication;
@@ -26,14 +26,14 @@ public class SelectTest {
     SeptimaSqlParser parserManager = new SeptimaSqlParser();
 
     @Test
-    public void testTableAlias() throws JSQLParserException {
+    public void testTableAlias() throws JSqlParserException {
         String statement = "SELECT t1.name FROM #table1 AS t1 WHERE t1.id = 12";
         Select select = (Select) parserManager.parse(new StringReader(statement));
         assertEquals(statement, "" + select);
     }
 
     @Test
-    public void testLimit() throws JSQLParserException {
+    public void testLimit() throws JSqlParserException {
         String statement = "SELECT * FROM mytable WHERE mytable.col = 9 LIMIT 3, ?";
 
         Select select = (Select) parserManager.parse(new StringReader(statement));
@@ -74,7 +74,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testTop() throws JSQLParserException {
+    public void testTop() throws JSqlParserException {
         String statement = "SELECT TOP 3 * FROM mytable WHERE mytable.col = 9";
 
         Select select = (Select) parserManager.parse(new StringReader(statement));
@@ -87,7 +87,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testCyrilicChars() throws JSQLParserException {
+    public void testCyrilicChars() throws JSqlParserException {
         String statement =
                 "/*привет*/ SELECT /*sdfsf*/ * FROM /*sdfs*/ моятаблица WHERE моятаблица.col = 9 /*ksjdf*/";
         Select select = (Select) parserManager.parse(new StringReader(statement));
@@ -95,7 +95,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testComment() throws JSQLParserException {
+    public void testComment() throws JSqlParserException {
         String statement =
                 "/*welkjhkas*/ SELECT /*sdfsf*/ * FROM /*sdfs*/ mytable WHERE mytable.col = 9 /*ksjdf*/";
         Select select = (Select) parserManager.parse(new StringReader(statement));
@@ -252,7 +252,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testSelectItems() throws JSQLParserException {
+    public void testSelectItems() throws JSqlParserException {
         String statement =
                 "SELECT myid AS MYID, mycol, tab.*, schema.tab.*, mytab.mycol2, myschema.mytab.mycol, myschema.mytab.* FROM mytable WHERE mytable.col = 9";
         PlainSelect plainSelect = (PlainSelect) ((Select) parserManager.parse(new StringReader(statement))).getSelectBody();
@@ -283,7 +283,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testUnion() throws JSQLParserException {
+    public void testUnion() throws JSqlParserException {
         String statement =
                 "SELECT * FROM mytable WHERE mytable.col = 9 UNION "
                 + "SELECT * FROM mytable3 WHERE mytable3.col = ? UNION "
@@ -303,7 +303,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testEXCEPT() throws JSQLParserException {
+    public void testEXCEPT() throws JSqlParserException {
         String statement =
                 "SELECT /*sdfhjklsdh*/ * FROM mytable WHERE mytable.col = 9 EXCEPT "
                 + "SELECT * FROM mytable3 WHERE mytable3.col = ? UNION "
@@ -338,7 +338,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testDistinct() throws JSQLParserException {
+    public void testDistinct() throws JSqlParserException {
         String statement = "SELECT DISTINCT ON (myid) myid, mycol FROM mytable WHERE mytable.col = 9";
         PlainSelect plainSelect = (PlainSelect) ((Select) parserManager.parse(new StringReader(statement))).getSelectBody();
         assertEquals(
@@ -349,7 +349,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testFrom() throws JSQLParserException {
+    public void testFrom() throws JSqlParserException {
         String statement =
                 "SELECT * FROM mytable as mytable0, mytable1 alias_tab1, mytable2 as alias_tab2, (SELECT * FROM mytable3) AS mytable4 WHERE mytable.col = 9";
         PlainSelect plainSelect = (PlainSelect) ((Select) parserManager.parse(new StringReader(statement))).getSelectBody();
@@ -362,7 +362,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testHashRefs() throws JSQLParserException {
+    public void testHashRefs() throws JSqlParserException {
         String statement =
                 "SELECT * FROM mytable as mytable0, #.my/-t/a.b-l/e.1 alias_tab1, mytable2 as alias_tab2, (SELECT * FROM mytable3) AS mytable4 WHERE mytable.col = 9";
         PlainSelect plainSelect = (PlainSelect) ((Select) parserManager.parse(new StringReader(statement))).getSelectBody();
@@ -376,7 +376,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testJoin() throws JSQLParserException {
+    public void testJoin() throws JSqlParserException {
         String statement = "SELECT * FROM tab1 LEFT outer JOIN tab2 ON tab1.id = tab2.id";
         PlainSelect plainSelect = (PlainSelect) ((Select) parserManager.parse(new StringReader(statement))).getSelectBody();
         assertEquals(1, plainSelect.getJoins().size());
@@ -429,7 +429,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testFunctions() throws JSQLParserException {
+    public void testFunctions() throws JSqlParserException {
         String statement = "SELECT MAX(id) as max FROM mytable WHERE mytable.col = 9";
         PlainSelect select = (PlainSelect) ((Select) parserManager.parse(new StringReader(statement))).getSelectBody();
         assertEquals("max", ((SelectExpressionItem) select.getSelectItems().get(0)).getAlias().getName());
@@ -469,7 +469,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testWhere() throws JSQLParserException {
+    public void testWhere() throws JSqlParserException {
 
         String statement = "SELECT * FROM tab1 WHERE ";
         String whereToString = "(a + b + c / d + e * f) * (a / b * (a + b)) > ?";
@@ -520,7 +520,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testDebug() throws JSQLParserException {
+    public void testDebug() throws JSqlParserException {
         String statement = "Select t1.CALC, t.NAMECALC, t2.VALUEOUT "
                 + "From TR_SENSOR_DEFINE_PARAM t1"
                 + " Inner Join TR_CALC_PARAMS t on t1.CALC = t.TR_CALC_PARAMS_ID"
@@ -534,7 +534,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testGroupBy() throws JSQLParserException {
+    public void testGroupBy() throws JSqlParserException {
         String statement = "SELECT * FROM tab1 WHERE a > 34 GROUP BY tab1.b";
         PlainSelect plainSelect = (PlainSelect) ((Select) parserManager.parse(new StringReader(statement))).getSelectBody();
         assertEquals(1, plainSelect.getGroupByColumnReferences().size());
@@ -550,7 +550,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testHaving() throws JSQLParserException {
+    public void testHaving() throws JSqlParserException {
         String statement = "SELECT MAX(tab1.b) FROM tab1 WHERE a > 34 GROUP BY tab1.b HAVING MAX(tab1.b) > 56";
         PlainSelect plainSelect = (PlainSelect) ((Select) parserManager.parse(new StringReader(statement))).getSelectBody();
         assertTrue(plainSelect.getHaving() instanceof GreaterThan);
@@ -563,7 +563,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testExists() throws JSQLParserException {
+    public void testExists() throws JSqlParserException {
         String statement = "SELECT * FROM tab1 WHERE";
         String where = " EXISTS (SELECT * FROM tab2)";
         statement += where;
@@ -581,7 +581,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testOrderBy() throws JSQLParserException {
+    public void testOrderBy() throws JSqlParserException {
         //TODO: should there be a DESC marker in the OrderByElement class?
         String statement = "SELECT * FROM tab1 WHERE a > 34 GROUP BY tab1.b ORDER BY tab1.a DESC, tab1.b ASC";
         PlainSelect plainSelect = (PlainSelect) ((Select) parserManager.parse(new StringReader(statement))).getSelectBody();
@@ -609,7 +609,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testTimestamp() throws JSQLParserException {
+    public void testTimestamp() throws JSqlParserException {
         String statement = "SELECT * FROM tab1 WHERE a > {ts '2004-04-30 04:05:34.56'}";
         PlainSelect plainSelect = (PlainSelect) ((Select) parserManager.parse(new StringReader(statement))).getSelectBody();
         assertEquals("2004-04-30 04:05:34.56", ((TimestampValue) ((GreaterThan) plainSelect.getWhere()).getRightExpression()).getValue().toString());
@@ -617,7 +617,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testTime() throws JSQLParserException {
+    public void testTime() throws JSqlParserException {
         String statement = "SELECT * FROM tab1 WHERE a > {t '04:05:34'}";
         PlainSelect plainSelect = (PlainSelect) ((Select) parserManager.parse(new StringReader(statement))).getSelectBody();
         assertEquals("04:05:34", (((TimeValue) ((GreaterThan) plainSelect.getWhere()).getRightExpression()).getValue()).toString());
@@ -625,7 +625,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testCase() throws JSQLParserException {
+    public void testCase() throws JSqlParserException {
         String statement = "SELECT a, CASE b WHEN 1 THEN 2 END FROM tab1";
         Statement parsed = parserManager.parse(new StringReader(statement));
         assertEquals(statement, "" + parsed);
@@ -689,14 +689,14 @@ public class SelectTest {
     }
 
     @Test
-    public void testReplaceAsFunction() throws JSQLParserException {
+    public void testReplaceAsFunction() throws JSqlParserException {
         String statement = "SELECT REPLACE(a, 'b', c) FROM tab1";
         Statement parsed = parserManager.parse(new StringReader(statement));
         assertEquals(statement, "" + parsed);
     }
 
     @Test
-    public void testLike() throws JSQLParserException {
+    public void testLike() throws JSqlParserException {
         String statement = "SELECT * FROM tab1 WHERE a LIKE 'test'";
         PlainSelect plainSelect = (PlainSelect) ((Select) parserManager.parse(new StringReader(statement))).getSelectBody();
         assertEquals("test", (((StringValue) ((LikeExpression) plainSelect.getWhere()).getRightExpression()).getValue()).toString());
@@ -710,14 +710,14 @@ public class SelectTest {
     }
 
     @Test
-    public void testSelectOrderHaving() throws JSQLParserException {
+    public void testSelectOrderHaving() throws JSqlParserException {
         String statement = "SELECT units, count(units) AS num FROM currency GROUP BY units HAVING count(units) > 1 ORDER BY num";
         Statement parsed = parserManager.parse(new StringReader(statement));
         assertEquals(statement, "" + parsed);
     }
 
     @Test
-    public void testDouble() throws JSQLParserException {
+    public void testDouble() throws JSqlParserException {
         String statement = "SELECT 1e2, * FROM mytable WHERE mytable.col = 9";
         Select select = (Select) parserManager.parse(new StringReader(statement));
 
@@ -740,7 +740,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testWith() throws JSQLParserException {
+    public void testWith() throws JSqlParserException {
         String statement = "WITH DINFO (DEPTNO, AVGSALARY, EMPCOUNT) AS "
                 + "(SELECT OTHERS.WORKDEPT, AVG(OTHERS.SALARY), COUNT(*) FROM EMPLOYEE AS OTHERS "
                 + "GROUP BY OTHERS.WORKDEPT), DINFOMAX AS (SELECT MAX(AVGSALARY) AS AVGMAX FROM DINFO) "
@@ -753,14 +753,14 @@ public class SelectTest {
     }
 
     @Test
-    public void testSelectAliasInQuotes() throws JSQLParserException {
+    public void testSelectAliasInQuotes() throws JSqlParserException {
         String statement = "SELECT mycolumn AS \"My Column Name\" FROM mytable";
         Statement parsed = parserManager.parse(new StringReader(statement));
         assertEquals(statement, "" + parsed);
     }
 
     @Test
-    public void testSelectJoinWithComma() throws JSQLParserException {
+    public void testSelectJoinWithComma() throws JSqlParserException {
         String statement = "SELECT cb.Genus, cb.Species FROM Coleccion_de_Briofitas AS cb, unigeoestados AS es "
                 + "WHERE es.nombre = \"Tamaulipas\" AND cb.the_geom = es.geom";
         Statement parsed = parserManager.parse(new StringReader(statement));
@@ -768,7 +768,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testDeparser() throws JSQLParserException {
+    public void testDeparser() throws JSqlParserException {
         String statement = "SELECT a.OWNERLASTNAME, a.OWNERFIRSTNAME "
                 + "FROM ANTIQUEOWNERS AS a, ANTIQUES AS b "
                 + "WHERE b.BUYERID = a.OWNERID AND b.ITEM = 'Chair'";
@@ -793,7 +793,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testMysqlQuote() throws JSQLParserException {
+    public void testMysqlQuote() throws JSqlParserException {
         String statement = "SELECT `a.OWNERLASTNAME`, `OWNERFIRSTNAME` "
                 + "FROM `ANTIQUEOWNERS` AS a, ANTIQUES AS b "
                 + "WHERE b.BUYERID = a.OWNERID AND b.ITEM = 'Chair'";
@@ -806,7 +806,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testConcat() throws JSQLParserException {
+    public void testConcat() throws JSqlParserException {
         String statement = "SELECT a || b || c + 4 FROM t";
         Statement parsed = parserManager.parse(new StringReader(statement));
         StatementDeParser deParser = new StatementDeParser(new StringBuilder());
@@ -817,7 +817,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testMatches() throws JSQLParserException {
+    public void testMatches() throws JSqlParserException {
         String statement = "SELECT * FROM team WHERE team.search_column @@ to_tsquery('new & york & yankees')";
         Statement parsed = parserManager.parse(new StringReader(statement));
         StatementDeParser deParser = new StatementDeParser(new StringBuilder());
@@ -828,7 +828,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testGroupByExpression() throws JSQLParserException {
+    public void testGroupByExpression() throws JSqlParserException {
         String statement =
                 "SELECT col1, col2, col1 + col2, sum(col8)"
                 + " FROM table1 "
@@ -842,7 +842,7 @@ public class SelectTest {
     }
 
     @Test
-    public void testBitwise() throws JSQLParserException {
+    public void testBitwise() throws JSqlParserException {
         String statement =
                 "SELECT col1 & 32, col2 ^ col1, col1 | col2"
                 + " FROM table1";

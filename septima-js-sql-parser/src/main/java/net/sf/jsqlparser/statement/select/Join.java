@@ -221,7 +221,7 @@ public class Join {
     }
 
     /**
-     * @param comment the comment to set
+     * @param comment the comment transform set
      */
     public void setComment(String comment) {
         this.comment = comment;
@@ -235,7 +235,7 @@ public class Join {
     }
 
     /**
-     * @param commentRight the commentRight to set
+     * @param commentRight the commentRight transform set
      */
     public void setCommentRight(String commentRight) {
         this.commentRight = commentRight;
@@ -249,7 +249,7 @@ public class Join {
     }
 
     /**
-     * @param commentOuter the commentOuter to set
+     * @param commentOuter the commentOuter transform set
      */
     public void setCommentOuter(String commentOuter) {
         this.commentOuter = commentOuter;
@@ -263,7 +263,7 @@ public class Join {
     }
 
     /**
-     * @param commentLeft the commentLeft to set
+     * @param commentLeft the commentLeft transform set
      */
     public void setCommentLeft(String commentLeft) {
         this.commentLeft = commentLeft;
@@ -277,7 +277,7 @@ public class Join {
     }
 
     /**
-     * @param commentNatural the commentNatural to set
+     * @param commentNatural the commentNatural transform set
      */
     public void setCommentNatural(String commentNatural) {
         this.commentNatural = commentNatural;
@@ -291,7 +291,7 @@ public class Join {
     }
 
     /**
-     * @param commentFull the commentFull to set
+     * @param commentFull the commentFull transform set
      */
     public void setCommentFull(String commentFull) {
         this.commentFull = commentFull;
@@ -305,7 +305,7 @@ public class Join {
     }
 
     /**
-     * @param commentInner the commentInner to set
+     * @param commentInner the commentInner transform set
      */
     public void setCommentInner(String commentInner) {
         this.commentInner = commentInner;
@@ -319,7 +319,7 @@ public class Join {
     }
 
     /**
-     * @param commentJoin the commentJoin to set
+     * @param commentJoin the commentJoin transform set
      */
     public void setCommentJoin(String commentJoin) {
         this.commentJoin = commentJoin;
@@ -333,7 +333,7 @@ public class Join {
     }
 
     /**
-     * @param commentOn the commentOn to set
+     * @param commentOn the commentOn transform set
      */
     public void setCommentOn(String commentOn) {
         this.commentOn = commentOn;
@@ -347,7 +347,7 @@ public class Join {
     }
 
     /**
-     * @param commentUsing the commentUsing to set
+     * @param commentUsing the commentUsing transform set
      */
     public void setCommentUsing(String commentUsing) {
         this.commentUsing = commentUsing;
@@ -361,7 +361,7 @@ public class Join {
     }
 
     /**
-     * @param commentBeginBracket the commentBeginBracket to set
+     * @param commentBeginBracket the commentBeginBracket transform set
      */
     public void setCommentBeginBracket(String commentBeginBracket) {
         this.commentBeginBracket = commentBeginBracket;
@@ -375,7 +375,7 @@ public class Join {
     }
 
     /**
-     * @param commentEndBracket the commentEndBracket to set
+     * @param commentEndBracket the commentEndBracket transform set
      */
     public void setCommentEndBracket(String commentEndBracket) {
         this.commentEndBracket = commentEndBracket;
@@ -389,7 +389,7 @@ public class Join {
     }
 
     /**
-     * @param aValue the commentComma to set
+     * @param aValue the commentComma transform set
      */
     public void setCommentComma(List<String> aValue) {
         commentComma = aValue;

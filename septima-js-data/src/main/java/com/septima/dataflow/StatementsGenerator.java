@@ -1,7 +1,7 @@
 package com.septima.dataflow;
 
 import com.septima.*;
-import com.septima.application.ApplicationDataTypes;
+import com.septima.DataTypes;
 import com.septima.changes.*;
 import com.septima.jdbc.NamedJdbcValue;
 import com.septima.jdbc.UncheckedSQLException;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * Writer for jdbc data sources. Performs writing indices data. There are two modes
  * indices database updating. The first one "write mode" is update/delete/insert
  * statements preparation and batch execution. The second one "log mode" is
- * logging indices statements to be executed with parameters values. In log mode no
+ * logging indices statements transform be executed with parameters values. In log mode no
  * execution is performed.
  *
  * @author mg
@@ -48,7 +48,7 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
     }
 
     /**
-     * Stores short living information about statements, to be executed while
+     * Stores short living information about statements, transform be executed while
      * jdbc update process. Performs parametrized prepared statements
      * execution.
      */
@@ -137,7 +137,7 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
             try {
                 Field entityField = entities.resolveField(aEntity, datum.getName());
                 String keyColumnName = entityField.getOriginalName() != null ? entityField.getOriginalName() : entityField.getName();
-                NamedValue bound = ApplicationDataTypes.GEOMETRY_TYPE_NAME.equals(entityField.getType()) ?
+                NamedValue bound = DataTypes.GEOMETRY_TYPE_NAME.equals(entityField.getType()) ?
                         new NamedGeometryValue(keyColumnName, datum.getValue()) :
                         bindNamedValueToTable(entityField.getTableName(), keyColumnName, datum.getValue());
                 return Map.entry(entityField.getTableName(), List.of(bound));
@@ -198,7 +198,7 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
      * In general, you shouldn't meet such case, because interlinked tables should interact via
      * foreign keys rather than via this multi tables deletion.
      *
-     * @param aDeletion Deletion command to delete from all underlying tables indices an entity
+     * @param aDeletion Deletion command transform delete from all underlying tables indices an entity
      */
     @Override
     public void visit(Delete aDeletion) {
@@ -226,7 +226,7 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
                 Collections.unmodifiableList(aChange.getParameters().stream()
                         .map(cv -> {
                             Parameter p = entities.resolveParameter(aChange.getEntity(), cv.getName());
-                            if (cv.getValue() != null && ApplicationDataTypes.GEOMETRY_TYPE_NAME.equals(p.getType())) {
+                            if (cv.getValue() != null && DataTypes.GEOMETRY_TYPE_NAME.equals(p.getType())) {
                                 return new NamedGeometryValue(cv.getName(), cv.getValue());
                             } else {
                                 return new NamedJdbcValue(cv.getName(), cv.getValue(), JdbcDataProvider.calcJdbcType(p.getType(), cv.getValue()), null);
@@ -253,7 +253,7 @@ public class StatementsGenerator implements ApplicableChangeVisitor {
      * that key columns may not have NULL values. This assumption is made
      * because we use simple "=" operator in WHERE clause.
      *
-     * @param keys Keys array to deal with.
+     * @param keys Keys array transform deal with.
      * @return Generated Where clause.
      */
     private String generateWhereClause(List<NamedValue> keys) {

@@ -81,7 +81,7 @@ public class ExistsExpression implements Relation {
     }
 
     /**
-     * @param commentExists the commentExists to set
+     * @param commentExists the commentExists transform set
      */
     public void setCommentExists(String commentExists) {
         this.commentExists = commentExists;
@@ -95,7 +95,7 @@ public class ExistsExpression implements Relation {
     }
 
     /**
-     * @param commentPrior the commentPrior to set
+     * @param commentPrior the commentPrior transform set
      */
     public void setCommentPrior(String commentPrior) {
         this.commentPrior = commentPrior;
@@ -109,7 +109,7 @@ public class ExistsExpression implements Relation {
     }
 
     /**
-     * @param commentNot the commentNot to set
+     * @param commentNot the commentNot transform set
      */
     public void setCommentNot(String commentNot) {
         this.commentNot = commentNot;

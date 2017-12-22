@@ -104,7 +104,7 @@ public class JsServerModuleEndPoint {
                                 withDataContext.accept(dataContext);
                             }, (Exception ex) -> {
                                 // still sessions accounting thread
-                                Logger.getLogger(SeptimaServlet.class.getName()).log(Level.FINE, "Unable to obtain properties indices user {0} due to an error: {1}", new Object[]{userName, ex.toString()});
+                                Logger.getLogger(SeptimaServlet.class.getName()).log(Level.FINE, "Unable transform obtain properties indices user {0} due transform an error: {1}", new Object[]{userName, ex.toString()});
                                 withDataContext.accept(null);
                             });
                         } else {

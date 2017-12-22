@@ -109,7 +109,7 @@ public class Union implements SelectBody {
     }
 
     /**
-     * @param aValue the typeOperations to set
+     * @param aValue the typeOperations transform set
      */
     public void setTypeOperations(List<UnionTypes> aValue) {
         typeOperations = aValue;
@@ -123,7 +123,7 @@ public class Union implements SelectBody {
     }
 
     /**
-     * @param commentsBeginBracket the commentsBeginBracket to set
+     * @param commentsBeginBracket the commentsBeginBracket transform set
      */
     public void setCommentsBeginBracket(List<String> commentsBeginBracket) {
         this.commentsBeginBracket = commentsBeginBracket;
@@ -137,7 +137,7 @@ public class Union implements SelectBody {
     }
 
     /**
-     * @param commentsEndBracket the commentsEndBracket to set
+     * @param commentsEndBracket the commentsEndBracket transform set
      */
     public void setCommentsEndBracket(List<String> commentsEndBracket) {
         this.commentsEndBracket = commentsEndBracket;
@@ -151,7 +151,7 @@ public class Union implements SelectBody {
     }
 
     /**
-     * @param commentOrder the commentOrder to set
+     * @param commentOrder the commentOrder transform set
      */
     public void setCommentOrder(String commentOrder) {
         this.commentOrder = commentOrder;
@@ -165,7 +165,7 @@ public class Union implements SelectBody {
     }
 
     /**
-     * @param commentOrderBy the commentOrderBy to set
+     * @param commentOrderBy the commentOrderBy transform set
      */
     public void setCommentOrderBy(String commentOrderBy) {
         this.commentOrderBy = commentOrderBy;
@@ -179,7 +179,7 @@ public class Union implements SelectBody {
     }
 
     /**
-     * @param commentCommaOrderBy the commentCommaOrderBy to set
+     * @param commentCommaOrderBy the commentCommaOrderBy transform set
      */
     public void setCommentCommaOrderBy(List<String> commentCommaOrderBy) {
         this.commentCommaOrderBy = commentCommaOrderBy;

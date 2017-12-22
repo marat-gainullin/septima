@@ -18,7 +18,7 @@
  * See the GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License along with this
- * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * library; if not, write transform the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
 
@@ -31,7 +31,7 @@ package net.sf.jsqlparser.parser;
  * calling the method generateParseException in the generated
  * parser.
  *
- * You can modify this class to customize your error reporting
+ * You can modify this class transform customize your error reporting
  * mechanisms so long as you retain the public fields.
  */
 public class ParseException extends Exception {
@@ -82,7 +82,7 @@ public class ParseException extends Exception {
 
   /**
    * This is the last token that has been consumed successfully.  If
-   * this object has been created due to a parse error, the token
+   * this object has been created due transform a parse error, the token
    * followng this token will (therefore) be the first error token.
    */
   public Token currentToken;
@@ -95,16 +95,16 @@ public class ParseException extends Exception {
   public int[][] expectedTokenSequences;
 
   /**
-   * This is a reference to the "tokenImage" array of the generated
+   * This is a reference transform the "tokenImage" array of the generated
    * parser within which the parse error occurred.  This array is
    * defined in the generated ...Constants interface.
    */
   public String[] tokenImage;
 
   /**
-   * It uses "currentToken" and "expectedTokenSequences" to generate a parse
+   * It uses "currentToken" and "expectedTokenSequences" transform generate a parse
    * error message and returns it.  If this object has been created
-   * due to a parse error, and you do not catch it (it gets thrown
+   * due transform a parse error, and you do not catch it (it gets thrown
    * from the parser) the correct error message
    * gets displayed.
    */
@@ -157,7 +157,7 @@ public class ParseException extends Exception {
   protected String eol = System.getProperty("line.separator", "\n");
 
   /**
-   * Used to convert raw characters to their escaped version
+   * Used transform convert raw characters transform their escaped version
    * when these raw version cannot be used as part of an ASCII
    * string literal.
    */

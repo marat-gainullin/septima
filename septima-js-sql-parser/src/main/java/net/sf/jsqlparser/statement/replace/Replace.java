@@ -160,7 +160,7 @@ public class Replace implements Statement {
     }
 
     /**
-     * @param comment the comment to set
+     * @param comment the comment transform set
      */
     public void setComment(String comment) {
         this.comment = comment;
@@ -184,7 +184,7 @@ public class Replace implements Statement {
     }
 
     /**
-     * @param commentInto the commentInto to set
+     * @param commentInto the commentInto transform set
      */
     public void setCommentInto(String commentInto) {
         this.commentInto = commentInto;
@@ -198,7 +198,7 @@ public class Replace implements Statement {
     }
 
     /**
-     * @param commentSet the commentSet to set
+     * @param commentSet the commentSet transform set
      */
     public void setCommentSet(String commentSet) {
         this.commentSet = commentSet;
@@ -212,7 +212,7 @@ public class Replace implements Statement {
     }
 
     /**
-     * @param commentValues the commentValues to set
+     * @param commentValues the commentValues transform set
      */
     public void setCommentValues(String commentValues) {
         this.commentValues = commentValues;
@@ -226,7 +226,7 @@ public class Replace implements Statement {
     }
 
     /**
-     * @param commentBeforeColumns the commentBeforeColumns to set
+     * @param commentBeforeColumns the commentBeforeColumns transform set
      */
     public void setCommentBeforeColumns(String commentBeforeColumns) {
         this.commentBeforeColumns = commentBeforeColumns;
@@ -240,7 +240,7 @@ public class Replace implements Statement {
     }
 
     /**
-     * @param commentAfterColumns the commentAfterColumns to set
+     * @param commentAfterColumns the commentAfterColumns transform set
      */
     public void setCommentAfterColumns(String commentAfterColumns) {
         this.commentAfterColumns = commentAfterColumns;
@@ -254,7 +254,7 @@ public class Replace implements Statement {
     }
 
     /**
-     * @param commentCommaColumns the commentCommaColumns to set
+     * @param commentCommaColumns the commentCommaColumns transform set
      */
     public void setCommentCommaColumns(List<String> commentCommaColumns) {
         this.commentCommaColumns = commentCommaColumns;
@@ -268,7 +268,7 @@ public class Replace implements Statement {
     }
 
     /**
-     * @param commentEqualsColumns the commentEqualsColumns to set
+     * @param commentEqualsColumns the commentEqualsColumns transform set
      */
     public void setCommentEqualsColumns(List<String> commentEqualsColumns) {
         this.commentEqualsColumns = commentEqualsColumns;
@@ -282,7 +282,7 @@ public class Replace implements Statement {
     }
 
     /**
-     * @param commentCommaExpr the commentCommaExpr to set
+     * @param commentCommaExpr the commentCommaExpr transform set
      */
     public void setCommentCommaExpr(List<String> commentCommaExpr) {
         this.commentCommaExpr = commentCommaExpr;
@@ -296,7 +296,7 @@ public class Replace implements Statement {
     }
 
     /**
-     * @param commentCommaItems the commentCommaItems to set
+     * @param commentCommaItems the commentCommaItems transform set
      */
     public void setCommentCommaItems(List<String> commentCommaItems) {
         this.commentCommaItems = commentCommaItems;
@@ -310,7 +310,7 @@ public class Replace implements Statement {
     }
 
     /**
-     * @param commentBeforeItems the commentBeforeItems to set
+     * @param commentBeforeItems the commentBeforeItems transform set
      */
     public void setCommentBeforeItems(String commentBeforeItems) {
         this.commentBeforeItems = commentBeforeItems;
@@ -324,7 +324,7 @@ public class Replace implements Statement {
     }
 
     /**
-     * @param commentAfterItems the commentAfterItems to set
+     * @param commentAfterItems the commentAfterItems transform set
      */
     public void setCommentAfterItems(String commentAfterItems) {
         this.commentAfterItems = commentAfterItems;
@@ -338,7 +338,7 @@ public class Replace implements Statement {
     }
 
     /**
-     * @param useInto the useInto to set
+     * @param useInto the useInto transform set
      */
     public void setUseInto(boolean useInto) {
         this.useInto = useInto;

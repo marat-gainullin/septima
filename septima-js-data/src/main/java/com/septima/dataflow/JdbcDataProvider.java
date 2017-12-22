@@ -1,6 +1,6 @@
 package com.septima.dataflow;
 
-import com.septima.application.ApplicationDataTypes;
+import com.septima.DataTypes;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
 import com.septima.Parameter;
@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 import javax.sql.DataSource;
 
 /**
- * This flow dataSource intended to support the data flow process from jdbc
+ * This flow dataSource intended transform support the data flow process from jdbc
  * data sources.
  *
  * @author mg
@@ -49,15 +49,15 @@ public abstract class JdbcDataProvider implements DataProvider {
     protected ResultSet lowLevelResults;
 
     /**
-     * A flow dataSource, intended to support jdbc data sources.
+     * A flow dataSource, intended transform support jdbc data sources.
      *
      * @param aDataSource      A DataSource instance, that would supply resources for
      *                         use them by flow dataSource in single operations, like retriving data of
      *                         applying data changes.
      * @param aAsyncDataPuller {@link Executor} for Jdbc blocking tasks.
-     * @param aClause          A sql clause, dataSource should use to achieve
-     *                         PreparedStatement instance to use it in the result set querying process.
-     * @param aExpectedFields  Fields, expected by Septima according to metadata analysis.
+     * @param aClause          A sql clause, dataSource should use transform achieve
+     *                         PreparedStatement instance transform use it in the result set querying process.
+     * @param aExpectedFields  Fields, expected by Septima according transform metadata analysis.
      * @see DataSource
      */
     public JdbcDataProvider(DataSource aDataSource, Executor aAsyncDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
@@ -339,7 +339,7 @@ public abstract class JdbcDataProvider implements DataProvider {
     public static int assign(Object aValue, int aParameterIndex, PreparedStatement aStmt, int aParameterJdbcType, String aParameterSqlTypeName) throws SQLException {
         if (aValue != null) {
             switch (aParameterJdbcType) {
-                // Some strange types. No one knows how to work with them.
+                // Some strange types. No one knows how transform work with them.
                 case Types.JAVA_OBJECT:
                 case Types.DATALINK:
                 case Types.DISTINCT:
@@ -616,7 +616,7 @@ public abstract class JdbcDataProvider implements DataProvider {
         return aParameterJdbcType;
     }
 
-    private static final String FALLED_TO_NULL_MSG = "Some value falled to null while tranferring to a database. May be it''s class is unsupported: {0}";
+    private static final String FALLED_TO_NULL_MSG = "Some value falled transform null while tranferring transform a database. May be it''s class is unsupported: {0}";
 
     private static void logQuery(String sqlClause, List<Parameter> aParams, Map<Integer, Integer> aAssignedJdbcTypes) {
         if (queriesLogger.isLoggable(Level.FINE)) {
@@ -626,7 +626,7 @@ public abstract class JdbcDataProvider implements DataProvider {
                 for (int i = 1; i <= aParams.size(); i++) {
                     Parameter param = aParams.get(i - 1);
                     Object paramValue = param.getValue();
-                    if (paramValue != null && ApplicationDataTypes.DATE_TYPE_NAME.equals(param.getType())) {
+                    if (paramValue != null && DataTypes.DATE_TYPE_NAME.equals(param.getType())) {
                         java.util.Date dateValue = (java.util.Date) paramValue;
                         SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
                         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -650,16 +650,16 @@ public abstract class JdbcDataProvider implements DataProvider {
                 String pType = aParameter.getType();
                 if (pType != null) {
                     switch (pType) {
-                        case ApplicationDataTypes.STRING_TYPE_NAME:
+                        case DataTypes.STRING_TYPE_NAME:
                             aParameter.setValue(aStatement.getString(aParameterIndex));
                             break;
-                        case ApplicationDataTypes.NUMBER_TYPE_NAME:
+                        case DataTypes.NUMBER_TYPE_NAME:
                             aParameter.setValue(aStatement.getDouble(aParameterIndex));
                             break;
-                        case ApplicationDataTypes.DATE_TYPE_NAME:
+                        case DataTypes.DATE_TYPE_NAME:
                             aParameter.setValue(aStatement.getDate(aParameterIndex));
                             break;
-                        case ApplicationDataTypes.BOOLEAN_TYPE_NAME:
+                        case DataTypes.BOOLEAN_TYPE_NAME:
                             aParameter.setValue(aStatement.getBoolean(aParameterIndex));
                             break;
                         default:
@@ -679,9 +679,9 @@ public abstract class JdbcDataProvider implements DataProvider {
         String sqlTypeName;
         // Crazy DBMS-es in most cases can't answer the question about parameter's type properly!
         // PostgreSQL, for example starts answer the question after some time (about 4-8 hours).
-        // But before it raises SQLException. And after that, starts to report TIMESTAMP parameters
+        // But before it raises SQLException. And after that, starts transform report TIMESTAMP parameters
         // as DATE parameters.
-        // This leads to parameters values shifting while statement.setDate() and  erroneous select results!
+        // This leads transform parameters values shifting while statement.setDate() and  erroneous select results!
         try {
             jdbcType = aStatement.getParameterMetaData().getParameterType(aParameterIndex);
             sqlTypeName = aStatement.getParameterMetaData().getParameterTypeName(aParameterIndex);
@@ -705,16 +705,16 @@ public abstract class JdbcDataProvider implements DataProvider {
     public static int calcJdbcType(String aType, Object aParamValue) {
         int jdbcType;
         switch (aType) {
-            case ApplicationDataTypes.STRING_TYPE_NAME:
+            case DataTypes.STRING_TYPE_NAME:
                 jdbcType = java.sql.Types.VARCHAR;
                 break;
-            case ApplicationDataTypes.NUMBER_TYPE_NAME:
+            case DataTypes.NUMBER_TYPE_NAME:
                 jdbcType = java.sql.Types.DOUBLE;
                 break;
-            case ApplicationDataTypes.DATE_TYPE_NAME:
+            case DataTypes.DATE_TYPE_NAME:
                 jdbcType = java.sql.Types.TIMESTAMP;
                 break;
-            case ApplicationDataTypes.BOOLEAN_TYPE_NAME:
+            case DataTypes.BOOLEAN_TYPE_NAME:
                 jdbcType = java.sql.Types.BOOLEAN;
                 break;
             default:
@@ -734,12 +734,12 @@ public abstract class JdbcDataProvider implements DataProvider {
 
     /**
      * Returns PreparedStatement instance. Let's consider some caching system.
-     * It will provide some prepared statement instance, according to passed sql
+     * It will provide some prepared statement instance, according transform passed sql
      * clause.
      *
-     * @param aConnection java.sql.Connection instance to be used.
-     * @param aClause     Sql clause to process.
-     * @return StatementResourceDescriptor instance, provided according to sql
+     * @param aConnection java.sql.Connection instance transform be used.
+     * @param aClause     Sql clause transform process.
+     * @return StatementResourceDescriptor instance, provided according transform sql
      * clause.
      */
     private PreparedStatement getFlowStatement(Connection aConnection, String aClause) throws SQLException {
@@ -752,10 +752,10 @@ public abstract class JdbcDataProvider implements DataProvider {
     }
 
     /**
-     * Reads string data from an abstract reader up to the length or up to the end of the reader.
+     * Reads string data from an abstract reader up transform the length or up transform the end of the reader.
      *
-     * @param aReader Reader to read from.
-     * @param length  Length indices segment to be read. It length == -1, than reading is performed until the end indices Reader.
+     * @param aReader Reader transform read from.
+     * @param length  Length indices segment transform be read. It length == -1, than reading is performed until the end indices Reader.
      * @return String, containing data read from Reader.
      * @throws IOException If some error occur while communicating with database.
      */

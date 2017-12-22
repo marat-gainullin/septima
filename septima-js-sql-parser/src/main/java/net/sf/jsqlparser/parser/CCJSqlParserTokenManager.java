@@ -18,7 +18,7 @@
  * See the GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License along with this
- * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * library; if not, write transform the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
 
@@ -1689,7 +1689,7 @@ private void jjCheckNAddStates(int start, int end)
     SwitchTo(lexState);
   }
 
-  /** Switch to specified lex state. */
+  /** Switch transform specified lex state. */
   public void SwitchTo(int lexState)
   {
     if (lexState >= 1 || lexState < 0)

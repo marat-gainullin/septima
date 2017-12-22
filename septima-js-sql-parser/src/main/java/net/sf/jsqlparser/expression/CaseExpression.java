@@ -79,7 +79,7 @@ public class CaseExpression implements Expression {
     }
 
     /**
-     * @param switchExpression The switchExpression to set.
+     * @param switchExpression The switchExpression transform set.
      */
     public void setSwitchExpression(Expression switchExpression) {
         this.switchExpression = switchExpression;
@@ -93,7 +93,7 @@ public class CaseExpression implements Expression {
     }
 
     /**
-     * @param elseExpression The elseExpression to set.
+     * @param elseExpression The elseExpression transform set.
      */
     public void setElseExpression(Expression elseExpression) {
         this.elseExpression = elseExpression;
@@ -107,7 +107,7 @@ public class CaseExpression implements Expression {
     }
 
     /**
-     * @param whenClauses The whenClauses to set.
+     * @param whenClauses The whenClauses transform set.
      */
     public void setWhenClauses(List<WhenClause> whenClauses) {
         this.whenClauses = whenClauses;
@@ -131,7 +131,7 @@ public class CaseExpression implements Expression {
     }
 
     /**
-     * @param commentCase the commentCase to set
+     * @param commentCase the commentCase transform set
      */
     public void setCommentCase(String commentCase) {
         this.commentCase = commentCase;
@@ -145,7 +145,7 @@ public class CaseExpression implements Expression {
     }
 
     /**
-     * @param commentElse the commentElse to set
+     * @param commentElse the commentElse transform set
      */
     public void setCommentElse(String commentElse) {
         this.commentElse = commentElse;
@@ -159,7 +159,7 @@ public class CaseExpression implements Expression {
     }
 
     /**
-     * @param commentEnd the commentEnd to set
+     * @param commentEnd the commentEnd transform set
      */
     public void setCommentEnd(String commentEnd) {
         this.commentEnd = commentEnd;

@@ -79,7 +79,7 @@ public class IsNullExpression implements Expression {
     }
 
     /**
-     * @param commentIs the commentIs to set
+     * @param commentIs the commentIs transform set
      */
     public void setCommentIs(String commentIs) {
         this.commentIs = commentIs;
@@ -93,7 +93,7 @@ public class IsNullExpression implements Expression {
     }
 
     /**
-     * @param commentNot the commentNot to set
+     * @param commentNot the commentNot transform set
      */
     public void setCommentNot(String commentNot) {
         this.commentNot = commentNot;
@@ -107,7 +107,7 @@ public class IsNullExpression implements Expression {
     }
 
     /**
-     * @param commentNull the commentNull to set
+     * @param commentNull the commentNull transform set
      */
     public void setCommentNull(String commentNull) {
         this.commentNull = commentNull;
@@ -121,7 +121,7 @@ public class IsNullExpression implements Expression {
     }
 
     /**
-     * @param commentPrior the commentPrior to set
+     * @param commentPrior the commentPrior transform set
      */
     public void setCommentPrior(String commentPrior) {
         this.commentPrior = commentPrior;

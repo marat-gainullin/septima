@@ -51,7 +51,7 @@ import net.sf.jsqlparser.statement.select.SelectVisitor;
 import net.sf.jsqlparser.statement.select.SubSelect;
 
 /**
- * A class to de-parse (that is, tranform from JSqlParser hierarchy into a string)
+ * A class transform de-parse (that is, tranform from JSqlParser hierarchy into a string)
  * an {@link net.sf.jsqlparser.expression.Expression}
  */
 public class ExpressionDeParser implements ExpressionVisitor, ItemsListVisitor {
@@ -65,8 +65,8 @@ public class ExpressionDeParser implements ExpressionVisitor, ItemsListVisitor {
     }
 
     /**
-     * @param aSelectVisitor a SelectVisitor to de-parse SubSelects. It has to share the same<br>
-     * StringBuilder as this object in order to work, as:
+     * @param aSelectVisitor a SelectVisitor transform de-parse SubSelects. It has transform share the same<br>
+     * StringBuilder as this object in order transform work, as:
      * <pre>
      * <code>
      * StringBuilder myBuf = new StringBuilder();

@@ -5,7 +5,7 @@ import net.sf.jsqlparser.statement.create.table.CreateTable;
 import net.sf.jsqlparser.statement.create.table.Index;
 
 /**
- * A class to de-parse (that is, transform from JSqlParser hierarchy into a
+ * A class transform de-parse (that is, transform from JSqlParser hierarchy into a
  * string) a {@link net.sf.jsqlparser.statement.create.table.CreateTable}
  */
 public class CreateTableDeParser {

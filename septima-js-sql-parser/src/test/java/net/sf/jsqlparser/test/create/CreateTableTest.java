@@ -1,6 +1,6 @@
 package net.sf.jsqlparser.test.create;
 
-import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.JSqlParserException;
 import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
@@ -25,7 +25,7 @@ public class CreateTableTest {
     SeptimaSqlParser parserManager = new SeptimaSqlParser();
 
     @Test
-    public void testCreateTable() throws JSQLParserException {
+    public void testCreateTable() throws JSqlParserException {
         String statement
                 = "CREATE TABLE mytab (mycol a (10, 20) c nm g, mycol2 mypar1 mypar2 (23,323,3) asdf ('23','123') dasd, "
                 + "PRIMARY KEY (mycol2, mycol)) type = myisam";
@@ -39,7 +39,7 @@ public class CreateTableTest {
     }
 
     @Test
-    public void testComment() throws JSQLParserException {
+    public void testComment() throws JSqlParserException {
         String statement
                 = "/*90053*/ CREATE /*11*/ TEMPORARY /**/ TABLE /**/ mytab /**/ (/**/ mycol /**/ a /**/ (/**/ 10 /**/, /**/ 20 /**/ ) "
                 + "/** /c /**/ nm /**/ g /*100*/, /**/ mycol2 /**/ mypar1 /**/ mypar2 /**/ ( /**/ 23 /**/ , /**/ 323 /**/ , /**/ 3 /**/ ) "

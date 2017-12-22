@@ -91,7 +91,7 @@ public class TablesNamesFinderTest {
                 + " WHERE ID = (SELECT MAX(ID) FROM MY_TABLE5) AND ID2 IN (SELECT * FROM MY_TABLE6)";
         net.sf.jsqlparser.statement.Statement statement = pm.parse(new StringReader(sql));
 
-        //now you should use a class that implements StatementVisitor to decide what to do
+        //now you should use a class that implements StatementVisitor transform decide what transform do
         //based on the kind of the statement, that is SELECT or INSERT etc. but here we are only
         //interested in SELECTS
         if (statement instanceof Select) {

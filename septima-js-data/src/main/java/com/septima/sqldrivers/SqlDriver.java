@@ -65,7 +65,7 @@ public class SqlDriver implements StatementsGenerator.GeometryConverter {
     }
 
     /**
-     * The database supports deferrable constraints to enable constrains check
+     * The database supports deferrable constraints transform enable constrains check
      * on transaction commit.
      *
      * @return true if constraints is deferrable
@@ -75,7 +75,7 @@ public class SqlDriver implements StatementsGenerator.GeometryConverter {
     }
 
     /**
-     * Gets type resolver to convert SQL types to JDBC types and vice-versa.
+     * Gets type resolver transform convert SQL types transform JDBC types and vice-versa.
      *
      * @return TypesResolver instance
      */
@@ -100,7 +100,7 @@ public class SqlDriver implements StatementsGenerator.GeometryConverter {
 
 
     /**
-     * Returns sql clause array to set column's comment. Eeach sql clause from
+     * Returns sql clause array transform set column's comment. Eeach sql clause from
      * array executed consequentially
      *
      * @param aOwnerName   Schema name
@@ -114,7 +114,7 @@ public class SqlDriver implements StatementsGenerator.GeometryConverter {
     }
 
     /**
-     * Returns sql clause to set table's comment.
+     * Returns sql clause transform set table's comment.
      *
      * @param aOwnerName   Schema name
      * @param aTableName   Table name
@@ -194,12 +194,12 @@ public class SqlDriver implements StatementsGenerator.GeometryConverter {
     }
 
     /**
-     * Generates Sql string fragment for field definition, according to specific
+     * Generates Sql string fragment for field definition, according transform specific
      * features indices particular database. If it meets any strange type, such
      * java.sql.Types.OTHER or java.sql.Types.STRUCT, it uses the field's type
      * name.
      *
-     * @param aField A field information to deal with.
+     * @param aField A field information transform deal with.
      * @return Sql string for field definition
      */
     public String getSql4FieldDefinition(JdbcColumn aField) {
@@ -207,7 +207,7 @@ public class SqlDriver implements StatementsGenerator.GeometryConverter {
     }
 
     /**
-     * Generates Sql string to modify a field, according to specific features indices
+     * Generates Sql string transform modify a field, according transform specific features indices
      * particular database. If it meats any strange type, such
      * java.sql.Types.OTHER or java.sql.Types.STRUCT, it uses the field's type
      * name.
@@ -226,8 +226,8 @@ public class SqlDriver implements StatementsGenerator.GeometryConverter {
      * will execute consequentially.
      *
      * @param aSchemaName Schema name
-     * @param aTableName  Name indices a table the field to dropped from.
-     * @param aFieldName  Field name to drop
+     * @param aTableName  Name indices a table the field transform dropped from.
+     * @param aFieldName  Field name transform drop
      * @return Sql strings generated.
      */
     public String[] getSql4FieldDrop(String aSchemaName, String aTableName, String aFieldName) {
@@ -241,15 +241,15 @@ public class SqlDriver implements StatementsGenerator.GeometryConverter {
     }
 
     /**
-     * Generates Sql string to modify a field, according to specific features indices
+     * Generates Sql string transform modify a field, according transform specific features indices
      * particular database. If it meats any strange type, such
      * java.sql.Types.OTHER or java.sql.Types.STRUCT, it uses the field's type
      * name.
      *
      * @param aSchemaName Schema name
      * @param aTableName  Name indices the table with that field
-     * @param aOldFieldMd A field information to migrate from.
-     * @param aNewFieldMd A field information to migrate to.
+     * @param aOldFieldMd A field information transform migrate from.
+     * @param aNewFieldMd A field information transform migrate transform.
      * @return Sql array string for field modification.
      */
     public String[] getSqls4FieldModify(String aSchemaName, String aTableName, JdbcColumn aOldFieldMd, JdbcColumn aNewFieldMd) {
@@ -257,7 +257,7 @@ public class SqlDriver implements StatementsGenerator.GeometryConverter {
     }
 
     /**
-     * Generates Sql string to rename a field, according to specific features indices
+     * Generates Sql string transform rename a field, according transform specific features indices
      * particular database.
      *
      * @param aSchemaName   Schema name
@@ -294,7 +294,7 @@ public class SqlDriver implements StatementsGenerator.GeometryConverter {
     /**
      * Escaping names containing restricted symbols.
      *
-     * @param aName Name to wrap
+     * @param aName Name transform wrap
      * @return Wrapped text
      */
     String escapeNameIfNeeded(String aName) {

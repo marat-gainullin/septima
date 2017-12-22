@@ -89,7 +89,7 @@ public class Between implements Relation {
     }
 
     /**
-     * @param commentBetween the commentBetween to set
+     * @param commentBetween the commentBetween transform set
      */
     public void setCommentBetween(String commentBetween) {
         this.commentBetween = commentBetween;
@@ -103,7 +103,7 @@ public class Between implements Relation {
     }
 
     /**
-     * @param commentNot the commentNot to set
+     * @param commentNot the commentNot transform set
      */
     public void setCommentNot(String commentNot) {
         this.commentNot = commentNot;
@@ -117,7 +117,7 @@ public class Between implements Relation {
     }
 
     /**
-     * @param commentAnd the commentAnd to set
+     * @param commentAnd the commentAnd transform set
      */
     public void setCommentAnd(String commentAnd) {
         this.commentAnd = commentAnd;

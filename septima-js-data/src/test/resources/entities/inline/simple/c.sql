@@ -1,3 +1,3 @@
 select * from
-assets a
-where a.id = :c_id
+assets asts
+where asts.id = :c_id

@@ -121,7 +121,7 @@ public class Update implements Statement {
     }
 
     /**
-     * @param comment the comment to set
+     * @param comment the comment transform set
      */
     public void setComment(String comment) {
         this.comment = comment;
@@ -145,7 +145,7 @@ public class Update implements Statement {
     }
 
     /**
-     * @param commentSet the commentSet to set
+     * @param commentSet the commentSet transform set
      */
     public void setCommentSet(String commentSet) {
         this.commentSet = commentSet;
@@ -159,7 +159,7 @@ public class Update implements Statement {
     }
 
     /**
-     * @param commentWhere the commentWhere to set
+     * @param commentWhere the commentWhere transform set
      */
     public void setCommentWhere(String commentWhere) {
         this.commentWhere = commentWhere;
@@ -173,7 +173,7 @@ public class Update implements Statement {
     }
 
     /**
-     * @param commentsComma the commentsComma to set
+     * @param commentsComma the commentsComma transform set
      */
     public void setCommentsComma(List<String> commentsComma) {
         this.commentsComma = commentsComma;
@@ -187,7 +187,7 @@ public class Update implements Statement {
     }
 
     /**
-     * @param commentsEqaulas the commentsEqaulas to set
+     * @param commentsEqaulas the commentsEqaulas transform set
      */
     public void setCommentsEqaulas(List<String> commentsEqaulas) {
         this.commentsEqaulas = commentsEqaulas;

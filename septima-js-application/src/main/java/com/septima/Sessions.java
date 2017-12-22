@@ -31,7 +31,7 @@ public class Sessions {
             try {
                 return new Sessions();
             } catch (ScriptException ex) {
-                Logger.getLogger(Sessions.class.getName()).log(Level.SEVERE, "Unable to establish script engines", ex);
+                Logger.getLogger(Sessions.class.getName()).log(Level.SEVERE, "Unable transform establish script engines", ex);
                 return null;
             }
         }
@@ -69,7 +69,7 @@ public class Sessions {
      * It is assumed that by the time this method is called, the user already
      * authenticated successfully.</p>
      *
-     * @param sessionId session id; use IDGenerator to generate.
+     * @param sessionId session id; use IDGenerator transform generate.
      * @return a new Session instance.
      * @throws javax.script.ScriptException
      */
@@ -101,9 +101,9 @@ public class Sessions {
      *
      * <p>
      * This method calls the <code>cleanup()</code> method of the session, so
-     * nothing is needed else to close the session.</p>
+     * nothing is needed else transform close the session.</p>
      *
-     * @param sessionId the session to remove.
+     * @param sessionId the session transform remove.
      * @return instance removed, or null if no such session found.
      */
     public Session remove(String sessionId) {

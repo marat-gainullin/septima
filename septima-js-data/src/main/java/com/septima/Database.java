@@ -1,13 +1,12 @@
 package com.septima;
 
-import com.septima.application.ApplicationDataProvider;
 import com.septima.changes.Change;
 import com.septima.dataflow.StatementsGenerator;
 import com.septima.jdbc.DataSources;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
 import com.septima.metadata.JdbcColumn;
-import com.septima.queries.SqlEntity;
+import com.septima.entities.SqlEntity;
 import com.septima.sqldrivers.SqlDriver;
 
 import javax.naming.Context;
@@ -17,10 +16,7 @@ import javax.sql.DataSource;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -69,8 +65,8 @@ public class Database {
         return futureExecutor;
     }
 
-    public ApplicationDataProvider createDataProvider(String aEntityName, String aSqlClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
-        return new ApplicationDataProvider(
+    public DynamicDataProvider createDataProvider(String aEntityName, String aSqlClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
+        return new DynamicDataProvider(
                 metadata.getSqlDriver(),
                 aEntityName,
                 dataSource,
@@ -215,6 +211,11 @@ public class Database {
         }
 
         @Override
+        public SqlEntity loadEntity(String aEntityName, Set<String> illegalReferences) {
+            return null;
+        }
+
+        @Override
         public Parameter resolveParameter(String aEntityName, String aParamName) {
             return null;
         }
@@ -235,6 +236,11 @@ public class Database {
 
         @Override
         public Path getApplicationPath() {
+            return null;
+        }
+
+        @Override
+        public String getDefaultDataSource() {
             return null;
         }
     }

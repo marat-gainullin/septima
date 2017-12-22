@@ -18,7 +18,7 @@
  * See the GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License along with this
- * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * library; if not, write transform the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
 
@@ -26,7 +26,7 @@
 package net.sf.jsqlparser.parser;
 
 /**
- * An implementation of interface CharStream, where the stream is assumed to
+ * An implementation of interface CharStream, where the stream is assumed transform
  * contain only ASCII characters (without unicode processing).
  */
 
@@ -445,7 +445,7 @@ public class SimpleCharStream
   }
 
   /**
-   * Method to adjust line and column numbers for the start of a token.
+   * Method transform adjust line and column numbers for the start of a token.
    */
   public void adjustBeginLineColumn(int newLine, int newCol)
   {

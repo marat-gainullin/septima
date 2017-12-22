@@ -1,6 +1,6 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.application.ApplicationDataTypes;
+import com.septima.DataTypes;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,25 +15,25 @@ import java.util.Set;
 public class H2TypesResolver implements TypesResolver {
 
     private static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
-        put("VARCHAR", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("NUMERIC", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("DECIMAL", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("BOOLEAN", ApplicationDataTypes.BOOLEAN_TYPE_NAME);
-        put("TIMESTAMP", ApplicationDataTypes.DATE_TYPE_NAME);
-        put("TINYINT", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("BIGINT", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("IDENTITY", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("INTEGER", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("SMALLINT", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("FLOAT", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("REAL", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("DOUBLE", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("LONGVARCHAR", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("CHAR", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("VARCHAR_IGNORECASE", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("DATE", ApplicationDataTypes.DATE_TYPE_NAME);
-        put("TIME", ApplicationDataTypes.DATE_TYPE_NAME);
-        put("CLOB", ApplicationDataTypes.STRING_TYPE_NAME);
+        put("VARCHAR", DataTypes.STRING_TYPE_NAME);
+        put("NUMERIC", DataTypes.NUMBER_TYPE_NAME);
+        put("DECIMAL", DataTypes.NUMBER_TYPE_NAME);
+        put("BOOLEAN", DataTypes.BOOLEAN_TYPE_NAME);
+        put("TIMESTAMP", DataTypes.DATE_TYPE_NAME);
+        put("TINYINT", DataTypes.NUMBER_TYPE_NAME);
+        put("BIGINT", DataTypes.NUMBER_TYPE_NAME);
+        put("IDENTITY", DataTypes.NUMBER_TYPE_NAME);
+        put("INTEGER", DataTypes.NUMBER_TYPE_NAME);
+        put("SMALLINT", DataTypes.NUMBER_TYPE_NAME);
+        put("FLOAT", DataTypes.NUMBER_TYPE_NAME);
+        put("REAL", DataTypes.NUMBER_TYPE_NAME);
+        put("DOUBLE", DataTypes.NUMBER_TYPE_NAME);
+        put("LONGVARCHAR", DataTypes.STRING_TYPE_NAME);
+        put("CHAR", DataTypes.STRING_TYPE_NAME);
+        put("VARCHAR_IGNORECASE", DataTypes.STRING_TYPE_NAME);
+        put("DATE", DataTypes.DATE_TYPE_NAME);
+        put("TIME", DataTypes.DATE_TYPE_NAME);
+        put("CLOB", DataTypes.STRING_TYPE_NAME);
         put("LONGVARBINARY", null);
         put("VARBINARY", null);
         put("BINARY", null);

@@ -76,7 +76,7 @@ public class Drop implements Statement {
     }
 
     /**
-     * @param comment the comment to set
+     * @param comment the comment transform set
      */
     public void setComment(String comment) {
         this.comment = comment;
@@ -90,7 +90,7 @@ public class Drop implements Statement {
     }
 
     /**
-     * @param typeComment the typeComment to set
+     * @param typeComment the typeComment transform set
      */
     public void setTypeComment(String typeComment) {
         this.typeComment = typeComment;
@@ -104,7 +104,7 @@ public class Drop implements Statement {
     }
 
     /**
-     * @param nameComment the nameComment to set
+     * @param nameComment the nameComment transform set
      */
     public void setNameComment(String nameComment) {
         this.nameComment = nameComment;
@@ -118,7 +118,7 @@ public class Drop implements Statement {
     }
 
     /**
-     * @param aComments the parametersComment to set
+     * @param aComments the parametersComment transform set
      */
     public void setParametersComment(List<String> aComments) {
         parametersComment = aComments;

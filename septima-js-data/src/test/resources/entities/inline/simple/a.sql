@@ -1,2 +1,2 @@
 select * from
-#./b
+#./b, (select * from #entities/inline/simple/b) absB

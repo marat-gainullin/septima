@@ -2,7 +2,7 @@ package net.sf.jsqlparser.test.replace;
 
 import java.io.StringReader;
 
-import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.JSqlParserException;
 import net.sf.jsqlparser.expression.JdbcParameter;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.StringValue;
@@ -19,7 +19,7 @@ public class ReplaceTest {
     SeptimaSqlParser parserManager = new SeptimaSqlParser();
 
     @Test
-    public void testReplaceSyntax1() throws JSQLParserException {
+    public void testReplaceSyntax1() throws JSqlParserException {
         String statement = "REPLACE mytable SET col1='as', col2=?, col3=565";
         Replace replace = (Replace) parserManager.parse(new StringReader(statement));
         assertEquals("mytable", replace.getTable().getName());
@@ -35,7 +35,7 @@ public class ReplaceTest {
     }
     
     @Test
-    public void testComment() throws JSQLParserException {
+    public void testComment() throws JSqlParserException {
         String statement =
                 "/*90053*/ REPLACE /*347*/ INTO /*347*/ mytable /*347*/ SET /*347*/ col1 /*347*/ ='as' /*347*/ , /*347*/ col2 /*347*/ =? /*347*/ , /*347*/ col3 /*347*/ =565 /*eiortouei*/";
         Replace replace = (Replace) parserManager.parse(new StringReader(statement));
@@ -51,7 +51,7 @@ public class ReplaceTest {
     }
     
     @Test
-    public void testReplaceSyntax2() throws JSQLParserException {
+    public void testReplaceSyntax2() throws JSqlParserException {
         String statement = "REPLACE mytable (col1, col2, col3) VALUES ('as', ?, 565)";
         Replace replace = (Replace) parserManager.parse(new StringReader(statement));
         assertEquals("mytable", replace.getTable().getName());
@@ -66,7 +66,7 @@ public class ReplaceTest {
     }
 
     @Test
-    public void testReplaceSyntax3() throws JSQLParserException {
+    public void testReplaceSyntax3() throws JSqlParserException {
         String statement = "REPLACE mytable (col1, col2, col3) SELECT * FROM mytable3";
         Replace replace = (Replace) parserManager.parse(new StringReader(statement));
         assertEquals("mytable", replace.getTable().getName());

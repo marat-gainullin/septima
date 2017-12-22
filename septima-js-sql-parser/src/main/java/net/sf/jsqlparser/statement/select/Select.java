@@ -21,9 +21,10 @@
  */
 package net.sf.jsqlparser.statement.select;
 
-import java.util.List;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.StatementVisitor;
+
+import java.util.List;
 
 public class Select implements Statement {
 
@@ -86,7 +87,7 @@ public class Select implements Statement {
     }
 
     /**
-     * @param commentWith the commentWith to set
+     * @param commentWith the commentWith transform set
      */
     public void setCommentWith(String commentWith) {
         this.commentWith = commentWith;
@@ -100,7 +101,7 @@ public class Select implements Statement {
     }
 
     /**
-     * @param aValue the commetsComma to set
+     * @param aValue the commetsComma transform set
      */
     public void setCommentsComma(List<String> aValue) {
         commentsComma = aValue;

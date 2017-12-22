@@ -44,7 +44,7 @@ public class ColDataType {
     }
 
     /**
-     * @param commentType the commentType to set
+     * @param commentType the commentType transform set
      */
     public void setCommentType(String commentType) {
         this.commentType = commentType;
@@ -58,7 +58,7 @@ public class ColDataType {
     }
 
     /**
-     * @param commentBeginBracket the commentBeginBracket to set
+     * @param commentBeginBracket the commentBeginBracket transform set
      */
     public void setCommentBeginBracket(String commentBeginBracket) {
         this.commentBeginBracket = commentBeginBracket;
@@ -72,7 +72,7 @@ public class ColDataType {
     }
 
     /**
-     * @param commentEndBracket the commentEndBracket to set
+     * @param commentEndBracket the commentEndBracket transform set
      */
     public void setCommentEndBracket(String commentEndBracket) {
         this.commentEndBracket = commentEndBracket;
@@ -86,7 +86,7 @@ public class ColDataType {
     }
 
     /**
-     * @param commentsComma the commentsComma to set
+     * @param commentsComma the commentsComma transform set
      */
     public void setCommentsComma(List<String> commentsComma) {
         this.commentsComma = commentsComma;
@@ -100,7 +100,7 @@ public class ColDataType {
     }
 
     /**
-     * @param commentsValue the commentsValue to set
+     * @param commentsValue the commentsValue transform set
      */
     public void setCommentsValue(List<String> commentsValue) {
         this.commentsValue = commentsValue;

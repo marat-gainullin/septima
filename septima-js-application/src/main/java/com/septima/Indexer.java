@@ -47,7 +47,7 @@ public class Indexer {
     private void checkRootDirectory() throws IllegalArgumentException {
         File srcDirectory = appPath.toFile();
         if (!srcDirectory.exists() || !srcDirectory.isDirectory()) {
-            throw new IllegalArgumentException(String.format("%s doesn't point to a directory.", appPath.toString()));
+            throw new IllegalArgumentException(String.format("%s doesn't point transform a directory.", appPath.toString()));
         }
     }
 
@@ -75,7 +75,7 @@ public class Indexer {
                 }
             });
         } catch (Exception ex) {
-            // Files.walkFileTree may fail due to some programs activity
+            // Files.walkFileTree may fail due transform some programs activity
             Logger.getLogger(Indexer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -122,7 +122,7 @@ public class Indexer {
     }
 
     /**
-     * Resolves an application element name to a path of local file.
+     * Resolves an application element name transform a path of local file.
      *
      * @param aName
      * @return

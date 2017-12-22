@@ -67,7 +67,7 @@ public class Index {
     }
 
     /**
-     * @param commentsValue the commentsValue to set
+     * @param commentsValue the commentsValue transform set
      */
     public void setCommentsValue(List commentsValue) {
         this.commentsValue = commentsValue;
@@ -81,7 +81,7 @@ public class Index {
     }
 
     /**
-     * @param commentType the commentType to set
+     * @param commentType the commentType transform set
      */
     public void setCommentType(String commentType) {
         this.commentType = commentType;
@@ -95,7 +95,7 @@ public class Index {
     }
 
     /**
-     * @param commentName the commentName to set
+     * @param commentName the commentName transform set
      */
     public void setCommentName(String commentName) {
         this.commentName = commentName;
@@ -109,7 +109,7 @@ public class Index {
     }
 
     /**
-     * @param commentBeginBracket the commentBeginBracket to set
+     * @param commentBeginBracket the commentBeginBracket transform set
      */
     public void setCommentBeginBracket(String commentBeginBracket) {
         this.commentBeginBracket = commentBeginBracket;
@@ -123,7 +123,7 @@ public class Index {
     }
 
     /**
-     * @param commentEndBracket the commentEndBracket to set
+     * @param commentEndBracket the commentEndBracket transform set
      */
     public void setCommentEndBracket(String commentEndBracket) {
         this.commentEndBracket = commentEndBracket;
@@ -137,7 +137,7 @@ public class Index {
     }
 
     /**
-     * @param commentsComma the commentsComma to set
+     * @param commentsComma the commentsComma transform set
      */
     public void setCommentsComma(List commentsComma) {
         this.commentsComma = commentsComma;
@@ -151,7 +151,7 @@ public class Index {
     }
 
     /**
-     * @param key the key to set
+     * @param key the key transform set
      */
     public void setKey(boolean key) {
         this.key = key;
@@ -165,7 +165,7 @@ public class Index {
     }
 
     /**
-     * @param commentKey the commentKey to set
+     * @param commentKey the commentKey transform set
      */
     public void setCommentKey(String commentKey) {
         this.commentKey = commentKey;

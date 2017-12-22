@@ -4,7 +4,7 @@ import net.sf.jsqlparser.expression.ExpressionVisitor;
 import net.sf.jsqlparser.statement.truncate.Truncate;
 
 /**
- * A class to de-parse (that is, tranform from JSqlParser hierarchy into a
+ * A class transform de-parse (that is, tranform from JSqlParser hierarchy into a
  * string) a {@link net.sf.jsqlparser.statement.delete.Delete}
  */
 public class TruncateDeParser {
@@ -16,9 +16,9 @@ public class TruncateDeParser {
     }
 
     /**
-     * @param expressionVisitor a {@link ExpressionVisitor} to de-parse
-     * expressions. It has to share the same<br>
-     * StringBuilder (builder parameter) as this object in order to work
+     * @param expressionVisitor a {@link ExpressionVisitor} transform de-parse
+     * expressions. It has transform share the same<br>
+     * StringBuilder (builder parameter) as this object in order transform work
      * @param buffer the builder that will be filled with the select
      */
     public TruncateDeParser(ExpressionVisitor expressionVisitor, StringBuilder buffer) {

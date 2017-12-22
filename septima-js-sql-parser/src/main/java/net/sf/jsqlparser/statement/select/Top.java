@@ -39,7 +39,7 @@ public class Top {
     }
 
     /**
-     * @param commentTop the commentTop to set
+     * @param commentTop the commentTop transform set
      */
     public void setCommentTop(String commentTop) {
         this.commentTop = commentTop;
@@ -53,7 +53,7 @@ public class Top {
     }
 
     /**
-     * @param commentTopValue the commentTopValue to set
+     * @param commentTopValue the commentTopValue transform set
      */
     public void setCommentTopValue(String commentTopValue) {
         this.commentTopValue = commentTopValue;

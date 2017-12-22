@@ -2,13 +2,6 @@ package com.septima;
 
 import java.sql.ParameterMetaData;
 
-/**
- * This class is a parameter specification for columns.
- * It holds information about field as the <code>Field</code> class
- * and additional information about parameter mode, value and default value.
- *
- * @author mg
- */
 public class Parameter {
 
     public enum Mode {
@@ -28,17 +21,6 @@ public class Parameter {
                 return Unknown;
             }
         }
-        public static int toJdbc(Mode aMode){
-            if(aMode == In){
-                return ParameterMetaData.parameterModeIn;
-            } else if(aMode == Out) {
-                return ParameterMetaData.parameterModeOut;
-            } else if(aMode == InOut){
-                return ParameterMetaData.parameterModeInOut;
-            } else {
-                return ParameterMetaData.parameterModeUnknown;
-            }
-        }
     }
 
     private final String name;
@@ -47,32 +29,14 @@ public class Parameter {
     private final String type;
     private Object value;
 
-    /**
-     * Constructor with name.
-     *
-     * @param aName Name of the created parameter.
-     */
     public Parameter(String aName) {
         this(aName, null);
     }
 
-    /**
-     * Constructor with name and description.
-     *
-     * @param aName        Name of the created parameter.
-     * @param aDescription Description of the created parameter.
-     */
     public Parameter(String aName, String aDescription) {
         this(aName, aDescription, null);
     }
 
-    /**
-     * Constructor with name, description and typeInfo.
-     *
-     * @param aName        Name of the created parameter.
-     * @param aDescription Description of the created parameter.
-     * @param aType        Type name of the created parameter.
-     */
     public Parameter(String aName, String aDescription, String aType) {
         this(aName, aDescription, aType, null, Mode.In);
     }
@@ -118,7 +82,7 @@ public class Parameter {
      * Gets parameter's value as a String, whether it feasible. The result
      * exists only for non-null values and some simple types.
      *
-     * @return String representing Parameter's value, this value can be used to
+     * @return String representing Parameter's value, this value can be used transform
      * set the value using <code>setValueByString()</code>.
 
     public String getValueAsString() {

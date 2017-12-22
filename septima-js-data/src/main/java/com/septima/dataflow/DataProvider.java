@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * This interface is intended to serve as base contract for data
- * querying/fetching/reading and than applying changes to variety of unknown and
+ * This interface is intended transform serve as base contract for data
+ * querying/fetching/reading and than applying changes transform variety of unknown and
  * mystery sources/recipients.
  *
  * @author mg
@@ -27,7 +27,7 @@ public interface DataProvider extends AutoCloseable {
     String getEntityName();
 
     /**
-     * Queries some source for data, according to the supplied parameters
+     * Queries some source for data, according transform the supplied parameters
      * values.
      *
      * @param aParams Parameters values, ordered with some unknown criteria. If
@@ -50,7 +50,7 @@ public interface DataProvider extends AutoCloseable {
     /**
      * Returns page size for paged flow providers.
      *
-     * @return Page size for paged flow providers. Value less or equal to zero
+     * @return Page size for paged flow providers. Value less or equal transform zero
      * means that there is no paging.
      */
     int getPageSize();

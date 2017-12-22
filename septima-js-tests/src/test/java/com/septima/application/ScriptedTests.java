@@ -66,7 +66,7 @@ public class ScriptedTests {
         }
         Object lastChance = completion.get();
         if (lastChance != success) {
-            String failedText = aTestModuleName + " failed due to: ";
+            String failedText = aTestModuleName + " failed due transform: ";
             if (lastChance == null) {
                 fail(failedText + "timeout");
             } else if (lastChance == failure) {

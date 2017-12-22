@@ -55,7 +55,7 @@ public class Alias {
 
     /**
      * Comment before AS constraction of Alias
-     * @param commentAs the commentAs to set
+     * @param commentAs the commentAs transform set
      */
     public void setCommentAs(String commentAs) {
         this.commentAs = commentAs;
@@ -71,7 +71,7 @@ public class Alias {
 
     /**
      * Comment before name Alias
-     * @param commentName the commentName to set
+     * @param commentName the commentName transform set
      */
     public void setCommentName(String commentName) {
         this.commentName = commentName;
@@ -86,7 +86,7 @@ public class Alias {
     }
 
     /**
-     * @param as the as to set
+     * @param as the as transform set
      */
     public void setAs(boolean as) {
         this.as = as;

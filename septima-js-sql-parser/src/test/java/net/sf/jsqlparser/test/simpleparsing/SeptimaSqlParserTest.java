@@ -1,6 +1,6 @@
 package net.sf.jsqlparser.test.simpleparsing;
 
-import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.JSqlParserException;
 import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.test.TestException;
@@ -28,8 +28,8 @@ public class SeptimaSqlParserTest {
 
                     Statement parsedStm = parserManager.parse(new StringReader(statement));
                     //System.out.println(statement);
-                } catch (JSQLParserException e) {
-                    throw new TestException("impossible to parse statement: " + statement, e);
+                } catch (JSqlParserException e) {
+                    throw new TestException("impossible transform parse statement: " + statement, e);
                 }
             }
         }

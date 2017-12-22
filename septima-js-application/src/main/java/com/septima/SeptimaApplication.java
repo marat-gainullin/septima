@@ -117,7 +117,7 @@ public abstract class SeptimaApplication implements Application<SqlQuery> {
     }
 
     /**
-     * Executes a script module according to all rules defimed within
+     * Executes a script module according transform all rules defimed within
      * Platypus.js Such as @stateless and @rezident annotations, async-io
      * convensions etc.
      *
@@ -280,7 +280,7 @@ public abstract class SeptimaApplication implements Application<SqlQuery> {
                             }
                         });
                     } else {
-                        throw new AccessControlException(String.format("Public access to module %s is denied.", aModuleName));//NOI18N
+                        throw new AccessControlException(String.format("Public access transform module %s is denied.", aModuleName));//NOI18N
                     }
                 } catch (AccessControlException ex) {
                     onFailure.accept(ex);

@@ -1,7 +1,7 @@
 package com.septima.queries;
 
 import com.septima.Database;
-import com.septima.application.ApplicationDataProvider;
+import com.septima.DynamicDataProvider;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.changes.Command;
 import com.septima.NamedValue;
@@ -35,7 +35,7 @@ public class SqlQuery {
     private final int pageSize;
     private final Map<String, Field> expectedFields;
 
-    SqlQuery(Database aDatabase, String aEntityName, String aSqlClause, List<Parameter> aParams, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
+    public SqlQuery(Database aDatabase, String aEntityName, String aSqlClause, List<Parameter> aParams, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
         super();
         database = aDatabase;
         entityName = aEntityName;
@@ -68,7 +68,7 @@ public class SqlQuery {
     public CompletableFuture<Collection<Map<String, Object>>> executeQuery(List<Parameter> aParameters) {
         Objects.requireNonNull(database);
         Objects.requireNonNull(aParameters);
-        ApplicationDataProvider dataProvider = database.createDataProvider(entityName, sqlClause, procedure, pageSize, expectedFields);
+        DynamicDataProvider dataProvider = database.createDataProvider(entityName, sqlClause, procedure, pageSize, expectedFields);
         return dataProvider.pull(aParameters);
     }
 

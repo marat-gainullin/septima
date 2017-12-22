@@ -1,6 +1,6 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.application.ApplicationDataTypes;
+import com.septima.DataTypes;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,38 +15,38 @@ import java.util.Set;
 public class MsSqlTypesResolver implements TypesResolver {
 
     private static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
-        put("varchar", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("numeric", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("decimal", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("money", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("bit", ApplicationDataTypes.BOOLEAN_TYPE_NAME);
-        put("datetime", ApplicationDataTypes.DATE_TYPE_NAME);
-        put("int", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("smallint", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("tinyint", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("bigint", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("real", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("float", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("smallmoney", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("tinyint identity", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("bigint identity", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("numeric identity", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("decimal identity", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("int identity", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("smallint identity", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("nvarchar", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("char", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("nchar", ApplicationDataTypes.STRING_TYPE_NAME);
+        put("varchar", DataTypes.STRING_TYPE_NAME);
+        put("numeric", DataTypes.NUMBER_TYPE_NAME);
+        put("decimal", DataTypes.NUMBER_TYPE_NAME);
+        put("money", DataTypes.NUMBER_TYPE_NAME);
+        put("bit", DataTypes.BOOLEAN_TYPE_NAME);
+        put("datetime", DataTypes.DATE_TYPE_NAME);
+        put("int", DataTypes.NUMBER_TYPE_NAME);
+        put("smallint", DataTypes.NUMBER_TYPE_NAME);
+        put("tinyint", DataTypes.NUMBER_TYPE_NAME);
+        put("bigint", DataTypes.NUMBER_TYPE_NAME);
+        put("real", DataTypes.NUMBER_TYPE_NAME);
+        put("float", DataTypes.NUMBER_TYPE_NAME);
+        put("smallmoney", DataTypes.NUMBER_TYPE_NAME);
+        put("tinyint identity", DataTypes.NUMBER_TYPE_NAME);
+        put("bigint identity", DataTypes.NUMBER_TYPE_NAME);
+        put("numeric identity", DataTypes.NUMBER_TYPE_NAME);
+        put("decimal identity", DataTypes.NUMBER_TYPE_NAME);
+        put("int identity", DataTypes.NUMBER_TYPE_NAME);
+        put("smallint identity", DataTypes.NUMBER_TYPE_NAME);
+        put("nvarchar", DataTypes.STRING_TYPE_NAME);
+        put("char", DataTypes.STRING_TYPE_NAME);
+        put("nchar", DataTypes.STRING_TYPE_NAME);
 
-        put("smalldatetime", ApplicationDataTypes.DATE_TYPE_NAME);
-        put("datetime2", ApplicationDataTypes.DATE_TYPE_NAME);
-        put("date", ApplicationDataTypes.DATE_TYPE_NAME);
-        put("time", ApplicationDataTypes.DATE_TYPE_NAME);
-        put("text", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("ntext", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("uniqueidentifier", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("sysname", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("xml", ApplicationDataTypes.STRING_TYPE_NAME);
+        put("smalldatetime", DataTypes.DATE_TYPE_NAME);
+        put("datetime2", DataTypes.DATE_TYPE_NAME);
+        put("date", DataTypes.DATE_TYPE_NAME);
+        put("time", DataTypes.DATE_TYPE_NAME);
+        put("text", DataTypes.STRING_TYPE_NAME);
+        put("ntext", DataTypes.STRING_TYPE_NAME);
+        put("uniqueidentifier", DataTypes.STRING_TYPE_NAME);
+        put("sysname", DataTypes.STRING_TYPE_NAME);
+        put("xml", DataTypes.STRING_TYPE_NAME);
         put("image", null);
         put("sql_variant", null);
         put("varbinary", null);

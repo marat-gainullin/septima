@@ -1,6 +1,6 @@
 package com.septima.dataflow;
 
-import com.septima.application.ApplicationDataTypes;
+import com.septima.DataTypes;
 import com.septima.metadata.Field;
 
 import java.sql.Connection;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 /**
  * Reader for jdbc result sets sources. Performs reading of a whole result set and
- * particular subset of rows for the result set. Reading utilizes converters to
+ * particular subset of rows for the result set. Reading utilizes converters transform
  * produce application-specific data while reading.
  *
  * @author mg
@@ -93,7 +93,7 @@ public class ResultSetReader {
                 Field expectedField = aExpectedFields.get(readField.getName());
                 Field field = expectedField != null ? expectedField : readField;
                 Object appObject;
-                if (ApplicationDataTypes.GEOMETRY_TYPE_NAME.equals(field.getType())) {
+                if (DataTypes.GEOMETRY_TYPE_NAME.equals(field.getType())) {
                     appObject = gReader.readGeometry(aResultSet, i, aConnection);
                 } else {
                     appObject = JdbcDataProvider.get(aResultSet, i);

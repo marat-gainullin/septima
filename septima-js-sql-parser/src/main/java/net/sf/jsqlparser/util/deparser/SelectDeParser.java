@@ -27,7 +27,7 @@ import net.sf.jsqlparser.statement.select.Union;
 import net.sf.jsqlparser.statement.select.UnionTypes;
 
 /**
- * A class to de-parse (that is, tranform from JSqlParser hierarchy into a
+ * A class transform de-parse (that is, tranform from JSqlParser hierarchy into a
  * string) a {@link net.sf.jsqlparser.statement.select.Select}
  */
 public class SelectDeParser implements SelectVisitor, OrderByVisitor, SelectItemVisitor, FromItemVisitor {
@@ -39,9 +39,9 @@ public class SelectDeParser implements SelectVisitor, OrderByVisitor, SelectItem
     }
 
     /**
-     * @param aExpressionVisitor a {@link ExpressionVisitor} to de-parse
-     * expressions. It has to share the same<br>
-     * StringBuilder (builder parameter) as this object in order to work
+     * @param aExpressionVisitor a {@link ExpressionVisitor} transform de-parse
+     * expressions. It has transform share the same<br>
+     * StringBuilder (builder parameter) as this object in order transform work
      * @param aBuilder the builder that will be filled with the select
      */
     public SelectDeParser(ExpressionVisitor aExpressionVisitor, StringBuilder aBuilder) {
@@ -284,7 +284,7 @@ public class SelectDeParser implements SelectVisitor, OrderByVisitor, SelectItem
                     /*
                     from mysql docs:
                     For compatibility with PostgreSQL, MySQL also supports the LIMIT row_count OFFSET offset syntax.
-                    To retrieve all rows from a certain offset up to the end of the result set, you can use some large number
+                    To retrieve all rows from a certain offset up transform the end of the result set, you can use some large number
                     for the second parameter.
                      */
                     buffer.append("18446744073709551615");

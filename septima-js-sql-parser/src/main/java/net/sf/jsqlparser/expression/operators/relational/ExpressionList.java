@@ -73,7 +73,7 @@ public class ExpressionList implements ItemsList {
     }
 
     /**
-     * @param commentsComma the commentsComma to set
+     * @param commentsComma the commentsComma transform set
      */
     public void setCommentsComma(List<String> commentsComma) {
         this.commentsComma = commentsComma;
@@ -87,7 +87,7 @@ public class ExpressionList implements ItemsList {
     }
 
     /**
-     * @param commentEndBracket the commentEndBracket to set
+     * @param commentEndBracket the commentEndBracket transform set
      */
     public void setCommentEndBracket(String commentEndBracket) {
         this.commentEndBracket = commentEndBracket;

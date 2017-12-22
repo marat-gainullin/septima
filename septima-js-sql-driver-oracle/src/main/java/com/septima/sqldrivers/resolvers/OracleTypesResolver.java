@@ -1,6 +1,6 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.application.ApplicationDataTypes;
+import com.septima.DataTypes;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,35 +15,35 @@ import java.util.Set;
 public class OracleTypesResolver implements TypesResolver {
 
     private static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
-        put("VARCHAR2", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("DECIMAL", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("NUMBER", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("TIMESTAMP", ApplicationDataTypes.DATE_TYPE_NAME);
-        put("MDSYS.SDO_GEOMETRY", ApplicationDataTypes.GEOMETRY_TYPE_NAME);
-        put("INTEGER", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("FLOAT", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("REAL", ApplicationDataTypes.NUMBER_TYPE_NAME);
-        put("DATE", ApplicationDataTypes.DATE_TYPE_NAME);
-        put("NVARCHAR2", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("NCHAR", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("TIMESTAMP(6)", ApplicationDataTypes.DATE_TYPE_NAME);
-        put("TIMESTAMP WITH TIME ZONE", ApplicationDataTypes.DATE_TYPE_NAME);
-        put("TIMESTAMP WITH LOCAL TIME ZONE", ApplicationDataTypes.DATE_TYPE_NAME);
-        put("TIMESTAMP(6) WITH TIME ZONE", ApplicationDataTypes.DATE_TYPE_NAME);
-        put("TIMESTAMP(6) WITH LOCAL TIME ZONE", ApplicationDataTypes.DATE_TYPE_NAME);
-        put("LONG RAW", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("RAW", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("LONG", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("CHAR", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("CLOB", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("NCLOB", ApplicationDataTypes.STRING_TYPE_NAME);
-        put("GEOMETRY", ApplicationDataTypes.GEOMETRY_TYPE_NAME);
-        put("CURVE", ApplicationDataTypes.GEOMETRY_TYPE_NAME);
-        put("POLYGON", ApplicationDataTypes.GEOMETRY_TYPE_NAME);
-        put("LINESTRING", ApplicationDataTypes.GEOMETRY_TYPE_NAME);
-        put("POINT", ApplicationDataTypes.GEOMETRY_TYPE_NAME);
-        put("SURFACE", ApplicationDataTypes.GEOMETRY_TYPE_NAME);
-        put("SDO_GEOMETRY", ApplicationDataTypes.GEOMETRY_TYPE_NAME);
+        put("VARCHAR2", DataTypes.STRING_TYPE_NAME);
+        put("DECIMAL", DataTypes.NUMBER_TYPE_NAME);
+        put("NUMBER", DataTypes.NUMBER_TYPE_NAME);
+        put("TIMESTAMP", DataTypes.DATE_TYPE_NAME);
+        put("MDSYS.SDO_GEOMETRY", DataTypes.GEOMETRY_TYPE_NAME);
+        put("INTEGER", DataTypes.NUMBER_TYPE_NAME);
+        put("FLOAT", DataTypes.NUMBER_TYPE_NAME);
+        put("REAL", DataTypes.NUMBER_TYPE_NAME);
+        put("DATE", DataTypes.DATE_TYPE_NAME);
+        put("NVARCHAR2", DataTypes.STRING_TYPE_NAME);
+        put("NCHAR", DataTypes.STRING_TYPE_NAME);
+        put("TIMESTAMP(6)", DataTypes.DATE_TYPE_NAME);
+        put("TIMESTAMP WITH TIME ZONE", DataTypes.DATE_TYPE_NAME);
+        put("TIMESTAMP WITH LOCAL TIME ZONE", DataTypes.DATE_TYPE_NAME);
+        put("TIMESTAMP(6) WITH TIME ZONE", DataTypes.DATE_TYPE_NAME);
+        put("TIMESTAMP(6) WITH LOCAL TIME ZONE", DataTypes.DATE_TYPE_NAME);
+        put("LONG RAW", DataTypes.STRING_TYPE_NAME);
+        put("RAW", DataTypes.STRING_TYPE_NAME);
+        put("LONG", DataTypes.STRING_TYPE_NAME);
+        put("CHAR", DataTypes.STRING_TYPE_NAME);
+        put("CLOB", DataTypes.STRING_TYPE_NAME);
+        put("NCLOB", DataTypes.STRING_TYPE_NAME);
+        put("GEOMETRY", DataTypes.GEOMETRY_TYPE_NAME);
+        put("CURVE", DataTypes.GEOMETRY_TYPE_NAME);
+        put("POLYGON", DataTypes.GEOMETRY_TYPE_NAME);
+        put("LINESTRING", DataTypes.GEOMETRY_TYPE_NAME);
+        put("POINT", DataTypes.GEOMETRY_TYPE_NAME);
+        put("SURFACE", DataTypes.GEOMETRY_TYPE_NAME);
+        put("SDO_GEOMETRY", DataTypes.GEOMETRY_TYPE_NAME);
         put("BLOB", null);
     }};
     private static final Set<String> jdbcTypesWithSize = new HashSet<>() {{

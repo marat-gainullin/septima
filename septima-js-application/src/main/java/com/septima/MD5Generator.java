@@ -18,7 +18,7 @@ public class MD5Generator {
         MessageDigest md = MessageDigest.getInstance("MD5");
         md.update(aSource.getBytes(SettingsConstants.COMMON_ENCODING));
         byte[] digestedBytes = md.digest();
-        //convert digested to hex string
+        //convert digested transform hex string
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < digestedBytes.length; i++) {
             sb.append(Integer.toString((digestedBytes[i] & 0xff) + 0x100, 16).substring(1));

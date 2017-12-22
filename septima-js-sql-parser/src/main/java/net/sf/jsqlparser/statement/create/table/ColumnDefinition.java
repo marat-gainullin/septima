@@ -59,7 +59,7 @@ public class ColumnDefinition {
     }
 
     /**
-     * @param commentName the commentName to set
+     * @param commentName the commentName transform set
      */
     public void setCommentName(String commentName) {
         this.commentName = commentName;
@@ -73,7 +73,7 @@ public class ColumnDefinition {
     }
 
     /**
-     * @param commentsSpec the commentsSpec to set
+     * @param commentsSpec the commentsSpec transform set
      */
     public void setCommentsSpec(List<String> commentsSpec) {
         this.commentsSpec = commentsSpec;

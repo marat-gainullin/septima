@@ -97,7 +97,7 @@ public class InExpression implements Relation {
     }
 
     /**
-     * @param commentIn the commentIn to set
+     * @param commentIn the commentIn transform set
      */
     public void setCommentIn(String commentIn) {
         this.commentIn = commentIn;
@@ -111,7 +111,7 @@ public class InExpression implements Relation {
     }
 
     /**
-     * @param commentNot the commentNot to set
+     * @param commentNot the commentNot transform set
      */
     public void setCommentNot(String commentNot) {
         this.commentNot = commentNot;
@@ -125,7 +125,7 @@ public class InExpression implements Relation {
     }
 
     /**
-     * @param commentPrior the commentPrior to set
+     * @param commentPrior the commentPrior transform set
      */
     public void setCommentPrior(String commentPrior) {
         this.commentPrior = commentPrior;
@@ -139,7 +139,7 @@ public class InExpression implements Relation {
     }
 
     /**
-     * @param commentBeginBracket the commentBeginBracket to set
+     * @param commentBeginBracket the commentBeginBracket transform set
      */
     public void setCommentBeginBracket(String commentBeginBracket) {
         this.commentBeginBracket = commentBeginBracket;

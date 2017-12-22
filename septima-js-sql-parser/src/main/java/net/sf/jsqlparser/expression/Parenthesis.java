@@ -85,7 +85,7 @@ public class Parenthesis implements Expression {
     }
 
     /**
-     * @param commentNot the commentNot to set
+     * @param commentNot the commentNot transform set
      */
     public void setCommentNot(String commentNot) {
         this.commentNot = commentNot;
@@ -99,7 +99,7 @@ public class Parenthesis implements Expression {
     }
 
     /**
-     * @param commentPrior the commentPrior to set
+     * @param commentPrior the commentPrior transform set
      */
     public void setCommentPrior(String commentPrior) {
         this.commentPrior = commentPrior;
@@ -113,7 +113,7 @@ public class Parenthesis implements Expression {
     }
 
     /**
-     * @param commentBeginBracket the commentBeginBracket to set
+     * @param commentBeginBracket the commentBeginBracket transform set
      */
     public void setCommentBeginBracket(String commentBeginBracket) {
         this.commentBeginBracket = commentBeginBracket;
@@ -127,7 +127,7 @@ public class Parenthesis implements Expression {
     }
 
     /**
-     * @param commentEndBracket the commentEndBracket to set
+     * @param commentEndBracket the commentEndBracket transform set
      */
     public void setCommentEndBracket(String commentEndBracket) {
         this.commentEndBracket = commentEndBracket;

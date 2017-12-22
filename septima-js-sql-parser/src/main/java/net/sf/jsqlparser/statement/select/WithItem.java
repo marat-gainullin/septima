@@ -77,7 +77,7 @@ public class WithItem {
     }
 
     /**
-     * @param commentName the commentName to set
+     * @param commentName the commentName transform set
      */
     public void setCommentName(String commentName) {
         this.commentName = commentName;
@@ -91,7 +91,7 @@ public class WithItem {
     }
 
     /**
-     * @param commentsCommaWith the commentsCommaWith to set
+     * @param commentsCommaWith the commentsCommaWith transform set
      */
     public void setCommentsCommaWith(List<String> commentsCommaWith) {
         this.commentsCommaWith = commentsCommaWith;
@@ -105,7 +105,7 @@ public class WithItem {
     }
 
     /**
-     * @param commentBeginBracketWith the commentBeginBracketWith to set
+     * @param commentBeginBracketWith the commentBeginBracketWith transform set
      */
     public void setCommentBeginBracketWith(String commentBeginBracketWith) {
         this.commentBeginBracketWith = commentBeginBracketWith;
@@ -119,7 +119,7 @@ public class WithItem {
     }
 
     /**
-     * @param commentEndBracketWith the commentEndBracketWith to set
+     * @param commentEndBracketWith the commentEndBracketWith transform set
      */
     public void setCommentEndBracketWith(String commentEndBracketWith) {
         this.commentEndBracketWith = commentEndBracketWith;
@@ -133,7 +133,7 @@ public class WithItem {
     }
 
     /**
-     * @param commentBeginBracketAs the commentBeginBracketAs to set
+     * @param commentBeginBracketAs the commentBeginBracketAs transform set
      */
     public void setCommentBeginBracketAs(String commentBeginBracketAs) {
         this.commentBeginBracketAs = commentBeginBracketAs;
@@ -147,7 +147,7 @@ public class WithItem {
     }
 
     /**
-     * @param commentEndBracketAs the commentEndBracketAs to set
+     * @param commentEndBracketAs the commentEndBracketAs transform set
      */
     public void setCommentEndBracketAs(String commentEndBracketAs) {
         this.commentEndBracketAs = commentEndBracketAs;
@@ -161,7 +161,7 @@ public class WithItem {
     }
 
     /**
-     * @param commentAS the commentAS to set
+     * @param commentAS the commentAS transform set
      */
     public void setCommentAs(String commentAS) {
         this.commentAs = commentAS;
@@ -175,7 +175,7 @@ public class WithItem {
     }
 
     /**
-     * @param comment the comment to set
+     * @param comment the comment transform set
      */
     public void setComment(String comment) {
         this.comment = comment;

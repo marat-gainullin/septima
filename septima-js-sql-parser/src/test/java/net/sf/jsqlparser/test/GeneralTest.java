@@ -4,12 +4,13 @@
  */
 package net.sf.jsqlparser.test;
 
+import net.sf.jsqlparser.JSqlParserException;
 import org.junit.Test;
 import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.Statement;
 import java.io.StringReader;
-import net.sf.jsqlparser.JSQLParserException;
+
 import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
@@ -35,7 +36,7 @@ public class GeneralTest {
     {
     }
 
-    public void checkParseAndDeparse(String statementText) throws JSQLParserException {
+    public void checkParseAndDeparse(String statementText) throws JSqlParserException {
         Statement statement = parserManager.parse(new StringReader(statementText));
         assertNotNull(statement);
         StringBuilder buffer = new StringBuilder();
@@ -47,7 +48,7 @@ public class GeneralTest {
         } else if (statement instanceof Insert) {
             deparser.visit((Insert) statement);
         } else {
-            throw new JSQLParserException("Unknown type of parsed statement");
+            throw new JSqlParserException("Unknown type of parsed statement");
         }
         assertEquals(buffer.toString().toLowerCase().replaceAll(ExpressionDeParser.LINE_SEPARATOR, ""), statementText.toLowerCase().replaceAll(ExpressionDeParser.LINE_SEPARATOR, ""));
     }

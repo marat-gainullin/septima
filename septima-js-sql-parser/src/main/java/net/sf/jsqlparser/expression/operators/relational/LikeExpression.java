@@ -79,7 +79,7 @@ public class LikeExpression extends BinaryExpression implements Relation {
     }
 
     /**
-     * @param commentLike the commentLike to set
+     * @param commentLike the commentLike transform set
      */
     public void setCommentLike(String commentLike) {
         this.commentLike = commentLike;
@@ -93,7 +93,7 @@ public class LikeExpression extends BinaryExpression implements Relation {
     }
 
     /**
-     * @param commentNot the commentNot to set
+     * @param commentNot the commentNot transform set
      */
     public void setCommentNot(String commentNot) {
         this.commentNot = commentNot;
@@ -107,7 +107,7 @@ public class LikeExpression extends BinaryExpression implements Relation {
     }
 
     /**
-     * @param commentEscape the commentEscape to set
+     * @param commentEscape the commentEscape transform set
      */
     public void setCommentEscape(String commentEscape) {
         this.commentEscape = commentEscape;
@@ -121,7 +121,7 @@ public class LikeExpression extends BinaryExpression implements Relation {
     }
 
     /**
-     * @param commentLiteral the commentLiteral to set
+     * @param commentLiteral the commentLiteral transform set
      */
     public void setCommentLiteral(String commentLiteral) {
         this.commentLiteral = commentLiteral;

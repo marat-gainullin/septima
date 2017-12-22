@@ -73,7 +73,7 @@ public class Delete implements Statement {
     }
 
     /**
-     * @param comment the comment to set
+     * @param comment the comment transform set
      */
     public void setComment(String comment) {
         this.comment = comment;
@@ -97,7 +97,7 @@ public class Delete implements Statement {
     }
 
     /**
-     * @param fromComment the fromComment to set
+     * @param fromComment the fromComment transform set
      */
     public void setFromComment(String fromComment) {
         this.fromComment = fromComment;
@@ -111,7 +111,7 @@ public class Delete implements Statement {
     }
 
     /**
-     * @param whereComment the whereComment to set
+     * @param whereComment the whereComment transform set
      */
     public void setWhereComment(String whereComment) {
         this.whereComment = whereComment;

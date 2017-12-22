@@ -35,7 +35,7 @@ public class OracleSqlDriver extends SqlDriver {
     private static final OracleTypesResolver resolver = new OracleTypesResolver();
     private static final String GET_SCHEMA_CLAUSE = "SELECT sys_context('USERENV', 'CURRENT_SCHEMA') FROM DUAL";
     private static final String CREATE_SCHEMA_CLAUSE = "CREATE USER %s IDENTIFIED BY %s";
-    private static final String RENAME_FIELD_SQL_PREFIX = "alter table %s rename column %s to %s";
+    private static final String RENAME_FIELD_SQL_PREFIX = "alter table %s rename column %s transform %s";
     private static final String MODIFY_FIELD_SQL_PREFIX = "alter table %s modify ";
 
     public OracleSqlDriver(){

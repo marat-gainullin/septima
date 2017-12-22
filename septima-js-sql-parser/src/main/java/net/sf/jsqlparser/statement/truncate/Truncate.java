@@ -43,7 +43,7 @@ public class Truncate implements Statement {
     }
 
     /**
-     * @param comment the comment to set
+     * @param comment the comment transform set
      */
     public void setComment(String comment) {
         this.comment = comment;
@@ -67,7 +67,7 @@ public class Truncate implements Statement {
     }
 
     /**
-     * @param commentTable the commentTable to set
+     * @param commentTable the commentTable transform set
      */
     public void setCommentTable(String commentTable) {
         this.commentTable = commentTable;

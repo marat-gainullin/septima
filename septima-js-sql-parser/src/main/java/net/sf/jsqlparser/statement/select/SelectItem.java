@@ -23,7 +23,7 @@ package net.sf.jsqlparser.statement.select;
 
 /**
  * Anything between "SELECT" and "FROM"<BR> (that is, any column or expression
- * etc to be retrieved with the query)
+ * etc transform be retrieved with the query)
  */
 public interface SelectItem {
 

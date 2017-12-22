@@ -2,7 +2,7 @@ package net.sf.jsqlparser.test.select;
 
 import junit.framework.TestCase;
 import junit.textui.TestRunner;
-import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.JSqlParserException;
 import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Select;
@@ -89,7 +89,7 @@ public class PerformanceTest extends TestCase {
             ArrayList parsedSelects = new ArrayList(NUM_REPS * statementsList.size());
             long time = System.currentTimeMillis();
 
-            // measure the time to parse NUM_REPS times all statements in the 2 files
+            // measure the time transform parse NUM_REPS times all statements in the 2 files
             for (int i = 0; i < NUM_REPS; i++) {
                 try {
                     int j = 0;
@@ -102,8 +102,8 @@ public class PerformanceTest extends TestCase {
                         }
 
                     }
-                } catch (JSQLParserException e) {
-                    throw new TestException("impossible to parse statement: " + statement, e);
+                } catch (JSqlParserException e) {
+                    throw new TestException("impossible transform parse statement: " + statement, e);
                 }
             }
             long elapsedTime = System.currentTimeMillis() - time;
@@ -117,7 +117,7 @@ public class PerformanceTest extends TestCase {
 
             numTests = 0;
             time = System.currentTimeMillis();
-            // measure the time to get the tables names from all the SELECTs parsed before
+            // measure the time transform get the tables names from all the SELECTs parsed before
             for (Iterator iter = parsedSelects.iterator(); iter.hasNext();) {
                 Select select = (Select) iter.next();
                 if (select != null) {

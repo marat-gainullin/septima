@@ -96,7 +96,7 @@ public class Limit {
     }
 
     /**
-     * @param commentLimit the commentLimit to set
+     * @param commentLimit the commentLimit transform set
      */
     public void setCommentLimit(String commentLimit) {
         this.commentLimit = commentLimit;
@@ -110,7 +110,7 @@ public class Limit {
     }
 
     /**
-     * @param commentOffset the commentOffset to set
+     * @param commentOffset the commentOffset transform set
      */
     public void setCommentOffset(String commentOffset) {
         this.commentOffset = commentOffset;
@@ -124,7 +124,7 @@ public class Limit {
     }
 
     /**
-     * @param commentOffsetValue the commentOffsetValue to set
+     * @param commentOffsetValue the commentOffsetValue transform set
      */
     public void setCommentOffsetValue(String commentOffsetValue) {
         this.commentOffsetValue = commentOffsetValue;
@@ -138,7 +138,7 @@ public class Limit {
     }
 
     /**
-     * @param commentLimitValue the commentLimitValue to set
+     * @param commentLimitValue the commentLimitValue transform set
      */
     public void setCommentLimitValue(String commentLimitValue) {
         this.commentLimitValue = commentLimitValue;
@@ -152,7 +152,7 @@ public class Limit {
     }
 
     /**
-     * @param comma the comma to set
+     * @param comma the comma transform set
      */
     public void setComma(boolean comma) {
         this.comma = comma;
@@ -166,7 +166,7 @@ public class Limit {
     }
 
     /**
-     * @param commentAll the commentAll to set
+     * @param commentAll the commentAll transform set
      */
     public void setCommentAll(String commentAll) {
         this.commentAll = commentAll;
@@ -180,7 +180,7 @@ public class Limit {
     }
 
     /**
-     * @param commentComma the commentComma to set
+     * @param commentComma the commentComma transform set
      */
     public void setCommentComma(String commentComma) {
         this.commentComma = commentComma;
@@ -194,7 +194,7 @@ public class Limit {
     }
 
     /**
-     * @param commentAfterCommaValue the commentAfterCommaValue to set
+     * @param commentAfterCommaValue the commentAfterCommaValue transform set
      */
     public void setCommentAfterCommaValue(String commentAfterCommaValue) {
         this.commentAfterCommaValue = commentAfterCommaValue;

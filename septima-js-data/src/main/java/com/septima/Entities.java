@@ -1,10 +1,11 @@
 package com.septima;
 
 import com.septima.metadata.Field;
-import com.septima.queries.SqlEntity;
+import com.septima.entities.SqlEntity;
 
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.Set;
 
 
 /**
@@ -18,5 +19,9 @@ public interface Entities {
 
     SqlEntity loadEntity(String aEntityName);
 
+    SqlEntity loadEntity(String aEntityName, Set<String> illegalReferences);
+
     Path getApplicationPath();
+
+    String getDefaultDataSource();
 }

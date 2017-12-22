@@ -66,7 +66,7 @@ public class Connect implements Expression {
     }
 
     /**
-     * @param comment the comment to set
+     * @param comment the comment transform set
      */
     public void setComment(String comment) {
         this.comment = comment;
@@ -80,7 +80,7 @@ public class Connect implements Expression {
     }
 
     /**
-     * @param commentWith the commentWith to set
+     * @param commentWith the commentWith transform set
      */
     public void setCommentWith(String commentWith) {
         this.commentWith = commentWith;
@@ -94,7 +94,7 @@ public class Connect implements Expression {
     }
 
     /**
-     * @param commentConnect the commentConnect to set
+     * @param commentConnect the commentConnect transform set
      */
     public void setCommentConnect(String commentConnect) {
         this.commentConnect = commentConnect;
@@ -108,7 +108,7 @@ public class Connect implements Expression {
     }
 
     /**
-     * @param commentBy the commentBy to set
+     * @param commentBy the commentBy transform set
      */
     public void setCommentBy(String commentBy) {
         this.commentBy = commentBy;
@@ -122,7 +122,7 @@ public class Connect implements Expression {
     }
 
     /**
-     * @param commentNoCycle the commentNoCycle to set
+     * @param commentNoCycle the commentNoCycle transform set
      */
     public void setCommentNoCycle(String commentNoCycle) {
         this.commentNoCycle = commentNoCycle;

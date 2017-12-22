@@ -32,12 +32,12 @@ import java.io.Reader;
 public class SeptimaSqlParser implements JSqlParser {
 
     @Override
-    public Statement parse(Reader statementReader) throws JSQLParserException {
+    public Statement parse(Reader statementReader) throws JSqlParserException {
         CCJSqlParser parser = new CCJSqlParser(statementReader);
         try {
             return parser.Statement();
         } catch (Throwable e) {
-            throw new JSQLParserException(e);
+            throw new JSqlParserException(e);
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.septima.metadata;
 
 /**
- * A class intended to hold information about primary key constraint in database.
+ * A class intended transform hold information about primary key constraint in database.
  */
 public class PrimaryKey {
 

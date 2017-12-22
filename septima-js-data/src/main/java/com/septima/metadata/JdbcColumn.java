@@ -1,5 +1,7 @@
 package com.septima.metadata;
 
+import java.sql.Types;
+
 /**
  * @author mg
  */
@@ -11,6 +13,25 @@ public class JdbcColumn extends Field {
     private final boolean signed;
     private final String schemaName;
     private final int jdbcType;
+
+    public JdbcColumn(String aName) {
+        this(
+                aName,
+                null,
+                aName,
+                null,
+                "VARCHAR",
+                true,
+                false,
+                null,
+                Integer.MAX_VALUE,
+                0,
+                0,
+                false,
+                null,
+                Types.VARCHAR
+        );
+    }
 
     public JdbcColumn(
             String aName,
@@ -125,7 +146,7 @@ public class JdbcColumn extends Field {
         }
         if (getFk() != null && getFk().getReferee() != null) {
             PrimaryKey rf = getFk().getReferee();
-            sb.append(", foreign key to ");
+            sb.append(", foreign key transform ");
             if (rf.getSchema() != null && !rf.getSchema().isEmpty()) {
                 sb.append(rf.getSchema()).append(".");
             }

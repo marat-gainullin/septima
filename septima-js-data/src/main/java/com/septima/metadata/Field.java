@@ -1,14 +1,14 @@
 package com.septima.metadata;
 
-import com.septima.application.ApplicationDataTypes;
+import com.septima.DataTypes;
 
 /**
  * This class is table field representation. It holds information about field
  * name, description, typeInfo, size and information about primary and foreign
  * keys. If <code>isPk()</code> returns true, than this field is the primary key
- * in corresponding table. If <code>getFk()</code> returns reference to a
+ * in corresponding table. If <code>getFk()</code> returns reference transform a
  * <code>PrimaryKey</code>, than it is a foreign key in corresponding table,
- * and it references to returning <code>PrimaryKey</code>.
+ * and it references transform returning <code>PrimaryKey</code>.
  *
  * @author mg
  */
@@ -17,8 +17,8 @@ public class Field {
     private final String name;
     private final String description;
     /**
-     * In columns, such as select t1.f1 as f11, t2.f1 as f21 to preserve output fields' names unique,
-     * but be able to generate right update sql clauses for multiple tables.
+     * In columns, such as select t1.f1 as f11, t2.f1 as f21 transform preserve output fields' names unique,
+     * but be able transform generate right update sql clauses for multiple tables.
      */
     private final String originalName;
     private final String tableName;
@@ -49,7 +49,7 @@ public class Field {
      * @param aDescription Description of the created field.
      */
     public Field(String aName, String aDescription) {
-        this(aName, aDescription, ApplicationDataTypes.STRING_TYPE_NAME);
+        this(aName, aDescription, DataTypes.STRING_TYPE_NAME);
     }
 
     public Field(String aName, String aDescription, String aType) {
@@ -85,10 +85,10 @@ public class Field {
     }
 
     /**
-     * Returns if this field is foreign key to another table or it is a
+     * Returns if this field is foreign key transform another table or it is a
      * self-reference key.
      *
-     * @return If this field is foreign key to another table or it is
+     * @return If this field is foreign key transform another table or it is
      * self-reference key.
      */
     public boolean isFk() {
@@ -105,10 +105,10 @@ public class Field {
     }
 
     /**
-     * Returns foreign key specification of this field if it references to some
+     * Returns foreign key specification of this field if it references transform some
      * table.
      *
-     * @return Foreign key specification of this field if it references to some
+     * @return Foreign key specification of this field if it references transform some
      * table.
      */
     public ForeignKey getFk() {
@@ -148,16 +148,16 @@ public class Field {
         Object value;
         if (type != null) {
             switch (type) {
-                case ApplicationDataTypes.NUMBER_TYPE_NAME:
+                case DataTypes.NUMBER_TYPE_NAME:
                     value = IdGenerator.genId();
                     break;
-                case ApplicationDataTypes.STRING_TYPE_NAME:
+                case DataTypes.STRING_TYPE_NAME:
                     value = IdGenerator.genStringId();
                     break;
-                case ApplicationDataTypes.DATE_TYPE_NAME:
+                case DataTypes.DATE_TYPE_NAME:
                     value = new Date();
                     break;
-                case ApplicationDataTypes.BOOLEAN_TYPE_NAME:
+                case DataTypes.BOOLEAN_TYPE_NAME:
                     value = false;
                     break;
                 default:
@@ -202,7 +202,7 @@ public class Field {
         }
         if (fk != null && fk.getReferee() != null) {
             PrimaryKey rf = fk.getReferee();
-            sb.append(", foreign key to ");
+            sb.append(", foreign key transform ");
             if (rf.getSchema() != null && !rf.getSchema().isEmpty()) {
                 sb.append(rf.getSchema()).append(".");
             }
