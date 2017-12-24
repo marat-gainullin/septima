@@ -1,6 +1,6 @@
 package com.septima.queries;
 
-import com.septima.Entities;
+import com.septima.entities.SqlEntities;
 import com.septima.entities.SqlEntity;
 import net.sf.jsqlparser.JSqlParser;
 import net.sf.jsqlparser.JSqlParserException;
@@ -20,17 +20,17 @@ public class InlineEntities extends SyntaxTreeVisitor {
 
     private static final String HASH = "#";
 
-    public static void to(Statement syntax, Entities aEntities, Map<String, Map<String, String>> aParametersBinds, Path aStartOfReferences, Set<String> aIllegalReferences) {
+    public static void to(Statement syntax, SqlEntities aEntities, Map<String, Map<String, String>> aParametersBinds, Path aStartOfReferences, Set<String> aIllegalReferences) {
         InlineEntities inline = new InlineEntities(aEntities, aParametersBinds, aStartOfReferences, aIllegalReferences);
         syntax.accept(inline);
     }
 
-    private final Entities entities;
+    private final SqlEntities entities;
     private final Map<String, Map<String, String>> parametersBinds;
     private final Path startOfReferences;
     private final Set<String> illegalReferences;
 
-    private InlineEntities(Entities aQueries, Map<String, Map<String, String>> aParametersBinds, Path aStartOfReferences, Set<String> aIllegalReferences) {
+    private InlineEntities(SqlEntities aQueries, Map<String, Map<String, String>> aParametersBinds, Path aStartOfReferences, Set<String> aIllegalReferences) {
         entities = aQueries;
         parametersBinds = aParametersBinds;
         startOfReferences = aStartOfReferences;

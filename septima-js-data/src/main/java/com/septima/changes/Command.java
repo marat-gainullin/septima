@@ -2,39 +2,27 @@ package com.septima.changes;
 
 import com.septima.NamedValue;
 
-import java.util.List;
+import java.util.Map;
 
 /**
  * @author mg
  */
-public class Command extends Change implements Change.Applicable {
+public class Command extends Change {
 
-    /**
-     * Compiled Sql clause with linear parameters in form of (?, ?, ?).
-     */
-    private final String clause;
-    /**
-     * Compiled and not unique collection of parameters.
-     */
-    private final List<NamedValue> parameters;
+    private final Map<String, NamedValue> parameters;
 
-    public Command(String aEntityName, String aClause, List<NamedValue> aParameters) {
-        super(aEntityName);
-        clause = aClause;
+    public Command(final String entityName, final Map<String, NamedValue> aParameters) {
+        super(entityName);
         parameters = aParameters;
     }
 
-    public String getCommand() {
-        return clause;
+    public Map<String, NamedValue> getParameters() {
+        return parameters;
     }
 
     @Override
-    public void accept(ApplicableChangeVisitor aChangeVisitor) {
+    public void accept(ChangesVisitor aChangeVisitor) {
         aChangeVisitor.visit(this);
-    }
-
-    public List<NamedValue> getParameters() {
-        return parameters;
     }
 
 }

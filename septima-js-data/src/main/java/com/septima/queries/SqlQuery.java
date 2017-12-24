@@ -2,20 +2,20 @@ package com.septima.queries;
 
 import com.septima.Database;
 import com.septima.DynamicDataProvider;
-import com.septima.jdbc.UncheckedSQLException;
-import com.septima.changes.Command;
-import com.septima.NamedValue;
-import com.septima.dataflow.JdbcDataProvider;
-import com.septima.metadata.Field;
 import com.septima.Parameter;
+import com.septima.dataflow.JdbcDataProvider;
+import com.septima.jdbc.UncheckedSQLException;
+import com.septima.metadata.Field;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 /**
  * A compiled Sql query.
@@ -58,21 +58,26 @@ public class SqlQuery {
      * Executes query and returns results regardless of procedure flag.
      * It uses query's own parameters.
      */
-    public CompletableFuture<Collection<Map<String, Object>>> executeQuery() {
-        return executeQuery(parameters);
+    public CompletableFuture<Collection<Map<String, Object>>> requestData() {
+        return requestData(parameters);
     }
 
     /**
      * Executes query and returns results regardless of procedure flag.
      */
-    public CompletableFuture<Collection<Map<String, Object>>> executeQuery(List<Parameter> aParameters) {
+    public CompletableFuture<Collection<Map<String, Object>>> requestData(List<Parameter> aParameters) {
         Objects.requireNonNull(database);
         Objects.requireNonNull(aParameters);
         DynamicDataProvider dataProvider = database.createDataProvider(entityName, sqlClause, procedure, pageSize, expectedFields);
         return dataProvider.pull(aParameters);
     }
 
-    public CompletableFuture<Integer> executeUpdate() {
+    public CompletableFuture<Integer> start() {
+        return start(parameters);
+    }
+
+    public CompletableFuture<Integer> start(List<Parameter> aParameters) {
+        Objects.requireNonNull(aParameters, "aParameters is required argument");
         CompletableFuture<Integer> updating = new CompletableFuture<>();
         database.getJdbcPerformer().execute(() -> {
             try {
@@ -82,15 +87,15 @@ public class SqlQuery {
                     connection.setAutoCommit(false);
                     try {
                         try (PreparedStatement stmt = connection.prepareStatement(sqlClause)) {
-                            for (int i = 0; i < parameters.size(); i++) {
-                                Parameter param = parameters.get(i);
+                            for (int i = 0; i < aParameters.size(); i++) {
+                                Parameter param = aParameters.get(i);
                                 int jdbcType = JdbcDataProvider.calcJdbcType(param.getType(), param.getValue());
                                 JdbcDataProvider.assign(param.getValue(), i + 1, stmt, jdbcType, null);
                             }
                             try {
                                 int rowsAffected = stmt.executeUpdate();
                                 connection.commit();
-                                updating.completeAsync(() -> rowsAffected, database.getFutureExecutor());
+                                updating.completeAsync(() -> rowsAffected, database.getFuturesExecutor());
                             } catch (SQLException | UncheckedSQLException ex) {
                                 connection.rollback();
                                 throw ex;
@@ -100,27 +105,11 @@ public class SqlQuery {
                         connection.setAutoCommit(autoCommit);
                     }
                 }
-            } catch (SQLException | UncheckedSQLException ex) {
-                database.getFutureExecutor().execute(() -> {
-                    updating.completeExceptionally(ex);
-                });
+            } catch (Throwable ex) {
+                database.getFuturesExecutor().execute(() -> updating.completeExceptionally(ex));
             }
         });
         return updating;
-    }
-
-    public Command prepareCommand() {
-        return prepareCommand(parameters);
-    }
-
-    public Command prepareCommand(List<Parameter> aParameters) {
-        Objects.requireNonNull(aParameters);
-        return new Command(
-                entityName,
-                sqlClause,
-                Collections.unmodifiableList(aParameters.stream()
-                .map(parameter -> new NamedValue(parameter.getName(), parameter.getValue()))
-                .collect(Collectors.toList())));
     }
 
     /**

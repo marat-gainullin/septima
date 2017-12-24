@@ -31,7 +31,7 @@ import javax.security.auth.AuthPermission;
  */
 public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRequest.Response> {
 
-    private static final class ChangesJSONReader implements TransferableChangeVisitor {
+    private static final class ChangesJSONReader implements ChangesVisitor {
 
         private static final String CHANGE_DATA_NAME = "data";
         private static final String CHANGE_KEYS_NAME = "keys";
@@ -81,7 +81,7 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
         }
 
         @Override
-        public void visit(CommandRequest aRequest) throws Exception {
+        public void visit(Command aRequest) throws Exception {
             Object oParameters = sChange.getMember(CHANGE_PARAMETERS_NAME);
             List<NamedValue> values = parseObjectProperties(oParameters);
             values.stream().forEach(cv -> aRequest.getParameters().put(cv.name, cv));
@@ -116,7 +116,7 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
                                     change.accept(reader);
                                     break;
                                 case "command":
-                                    change = new CommandRequest(sEntityName);
+                                    change = new Command(sEntityName);
                                     change.accept(reader);
                                     break;
                             }
@@ -264,8 +264,8 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
                                         process.complete(null, accessControlEx, null);
                                     } else {
                                         try {
-                                            if (change instanceof CommandRequest) {
-                                                CommandRequest commandRequest = (CommandRequest)change;
+                                            if (change instanceof Command) {
+                                                Command command = (Command)change;
                                                 SqlCompiledQuery compiled = compiledEntities.computeIfAbsent(change.getEntity(), en -> {
                                                     try {
                                                         return query.compile();
@@ -273,7 +273,7 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
                                                         throw new IllegalStateException(ex);
                                                     }
                                                 });
-                                                process.complete(compiled.prepareCommand(commandRequest.getParameters()), null, null);
+                                                process.complete(compiled.prepareCommand(command.getParameters()), null, null);
                                             } else {
                                                 process.complete((Change.Applicable)change, null, null);
                                             }

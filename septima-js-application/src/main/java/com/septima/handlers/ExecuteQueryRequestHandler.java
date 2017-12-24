@@ -75,7 +75,7 @@ public class ExecuteQueryRequestHandler extends RequestHandler<ExecuteQueryReque
             p.setValue(aSpace.toJava(aSpace.parseJsonWithDates(pJson)));
         }
         aQuery.execute(aSpace, onSuccess, onFailure);
-        // SqlCompiledQuery.executeUpdate/Client.enqueueUpdate is prohibited here, because no security check is performed in it.
+        // SqlCompiledQuery.start/Client.enqueueUpdate is prohibited here, because no security check is performed in it.
         // Stored procedures can't be called directly from three-tier clients for security reasons
         // and out parameters can't pass through the network.
     }

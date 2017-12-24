@@ -26,7 +26,7 @@ public class SqlEntityTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void sqlEntityEmptySql() {
+    public void sqlEntityEmptySql() throws Exception {
         SqlEntity entity = new SqlEntity(Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)),
                 "",
                 null,
@@ -44,7 +44,7 @@ public class SqlEntityTest {
     }
 
     @Test
-    public void sqlEntityCustomSql() {
+    public void sqlEntityCustomSql() throws Exception {
         SqlEntity entity = new SqlEntity(Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)),
                 "select f1, f2 from table",
                 "select f1, f2::json from table",
@@ -63,7 +63,7 @@ public class SqlEntityTest {
     }
 
     @Test
-    public void sqlEntityStructure() {
+    public void sqlEntityStructure() throws Exception {
         Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
         SqlEntity entity = new SqlEntity(database,
                 "select f1, f2 from table",
@@ -85,7 +85,7 @@ public class SqlEntityTest {
         assertEquals(true, entity.isCommand());
         assertEquals(true, entity.isProcedure());
         assertEquals(true, entity.isPublicAccess());
-        assertEquals("testEntity", entity.getEntityName());
+        assertEquals("testEntity", entity.getName());
         assertEquals("Awesome sql based entity", entity.getTitle());
         assertEquals(64, entity.getPageSize());
         assertEquals(Map.of(), entity.getParameters());
@@ -102,7 +102,7 @@ public class SqlEntityTest {
     }
 
     @Test
-    public void namedParametersExtraction() {
+    public void namedParametersExtraction() throws Exception {
         SqlEntity entity = new SqlEntity(
                 Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)),
                 "select a.id::json, /*multil/i*ne \n com \r ment * /text :pp1 */'jj :pp2 ww' txt from assets a\n" +
@@ -122,7 +122,7 @@ public class SqlEntityTest {
     }
 
     @Test
-    public void namedParametersToJdbcParameters() {
+    public void namedParametersToJdbcParameters() throws Exception {
         SqlEntity entity = new SqlEntity(
                 Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)),
                 "select a.id::json ajson, /*multil/i*ne \n" +

@@ -223,7 +223,7 @@ public class SqlDriver implements StatementsGenerator.GeometryConverter {
 
     /**
      * Generates sql texts array for dropping a field. Sql clauses from array
-     * will execute consequentially.
+     * will start consequentially.
      *
      * @param aSchemaName Schema name
      * @param aTableName  Name indices a table the field transform dropped from.

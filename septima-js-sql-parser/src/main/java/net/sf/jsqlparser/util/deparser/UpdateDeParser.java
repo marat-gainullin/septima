@@ -19,9 +19,9 @@ public class UpdateDeParser {
 
     /**
      * @param aExpressionVisitor a {@link ExpressionVisitor} transform de-parse
-     * expressions. It has transform share the same<br>
-     * StringBuilder (builder parameter) as this object in order transform work
-     * @param aBuffer the builder that will be filled with the select
+     *                           expressions. It has transform share the same<br>
+     *                           StringBuilder (builder parameter) as this object in order transform work
+     * @param aBuffer            the builder that will be filled with the select
      */
     public UpdateDeParser(ExpressionVisitor aExpressionVisitor, StringBuilder aBuffer) {
         buffer = aBuffer;
@@ -37,15 +37,22 @@ public class UpdateDeParser {
     }
 
     public void deParse(Update aUpdate) {
-        buffer.append(aUpdate.getComment() != null ? aUpdate.getComment() + " " + ExpressionDeParser.LINE_SEPARATOR : "").append("Update ").append(ExpressionDeParser.LINE_SEPARATOR)
-                .append(aUpdate.getTable().getComment() != null ? aUpdate.getTable().getComment() + " " + ExpressionDeParser.LINE_SEPARATOR : "").append(aUpdate.getTable().getWholeTableName()).append(ExpressionDeParser.LINE_SEPARATOR)
+        buffer.append(aUpdate.getComment() != null ? aUpdate.getComment() + " " + ExpressionDeParser.LINE_SEPARATOR : "")
+                .append("Update ").append(ExpressionDeParser.LINE_SEPARATOR)
+                .append(aUpdate.getTable().getComment() != null ? aUpdate.getTable().getComment() + " " + ExpressionDeParser.LINE_SEPARATOR : "")
+                .append(aUpdate.getTable().getWholeTableName())
+                .append(aUpdate.getTable().getAlias() != null && aUpdate.getTable().getAlias().getCommentAs() != null ? aUpdate.getTable().getAlias().getCommentAs() : "")
+                .append(aUpdate.getTable().getAlias() != null ? " as " : "")
+                .append(aUpdate.getTable().getAlias() != null && aUpdate.getTable().getAlias().getCommentName() != null ? aUpdate.getTable().getAlias().getCommentName() : "")
+                .append(aUpdate.getTable().getAlias() != null ? aUpdate.getTable().getAlias().getName() + " " : "")
+                .append(ExpressionDeParser.LINE_SEPARATOR)
                 .append(aUpdate.getCommentSet() != null ? " " + aUpdate.getCommentSet() + ExpressionDeParser.LINE_SEPARATOR : "").append(" set ");
         int columnsCounter = 0;
         for (int i = 0, s = aUpdate.getColumns().size(); i < s; i++) {
-            Column column = (Column) aUpdate.getColumns().get(i);
+            Column column = aUpdate.getColumns().get(i);
             buffer.append(column.getComment() != null ? column.getComment() + " " + ExpressionDeParser.LINE_SEPARATOR : "").append(column.getWholeColumnName())
                     .append(!aUpdate.getCommentsEqaulas().get(i).toString().isEmpty() ? " " + aUpdate.getCommentsEqaulas().get(i) + ExpressionDeParser.LINE_SEPARATOR : "").append(" = ");
-            Expression expression = (Expression) aUpdate.getExpressions().get(i);
+            Expression expression = aUpdate.getExpressions().get(i);
             expression.accept(expressionVisitor);
             if (i < aUpdate.getColumns().size() - 1) {
                 buffer.append(!aUpdate.getCommentsComma().get(i).toString().isEmpty() ? " " + aUpdate.getCommentsComma().get(i) + " " : "");

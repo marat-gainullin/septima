@@ -71,7 +71,7 @@ public class DynamicDataProvider extends JdbcDataProvider {
                     );
                     Collection<Map<String, Object>> processed = reader.readRowSet(lowLevelResults, pageSize);
                     fetching.completeAsync(() -> processed, futureExecutor);
-                } catch (SQLException | UncheckedSQLException ex) {
+                } catch (Throwable ex) {
                     futureExecutor.execute(() -> fetching.completeExceptionally(ex));
                 } finally {
                     try {

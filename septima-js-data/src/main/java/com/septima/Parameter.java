@@ -10,12 +10,12 @@ public class Parameter {
         InOut,
         Unknown;
 
-        public static Mode of(int aJdbcMode){
-            if(aJdbcMode == ParameterMetaData.parameterModeIn){
+        public static Mode of(int aJdbcMode) {
+            if (aJdbcMode == ParameterMetaData.parameterModeIn) {
                 return In;
-            } else if(aJdbcMode == ParameterMetaData.parameterModeOut) {
+            } else if (aJdbcMode == ParameterMetaData.parameterModeOut) {
                 return Out;
-            } else if(aJdbcMode == ParameterMetaData.parameterModeInOut){
+            } else if (aJdbcMode == ParameterMetaData.parameterModeInOut) {
                 return InOut;
             } else {
                 return Unknown;
@@ -33,15 +33,19 @@ public class Parameter {
         this(aName, null);
     }
 
-    public Parameter(String aName, String aDescription) {
-        this(aName, aDescription, null);
+    public Parameter(String aName, Object aValue) {
+        this(aName, aValue, null);
     }
 
-    public Parameter(String aName, String aDescription, String aType) {
-        this(aName, aDescription, aType, null, Mode.In);
+    public Parameter(String aName, Object aValue, String aType) {
+        this(aName, aValue, aType, Mode.In);
     }
 
-    public Parameter(String aName, String aDescription, String aType, Object aValue, Mode aMode) {
+    public Parameter(String aName, Object aValue, String aType, Mode aMode) {
+        this(aName, aValue, aType, aMode, null);
+    }
+
+    public Parameter(String aName, Object aValue, String aType, Mode aMode, String aDescription) {
         super();
         name = aName;
         value = aValue;

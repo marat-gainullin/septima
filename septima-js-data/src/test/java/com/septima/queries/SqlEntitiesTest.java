@@ -1,9 +1,8 @@
 package com.septima.queries;
 
-import com.septima.Entities;
+import com.septima.DataTypes;
 import com.septima.Parameter;
 import com.septima.TestDataSource;
-import com.septima.DataTypes;
 import com.septima.entities.SqlEntities;
 import com.septima.entities.SqlEntity;
 import com.septima.entities.SqlEntityCyclicReferenceException;
@@ -35,7 +34,7 @@ public class SqlEntitiesTest {
 
     @Test(expected = IllegalStateException.class)
     public void badDataSource() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -48,7 +47,7 @@ public class SqlEntitiesTest {
      */
     @Test(expected = UncheckedJSqlParserException.class)
     public void unparsableSqlText() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -57,7 +56,7 @@ public class SqlEntitiesTest {
 
     @Test(expected = UncheckedJSqlParserException.class)
     public void withUnparsableSubEntity() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -66,7 +65,7 @@ public class SqlEntitiesTest {
 
     @Test(expected = SqlEntityCyclicReferenceException.class)
     public void cyclicHashRefsTwoElements() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -75,7 +74,7 @@ public class SqlEntitiesTest {
 
     @Test(expected = SqlEntityCyclicReferenceException.class)
     public void cyclicHashRefsThreeElements() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -84,7 +83,7 @@ public class SqlEntitiesTest {
 
     @Test(expected = IllegalStateException.class)
     public void emptyEntity() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -93,7 +92,7 @@ public class SqlEntitiesTest {
 
     @Test(expected = IllegalStateException.class)
     public void withEmptySubEntity() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -102,7 +101,7 @@ public class SqlEntitiesTest {
 
     @Test(expected = UncheckedIOException.class)
     public void absentEntity() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -111,7 +110,7 @@ public class SqlEntitiesTest {
 
     @Test(expected = UncheckedIOException.class)
     public void directoryInsteadOfEntitySqlFile() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -120,7 +119,7 @@ public class SqlEntitiesTest {
 
     @Test(expected = UncheckedIOException.class)
     public void withAbsentSubEntity() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -129,7 +128,7 @@ public class SqlEntitiesTest {
 
     @Test(expected = IllegalStateException.class)
     public void withInlinedDelete() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -138,13 +137,13 @@ public class SqlEntitiesTest {
 
     @Test
     public void ethalonJsonContent() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
         SqlEntity entity = entities.loadEntity("entities/ethalon");
         assertNotNull(entity);
-        assertEquals("entities/ethalon", entity.getEntityName());
+        assertEquals("entities/ethalon", entity.getName());
         assertEquals("Custom orders", entity.getTitle());
         assertEquals("select o.*, co.body::json from orders o inner join customOrders co on(o.id = co.order_id)", entity.getCustomSqlText());
         assertEquals("Select o.order_id id, o.amount amt, o.good goodik\n" +
@@ -217,7 +216,7 @@ public class SqlEntitiesTest {
 
     @Test
     public void ethalonJsonMergedContent() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -249,7 +248,7 @@ public class SqlEntitiesTest {
 
     @Test
     public void simpleInline() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -270,7 +269,7 @@ public class SqlEntitiesTest {
 
     @Test
     public void variousCase() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -296,7 +295,7 @@ public class SqlEntitiesTest {
 
     @Test
     public void multiplePrimaryKeys() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -311,7 +310,7 @@ public class SqlEntitiesTest {
 
     @Test
     public void allColumnsTwoTables() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -330,7 +329,7 @@ public class SqlEntitiesTest {
 
     @Test
     public void allColumnsOneTableOneFieldFromOtherTable() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -347,7 +346,7 @@ public class SqlEntitiesTest {
 
     @Test
     public void allColumnsWithSubEntity() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -369,7 +368,7 @@ public class SqlEntitiesTest {
 
     @Test
     public void allColumnsOneSubEntity() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -383,7 +382,7 @@ public class SqlEntitiesTest {
 
     @Test
     public void columnsWithoutSource() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -404,7 +403,7 @@ public class SqlEntitiesTest {
 
     @Test
     public void columnsWithAliases() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -419,7 +418,7 @@ public class SqlEntitiesTest {
 
     @Test
     public void columnsWithoutAliases() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -434,7 +433,7 @@ public class SqlEntitiesTest {
 
     @Test
     public void columnsFromTablesWithAndWithoutAliases() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -449,7 +448,7 @@ public class SqlEntitiesTest {
 
     @Test
     public void withSchemaInColumns() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -475,7 +474,7 @@ public class SqlEntitiesTest {
 
     @Test
     public void expressionColumn() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
@@ -487,7 +486,7 @@ public class SqlEntitiesTest {
 
     @Test
     public void expressionColumnWithoutAlias() {
-        Entities entities = new SqlEntities(
+        SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );

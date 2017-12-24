@@ -7,13 +7,13 @@ import com.septima.metadata.ForeignKey;
 import com.septima.metadata.JdbcColumn;
 import com.septima.metadata.PrimaryKey;
 import com.septima.queries.CaseInsensitiveMap;
+import com.septima.queries.CaseInsensitiveSet;
 import com.septima.sqldrivers.SqlDriver;
 
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * @author mg
@@ -41,67 +41,6 @@ public class Metadata implements StatementsGenerator.TablesContainer {
     private static final String JDBC_NUMBER_PRECISION_RADIX = "NUM_PREC_RADIX";
     private static final String JDBC_NULLABLE = "NULLABLE";
     private static final String JDBC_PK_CONSTRAINT_NAME = "PK_NAME";
-
-    private static class CaseInsensitiveSet extends AbstractSet<String> {
-
-        private static String keyToLowerCase(String aKey) {
-            return aKey != null ? aKey.toLowerCase() : null;
-        }
-
-        private Set<String> delegate;
-
-        CaseInsensitiveSet(Set<String> aDelegate) {
-            super();
-            Objects.requireNonNull(aDelegate, "aDelegate is required argument");
-            delegate = aDelegate;
-        }
-
-        @Override
-        public Iterator<String> iterator() {
-            return delegate.iterator();
-        }
-
-        @Override
-        public int size() {
-            return delegate.size();
-        }
-
-        @Override
-        public boolean add(String s) {
-            return delegate.add(keyToLowerCase(s));
-        }
-
-        @Override
-        public boolean addAll(Collection<? extends String> c) {
-            return delegate.addAll(c.stream()
-                    .map(CaseInsensitiveSet::keyToLowerCase)
-                    .collect(Collectors.toSet()));
-        }
-
-        @Override
-        public boolean remove(Object o) {
-            return delegate.remove(keyToLowerCase((String) o));
-        }
-
-        @Override
-        public boolean removeAll(Collection<?> c) {
-            return delegate.removeAll(c.stream()
-                    .map(o -> keyToLowerCase((String) o))
-                    .collect(Collectors.toSet()));
-        }
-
-        @Override
-        public boolean contains(Object o) {
-            return delegate.contains(keyToLowerCase((String) o));
-        }
-
-        @Override
-        public boolean containsAll(Collection<?> c) {
-            return c.stream()
-                    .allMatch(e -> delegate.contains(keyToLowerCase((String) e)));
-        }
-
-    }
 
     private final DataSource dataSource;
     private final Set<String> schemas;

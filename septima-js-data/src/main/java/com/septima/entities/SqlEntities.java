@@ -3,15 +3,19 @@ package com.septima.entities;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.septima.Database;
-import com.septima.Entities;
+import com.septima.Metadata;
 import com.septima.Parameter;
+import com.septima.changes.Change;
 import com.septima.dataflow.DataProvider;
-import com.septima.jdbc.DataSources;
+import com.septima.dataflow.StatementsGenerator;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
 import com.septima.metadata.ForeignKey;
 import com.septima.metadata.JdbcColumn;
-import com.septima.queries.*;
+import com.septima.queries.CaseInsensitiveMap;
+import com.septima.queries.CaseInsensitiveSet;
+import com.septima.queries.ExtractParameters;
+import com.septima.queries.InlineEntities;
 import com.septima.sqldrivers.resolvers.TypesResolver;
 import net.sf.jsqlparser.JSqlParser;
 import net.sf.jsqlparser.JSqlParserException;
@@ -25,6 +29,8 @@ import net.sf.jsqlparser.syntax.FromItems;
 import net.sf.jsqlparser.syntax.SelectItems;
 import net.sf.jsqlparser.util.deparser.StatementDeParser;
 
+import javax.naming.NamingException;
+import javax.sql.DataSource;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -32,15 +38,16 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.Consumer;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.StreamSupport;
 
 /**
  * @author mg
  */
-public class SqlEntities implements Entities {
+public class SqlEntities {
 
     private static final String ENTITY_NAME_MISSING_MSG = "Entity name missing.";
     private static final String LOADING_QUERY_MSG = "Loading entity '%s'.";
@@ -49,24 +56,35 @@ public class SqlEntities implements Entities {
     private final Path applicationPath;
     private final String defaultDataSource;
     private final Map<String, SqlEntity> entities = new ConcurrentHashMap<>();
+    private final Executor jdbcPerformer;
+    private final Executor futuresExecutor;
 
-    public SqlEntities(Path aApplicationPath, String aDefaultDataSource) {
-        super();
-        applicationPath = aApplicationPath;
-        defaultDataSource = aDefaultDataSource;
+    private final Map<String, Database> databases = new ConcurrentHashMap<>();
+
+    public SqlEntities(Path anApplicationPath, String aDefaultDataSource) {
+        this(anApplicationPath, aDefaultDataSource, Database.jdbcTasksPerformer(32), ForkJoinPool.commonPool());
     }
 
-    @Override
+    public SqlEntities(Path anApplicationPath, String aDefaultDataSource, Executor aJdbcPerformer, Executor aFuturesExecutor) {
+        super();
+        Objects.requireNonNull(anApplicationPath, "aApplicationPath is required argument");
+        Objects.requireNonNull(aDefaultDataSource, "aDefaultDataSource is required argument");
+        Objects.requireNonNull(aJdbcPerformer, "aJdbcPerformer is required argument");
+        Objects.requireNonNull(aFuturesExecutor, "aFuturesExecutor is required argument");
+        applicationPath = anApplicationPath;
+        defaultDataSource = aDefaultDataSource;
+        jdbcPerformer = aJdbcPerformer;
+        futuresExecutor = aFuturesExecutor;
+    }
+
     public Path getApplicationPath() {
         return applicationPath;
     }
 
-    @Override
     public String getDefaultDataSource() {
         return defaultDataSource;
     }
 
-    @Override
     public SqlEntity loadEntity(String anEntityName) {
         return loadEntity(anEntityName, new HashSet<>());
     }
@@ -82,7 +100,6 @@ public class SqlEntities implements Entities {
      * @throws SqlEntityCyclicReferenceException If entity body has a cyclic reference.
      * @see ConcurrentHashMap
      */
-    @Override
     public SqlEntity loadEntity(String anEntityName, Set<String> aIllegalReferences) throws SqlEntityCyclicReferenceException {
         Objects.requireNonNull(anEntityName, ENTITY_NAME_MISSING_MSG);
         if (aIllegalReferences.contains(anEntityName)) {
@@ -115,42 +132,16 @@ public class SqlEntities implements Entities {
         }
     }
 
-    @Override
-    public Parameter resolveParameter(String aEntityName, String aParamName) {
-        if (aEntityName != null) {
-            SqlEntity entity = loadEntity(aEntityName);
-            if (entity != null) {
-                return entity.getParameters().get(aParamName);
-            } else {
-                return null;
-            }
-        } else {
-            return null;
+    public List<StatementsGenerator.GeneratedStatement> bindChanges(List<Change> aChangeLog) {
+        List<StatementsGenerator.GeneratedStatement> statements = new ArrayList<>();
+        for (Change change : aChangeLog) {
+            SqlEntity entity = loadEntity(change.getEntityName());
+            Database database = entity.getDatabase();
+            StatementsGenerator generator = new StatementsGenerator(this, database.getMetadata(), database.getSqlDriver());
+            change.accept(generator);
+            statements.addAll(generator.getLogEntries());
         }
-    }
-
-    @Override
-    public Field resolveField(String anEntityName, String aFieldName) throws SQLException {
-        if (anEntityName != null) {
-            SqlEntity entity = loadEntity(anEntityName);
-            if (entity != null) {
-                Map<String, Field> fields = entity.getFields();
-                Field resolved = fields.get(aFieldName);
-                String resolvedTableName = resolved != null && resolved.getTableName() != null ? resolved.getTableName().toLowerCase() : null;
-                return resolvedTableName != null &&
-                        (entity.getWritable().isEmpty() || entity.getWritable().contains(resolvedTableName)) ? resolved : null;
-            } else {
-                // It seems, that anEntityName is a table name...
-                Map<String, JdbcColumn> fields = Database.of(defaultDataSource).getMetadata().getTableColumns(anEntityName)
-                        .orElseGet(() -> {
-                            Logger.getLogger(DataSources.class.getName()).log(Level.WARNING, "Can't find fields for entity '{0}'", anEntityName);
-                            return Map.of();
-                        });
-                return fields.get(aFieldName);
-            }
-        } else {
-            return null;
-        }
+        return Collections.unmodifiableList(statements);
     }
 
     private Map<String, JdbcColumn> resolveTableColumns(Database database, Table aTable) throws SQLException {
@@ -219,10 +210,10 @@ public class SqlEntities implements Entities {
             boolean out = outNode != null && outNode.isBoolean() && outNode.asBoolean();
             params.put(parameterName, new Parameter(
                     parameterName,
-                    description,
-                    type,
                     value,
-                    out ? Parameter.Mode.InOut : Parameter.Mode.In
+                    type,
+                    out ? Parameter.Mode.InOut : Parameter.Mode.In,
+                    description
             ));
             // Binds
             JsonNode bindsNode = parameterNode.get("binds");
@@ -330,7 +321,7 @@ public class SqlEntities implements Entities {
 
             JsonNode dataSourceNode = entityDocument != null ? entityDocument.get("source") : null;
             String dataSource = dataSourceNode != null && dataSourceNode.isTextual() ? dataSourceNode.asText() : defaultDataSource;
-            Database database = Database.of(dataSource);
+            Database database = databaseOf(dataSource);
             JsonNode procedureNode = entityDocument != null ? entityDocument.get("procedure") : null;
             boolean procedure = procedureNode != null && procedureNode.asBoolean();
 
@@ -338,8 +329,6 @@ public class SqlEntities implements Entities {
             String title = titleNode != null && titleNode.isTextual() ? titleNode.asText() : anEntityName;
             JsonNode sqlNode = entityDocument != null ? entityDocument.get("sql") : null;
             String customSql = sqlNode != null && sqlNode.isTextual() ? sqlNode.asText() : null;
-            JsonNode commandNode = entityDocument != null ? entityDocument.get("command") : null;
-            boolean command = commandNode != null && commandNode.asBoolean();
             JsonNode readonlyNode = entityDocument != null ? entityDocument.get("readonly") : null;
             boolean readonly = readonlyNode != null && readonlyNode.asBoolean();
             JsonNode publicNode = entityDocument != null ? entityDocument.get("public") : null;
@@ -349,6 +338,10 @@ public class SqlEntities implements Entities {
 
             JSqlParser sqlParser = new SeptimaSqlParser();
             Statement querySyntax = sqlParser.parse(new StringReader(anEntitySql));
+
+            boolean command = !(querySyntax instanceof Select);
+            JsonNode commandNode = entityDocument != null ? entityDocument.get("command") : null;
+            command = commandNode != null && commandNode.isBoolean() ? commandNode.asBoolean() : command;
 
             Map<String, Parameter> params = ExtractParameters.from(querySyntax);
             // subQueryName, subQueryParameterName, parameterName
@@ -364,7 +357,7 @@ public class SqlEntities implements Entities {
                     resolveColumnsBySyntax(database, querySyntax), database.getSqlDriver().getTypesResolver()
             );
 
-            Set<String> writable = new HashSet<>();
+            Set<String> writable = new CaseInsensitiveSet(new HashSet<>());
             Set<String> readRoles = new HashSet<>();
             Set<String> writeRoles = new HashSet<>();
 
@@ -544,5 +537,25 @@ public class SqlEntities implements Entities {
                     })
                     .orElse(new JdbcColumn(alias != null && !alias.isEmpty() ? alias : column.getColumnName()));
         }
+    }
+
+    private Database databaseOf(final String aDataSourceName) {
+        Objects.requireNonNull(aDataSourceName, "aDataSourceName ia required argument");
+        return databases.computeIfAbsent(aDataSourceName, dsn -> {
+            try {
+                DataSource ds = Database.obtainDataSource(aDataSourceName);
+                Metadata metadata = Metadata.of(ds);
+                return new Database(
+                        ds,
+                        metadata,
+                        jdbcPerformer,
+                        futuresExecutor
+                );
+            } catch (NamingException ex) {
+                throw new IllegalStateException(ex);
+            } catch (SQLException ex) {
+                throw new UncheckedSQLException(ex);
+            }
+        });
     }
 }

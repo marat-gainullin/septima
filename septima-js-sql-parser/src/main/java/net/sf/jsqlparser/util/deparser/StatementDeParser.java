@@ -56,7 +56,6 @@ public class StatementDeParser implements StatementVisitor {
         selectDeParser.setExpressionVisitor(expressionDeParser);
         InsertDeParser insertDeParser = new InsertDeParser(expressionDeParser, selectDeParser, builder);
         insertDeParser.deParse(insert);
-
     }
 
     public void visit(Replace replace) {
@@ -103,7 +102,6 @@ public class StatementDeParser implements StatementVisitor {
         UpdateDeParser updateDeParser = new UpdateDeParser(expressionDeParser, builder);
         selectDeParser.setExpressionVisitor(expressionDeParser);
         updateDeParser.deParse(update);
-
     }
 
     public StringBuilder getBuilder() {

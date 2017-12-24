@@ -169,7 +169,7 @@ public class SqlEntity {
         return title;
     }
 
-    public String getEntityName() {
+    public String getName() {
         return entityName;
     }
 
@@ -193,10 +193,10 @@ public class SqlEntity {
                     );
                     compiledParams.add(new Parameter(
                             p.getName(),
-                            p.getDescription(),
-                            p.getType(),
                             p.getValue(),
-                            p.getMode()
+                            p.getType(),
+                            p.getMode(),
+                            p.getDescription()
                     ));
                     return postgreSQL && DataTypes.DATE_TYPE_NAME.equals(p.getType()) ? "?::timestamp" : "?";
                 }
@@ -249,7 +249,7 @@ public class SqlEntity {
         return assembly;
     }
 
-    public static Map<String, Parameter> extractParameters(String aSource) {
+    private static Map<String, Parameter> extractParameters(String aSource) {
         Map<String, Parameter> params = new LinkedHashMap<>();
         if (aSource != null && !aSource.isEmpty()) {
             riddleParameters(aSource, paramName -> {

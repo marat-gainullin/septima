@@ -14,9 +14,9 @@ public class DeleteDeParser {
 
     /**
      * @param aExpressionVisitor a {@link ExpressionVisitor} transform de-parse
-     * expressions. It has transform share the same<br>
-     * StringBuilder (builder parameter) as this object in order transform work
-     * @param aBuffer the builder that will be filled with the select
+     *                           expressions. It has transform share the same<br>
+     *                           StringBuilder (builder parameter) as this object in order transform work
+     * @param aBuffer            the builder that will be filled with the select
      */
     public DeleteDeParser(ExpressionVisitor aExpressionVisitor, StringBuilder aBuffer) {
         this.buffer = aBuffer;
@@ -34,13 +34,22 @@ public class DeleteDeParser {
     public void deParse(Delete aDelete) {
         buffer
                 .append(aDelete.getComment() != null ? aDelete.getComment() + " " + ExpressionDeParser.LINE_SEPARATOR : "")
-                .append("Delete").append(aDelete.getFromComment() != null ? " " + aDelete.getFromComment() + ExpressionDeParser.LINE_SEPARATOR : "").append(" From ")
-                .append(aDelete.getTable().getComment() != null ? aDelete.getTable().getComment() + " " + ExpressionDeParser.LINE_SEPARATOR : "").append(aDelete.getTable().getWholeTableName());
+                .append("Delete")
+                .append(aDelete.getFromComment() != null ? " " + aDelete.getFromComment() + ExpressionDeParser.LINE_SEPARATOR : "")
+                .append(" From ")
+                .append(aDelete.getTable().getComment() != null ? aDelete.getTable().getComment() + " " + ExpressionDeParser.LINE_SEPARATOR : "")
+                .append(aDelete.getTable().getWholeTableName() + " ")
+                .append(aDelete.getTable().getAlias() != null && aDelete.getTable().getAlias().getCommentAs() != null ? aDelete.getTable().getAlias().getCommentAs() : "")
+                .append(aDelete.getTable().getAlias() != null ? " as " : "")
+                .append(aDelete.getTable().getAlias() != null && aDelete.getTable().getAlias().getCommentName() != null ? aDelete.getTable().getAlias().getCommentName() : "")
+                .append(aDelete.getTable().getAlias() != null ? aDelete.getTable().getAlias().getName() + " " : "");
         if (aDelete.getWhere() != null) {
-            buffer.append(aDelete.getWhereComment() != null ? " " + aDelete.getWhereComment() : "").append(ExpressionDeParser.LINE_SEPARATOR).append(" Where ");
+            buffer.append(aDelete.getWhereComment() != null ? " " + aDelete.getWhereComment() : "")
+                    .append(ExpressionDeParser.LINE_SEPARATOR)
+                    .append(" Where ");
             aDelete.getWhere().accept(expressionVisitor);
         }
-        buffer.append(!"".equals(aDelete.getEndComment()) ? " " + aDelete.getEndComment() : "");
+        buffer.append(!aDelete.getEndComment().isEmpty() ? " " + aDelete.getEndComment() : "");
     }
 
     public ExpressionVisitor getExpressionVisitor() {

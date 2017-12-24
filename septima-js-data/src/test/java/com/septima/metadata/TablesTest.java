@@ -6,14 +6,13 @@ import com.septima.TestDataSource;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 import javax.naming.NamingException;
 import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 import java.util.Optional;
+
+import static org.junit.Assert.*;
 
 public class TablesTest {
 
@@ -23,7 +22,7 @@ public class TablesTest {
     }
 
     @Test
-    public void assetsCaseInsensitiveColumns() throws SQLException {
+    public void assetsCaseInsensitiveColumns() throws Exception {
         Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
         assertNotNull(database);
         Metadata metadata = database.getMetadata();
@@ -40,7 +39,7 @@ public class TablesTest {
     }
 
     @Test
-    public void assetsColumns() throws SQLException {
+    public void assetsColumns() throws Exception {
         Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
         assertNotNull(database);
         Metadata metadata = database.getMetadata();
@@ -74,7 +73,7 @@ public class TablesTest {
     }
 
     @Test
-    public void assetsPrimaryKeys() throws SQLException {
+    public void assetsPrimaryKeys() throws Exception {
         Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
         assertNotNull(database);
         Metadata metadata = database.getMetadata();
@@ -88,7 +87,7 @@ public class TablesTest {
     }
 
     @Test
-    public void defaultSchema() throws SQLException {
+    public void defaultSchema() throws Exception {
         Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
         assertEquals("public", database.getMetadata().getDefaultSchema().toLowerCase());
         assertTrue(database.getMetadata().containsTable("AsseTs"));
@@ -108,7 +107,7 @@ public class TablesTest {
     }
 
     @Test
-    public void assetGroupsForeignKeys() throws SQLException {
+    public void assetGroupsForeignKeys() throws Exception {
         Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
         assertNotNull(database);
         Metadata metadata = database.getMetadata();

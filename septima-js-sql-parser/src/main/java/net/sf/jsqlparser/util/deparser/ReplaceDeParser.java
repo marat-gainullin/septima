@@ -1,7 +1,5 @@
 package net.sf.jsqlparser.util.deparser;
 
-import java.util.Iterator;
-
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.ExpressionVisitor;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
@@ -10,6 +8,8 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.replace.Replace;
 import net.sf.jsqlparser.statement.select.SelectVisitor;
 import net.sf.jsqlparser.statement.select.SubSelect;
+
+import java.util.Iterator;
 
 /**
  * A class transform de-parse (that is, tranform from JSqlParser hierarchy into a
@@ -55,14 +55,14 @@ public class ReplaceDeParser implements ItemsListVisitor {
         }
         buffer.append(aReplace.getTable().getComment() != null ? aReplace.getTable().getComment() + " " + ExpressionDeParser.LINE_SEPARATOR : "").append(aReplace.getTable().getWholeTableName());
         if (aReplace.getExpressions() != null && aReplace.getColumns() != null) {
-            buffer.append(aReplace.getCommentSet() != null ? " " + aReplace.getCommentSet() + ExpressionDeParser.LINE_SEPARATOR : "").append(" SET ");
+            buffer.append(aReplace.getCommentSet() != null ? " " + aReplace.getCommentSet() + ExpressionDeParser.LINE_SEPARATOR : "").append(" Set ");
             //each element from expressions match up with a column from columns.
             int columnsCounter = 0;
             for (int i = 0, s = aReplace.getColumns().size(); i < s; i++) {
-                Column column = (Column) aReplace.getColumns().get(i);
+                Column column = aReplace.getColumns().get(i);
                 buffer.append(column.getComment() != null ? column.getComment() + " " + ExpressionDeParser.LINE_SEPARATOR : "").append(column.getWholeColumnName())
                         .append(!aReplace.getCommentEqualsColumns().get(i).toString().isEmpty() ? " " + aReplace.getCommentEqualsColumns().get(i) + ExpressionDeParser.LINE_SEPARATOR : "").append(" = ");
-                Expression expression = (Expression) aReplace.getExpressions().get(i);
+                Expression expression = aReplace.getExpressions().get(i);
                 expression.accept(expressionVisitor);
                 if (i < aReplace.getColumns().size() - 1) {
                     buffer.append(!aReplace.getCommentCommaExpr().get(i).toString().isEmpty() ? " " + aReplace.getCommentCommaExpr().get(i) + " " : "");
@@ -78,7 +78,7 @@ public class ReplaceDeParser implements ItemsListVisitor {
             if (aReplace.getColumns() != null) {
                 buffer.append(aReplace.getCommentBeforeColumns() != null ? " " + aReplace.getCommentBeforeColumns() + ExpressionDeParser.LINE_SEPARATOR : "").append(" (");
                 for (int i = 0; i < aReplace.getColumns().size(); i++) {
-                    Column column = (Column) aReplace.getColumns().get(i);
+                    Column column = aReplace.getColumns().get(i);
                     buffer.append(column.getComment() != null ? column.getComment() + " " + ExpressionDeParser.LINE_SEPARATOR : "").append(column.getWholeColumnName());
                     if (i < aReplace.getColumns().size() - 1) {
                         buffer.append(!"".equals(aReplace.getCommentCommaColumns().get(i)) ? " " + aReplace.getCommentCommaColumns().get(i) + ExpressionDeParser.LINE_SEPARATOR : "")
@@ -97,7 +97,7 @@ public class ReplaceDeParser implements ItemsListVisitor {
         if (aReplace.isUseValues()) {
             buffer.append(aReplace.getCommentAfterItems() != null ? aReplace.getCommentAfterItems() + " " + ExpressionDeParser.LINE_SEPARATOR : "").append(")");
         }
-        buffer.append(!"".equals(aReplace.getEndComment()) ? " " + aReplace.getEndComment() : "");
+        buffer.append(!aReplace.getEndComment().isEmpty() ? " " + aReplace.getEndComment() : "");
     }
 
     public void visit(ExpressionList expressionList) {

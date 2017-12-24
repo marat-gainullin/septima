@@ -1,22 +1,21 @@
 package com.septima;
 
-import com.septima.changes.Change;
 import com.septima.dataflow.StatementsGenerator;
 import com.septima.jdbc.DataSources;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
-import com.septima.metadata.JdbcColumn;
-import com.septima.entities.SqlEntity;
 import com.septima.sqldrivers.SqlDriver;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -24,25 +23,21 @@ import java.util.logging.Logger;
 
 public class Database {
 
-    private static final Map<String, Database> DATABASES = new ConcurrentHashMap<>();
-
     private final DataSource dataSource;
     private final Metadata metadata;
     private final SqlDriver sqlDriver;
-    private final Entities entities;
     private final Executor jdbcPerformer;
-    private final Executor futureExecutor;
+    private final Executor futuresExecutor;
 
-    private Database(DataSource aDataSource, Metadata aMetadata, SqlDriver aSqlDriver, Entities aEntities, Executor aJdbcPerformer, Executor aFuturesExecutor) {
+    public Database(DataSource aDataSource, Metadata aMetadata, Executor aJdbcPerformer, Executor aFuturesExecutor) {
         Objects.requireNonNull(aDataSource, "aDataSource is required argument");
         Objects.requireNonNull(aJdbcPerformer, "aJdbcPerformer is required argument");
         Objects.requireNonNull(aFuturesExecutor, "aFuturesExecutor is required argument");
         dataSource = aDataSource;
         metadata = aMetadata;
-        sqlDriver = aSqlDriver;
+        sqlDriver = metadata.getSqlDriver();
         jdbcPerformer = aJdbcPerformer;
-        futureExecutor = aFuturesExecutor;
-        entities = aEntities != null ? aEntities : new TablesEntities();
+        futuresExecutor = aFuturesExecutor;
     }
 
     public DataSource getDataSource() {
@@ -61,8 +56,8 @@ public class Database {
         return jdbcPerformer;
     }
 
-    public Executor getFutureExecutor() {
-        return futureExecutor;
+    public Executor getFuturesExecutor() {
+        return futuresExecutor;
     }
 
     public DynamicDataProvider createDataProvider(String aEntityName, String aSqlClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
@@ -71,7 +66,7 @@ public class Database {
                 aEntityName,
                 dataSource,
                 jdbcPerformer,
-                futureExecutor,
+                futuresExecutor,
                 aSqlClause,
                 aProcedure,
                 aPageSize,
@@ -79,30 +74,24 @@ public class Database {
         );
     }
 
-    public CompletableFuture<Integer> commit(List<Change.Applicable> aChangeLog) {
-        Objects.requireNonNull(aChangeLog);
+    public CompletableFuture<Integer> commit(List<StatementsGenerator.GeneratedStatement> statements) {
+        Objects.requireNonNull(statements);
         CompletableFuture<Integer> committing = new CompletableFuture<>();
         jdbcPerformer.execute(() -> {
             try (Connection connection = dataSource.getConnection()) {
                 boolean autoCommit = connection.getAutoCommit();
                 connection.setAutoCommit(false);
                 try {
-                    List<StatementsGenerator.GeneratedStatement> statements = new ArrayList<>();
-                    for (Change.Applicable change : aChangeLog) {
-                        StatementsGenerator generator = new StatementsGenerator(entities, metadata, sqlDriver);
-                        change.accept(generator);
-                        statements.addAll(generator.getLogEntries());
-                    }
                     int affected = riddleStatements(statements, connection);
-                    committing.completeAsync(() -> affected, futureExecutor);
+                    committing.completeAsync(() -> affected, futuresExecutor);
                 } catch (SQLException | UncheckedSQLException ex) {
                     connection.rollback();
                     throw ex;
                 } finally {
                     connection.setAutoCommit(autoCommit);
                 }
-            } catch (SQLException | UncheckedSQLException ex) {
-                futureExecutor.execute(() -> committing.completeExceptionally(ex));
+            } catch (Throwable ex) {
+                futuresExecutor.execute(() -> committing.completeExceptionally(ex));
             }
         });
         return committing;
@@ -131,7 +120,7 @@ public class Database {
         return rowsAffected;
     }
 
-    private static DataSource obtainDataSource(String aDataSourceName) throws NamingException {
+    public static DataSource obtainDataSource(String aDataSourceName) throws NamingException {
         Objects.requireNonNull(aDataSourceName, "aDataSourceName is required argument");
         Context initContext = new InitialContext();
         try {
@@ -139,56 +128,6 @@ public class Database {
         } finally {
             initContext.close();
         }
-    }
-
-    public static Database of(final String aDataSourceName) {
-        return of(aDataSourceName, 32);
-    }
-
-    public static Database of(final String aDataSourceName, int aMaxParallelQueries) {
-        return of(
-                aDataSourceName,
-                jdbcTasksPerformer(Math.max(1, aMaxParallelQueries))
-        );
-    }
-
-    public static Database of(final String aDataSourceName, Executor aJdbcPerformer) {
-        return of(
-                aDataSourceName,
-                aJdbcPerformer,
-                ForkJoinPool.commonPool()
-        );
-    }
-
-    public static Database of(final String aDataSourceName, Executor aJdbcPerformer, Executor aFutureExecutor) {
-        return of(
-                aDataSourceName,
-                aJdbcPerformer,
-                aFutureExecutor,
-                null
-        );
-    }
-
-    public static Database of(final String aDataSourceName, Executor aJdbcPerformer, Executor aFutureExecutor, Entities aEntities) {
-        Objects.requireNonNull(aDataSourceName, "aDataSourceName ia required argument");
-        Objects.requireNonNull(aJdbcPerformer, "aJdbcPerformer ia required argument");
-        return DATABASES.computeIfAbsent(aDataSourceName, dsn -> {
-            try {
-                DataSource ds = obtainDataSource(aDataSourceName);
-                return new Database(
-                        ds,
-                        Metadata.of(ds),
-                        DataSources.getDataSourceSqlDriver(ds),
-                        aEntities,
-                        aJdbcPerformer,
-                        aFutureExecutor
-                );
-            } catch (NamingException ex) {
-                throw new IllegalStateException(ex);
-            } catch (SQLException ex) {
-                throw new UncheckedSQLException(ex);
-            }
-        });
     }
 
     public static ExecutorService jdbcTasksPerformer(final int aMaxParallelQueries) {
@@ -203,45 +142,9 @@ public class Database {
 //        jdbc.awaitTermination(30L, TimeUnit.SECONDS);
     }
 
-    private class TablesEntities implements Entities {
-
-        @Override
-        public SqlEntity loadEntity(String aEntityName) {
-            return null;
-        }
-
-        @Override
-        public SqlEntity loadEntity(String aEntityName, Set<String> illegalReferences) {
-            return null;
-        }
-
-        @Override
-        public Parameter resolveParameter(String aEntityName, String aParamName) {
-            return null;
-        }
-
-        @Override
-        public Field resolveField(String anEntityName, String aFieldName) throws SQLException {
-            if (anEntityName != null) {
-                Map<String, JdbcColumn> fields = metadata.getTableColumns(anEntityName)
-                        .orElseGet(() -> {
-                            Logger.getLogger(Database.class.getName()).log(Level.WARNING, "Can't find fields for entity '{0}'", anEntityName);
-                            return Map.of();
-                        });
-                return fields.get(aFieldName);
-            } else {
-                return null;
-            }
-        }
-
-        @Override
-        public Path getApplicationPath() {
-            return null;
-        }
-
-        @Override
-        public String getDefaultDataSource() {
-            return null;
-        }
+    public static Database of(String aDataSourceName) throws NamingException, SQLException {
+        DataSource dataSource = obtainDataSource(aDataSourceName);
+        Metadata metadata = Metadata.of(dataSource);
+        return new Database(dataSource, metadata, jdbcTasksPerformer(32), ForkJoinPool.commonPool());
     }
 }

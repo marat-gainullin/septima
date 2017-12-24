@@ -4,7 +4,7 @@ package com.septima.changes;
  *
  * @author mg
  */
-public interface TransferableChangeVisitor {
+public interface ChangesVisitor {
 
     void visit(Insert aChange) ;
 
@@ -12,5 +12,5 @@ public interface TransferableChangeVisitor {
 
     void visit(Delete aChange) ;
 
-    void visit(CommandRequest aChange) ;
+    void visit(Command aChange) ;
 }

@@ -1,10 +1,11 @@
 package com.septima.dataflow;
 
 import com.septima.DataTypes;
+import com.septima.Parameter;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
-import com.septima.Parameter;
 
+import javax.sql.DataSource;
 import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -15,7 +16,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.sql.DataSource;
 
 /**
  * This flow dataSource intended transform support the data flow process from jdbc
@@ -128,7 +128,7 @@ public abstract class JdbcDataProvider implements DataProvider {
                             if (isPaged()) {
                                 lowLevelResults = results;/* may be null*/
                             } else {
-                            /* may be null because of CallableStatement*/
+                                /* may be null because of CallableStatement*/
                                 if (results != null) {
                                     results.close();
                                 }
@@ -150,7 +150,7 @@ public abstract class JdbcDataProvider implements DataProvider {
                         connection.close();
                     }
                 }
-            } catch (SQLException | UncheckedSQLException ex) {
+            } catch (Throwable ex) {
                 futureExecutor.execute(() -> fetching.completeExceptionally(ex));
             }
         });
@@ -402,45 +402,50 @@ public abstract class JdbcDataProvider implements DataProvider {
                 case Types.NUMERIC:
                     // target type - BigDecimal
                     // target type - BigDecimal
-                    BigDecimal castedDecimal = null;
-                    if (aValue instanceof Number) {
-                        castedDecimal = number2BigDecimal((Number) aValue);
+                    BigDecimal castedBigDecimal = null;
+                    if (aValue instanceof BigDecimal) {
+                        castedBigDecimal = (BigDecimal) aValue;
+                    } else if (aValue instanceof Number) {
+                        castedBigDecimal = number2BigDecimal((Number) aValue);
                     } else if (aValue instanceof String) {
-                        castedDecimal = new BigDecimal((String) aValue);
+                        castedBigDecimal = new BigDecimal((String) aValue);
                     } else if (aValue instanceof Boolean) {
-                        castedDecimal = new BigDecimal(((Boolean) aValue) ? 1 : 0);
+                        castedBigDecimal = new BigDecimal(((Boolean) aValue) ? 1 : 0);
                     } else if (aValue instanceof java.util.Date) {
-                        castedDecimal = new BigDecimal(((java.util.Date) aValue).getTime());
+                        castedBigDecimal = new BigDecimal(((java.util.Date) aValue).getTime());
                     }
-                    if (castedDecimal != null) {
-                        aStmt.setBigDecimal(aParameterIndex, castedDecimal);
+                    if (castedBigDecimal != null) {
+                        aStmt.setBigDecimal(aParameterIndex, castedBigDecimal);
                     } else {
                         Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.BIGINT:
                     // target type - BigInteger
-                    BigInteger castedInteger = null;
-                    if (aValue instanceof Number) {
-                        castedInteger = BigInteger.valueOf(((Number) aValue).longValue());
+                    BigInteger castedBigInteger = null;
+                    if (aValue instanceof BigInteger) {
+                        castedBigInteger = (BigInteger) aValue;
+                    } else if (aValue instanceof Number) {
+                        castedBigInteger = BigInteger.valueOf(((Number) aValue).longValue());
                     } else if (aValue instanceof String) {
-                        castedInteger = new BigInteger((String) aValue);
+                        castedBigInteger = new BigInteger((String) aValue);
                     } else if (aValue instanceof Boolean) {
-                        castedInteger = BigInteger.valueOf(((Boolean) aValue) ? 1 : 0);
+                        castedBigInteger = BigInteger.valueOf(((Boolean) aValue) ? 1 : 0);
                     } else if (aValue instanceof java.util.Date) {
-                        castedInteger = BigInteger.valueOf(((java.util.Date) aValue).getTime());
+                        castedBigInteger = BigInteger.valueOf(((java.util.Date) aValue).getTime());
                     }
-                    if (castedInteger != null) {
-                        aStmt.setBigDecimal(aParameterIndex, new BigDecimal(castedInteger));
+                    if (castedBigInteger != null) {
+                        aStmt.setBigDecimal(aParameterIndex, new BigDecimal(castedBigInteger));
                     } else {
                         Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.SMALLINT:
                     // target type - Short
-                    // target type - Short
                     Short castedShort = null;
-                    if (aValue instanceof Number) {
+                    if (aValue instanceof Short) {
+                        castedShort = (Short) aValue; // To avoid unnecessary boxing / allocation
+                    } else if (aValue instanceof Number) {
                         castedShort = ((Number) aValue).shortValue();
                     } else if (aValue instanceof String) {
                         castedShort = Double.valueOf((String) aValue).shortValue();
@@ -458,18 +463,20 @@ public abstract class JdbcDataProvider implements DataProvider {
                 case Types.TINYINT:
                 case Types.INTEGER:
                     // target type - Integer
-                    Integer castedInt = null;
-                    if (aValue instanceof Number) {
-                        castedInt = ((Number) aValue).intValue();
+                    Integer castedInteger = null;
+                    if (aValue instanceof Integer) {
+                        castedInteger = (Integer) aValue; // To avoid unnecessary boxing / allocation
+                    } else if (aValue instanceof Number) {
+                        castedInteger = ((Number) aValue).intValue();
                     } else if (aValue instanceof String) {
-                        castedInt = Double.valueOf((String) aValue).intValue();
+                        castedInteger = Double.valueOf((String) aValue).intValue();
                     } else if (aValue instanceof Boolean) {
-                        castedInt = (Boolean) aValue ? 1 : 0;
+                        castedInteger = (Boolean) aValue ? 1 : 0;
                     } else if (aValue instanceof java.util.Date) {
-                        castedInt = (int) ((java.util.Date) aValue).getTime();
+                        castedInteger = (int) ((java.util.Date) aValue).getTime();
                     }
-                    if (castedInt != null) {
-                        aStmt.setInt(aParameterIndex, castedInt);
+                    if (castedInteger != null) {
+                        aStmt.setInt(aParameterIndex, castedInteger);
                     } else {
                         Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
                     }
@@ -478,7 +485,9 @@ public abstract class JdbcDataProvider implements DataProvider {
                 case Types.FLOAT:
                     // target type - Float
                     Float castedFloat = null;
-                    if (aValue instanceof Number) {
+                    if (aValue instanceof Float) {
+                        castedFloat = (Float) aValue; // To avoid unnecessary boxing / allocation
+                    } else if (aValue instanceof Number) {
                         castedFloat = ((Number) aValue).floatValue();
                     } else if (aValue instanceof String) {
                         castedFloat = Float.valueOf((String) aValue);
@@ -496,7 +505,9 @@ public abstract class JdbcDataProvider implements DataProvider {
                 case Types.DOUBLE:
                     // target type - Double
                     Double castedDouble = null;
-                    if (aValue instanceof Number) {
+                    if (aValue instanceof Double) {
+                        castedDouble = (Double) aValue; // To avoid unnecessary boxing / allocation
+                    } else if (aValue instanceof Number) {
                         castedDouble = ((Number) aValue).doubleValue();
                     } else if (aValue instanceof String) {
                         castedDouble = Double.valueOf((String) aValue);
@@ -703,24 +714,22 @@ public abstract class JdbcDataProvider implements DataProvider {
     }
 
     public static int calcJdbcType(String aType, Object aParamValue) {
-        int jdbcType;
-        switch (aType) {
-            case DataTypes.STRING_TYPE_NAME:
-                jdbcType = java.sql.Types.VARCHAR;
-                break;
-            case DataTypes.NUMBER_TYPE_NAME:
-                jdbcType = java.sql.Types.DOUBLE;
-                break;
-            case DataTypes.DATE_TYPE_NAME:
-                jdbcType = java.sql.Types.TIMESTAMP;
-                break;
-            case DataTypes.BOOLEAN_TYPE_NAME:
-                jdbcType = java.sql.Types.BOOLEAN;
-                break;
-            default:
-                jdbcType = assumeJdbcType(aParamValue);
+        if (aType != null) {
+            switch (aType) {
+                case DataTypes.STRING_TYPE_NAME:
+                    return java.sql.Types.VARCHAR;
+                case DataTypes.NUMBER_TYPE_NAME:
+                    return java.sql.Types.DOUBLE;
+                case DataTypes.DATE_TYPE_NAME:
+                    return java.sql.Types.TIMESTAMP;
+                case DataTypes.BOOLEAN_TYPE_NAME:
+                    return java.sql.Types.BOOLEAN;
+                default:
+                    return assumeJdbcType(aParamValue);
+            }
+        } else {
+            return assumeJdbcType(aParamValue);
         }
-        return jdbcType;
     }
 
     protected void checkOutParameter(Parameter param, PreparedStatement stmt, int aParameterIndex, int jdbcType) throws SQLException {

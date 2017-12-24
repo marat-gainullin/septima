@@ -2,27 +2,24 @@ package com.septima.changes;
 
 import com.septima.NamedValue;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author mg
  */
-public class Update extends Change implements Change.Applicable, Change.Transferable {
+public class Update extends Change {
 
-    private final List<NamedValue> keys = new ArrayList<>();
-    private final List<NamedValue> data = new ArrayList<>();
+    private final List<NamedValue> keys;
+    private final List<NamedValue> data;
 
-    public Update(String aEntityName) {
+    public Update(String aEntityName, List<NamedValue> aKeys, List<NamedValue> aData) {
         super(aEntityName);
+        keys = aKeys;
+        data = aData;
     }
 
     @Override
-    public void accept(TransferableChangeVisitor aChangeVisitor) {
-        aChangeVisitor.visit(this);
-    }
-
-    public void accept(ApplicableChangeVisitor aChangeVisitor) {
+    public void accept(ChangesVisitor aChangeVisitor) {
         aChangeVisitor.visit(this);
     }
 

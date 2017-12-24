@@ -5,31 +5,6 @@ package com.septima.changes;
  */
 public abstract class Change {
 
-    public interface Generic {
-
-        String getEntity();
-    }
-
-    /**
-     * Changes marked with this interface are applicable transform a datasource.
-     *
-     * @author mgainullin
-     */
-    public interface Applicable extends Generic {
-
-        void accept(ApplicableChangeVisitor aChangeVisitor) ;
-    }
-
-    /**
-     * Changes marked with this interface are transferable over the network.
-     *
-     * @author mgainullin
-     */
-    public interface Transferable extends Generic {
-
-        void accept(TransferableChangeVisitor aChangeVisitor) ;
-    }
-
     private final String entityName;
 
     public Change(String aEntityName) {
@@ -37,7 +12,7 @@ public abstract class Change {
         entityName = aEntityName;
     }
 
-    public String getEntity() {
+    public String getEntityName() {
         return entityName;
     }
 
@@ -45,4 +20,6 @@ public abstract class Change {
     public String toString() {
         return getClass().getSimpleName();
     }
+
+    public abstract void accept(ChangesVisitor aChangeVisitor);
 }

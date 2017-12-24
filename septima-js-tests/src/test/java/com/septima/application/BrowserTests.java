@@ -85,7 +85,7 @@ public class BrowserTests {
         Object testError = browser.executeAsyncScript(""
                 + "var complete = arguments[arguments.length - 1];\n"
                 + "var testInstance = new window['" + aTestName + "']();\n"
-                + "testInstance.execute(function(){\n"
+                + "testInstance.start(function(){\n"
                 + "    complete();"
                 + "},\n"
                 + "function(aError){\n"

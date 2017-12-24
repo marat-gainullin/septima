@@ -28,7 +28,7 @@ public class ScriptedTests {
                     public Object call(final Object thiz, final Object... args) {
                         JSObject testModule = Scripts.getSpace().lookup(aTestModuleName);
                         JSObject testInstance = (JSObject) testModule.newObject();
-                        JSObject execute = (JSObject) testInstance.getMember("execute");
+                        JSObject execute = (JSObject) testInstance.getMember("start");
                         try {
                             execute.call(testInstance, new Object[]{new SystemJSCallback() {
                                 @Override
