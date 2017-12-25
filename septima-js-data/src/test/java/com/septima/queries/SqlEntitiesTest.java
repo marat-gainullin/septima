@@ -171,7 +171,7 @@ public class SqlEntitiesTest {
         assertEquals("id", order_id.getName());
         assertEquals("ORDER_ID", order_id.getOriginalName());
         assertTrue(order_id.isPk());
-        assertEquals("Ключик", order_id.getDescription());
+        assertEquals("Order key", order_id.getDescription());
         assertEquals("GOODORDER", order_id.getTableName());
         assertEquals("Number", order_id.getType());
         assertNull(order_id.getFk());
@@ -180,7 +180,7 @@ public class SqlEntitiesTest {
         assertEquals("amt", amount.getName());
         assertEquals("AMOUNT", amount.getOriginalName());
         assertFalse(amount.isPk());
-        assertEquals("Количество товара", amount.getDescription());
+        assertEquals("Goods amount", amount.getDescription());
         assertEquals("GOODORDER", amount.getTableName());
         assertEquals("Number", amount.getType());
         assertNull(amount.getFk());
@@ -188,7 +188,7 @@ public class SqlEntitiesTest {
         assertNotNull(good);
         assertEquals("goodik", good.getName());
         assertEquals("GOOD", good.getOriginalName());
-        assertEquals("Заказанный товар", good.getDescription());
+        assertEquals("Ordered good", good.getDescription());
         assertEquals("GOODORDER", good.getTableName());
         assertEquals("Number", good.getType());
         assertNotNull(good.getFk());
@@ -196,7 +196,7 @@ public class SqlEntitiesTest {
         assertNotNull(customer);
         assertEquals("orderer", customer.getName());
         assertEquals("CUSTOMER", customer.getOriginalName());
-        assertEquals("Заказчик", customer.getDescription());
+        assertEquals("Good orderer", customer.getDescription());
         assertEquals("GOODORDER", customer.getTableName());
         assertEquals("Number", customer.getType());
         assertNotNull(customer.getFk());
