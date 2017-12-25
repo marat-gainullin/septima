@@ -16,7 +16,7 @@ Create Table public.asset_groups (
     p_id decimal(38, 19)
 );
 Alter Table public.asset_groups Add Constraint public.asset_groups_pk Primary Key(ID);
-Alter Table public.asset_groups Add Constraint public.fk_asset_groups_parent Foreign Key(p_id) References public.asset_groups(id) On Delete Cascade NOCHECK;
+Alter Table public.asset_groups Add Constraint public.fk_asset_groups_parent Foreign Key(p_id) References public.asset_groups(id) On Delete Cascade;
 
 Create Table public.asset_kinds (
     id decimal(38, 19) not null,
@@ -58,8 +58,8 @@ Create Table public.goodorder (
     field1 blob(4294967295)
 );
 Alter Table public.goodorder Add Constraint public.goodorder_pk Primary Key(order_id);
-Alter Table public.goodorder Add Constraint public.fk_131158275681283 Foreign Key(customer) References public.customer(customer_id) On Delete Cascade NOCHECK;
-Alter Table public.goodorder Add Constraint public.fk_141171593226029 Foreign Key(good) References public.good(good_id) On Delete Cascade NOCHECK;
+Alter Table public.goodorder Add Constraint public.fk_131158275681283 Foreign Key(customer) References public.customer(customer_id) On Delete Cascade;
+Alter Table public.goodorder Add Constraint public.fk_141171593226029 Foreign Key(good) References public.good(good_id) On Delete Cascade;
 
 Create Table public.delaware_administrative(
     delaware_administrative_id decimal(38, 19) not null,
