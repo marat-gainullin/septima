@@ -1,3 +1,16 @@
+Create Schema If Not Exists argo;
+Create Table argo.assets (
+    id decimal(22, 0) not null,
+    name varchar(400) not null,
+    field3 varchar(100),
+    field4 varchar(100),
+    field5 decimal(22, 0),
+    field6 decimal(22, 0),
+    field7 double
+);
+Alter Table argo.assets Add Constraint argo.assets_pk Primary Key(id);
+Create Index argo.i127185895762216 On argo.assets(field6);
+
 Create Table public.assets (
     id decimal(22, 0) not null,
     name varchar(400) not null,

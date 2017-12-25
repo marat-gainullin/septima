@@ -3,7 +3,7 @@ package com.septima.queries;
 import com.septima.Database;
 import com.septima.DynamicDataProvider;
 import com.septima.Parameter;
-import com.septima.dataflow.JdbcDataProvider;
+import com.septima.dataflow.StatementResultSetHandler;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
 
@@ -70,6 +70,7 @@ public class SqlQuery {
     /**
      * Executes query and returns results future.
      * It uses query's own parameters.
+     *
      * @return {@link CompletableFuture} The future of requested data.
      */
     public CompletableFuture<Collection<Map<String, Object>>> requestData() {
@@ -79,6 +80,7 @@ public class SqlQuery {
     /**
      * Executes query and returns results future.
      * It uses its parameters as is and gets parameters' values form {@code aParametersValues} argument.
+     *
      * @param aParametersValues Used as parameters' values source. If some parameter's value is not found is this map,
      *                          value of own parameter is used as the default.
      * @return {@link CompletableFuture} The future of requested data.
@@ -92,6 +94,7 @@ public class SqlQuery {
 
     /**
      * Executes query with default parameters' values and returns affected rows count future.
+     *
      * @return {@link CompletableFuture} The future of affected rows count.
      */
     public CompletableFuture<Integer> start() {
@@ -101,6 +104,7 @@ public class SqlQuery {
     /**
      * Executes query and returns affected rows count future.
      * It uses its parameters as is and gets parameters' values form {@code aParametersValues} argument.
+     *
      * @param aParametersValues Used as parameters' values source. If some parameter's value is not found is this map,
      *                          value of own parameter is used as the default.
      * @return {@link CompletableFuture} The future of affected rows count.
@@ -111,6 +115,7 @@ public class SqlQuery {
         CompletableFuture<Integer> updating = new CompletableFuture<>();
         database.getJdbcPerformer().execute(() -> {
             try {
+                StatementResultSetHandler parametersHandler = database.createParametersHandler(procedure);
                 DataSource dataSource = database.getDataSource();
                 try (Connection connection = dataSource.getConnection()) {
                     boolean autoCommit = connection.getAutoCommit();
@@ -118,9 +123,7 @@ public class SqlQuery {
                     try {
                         try (PreparedStatement stmt = connection.prepareStatement(sqlClause)) {
                             for (int i = 0; i < linearParameters.size(); i++) {
-                                Parameter param = linearParameters.get(i);
-                                int jdbcType = JdbcDataProvider.calcJdbcType(param.getType(), param.getValue());
-                                JdbcDataProvider.assign(param.getValue(), i + 1, stmt, jdbcType, null);
+                                parametersHandler.assignInParameter(linearParameters.get(i), stmt, i + 1, connection);
                             }
                             try {
                                 int rowsAffected = stmt.executeUpdate();

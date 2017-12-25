@@ -1,13 +1,12 @@
 package com.septima.sqldrivers;
 
-import com.septima.jdbc.NamedJdbcValue;
-import com.septima.metadata.*;
 import com.septima.metadata.ForeignKey;
+import com.septima.metadata.JdbcColumn;
+import com.septima.metadata.PrimaryKey;
 import com.septima.sqldrivers.resolvers.H2TypesResolver;
 import com.septima.sqldrivers.resolvers.TypesResolver;
 
-import java.sql.Connection;
-import java.sql.Wrapper;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -339,12 +338,18 @@ public class H2SqlDriver extends SqlDriver {
     }
 
     @Override
-    public NamedJdbcValue convertGeometry(String aValue, Connection aConnection) {
-        return null;
+    public NamedJdbcValue geometryFromWkt(String aName, String aValue, Connection aConnection) {
+        return new NamedJdbcValue(aName, aValue, Types.OTHER, "GEOMETRY");
     }
 
     @Override
-    public String readGeometry(Wrapper aRs, int aColumnIndex, Connection aConnection) {
-        return null;
+    public String geometryToWkt(Wrapper aRs, int aColumnIndex, Connection aConnection) throws SQLException {
+        String wkt = aRs instanceof ResultSet ? ((ResultSet) aRs).getString(aColumnIndex) : ((CallableStatement) aRs).getString(aColumnIndex);
+        boolean wasNull = aRs instanceof ResultSet ? ((ResultSet) aRs).wasNull() : ((CallableStatement) aRs).wasNull();
+        if (wasNull) {
+            return null;
+        } else {
+            return wkt;
+        }
     }
 }

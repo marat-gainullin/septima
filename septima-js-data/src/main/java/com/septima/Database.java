@@ -1,5 +1,7 @@
 package com.septima;
 
+import com.septima.dataflow.JdbcStatementResultSetHandler;
+import com.septima.dataflow.StatementResultSetHandler;
 import com.septima.dataflow.StatementsGenerator;
 import com.septima.jdbc.DataSources;
 import com.septima.jdbc.UncheckedSQLException;
@@ -62,7 +64,7 @@ public class Database {
 
     public DynamicDataProvider createDataProvider(String aEntityName, String aSqlClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
         return new DynamicDataProvider(
-                metadata.getSqlDriver(),
+                createParametersHandler(aProcedure),
                 aEntityName,
                 dataSource,
                 jdbcPerformer,
@@ -72,6 +74,10 @@ public class Database {
                 aPageSize,
                 aExpectedFields
         );
+    }
+
+    public StatementResultSetHandler createParametersHandler(boolean aProcedure){
+        return new JdbcStatementResultSetHandler(sqlDriver, aProcedure);
     }
 
     public CompletableFuture<Integer> commit(List<StatementsGenerator.GeneratedStatement> statements) {

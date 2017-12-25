@@ -1,10 +1,8 @@
 package com.septima.sqldrivers;
 
-import com.septima.jdbc.NamedJdbcValue;
-import com.septima.dataflow.StatementsGenerator;
-import com.septima.metadata.PrimaryKey;
-import com.septima.metadata.JdbcColumn;
 import com.septima.metadata.ForeignKey;
+import com.septima.metadata.JdbcColumn;
+import com.septima.metadata.PrimaryKey;
 import com.septima.sqldrivers.resolvers.GenericTypesResolver;
 import com.septima.sqldrivers.resolvers.TypesResolver;
 
@@ -19,7 +17,7 @@ import java.util.regex.Pattern;
 /**
  * @author mg
  */
-public class SqlDriver implements StatementsGenerator.GeometryConverter {
+public class SqlDriver {
 
     static final String DROP_FIELD_SQL_PREFIX = "alter table %s drop column ";
     static final String ADD_FIELD_SQL_PREFIX = "alter table %s add ";
@@ -270,12 +268,11 @@ public class SqlDriver implements StatementsGenerator.GeometryConverter {
         return new String[]{};
     }
 
-    @Override
-    public NamedJdbcValue convertGeometry(String aValue, Connection aConnection) throws SQLException {
+    public NamedJdbcValue geometryFromWkt(String aName, String aValue, Connection aConnection) throws SQLException {
         return null;
     }
 
-    public String readGeometry(Wrapper aRs, int aColumnIndex, Connection aConnection) throws SQLException {
+    public String geometryToWkt(Wrapper aRs, int aColumnIndex, Connection aConnection) throws SQLException {
         return null;
     }
 

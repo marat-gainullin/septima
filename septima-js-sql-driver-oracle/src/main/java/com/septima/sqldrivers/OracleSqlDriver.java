@@ -1,6 +1,5 @@
 package com.septima.sqldrivers;
 
-import com.septima.jdbc.NamedJdbcValue;
 import com.septima.metadata.ForeignKey;
 import com.septima.metadata.JdbcColumn;
 import com.septima.metadata.PrimaryKey;
@@ -10,19 +9,13 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
 import com.vividsolutions.jts.io.WKTWriter;
-
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.sql.Wrapper;
-import java.util.ArrayList;
-import java.util.List;
-
 import oracle.jdbc.OracleConnection;
 import oracle.sql.STRUCT;
 import org.geotools.data.oracle.sdo.GeometryConverter;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author mg
@@ -280,10 +273,10 @@ public class OracleSqlDriver extends SqlDriver {
     }
 
     @Override
-    public NamedJdbcValue convertGeometry(String aValue, Connection aConnection) throws SQLException {
+    public NamedJdbcValue geometryFromWkt(String aName, String aValue, Connection aConnection) throws SQLException {
         try {
             return new NamedJdbcValue(
-                    null,
+                    aName,
                     aValue != null ?
                             new GeometryConverter(!(aConnection instanceof OracleConnection) ? aConnection.unwrap(OracleConnection.class) : (OracleConnection) aConnection)
                                     .toSDO(new WKTReader().read(aValue)) :
@@ -296,7 +289,7 @@ public class OracleSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String readGeometry(Wrapper aRs, int aColumnIndex, Connection aConnection) throws SQLException {
+    public String geometryToWkt(Wrapper aRs, int aColumnIndex, Connection aConnection) throws SQLException {
         Object read = aRs instanceof ResultSet ? ((ResultSet) aRs).getObject(aColumnIndex) : ((CallableStatement) aRs).getObject(aColumnIndex);
         boolean wasNull = aRs instanceof ResultSet ? ((ResultSet) aRs).wasNull() : ((CallableStatement) aRs).wasNull();
         if (wasNull) {

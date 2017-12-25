@@ -1,4 +1,4 @@
-package com.septima.jdbc;
+package com.septima.sqldrivers;
 
 import com.septima.NamedValue;
 

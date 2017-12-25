@@ -135,9 +135,7 @@ public class SqlEntities {
     public List<StatementsGenerator.GeneratedStatement> bindChanges(List<Change> aChangeLog) {
         List<StatementsGenerator.GeneratedStatement> statements = new ArrayList<>();
         for (Change change : aChangeLog) {
-            SqlEntity entity = loadEntity(change.getEntityName());
-            Database database = entity.getDatabase();
-            StatementsGenerator generator = new StatementsGenerator(this, database.getMetadata(), database.getSqlDriver());
+            StatementsGenerator generator = new StatementsGenerator(this);
             change.accept(generator);
             statements.addAll(generator.getLogEntries());
         }

@@ -46,8 +46,8 @@ public class GenericDriverTest {
         assertNull(driver.getSql4CreateFkConstraint("Whatever", List.of()));
         assertNull(driver.getSql4EmptyTableCreation("Whatever", "Whatever", "Whatever"));
         assertNull(driver.getSql4FieldDefinition(null));
-        assertNull(driver.convertGeometry(null, null));
-        assertNull(driver.readGeometry(null, 1, null));
+        assertNull(driver.geometryFromWkt(null, null, null));
+        assertNull(driver.geometryToWkt(null, 1, null));
         assertArrayEquals(new String[]{}, driver.getSqls4FieldAdd("Whatever", "Whatever", null));
         assertArrayEquals(new String[]{}, driver.getSqls4FieldModify("Whatever", "Whatever", null, null));
         assertArrayEquals(new String[]{}, driver.getSqls4FieldRename("Whatever", "Whatever", null, null));

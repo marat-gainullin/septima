@@ -3,13 +3,13 @@ package com.septima;
 import com.septima.dataflow.JdbcDataProvider;
 import com.septima.dataflow.NotPagedException;
 import com.septima.dataflow.ResultSetReader;
-import com.septima.jdbc.NamedJdbcValue;
+import com.septima.dataflow.StatementResultSetHandler;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
-import com.septima.sqldrivers.SqlDriver;
 
 import javax.sql.DataSource;
-import java.sql.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -21,12 +21,10 @@ public class DynamicDataProvider extends JdbcDataProvider {
     private static final String BAD_PULL_NEXT_PAGE_CHAIN_MSG = "The call indices nextPage() method is allowed only for paged data providers as the subsequent calls in the pull() -> nextPage() -> nextPage() -> ... calls chain";
 
     private final String entityName;
-    private final SqlDriver sqlDriver;
 
-    public DynamicDataProvider(SqlDriver aSqlDriver, String aEntityName, DataSource aDataSource, Executor aDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
-        super(aDataSource, aDataPuller, aFutureExecutor, aClause, aProcedure, aPageSize, aExpectedFields);
+    public DynamicDataProvider(StatementResultSetHandler aStatementResultSetHandler, String aEntityName, DataSource aDataSource, Executor aDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
+        super(aDataSource, aStatementResultSetHandler, aDataPuller, aFutureExecutor, aClause, aProcedure, aPageSize, aExpectedFields);
         entityName = aEntityName;
-        sqlDriver = aSqlDriver;
     }
 
     @Override
@@ -43,8 +41,7 @@ public class DynamicDataProvider extends JdbcDataProvider {
             if (rs != null) {
                 ResultSetReader reader = new ResultSetReader(
                         expectedFields,
-                        sqlDriver::readGeometry,
-                        sqlDriver.getTypesResolver()::toApplicationType
+                        statementResultSetHandler
                 );
                 return reader.readRowSet(rs, pageSize);
             } else {
@@ -66,8 +63,7 @@ public class DynamicDataProvider extends JdbcDataProvider {
                 try {
                     ResultSetReader reader = new ResultSetReader(
                             expectedFields,
-                            sqlDriver::readGeometry,
-                            sqlDriver.getTypesResolver()::toApplicationType
+                            statementResultSetHandler
                     );
                     Collection<Map<String, Object>> processed = reader.readRowSet(lowLevelResults, pageSize);
                     fetching.completeAsync(() -> processed, futureExecutor);
@@ -87,28 +83,4 @@ public class DynamicDataProvider extends JdbcDataProvider {
         }
     }
 
-    @Override
-    protected int assignParameter(Parameter aParameter, PreparedStatement aStatement, int aParameterIndex, Connection aConnection) throws SQLException {
-        if (DataTypes.GEOMETRY_TYPE_NAME.equals(aParameter.getType())) {
-            NamedJdbcValue jv = sqlDriver.convertGeometry(aParameter.getValue().toString(), aConnection);
-            Object paramValue = jv.getValue();
-            int jdbcType = jv.getJdbcType();
-            String sqlTypeName = jv.getSqlTypeName();
-            int assignedJdbcType = assign(paramValue, aParameterIndex, aStatement, jdbcType, sqlTypeName);
-            checkOutParameter(aParameter, aStatement, aParameterIndex, jdbcType);
-            return assignedJdbcType;
-        } else {
-            return super.assignParameter(aParameter, aStatement, aParameterIndex, aConnection);
-        }
-    }
-
-    @Override
-    protected void acceptOutParameter(Parameter aParameter, CallableStatement aStatement, int aParameterIndex, Connection aConnection) throws SQLException {
-        if (DataTypes.GEOMETRY_TYPE_NAME.equals(aParameter.getType())) {
-            String sGeometry = sqlDriver.readGeometry(aStatement, aParameterIndex, aConnection);
-            aParameter.setValue(sGeometry);
-        } else {
-            super.acceptOutParameter(aParameter, aStatement, aParameterIndex, aConnection);
-        }
-    }
 }

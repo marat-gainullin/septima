@@ -1,13 +1,11 @@
 package com.septima.dataflow;
 
-import com.septima.DataTypes;
 import com.septima.metadata.Field;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Wrapper;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -21,30 +19,16 @@ import java.util.stream.Collectors;
  */
 public class ResultSetReader {
 
-    public interface GeometryReader {
-
-        String readGeometry(Wrapper aRs, int aColumnIndex, Connection aConnection) throws SQLException;
-    }
-
-    public interface TypeResolver {
-
-        String toApplicationType(int aJdbcType, String aRdbmsTypeName);
-    }
-
-    private static final String RESULT_SET_MISSING_EXCEPTION_MSG = "aResultSet argument must be non null";
-
     private final Map<String, Field> expectedFields;
-    private final GeometryReader gReader;
-    private final TypeResolver resolver;
+    private final StatementResultSetHandler statementResultSetHandler;
 
-    public ResultSetReader(Map<String, Field> aExpectedFields, GeometryReader aReader, TypeResolver aResolver) {
-        gReader = aReader;
-        resolver = aResolver;
+    public ResultSetReader(Map<String, Field> aExpectedFields, StatementResultSetHandler aStatementResultSetHandler) {
+        statementResultSetHandler = aStatementResultSetHandler;
         expectedFields = aExpectedFields;
     }
 
     public Collection<Map<String, Object>> readRowSet(ResultSet aResultSet, int aPageSize) throws SQLException {
-        Objects.requireNonNull(aResultSet, RESULT_SET_MISSING_EXCEPTION_MSG);
+        Objects.requireNonNull(aResultSet, "aResultSet is required argument");
         ResultSetMetaData lowLevelJdbcFields = aResultSet.getMetaData();
         List<Field> readFields = readFields(lowLevelJdbcFields);
         return readRows(expectedFields != null && !expectedFields.isEmpty() ? expectedFields : readFields.stream().collect(Collectors.toMap(Field::getName, Function.identity())), readFields, aResultSet, aPageSize, aResultSet.getStatement().getConnection());
@@ -62,7 +46,7 @@ public class ResultSetReader {
                     null,
                     columnName,
                     jdbcFields.getTableName(i),
-                    resolver.toApplicationType(jdbcFields.getColumnType(i), jdbcFields.getColumnTypeName(i)),
+                    statementResultSetHandler.getSqlDriver().getTypesResolver().toApplicationType(jdbcFields.getColumnType(i), jdbcFields.getColumnTypeName(i)),
                     jdbcFields.isNullable(i) == ResultSetMetaData.columnNullable,
                     false,
                     null
@@ -72,33 +56,24 @@ public class ResultSetReader {
     }
 
     private Collection<Map<String, Object>> readRows(Map<String, Field> aExpectedFields, List<Field> aReadFields, ResultSet aResultSet, int aPageSize, Connection aConnection) throws SQLException {
-        if (aResultSet != null) {
-            Collection<Map<String, Object>> oRows = new ArrayList<>();
-            while ((aPageSize <= 0 || oRows.size() < aPageSize) && aResultSet.next()) {
-                Map<String, Object> jsRow = readRow(aExpectedFields, aReadFields, aResultSet, aConnection);
-                oRows.add(jsRow);
-            }
-            return oRows;
-        } else {
-            throw new SQLException(RESULT_SET_MISSING_EXCEPTION_MSG);
+        Collection<Map<String, Object>> oRows = new ArrayList<>();
+        while ((aPageSize <= 0 || oRows.size() < aPageSize) && aResultSet.next()) {
+            Map<String, Object> jsRow = readRow(aExpectedFields, aReadFields, aResultSet, aConnection);
+            oRows.add(jsRow);
         }
+        return oRows;
     }
 
     private Map<String, Object> readRow(Map<String, Field> aExpectedFields, List<Field> aReadFields, ResultSet aResultSet, Connection aConnection) throws SQLException {
         if (aResultSet != null) {
             assert aExpectedFields != null;
             Map<String, Object> row = new HashMap<>();
-            for (int i = 1; i <= aReadFields.size(); i++) {
-                Field readField = aReadFields.get(i - 1);
+            for (int i = 0; i < aReadFields.size(); i++) {
+                Field readField = aReadFields.get(i);
                 Field expectedField = aExpectedFields.get(readField.getName());
                 Field field = expectedField != null ? expectedField : readField;
-                Object appObject;
-                if (DataTypes.GEOMETRY_TYPE_NAME.equals(field.getType())) {
-                    appObject = gReader.readGeometry(aResultSet, i, aConnection);
-                } else {
-                    appObject = JdbcDataProvider.get(aResultSet, i);
-                }
-                row.put(field.getName(), appObject);
+                Object value = statementResultSetHandler.readTypedValue(aResultSet, i + 1);
+                row.put(field.getName(), value);
             }
             return row;
         }

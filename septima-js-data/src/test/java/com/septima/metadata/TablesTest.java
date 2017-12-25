@@ -22,6 +22,18 @@ public class TablesTest {
     }
 
     @Test
+    public void schemaMetadataOnDemand() throws Exception {
+        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
+        assertNotNull(database);
+        Metadata metadata = database.getMetadata();
+        assertNotNull(metadata);
+        Optional<Map<String, JdbcColumn>> ifAssetsColumns = metadata.getTableColumns("Argo.Assets");
+        assertTrue(ifAssetsColumns.isPresent());
+        Map<String, JdbcColumn> assetsColumns = ifAssetsColumns.get();
+        assertEquals(7, assetsColumns.size());
+    }
+
+    @Test
     public void assetsCaseInsensitiveColumns() throws Exception {
         Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
         assertNotNull(database);

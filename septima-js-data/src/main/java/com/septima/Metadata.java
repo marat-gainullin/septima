@@ -1,6 +1,5 @@
 package com.septima;
 
-import com.septima.dataflow.StatementsGenerator;
 import com.septima.jdbc.DataSources;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.ForeignKey;
@@ -18,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author mg
  */
-public class Metadata implements StatementsGenerator.TablesContainer {
+public class Metadata {
 
     private static final String JDBC_FK_TABLE_SCHEMA = "FKTABLE_SCHEM";
     private static final String JDBC_FK_TABLE_NAME = "FKTABLE_NAME";
@@ -89,7 +88,6 @@ public class Metadata implements StatementsGenerator.TablesContainer {
         return indexOfDot != -1 ? aQualifiedTableName.substring(indexOfDot + 1) : aQualifiedTableName;
     }
 
-    @Override
     public Optional<Map<String, JdbcColumn>> getTableColumns(String aQualifiedTableName) throws SQLException {
         String schema = schemaName(aQualifiedTableName);
         if (schema != null && !schema.isEmpty() && schemas.contains(schema) && !schemasTablesColumns.containsKey(schema)) {

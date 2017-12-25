@@ -1,6 +1,5 @@
 package com.septima.sqldrivers;
 
-import com.septima.jdbc.NamedJdbcValue;
 import com.septima.metadata.*;
 import com.septima.metadata.ForeignKey;
 import com.septima.sqldrivers.resolvers.MsSqlTypesResolver;
@@ -263,12 +262,12 @@ public class MsSqlSqlDriver extends SqlDriver {
     }
 
     @Override
-    public NamedJdbcValue convertGeometry(String aValue, Connection aConnection) {
+    public NamedJdbcValue geometryFromWkt(String aName, String aValue, Connection aConnection) {
         return null;
     }
 
     @Override
-    public String readGeometry(Wrapper aRs, int aColumnIndex, Connection aConnection) {
+    public String geometryToWkt(Wrapper aRs, int aColumnIndex, Connection aConnection) {
         return null;
     }
 }

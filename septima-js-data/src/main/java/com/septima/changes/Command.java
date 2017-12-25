@@ -11,8 +11,8 @@ public class Command extends Change {
 
     private final Map<String, NamedValue> parameters;
 
-    public Command(final String entityName, final Map<String, NamedValue> aParameters) {
-        super(entityName);
+    public Command(final String anEntityName, final Map<String, NamedValue> aParameters) {
+        super(anEntityName);
         parameters = aParameters;
     }
 

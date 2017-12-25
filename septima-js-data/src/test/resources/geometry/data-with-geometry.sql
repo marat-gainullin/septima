@@ -1,0 +1,1 @@
+Select * from delaware_administrative

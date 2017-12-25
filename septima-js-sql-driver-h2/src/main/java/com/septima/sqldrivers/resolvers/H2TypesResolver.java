@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * @author vv
+ * @author mg
  */
 public class H2TypesResolver implements TypesResolver {
 
@@ -33,6 +33,7 @@ public class H2TypesResolver implements TypesResolver {
         put("VARCHAR_IGNORECASE", DataTypes.STRING_TYPE_NAME);
         put("DATE", DataTypes.DATE_TYPE_NAME);
         put("TIME", DataTypes.DATE_TYPE_NAME);
+        put("GEOMETRY", DataTypes.GEOMETRY_TYPE_NAME);
         put("CLOB", DataTypes.STRING_TYPE_NAME);
         put("LONGVARBINARY", null);
         put("VARBINARY", null);

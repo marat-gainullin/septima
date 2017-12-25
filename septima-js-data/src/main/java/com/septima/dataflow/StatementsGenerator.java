@@ -1,21 +1,20 @@
 package com.septima.dataflow;
 
-import com.septima.DataTypes;
 import com.septima.NamedValue;
+import com.septima.Parameter;
 import com.septima.changes.*;
 import com.septima.entities.SqlEntities;
 import com.septima.entities.SqlEntity;
-import com.septima.jdbc.NamedJdbcValue;
-import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
-import com.septima.metadata.JdbcColumn;
 import com.septima.queries.SqlQuery;
 
 import java.sql.Connection;
-import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,72 +31,31 @@ import java.util.stream.Collectors;
  */
 public class StatementsGenerator implements ChangesVisitor {
 
-    public interface TablesContainer {
-
-        Optional<Map<String, JdbcColumn>> getTableColumns(String aTableName) throws SQLException;
-    }
-
-    public interface GeometryConverter {
-
-        NamedJdbcValue convertGeometry(String aValue, Connection aConnection) throws SQLException;
-    }
-
-    private static class NamedGeometryValue extends NamedValue {
-
-        NamedGeometryValue(String aName, Object aValue) {
-            super(aName, aValue);
-        }
-    }
-
     /**
-     * Stores short living information about statements, transform be executed while
-     * jdbc update process. Performs parametrized prepared statements
+     * Short live information about sqlClause and its parameters.
+     * Its like {@link SqlQuery}, but much simpler.
+     * Performs parametrized prepared statements
      * execution.
      */
     public static class GeneratedStatement {
 
         private static final Logger QUERIES_LOGGER = Logger.getLogger(GeneratedStatement.class.getName());
-        private final String clause;
-        private final List<NamedValue> parameters;
-        private final GeometryConverter geometryConverter;
 
-        GeneratedStatement(String aClause, List<NamedValue> aParameters, GeometryConverter aGeometryConverter) {
+        private final String clause;
+        private final List<Parameter> parameters;
+        private final StatementResultSetHandler parametersHandler;
+
+        GeneratedStatement(String aClause, List<Parameter> aParameters, StatementResultSetHandler aParametersHandler) {
             super();
             clause = aClause;
             parameters = aParameters;
-            geometryConverter = aGeometryConverter;
+            parametersHandler = aParametersHandler;
         }
 
         public int apply(Connection aConnection) throws SQLException {
             try (PreparedStatement stmt = aConnection.prepareStatement(clause)) {
-                ParameterMetaData pMeta = stmt.getParameterMetaData();
-                for (int i = 1; i <= parameters.size(); i++) {
-                    NamedValue v = parameters.get(i - 1);
-                    Object value;
-                    int jdbcType;
-                    String sqlTypeName;
-                    if (v instanceof NamedJdbcValue) {
-                        NamedJdbcValue jv = (NamedJdbcValue) v;
-                        value = jv.getValue();
-                        jdbcType = jv.getJdbcType();
-                        sqlTypeName = jv.getSqlTypeName();
-                    } else if (v instanceof NamedGeometryValue) {
-                        NamedJdbcValue jv = geometryConverter.convertGeometry(v.getValue() != null ? v.getValue().toString() : null, aConnection);
-                        value = jv.getValue();
-                        jdbcType = jv.getJdbcType();
-                        sqlTypeName = jv.getSqlTypeName();
-                    } else {
-                        value = v.getValue();
-                        try {
-                            jdbcType = pMeta.getParameterType(i);
-                            sqlTypeName = pMeta.getParameterTypeName(i);
-                        } catch (SQLException | UncheckedSQLException ex) {
-                            Logger.getLogger(StatementsGenerator.class.getName()).log(Level.WARNING, null, ex);
-                            jdbcType = JdbcDataProvider.assumeJdbcType(v.getValue());
-                            sqlTypeName = null;
-                        }
-                    }
-                    JdbcDataProvider.assign(value, i, stmt, jdbcType, sqlTypeName);
+                for (int i = 0; i < parameters.size(); i++) {
+                    parametersHandler.assignInParameter(parameters.get(i), stmt, i + 1, aConnection);
                 }
                 if (QUERIES_LOGGER.isLoggable(Level.FINE)) {
                     QUERIES_LOGGER.log(Level.FINE, "Executing sql with {0} parameters: {1}", new Object[]{parameters.size(), clause});
@@ -113,59 +71,42 @@ public class StatementsGenerator implements ChangesVisitor {
 
     private final List<GeneratedStatement> logEntries = new ArrayList<>();
     private final SqlEntities entities;
-    private final TablesContainer tables;
-    private final GeometryConverter geometryConverter;
 
-    public StatementsGenerator(SqlEntities aEntities, TablesContainer aTables, GeometryConverter aGeometryConverter) {
+    public StatementsGenerator(SqlEntities aEntities) {
         super();
         entities = aEntities;
-        tables = aTables;
-        geometryConverter = aGeometryConverter;
     }
 
     public List<GeneratedStatement> getLogEntries() {
         return logEntries;
     }
 
-    private NamedValue bindNamedValueToTable(final String aTableName, final String aColumnName, final Object aValue) throws SQLException {
-        return tables.getTableColumns(aTableName)
-                .map(tableFields -> tableFields.get(aColumnName))
-                .map(tableField -> (NamedValue) new NamedJdbcValue(aColumnName, aValue, tableField.getJdbcType(), tableField.getType()))
-                .orElseGet(() -> new NamedValue(aColumnName, aValue));
-    }
-
-    private Function<NamedValue, Map.Entry<String, List<NamedValue>>> asTableDatumEntry(String aEntityName) {
+    private Function<NamedValue, Map.Entry<String, List<Parameter>>> asTableDatumEntry(SqlEntity aEntity) {
         return datum -> {
-            try {
-                SqlEntity entity = entities.loadEntity(aEntityName);
-                Field entityField = entity.getFields().get(datum.getName());
-                if (entityField != null) {
-                    String keyColumnName = entityField.getOriginalName() != null ? entityField.getOriginalName() : entityField.getName();
-                    NamedValue bound = DataTypes.GEOMETRY_TYPE_NAME.equals(entityField.getType()) ?
-                            new NamedGeometryValue(keyColumnName, datum.getValue()) :
-                            bindNamedValueToTable(entityField.getTableName(), keyColumnName, datum.getValue());
-                    return Map.entry(entityField.getTableName(), List.of(bound));
-                } else {
-                    throw new IllegalStateException("Entity field '" + datum.getName() + "' is not found in entity '" + aEntityName + "'");
-                }
-            } catch (SQLException ex) {
-                throw new UncheckedSQLException(ex);
+            Field entityField = aEntity.getFields().get(datum.getName());
+            if (entityField != null) {
+                String keyColumnName = entityField.getOriginalName() != null ? entityField.getOriginalName() : entityField.getName();
+                Parameter bound = new Parameter(keyColumnName, datum.getValue(), entityField.getType());
+                return Map.entry(entityField.getTableName(), List.of(bound));
+            } else {
+                throw new IllegalStateException("Entity field '" + datum.getName() + "' is not found in entity '" + aEntity.getName() + "'");
             }
         };
     }
 
     @Override
     public void visit(Insert aInsert) {
+        SqlEntity entity = entities.loadEntity(aInsert.getEntityName());
+        StatementResultSetHandler parametersHandler = entity.getDatabase().createParametersHandler(entity.isProcedure());
         aInsert.getData().stream()
-                .map(asTableDatumEntry(aInsert.getEntityName()))
+                .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
                         Collectors.flatMapping(entry -> entry.getValue().stream(), Collectors.toList())))
                 .entrySet().stream()
-                .filter(entry -> {
-                    SqlEntity entity = entities.loadEntity(aInsert.getEntityName());
-                    return !entry.getValue().isEmpty() &&
-                            (entity.getWritable().isEmpty() || entity.getWritable().contains(entry.getKey()));
-                })
+                .filter(entry ->
+                        !entry.getValue().isEmpty() &&
+                                (entity.getWritable().isEmpty() || entity.getWritable().contains(entry.getKey()))
+                )
                 .map(entry -> new GeneratedStatement(
                         String.format(INSERT_CLAUSE,
                                 entry.getKey(),
@@ -173,27 +114,27 @@ public class StatementsGenerator implements ChangesVisitor {
                                 generatePlaceholders(entry.getValue().size())
                         ),
                         Collections.unmodifiableList(entry.getValue()),
-                        geometryConverter
+                        parametersHandler
                 ))
                 .forEach(logEntries::add);
     }
 
     @Override
     public void visit(Update aUpdate) {
-        Map<String, List<NamedValue>> updatesKeys = aUpdate.getKeys().stream()
-                .map(asTableDatumEntry(aUpdate.getEntityName()))
+        SqlEntity entity = entities.loadEntity(aUpdate.getEntityName());
+        StatementResultSetHandler parametersHandler = entity.getDatabase().createParametersHandler(entity.isProcedure());
+        Map<String, List<Parameter>> updatesKeys = aUpdate.getKeys().stream()
+                .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
                         Collectors.flatMapping(entry -> entry.getValue().stream(), Collectors.toList())));
         aUpdate.getData().stream()
-                .map(asTableDatumEntry(aUpdate.getEntityName()))
+                .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
                         Collectors.flatMapping(entry -> entry.getValue().stream(), Collectors.toList())))
                 .entrySet().stream()
-                .filter(entry -> {
-                    SqlEntity entity = entities.loadEntity(aUpdate.getEntityName());
-                    return !entry.getValue().isEmpty() && !updatesKeys.getOrDefault(entry.getKey(), List.of()).isEmpty() &&
-                            (entity.getWritable().isEmpty() || entity.getWritable().contains(entry.getKey()));
-                })
+                .filter(entry -> !entry.getValue().isEmpty() && !updatesKeys.getOrDefault(entry.getKey(), List.of()).isEmpty() &&
+                        (entity.getWritable().isEmpty() || entity.getWritable().contains(entry.getKey()))
+                )
                 .map(entry -> new GeneratedStatement(
                         String.format(UPDATE_CLAUSE,
                                 entry.getKey(),
@@ -201,7 +142,7 @@ public class StatementsGenerator implements ChangesVisitor {
                                 generateWhereClause(updatesKeys.getOrDefault(entry.getKey(), List.of()))
                         ),
                         Collections.unmodifiableList(concat(entry.getValue(), updatesKeys.getOrDefault(entry.getKey(), List.of()))),
-                        geometryConverter
+                        parametersHandler
                 ))
                 .forEach(logEntries::add);
     }
@@ -217,44 +158,45 @@ public class StatementsGenerator implements ChangesVisitor {
      */
     @Override
     public void visit(Delete aDeletion) {
+        SqlEntity entity = entities.loadEntity(aDeletion.getEntityName());
+        StatementResultSetHandler parametersHandler = entity.getDatabase().createParametersHandler(entity.isProcedure());
         aDeletion.getKeys().stream()
-                .map(asTableDatumEntry(aDeletion.getEntityName()))
+                .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
                         Collectors.flatMapping(entry -> entry.getValue().stream(), Collectors.toList())))
                 .entrySet().stream()
-                .filter(entry -> {
-                    SqlEntity entity = entities.loadEntity(aDeletion.getEntityName());
-                    return !entry.getValue().isEmpty() &&
-                            (entity.getWritable().isEmpty() || entity.getWritable().contains(entry.getKey()));
-                })
+                .filter(entry ->
+                        !entry.getValue().isEmpty() &&
+                                (entity.getWritable().isEmpty() || entity.getWritable().contains(entry.getKey()))
+                )
                 .map(entry -> new GeneratedStatement(
                         String.format(DELETE_CLAUSE,
                                 entry.getKey(),
                                 generateWhereClause(entry.getValue())
                         ),
                         Collections.unmodifiableList(entry.getValue()),
-                        geometryConverter
+                        parametersHandler
                 ))
                 .forEach(logEntries::add);
     }
 
     @Override
-    public void visit(Command aChange) {
-        SqlEntity entity = entities.loadEntity(aChange.getEntityName());
+    public void visit(Command aCommand) {
+        SqlEntity entity = entities.loadEntity(aCommand.getEntityName());
+        StatementResultSetHandler parametersHandler = entity.getDatabase().createParametersHandler(entity.isProcedure());
         SqlQuery query = entity.toQuery();
         logEntries.add(new GeneratedStatement(
                 query.getSqlClause(),
                 Collections.unmodifiableList(query.getParameters().stream()
-                        .map(queryParameter -> {
-                            NamedValue commandValue = aChange.getParameters().getOrDefault(queryParameter.getName(), new NamedValue(queryParameter.getName(), null));
-                            if (commandValue.getValue() != null && DataTypes.GEOMETRY_TYPE_NAME.equals(queryParameter.getType())) {
-                                return new NamedGeometryValue(commandValue.getName(), commandValue.getValue());
-                            } else {
-                                return new NamedJdbcValue(commandValue.getName(), commandValue.getValue(), JdbcDataProvider.calcJdbcType(queryParameter.getType(), commandValue.getValue()), null);
-                            }
-                        })
+                        .map(queryParameter -> new Parameter(
+                                queryParameter.getName(),
+                                aCommand.getParameters().getOrDefault(queryParameter.getName(), new NamedValue(queryParameter.getName(), queryParameter.getValue())).getValue(),
+                                queryParameter.getType(),
+                                queryParameter.getMode(),
+                                queryParameter.getDescription())
+                        )
                         .collect(Collectors.toList())),
-                geometryConverter
+                parametersHandler
         ));
     }
 
@@ -277,7 +219,7 @@ public class StatementsGenerator implements ChangesVisitor {
      * @param keys Keys array transform deal with.
      * @return Generated Where clause.
      */
-    private String generateWhereClause(List<NamedValue> keys) {
+    private String generateWhereClause(List<Parameter> keys) {
         return keys.stream()
                 .map(datum -> new StringBuilder(datum.getName()).append(" = ?"))
                 .reduce((name1, name2) -> name1.append(" and ").append(name2))
@@ -285,7 +227,7 @@ public class StatementsGenerator implements ChangesVisitor {
                 .orElse("");
     }
 
-    private static String generateUpdateColumnsClause(List<NamedValue> data) {
+    private static String generateUpdateColumnsClause(List<Parameter> data) {
         return data.stream()
                 .map(datum -> new StringBuilder(datum.getName()).append(" = ?"))
                 .reduce((name1, name2) -> name1.append(", ").append(name2))
@@ -293,7 +235,7 @@ public class StatementsGenerator implements ChangesVisitor {
                 .orElse("");
     }
 
-    private static String generateInsertColumnsClause(List<NamedValue> data) {
+    private static String generateInsertColumnsClause(List<Parameter> data) {
         return data.stream()
                 .map(datum -> new StringBuilder(datum.getName()))
                 .reduce((name1, name2) -> name1.append(", ").append(name2))

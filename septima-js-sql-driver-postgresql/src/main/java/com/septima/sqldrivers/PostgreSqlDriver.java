@@ -1,20 +1,15 @@
 package com.septima.sqldrivers;
 
-import com.septima.jdbc.NamedJdbcValue;
-import com.septima.metadata.*;
+import com.septima.metadata.ForeignKey;
+import com.septima.metadata.JdbcColumn;
+import com.septima.metadata.PrimaryKey;
 import com.septima.sqldrivers.resolvers.PostgreTypesResolver;
-
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.sql.Wrapper;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.septima.sqldrivers.resolvers.TypesResolver;
 import org.postgis.PGgeometry;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author mg
@@ -296,16 +291,16 @@ public class PostgreSqlDriver extends SqlDriver {
     }
 
     @Override
-    public NamedJdbcValue convertGeometry(String aValue, Connection aConnection) throws SQLException {
+    public NamedJdbcValue geometryFromWkt(String aName, String aValue, Connection aConnection) throws SQLException {
         return new NamedJdbcValue(
-                null,
+                aName,
                 aValue != null ? new PGgeometry(aValue) : null,
                 Types.OTHER,
                 "geometry");
     }
 
     @Override
-    public String readGeometry(Wrapper aRs, int aColumnIndex, Connection aConnection) throws SQLException {
+    public String geometryToWkt(Wrapper aRs, int aColumnIndex, Connection aConnection) throws SQLException {
         Object read = aRs instanceof ResultSet ? ((ResultSet) aRs).getObject(aColumnIndex) : ((CallableStatement) aRs).getObject(aColumnIndex);
         boolean wasNull = aRs instanceof ResultSet ? ((ResultSet) aRs).wasNull() : ((CallableStatement) aRs).wasNull();
         if (wasNull) {
