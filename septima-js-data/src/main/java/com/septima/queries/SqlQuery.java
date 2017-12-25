@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * A compiled Sql query.
@@ -54,30 +55,59 @@ public class SqlQuery {
         return pageSize;
     }
 
+    private List<Parameter> mergeParametersValues(Map<String, Object> aParametersValues) {
+        return parameters.stream()
+                .map(own -> new Parameter(
+                        own.getName(),
+                        aParametersValues.getOrDefault(own.getName(), own.getValue()),
+                        own.getType(),
+                        own.getMode(),
+                        own.getDescription())
+                )
+                .collect(Collectors.toList());
+    }
+
     /**
-     * Executes query and returns results regardless of procedure flag.
+     * Executes query and returns results future.
      * It uses query's own parameters.
+     * @return {@link CompletableFuture} The future of requested data.
      */
     public CompletableFuture<Collection<Map<String, Object>>> requestData() {
-        return requestData(parameters);
+        return requestData(Map.of());
     }
 
     /**
-     * Executes query and returns results regardless of procedure flag.
+     * Executes query and returns results future.
+     * It uses its parameters as is and gets parameters' values form {@code aParametersValues} argument.
+     * @param aParametersValues Used as parameters' values source. If some parameter's value is not found is this map,
+     *                          value of own parameter is used as the default.
+     * @return {@link CompletableFuture} The future of requested data.
      */
-    public CompletableFuture<Collection<Map<String, Object>>> requestData(List<Parameter> aParameters) {
+    public CompletableFuture<Collection<Map<String, Object>>> requestData(Map<String, Object> aParametersValues) {
+        Objects.requireNonNull(aParametersValues, "aParametersValues is required argument");
         Objects.requireNonNull(database);
-        Objects.requireNonNull(aParameters);
         DynamicDataProvider dataProvider = database.createDataProvider(entityName, sqlClause, procedure, pageSize, expectedFields);
-        return dataProvider.pull(aParameters);
+        return dataProvider.pull(mergeParametersValues(aParametersValues));
     }
 
+    /**
+     * Executes query with default parameters' values and returns affected rows count future.
+     * @return {@link CompletableFuture} The future of affected rows count.
+     */
     public CompletableFuture<Integer> start() {
-        return start(parameters);
+        return start(Map.of());
     }
 
-    public CompletableFuture<Integer> start(List<Parameter> aParameters) {
-        Objects.requireNonNull(aParameters, "aParameters is required argument");
+    /**
+     * Executes query and returns affected rows count future.
+     * It uses its parameters as is and gets parameters' values form {@code aParametersValues} argument.
+     * @param aParametersValues Used as parameters' values source. If some parameter's value is not found is this map,
+     *                          value of own parameter is used as the default.
+     * @return {@link CompletableFuture} The future of affected rows count.
+     */
+    public CompletableFuture<Integer> start(Map<String, Object> aParametersValues) {
+        Objects.requireNonNull(aParametersValues, "aParametersValues is required argument");
+        List<Parameter> linearParameters = mergeParametersValues(aParametersValues);
         CompletableFuture<Integer> updating = new CompletableFuture<>();
         database.getJdbcPerformer().execute(() -> {
             try {
@@ -87,8 +117,8 @@ public class SqlQuery {
                     connection.setAutoCommit(false);
                     try {
                         try (PreparedStatement stmt = connection.prepareStatement(sqlClause)) {
-                            for (int i = 0; i < aParameters.size(); i++) {
-                                Parameter param = aParameters.get(i);
+                            for (int i = 0; i < linearParameters.size(); i++) {
+                                Parameter param = linearParameters.get(i);
                                 int jdbcType = JdbcDataProvider.calcJdbcType(param.getType(), param.getValue());
                                 JdbcDataProvider.assign(param.getValue(), i + 1, stmt, jdbcType, null);
                             }

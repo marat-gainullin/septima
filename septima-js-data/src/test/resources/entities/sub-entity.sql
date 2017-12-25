@@ -1,5 +1,5 @@
-Select goodOrder.ORDER_ID as ORDER_NO, goodOrder.AMOUNT, customers.CUSTOMER_NAME as CUSTOMER
-From GOODORDER goodOrder
- Inner Join CUSTOMER customers on (goodOrder.CUSTOMER = customers.CUSTOMER_ID)
- and (goodOrder.AMOUNT > customers.CUSTOMER_NAME)
- Where :PARAM1 = goodOrder.GOOD
+select goodorder.order_id as order_no, goodorder.amount, customers.customer_name as customer
+from goodorder goodorder
+ inner join customer customers on (goodorder.customer = customers.customer_id)
+ and (goodorder.amount > customers.customer_name)
+ where :param1 = goodorder.good

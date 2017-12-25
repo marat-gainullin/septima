@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 
 /**
  * A Sql based entity with named parameters.
- *
+ * <p>
  * This class represents SQL based entity which sql text contains named parameters.
  * Also, it contains parameters' values and type information.
  * It provides a method toQuery() transform transform
@@ -205,10 +205,10 @@ public class SqlEntity {
                 database,
                 entityName,
                 jdbcSql,
-                compiledParams,
+                Collections.unmodifiableList(compiledParams),
                 procedure,
                 pageSize,
-                fields
+                Collections.unmodifiableMap(fields)
         );
     }
 

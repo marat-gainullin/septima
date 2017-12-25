@@ -11,6 +11,7 @@ import org.junit.Test;
 import javax.naming.NamingException;
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -74,7 +75,7 @@ public class DmlTest {
         assertEquals("id", deleteQuery.getParameters().get(0).getName());
 
         insertQuery
-                .start()
+                .start(Map.of())
                 .thenApply(inserted -> {
                     assertNotNull(inserted);
                     assertEquals(1L, (long) inserted);
@@ -139,26 +140,28 @@ public class DmlTest {
         assertEquals("id", deleteQuery.getParameters().get(0).getName());
 
         insertQuery
-                .start(List.of(
-                        new Parameter("id", assetId),
-                        new Parameter("name", assetName),
-                        new Parameter("field7", assetField7)
+                .start(Map.of(
+                        "id", assetId,
+                        "name", assetName,
+                        "field7", assetField7
                 ))
                 .thenApply(inserted -> {
                     assertNotNull(inserted);
                     assertEquals(1L, (long) inserted);
-                    return updateQuery.start(List.of(
-                            new Parameter("name", assetName + " updated"),
-                            new Parameter("id", assetId)
-                    ));
+                    return updateQuery.start(
+                            Map.of(
+                                    "name", assetName + " updated",
+                                    "id", assetId
+                            ));
                 })
                 .thenCompose(Function.identity())
                 .thenApply(updated -> {
                     assertNotNull(updated);
                     assertEquals(1L, (long) updated);
-                    return deleteQuery.start(List.of(
-                            new Parameter("id", assetId)
-                    ));
+                    return deleteQuery.start(
+                            Map.of(
+                                    "id", assetId
+                            ));
                 })
                 .thenCompose(Function.identity())
                 .thenAccept(deleted -> {

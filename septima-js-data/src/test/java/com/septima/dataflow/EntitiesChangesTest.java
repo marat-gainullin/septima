@@ -96,7 +96,7 @@ public class EntitiesChangesTest {
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
         SqlEntity compoundEntity = entities.loadEntity("changes/asset-groups-types-kinds-writable-restricted");
-        compoundEntity.toQuery().requestData()
+        compoundEntity.toQuery().requestData(Map.of())
                 .thenApply(data -> {
                     assertTrue(data.size() > 1);
                     return compoundEntity.getDatabase().commit(entities.bindChanges(List.of(
