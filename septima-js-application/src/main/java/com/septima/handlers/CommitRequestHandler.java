@@ -1,6 +1,5 @@
 package com.septima.handlers;
 
-import com.septima.NamedValue;
 import com.septima.RequestHandler;
 import com.septima.changes.*;
 import com.septima.client.DatabasesClient;
@@ -84,7 +83,7 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
         public void visit(Command aRequest) throws Exception {
             Object oParameters = sChange.getMember(CHANGE_PARAMETERS_NAME);
             List<NamedValue> values = parseObjectProperties(oParameters);
-            values.stream().forEach(cv -> aRequest.getParameters().put(cv.name, cv));
+            values.stream().forEach(cv -> aRequest.getArguments().put(cv.name, cv));
         }
 
         public static List<Change.Transferable> read(String aChangesJson, Scripts.Space aSpace) throws Exception {
@@ -273,7 +272,7 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
                                                         throw new IllegalStateException(ex);
                                                     }
                                                 });
-                                                process.complete(compiled.prepareCommand(command.getParameters()), null, null);
+                                                process.complete(compiled.prepareCommand(command.getArguments()), null, null);
                                             } else {
                                                 process.complete((Change.Applicable)change, null, null);
                                             }

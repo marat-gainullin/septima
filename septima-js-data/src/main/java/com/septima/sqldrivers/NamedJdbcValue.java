@@ -1,20 +1,28 @@
 package com.septima.sqldrivers;
 
-import com.septima.NamedValue;
-
 /**
- *
  * @author mg
  */
-public class NamedJdbcValue extends NamedValue {
+public class NamedJdbcValue {
 
+    private final String name;
+    private final Object value;
     private final int jdbcType;
     private final String sqlTypeName;
-    
-    public NamedJdbcValue(String aName, Object aValue, int aJdbcType, String aSqlTypeName) {
-        super(aName, aValue);
+
+    NamedJdbcValue(String aName, Object aValue, int aJdbcType, String aSqlTypeName) {
+        name = aName;
+        value = aValue;
         jdbcType = aJdbcType;
         sqlTypeName = aSqlTypeName;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Object getValue() {
+        return value;
     }
 
     public int getJdbcType() {
@@ -24,5 +32,5 @@ public class NamedJdbcValue extends NamedValue {
     public String getSqlTypeName() {
         return sqlTypeName;
     }
-    
+
 }

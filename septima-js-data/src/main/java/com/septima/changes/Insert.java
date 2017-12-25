@@ -1,17 +1,15 @@
 package com.septima.changes;
 
-import com.septima.NamedValue;
-
-import java.util.List;
+import java.util.Map;
 
 /**
  * @author mg
  */
 public class Insert extends Change {
 
-    private final List<NamedValue> data;
+    private final Map<String, Object> data;
 
-    public Insert(String aEntityName, List<NamedValue> aData) {
+    public Insert(String aEntityName, Map<String, Object> aData) {
         super(aEntityName);
         data = aData;
     }
@@ -21,7 +19,7 @@ public class Insert extends Change {
         aChangeVisitor.visit(this);
     }
 
-    public List<NamedValue> getData() {
+    public Map<String, Object> getData() {
         return data;
     }
 

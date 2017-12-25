@@ -1,17 +1,15 @@
 package com.septima.changes;
 
-import com.septima.NamedValue;
-
-import java.util.List;
+import java.util.Map;
 
 /**
  * @author mg
  */
 public class Delete extends Change {
 
-    private final List<NamedValue> keys;
+    private final Map<String, Object> keys;
 
-    public Delete(String aEntityName, List<NamedValue> aKeys) {
+    public Delete(String aEntityName, Map<String, Object> aKeys) {
         super(aEntityName);
         keys = aKeys;
     }
@@ -21,7 +19,7 @@ public class Delete extends Change {
         aChangeVisitor.visit(this);
     }
 
-    public List<NamedValue> getKeys() {
+    public Map<String, Object> getKeys() {
         return keys;
     }
 

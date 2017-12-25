@@ -1,6 +1,5 @@
 package com.septima.dataflow;
 
-import com.septima.NamedValue;
 import com.septima.Parameter;
 import com.septima.changes.*;
 import com.septima.entities.SqlEntities;
@@ -81,15 +80,17 @@ public class StatementsGenerator implements ChangesVisitor {
         return logEntries;
     }
 
-    private Function<NamedValue, Map.Entry<String, List<Parameter>>> asTableDatumEntry(SqlEntity aEntity) {
+    private Function<Map.Entry<String, Object>, Map.Entry<String, List<Parameter>>> asTableDatumEntry(SqlEntity aEntity) {
         return datum -> {
-            Field entityField = aEntity.getFields().get(datum.getName());
+            String datumName = datum.getKey();
+            Object datumValue = datum.getValue();
+            Field entityField = aEntity.getFields().get(datumName);
             if (entityField != null) {
                 String keyColumnName = entityField.getOriginalName() != null ? entityField.getOriginalName() : entityField.getName();
-                Parameter bound = new Parameter(keyColumnName, datum.getValue(), entityField.getType());
+                Parameter bound = new Parameter(keyColumnName, datumValue, entityField.getType());
                 return Map.entry(entityField.getTableName(), List.of(bound));
             } else {
-                throw new IllegalStateException("Entity field '" + datum.getName() + "' is not found in entity '" + aEntity.getName() + "'");
+                throw new IllegalStateException("Entity field '" + datumName + "' is not found in entity '" + aEntity.getName() + "'");
             }
         };
     }
@@ -98,7 +99,7 @@ public class StatementsGenerator implements ChangesVisitor {
     public void visit(Insert aInsert) {
         SqlEntity entity = entities.loadEntity(aInsert.getEntityName());
         StatementResultSetHandler parametersHandler = entity.getDatabase().createParametersHandler(entity.isProcedure());
-        aInsert.getData().stream()
+        aInsert.getData().entrySet().stream()
                 .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
                         Collectors.flatMapping(entry -> entry.getValue().stream(), Collectors.toList())))
@@ -123,11 +124,11 @@ public class StatementsGenerator implements ChangesVisitor {
     public void visit(Update aUpdate) {
         SqlEntity entity = entities.loadEntity(aUpdate.getEntityName());
         StatementResultSetHandler parametersHandler = entity.getDatabase().createParametersHandler(entity.isProcedure());
-        Map<String, List<Parameter>> updatesKeys = aUpdate.getKeys().stream()
+        Map<String, List<Parameter>> updatesKeys = aUpdate.getKeys().entrySet().stream()
                 .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
                         Collectors.flatMapping(entry -> entry.getValue().stream(), Collectors.toList())));
-        aUpdate.getData().stream()
+        aUpdate.getData().entrySet().stream()
                 .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
                         Collectors.flatMapping(entry -> entry.getValue().stream(), Collectors.toList())))
@@ -160,7 +161,7 @@ public class StatementsGenerator implements ChangesVisitor {
     public void visit(Delete aDeletion) {
         SqlEntity entity = entities.loadEntity(aDeletion.getEntityName());
         StatementResultSetHandler parametersHandler = entity.getDatabase().createParametersHandler(entity.isProcedure());
-        aDeletion.getKeys().stream()
+        aDeletion.getKeys().entrySet().stream()
                 .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
                         Collectors.flatMapping(entry -> entry.getValue().stream(), Collectors.toList())))
@@ -190,7 +191,7 @@ public class StatementsGenerator implements ChangesVisitor {
                 Collections.unmodifiableList(query.getParameters().stream()
                         .map(queryParameter -> new Parameter(
                                 queryParameter.getName(),
-                                aCommand.getParameters().getOrDefault(queryParameter.getName(), new NamedValue(queryParameter.getName(), queryParameter.getValue())).getValue(),
+                                aCommand.getArguments().getOrDefault(queryParameter.getName(), queryParameter.getValue()),
                                 queryParameter.getType(),
                                 queryParameter.getMode(),
                                 queryParameter.getDescription())

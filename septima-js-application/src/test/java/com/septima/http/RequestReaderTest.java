@@ -6,7 +6,6 @@ package com.septima.http;
 
 import com.septima.changes.*;
 import com.septima.indexer.ScriptDocuments;
-import com.septima.NamedValue;
 import com.septima.client.scripts.ScriptedResource;
 import com.septima.handlers.ChangesJSONReader;
 import com.septima.script.Scripts;
@@ -159,13 +158,13 @@ public class RequestReaderTest {
         assertEquals(2, u.getKeys().size());
         assertNotNull(d.getKeys());
         assertEquals(2, d.getKeys().size());
-        assertNotNull(c.getParameters());
-        assertEquals(2, c.getParameters().size());
+        assertNotNull(c.getArguments());
+        assertEquals(2, c.getArguments().size());
         for (int j = 0; j < u.getKeys().size(); j++) {
             assertNotSame(u.getKeys().get(j), d.getKeys().get(j));
             compareValues(u.getKeys().get(j), d.getKeys().get(j));
-            assertNotSame(u.getKeys().get(j), c.getParameters().get(j));
-            compareValues(u.getKeys().get(j), c.getParameters().get(j));
+            assertNotSame(u.getKeys().get(j), c.getArguments().get(j));
+            compareValues(u.getKeys().get(j), c.getArguments().get(j));
             compareValues(u.getKeys().get(j), keys[j]);
         }
     }

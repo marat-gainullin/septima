@@ -1,7 +1,6 @@
 package com.septima.dataflow;
 
 import com.septima.Database;
-import com.septima.NamedValue;
 import com.septima.TestDataSource;
 import com.septima.changes.Command;
 import com.septima.changes.Delete;
@@ -46,13 +45,13 @@ public class EntitiesChangesTest {
                 .thenApply(data -> {
                     assertTrue(data.size() > 1);
                     return compoundEntity.getDatabase().commit(entities.bindChanges(List.of(
-                            new Insert(compoundEntity.getName(), List.of(
-                                    new NamedValue("k_id", k_id),
-                                    new NamedValue("k_name", k_name),
-                                    new NamedValue("t_id", t_id),
-                                    new NamedValue("t_name", t_name),
-                                    new NamedValue("g_id", g_id),
-                                    new NamedValue("g_name", g_name)
+                            new Insert(compoundEntity.getName(), Map.of(
+                                    "k_id", k_id,
+                                    "k_name", k_name,
+                                    "t_id", t_id,
+                                    "t_name", t_name,
+                                    "g_id", g_id,
+                                    "g_name", g_name
                             ))
                     )));
                 }).thenCompose(Function.identity())
@@ -60,21 +59,21 @@ public class EntitiesChangesTest {
                     assertEquals(3L, (long) inserted);
                     return compoundEntity.getDatabase().commit(entities.bindChanges(List.of(
                             new Update(compoundEntity.getName(),
-                                    List.of(
-                                            new NamedValue("k_id", k_id),
-                                            new NamedValue("t_id", t_id),
-                                            new NamedValue("g_id", g_id)
+                                    Map.of(
+                                            "k_id", k_id,
+                                            "t_id", t_id,
+                                            "g_id", g_id
                                     ),
-                                    List.of(
-                                            new NamedValue("k_name", k_name + " updated"),
-                                            new NamedValue("t_name", t_name + " updated"),
-                                            new NamedValue("g_name", g_name + " updated")
+                                    Map.of(
+                                            "k_name", k_name + " updated",
+                                            "t_name", t_name + " updated",
+                                            "g_name", g_name + " updated"
                                     )
                             ),
-                            new Delete(compoundEntity.getName(), List.of(
-                                    new NamedValue("k_id", k_id),
-                                    new NamedValue("t_id", t_id),
-                                    new NamedValue("g_id", g_id)
+                            new Delete(compoundEntity.getName(), Map.of(
+                                    "k_id", k_id,
+                                    "t_id", t_id,
+                                    "g_id", g_id
                             ))
                     )));
                 }).thenCompose(Function.identity())
@@ -100,13 +99,13 @@ public class EntitiesChangesTest {
                 .thenApply(data -> {
                     assertTrue(data.size() > 1);
                     return compoundEntity.getDatabase().commit(entities.bindChanges(List.of(
-                            new Insert(compoundEntity.getName(), List.of(
-                                    new NamedValue("k_id", k_id),
-                                    new NamedValue("k_name", k_name),
-                                    new NamedValue("t_id", t_id),
-                                    new NamedValue("t_name", t_name),
-                                    new NamedValue("g_id", g_id),
-                                    new NamedValue("g_name", g_name)
+                            new Insert(compoundEntity.getName(), Map.of(
+                                    "k_id", k_id,
+                                    "k_name", k_name,
+                                    "t_id", t_id,
+                                    "t_name", t_name,
+                                    "g_id", g_id,
+                                    "g_name", g_name
                             ))
                     )));
                 }).thenCompose(Function.identity())
@@ -114,21 +113,21 @@ public class EntitiesChangesTest {
                     assertEquals(1L, (long) inserted);
                     return compoundEntity.getDatabase().commit(entities.bindChanges(List.of(
                             new Update(compoundEntity.getName(),
-                                    List.of(
-                                            new NamedValue("k_id", k_id),
-                                            new NamedValue("t_id", t_id),
-                                            new NamedValue("g_id", g_id)
+                                    Map.of(
+                                            "k_id", k_id,
+                                            "t_id", t_id,
+                                            "g_id", g_id
                                     ),
-                                    List.of(
-                                            new NamedValue("k_name", k_name + " updated"),
-                                            new NamedValue("t_name", t_name + " updated"),
-                                            new NamedValue("g_name", g_name + " updated")
+                                    Map.of(
+                                            "k_name", k_name + " updated",
+                                            "t_name", t_name + " updated",
+                                            "g_name", g_name + " updated"
                                     )
                             ),
-                            new Delete(compoundEntity.getName(), List.of(
-                                    new NamedValue("k_id", k_id),
-                                    new NamedValue("t_id", t_id),
-                                    new NamedValue("g_id", g_id)
+                            new Delete(compoundEntity.getName(), Map.of(
+                                    "k_id", k_id,
+                                    "t_id", t_id,
+                                    "g_id", g_id
                             ))
                     )));
                 }).thenCompose(Function.identity())
@@ -149,20 +148,20 @@ public class EntitiesChangesTest {
         database.commit(entities.bindChanges(List.of(
                 new Command("dml/insert-asset",
                         Map.of(
-                                "field7", new NamedValue("field7", assetField7),
-                                "name", new NamedValue("name", assetName),
-                                "id", new NamedValue("id", assetId)
+                                "field7", assetField7,
+                                "name", assetName,
+                                "id", assetId
                         )
                 ),
                 new Command("dml/update-asset",
                         Map.of(
-                                "id", new NamedValue("id", assetId),
-                                "name", new NamedValue("name", assetName + " updated")
+                                "id", assetId,
+                                "name", assetName + " updated"
                         )
                 ),
                 new Command("dml/delete-asset",
                         Map.of(
-                                "id", new NamedValue("id", assetId)
+                                "id", assetId
                         )
                 )
         )))

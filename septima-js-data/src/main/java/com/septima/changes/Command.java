@@ -1,7 +1,5 @@
 package com.septima.changes;
 
-import com.septima.NamedValue;
-
 import java.util.Map;
 
 /**
@@ -9,15 +7,15 @@ import java.util.Map;
  */
 public class Command extends Change {
 
-    private final Map<String, NamedValue> parameters;
+    private final Map<String, Object> arguments;
 
-    public Command(final String anEntityName, final Map<String, NamedValue> aParameters) {
+    public Command(final String anEntityName, final Map<String, Object> aParameters) {
         super(anEntityName);
-        parameters = aParameters;
+        arguments = aParameters;
     }
 
-    public Map<String, NamedValue> getParameters() {
-        return parameters;
+    public Map<String, Object> getArguments() {
+        return arguments;
     }
 
     @Override

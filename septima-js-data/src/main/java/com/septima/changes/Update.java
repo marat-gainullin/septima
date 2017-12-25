@@ -1,18 +1,16 @@
 package com.septima.changes;
 
-import com.septima.NamedValue;
-
-import java.util.List;
+import java.util.Map;
 
 /**
  * @author mg
  */
 public class Update extends Change {
 
-    private final List<NamedValue> keys;
-    private final List<NamedValue> data;
+    private final Map<String, Object> keys;
+    private final Map<String, Object> data;
 
-    public Update(String aEntityName, List<NamedValue> aKeys, List<NamedValue> aData) {
+    public Update(String aEntityName, Map<String, Object> aKeys, Map<String, Object> aData) {
         super(aEntityName);
         keys = aKeys;
         data = aData;
@@ -23,11 +21,11 @@ public class Update extends Change {
         aChangeVisitor.visit(this);
     }
 
-    public List<NamedValue> getKeys() {
+    public Map<String, Object> getKeys() {
         return keys;
     }
 
-    public List<NamedValue> getData() {
+    public Map<String, Object> getData() {
         return data;
     }
 
