@@ -130,6 +130,33 @@ Create Table public.TABLE2(
 );
 Alter Table public.table2 Add Constraint public.table2_pk Primary Key(id);
 
+Create Table public.VariousTypedFields (
+        s1 varchar(100),
+        s2 longvarchar,
+        s3 char,
+        s4 varchar_ignorecase,
+        s5 clob,
+        n1 numeric,
+        n2 decimal(38, 19),
+        n3 tinyint,
+        n4 bigint,
+        n5 integer,
+        n6 smallint,
+        n7 float,
+        n8 real,
+        n9 double,
+        b1 boolean,
+        dt1 timestamp,
+        dt2 date,
+        dt3 time,
+        iden1 identity,
+        iden2 uuid,
+        bin1 longvarbinary,
+        bin2 varbinary,
+        bin3 binary,
+        bin4 blob
+);
+
 Create Alias public.calculator As $$
     long septimaSampleCalc(int first, long second){
         return first + second;
