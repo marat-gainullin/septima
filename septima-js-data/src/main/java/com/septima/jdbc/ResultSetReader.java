@@ -1,4 +1,4 @@
-package com.septima.dataflow;
+package com.septima.jdbc;
 
 import com.septima.metadata.Field;
 
@@ -20,10 +20,10 @@ import java.util.stream.Collectors;
 public class ResultSetReader {
 
     private final Map<String, Field> expectedFields;
-    private final StatementResultSetHandler statementResultSetHandler;
+    private final JdbcReaderAssigner jdbcReaderAssigner;
 
-    public ResultSetReader(Map<String, Field> aExpectedFields, StatementResultSetHandler aStatementResultSetHandler) {
-        statementResultSetHandler = aStatementResultSetHandler;
+    public ResultSetReader(Map<String, Field> aExpectedFields, JdbcReaderAssigner aJdbcReaderAssigner) {
+        jdbcReaderAssigner = aJdbcReaderAssigner;
         expectedFields = aExpectedFields;
     }
 
@@ -46,7 +46,7 @@ public class ResultSetReader {
                     null,
                     columnName,
                     jdbcFields.getTableName(i),
-                    statementResultSetHandler.getSqlDriver().getTypesResolver().toApplicationType(jdbcFields.getColumnType(i), jdbcFields.getColumnTypeName(i)),
+                    jdbcReaderAssigner.getSqlDriver().getTypesResolver().toApplicationType(jdbcFields.getColumnType(i), jdbcFields.getColumnTypeName(i)),
                     jdbcFields.isNullable(i) == ResultSetMetaData.columnNullable,
                     false,
                     null
@@ -72,7 +72,7 @@ public class ResultSetReader {
                 Field readField = aReadFields.get(i);
                 Field expectedField = aExpectedFields.get(readField.getName());
                 Field field = expectedField != null ? expectedField : readField;
-                Object value = statementResultSetHandler.readTypedValue(aResultSet, i + 1);
+                Object value = jdbcReaderAssigner.readTypedValue(aResultSet, i + 1);
                 row.put(field.getName(), value);
             }
             return row;

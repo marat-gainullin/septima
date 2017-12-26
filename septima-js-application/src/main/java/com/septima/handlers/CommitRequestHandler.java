@@ -30,7 +30,7 @@ import javax.security.auth.AuthPermission;
  */
 public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRequest.Response> {
 
-    private static final class ChangesJSONReader implements ChangesVisitor {
+    private static final class ChangesJSONReader implements EntityChangesVisitor {
 
         private static final String CHANGE_DATA_NAME = "data";
         private static final String CHANGE_KEYS_NAME = "keys";
@@ -60,13 +60,13 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
         }
 
         @Override
-        public void visit(Insert aChange) throws Exception {
+        public void visit(EntityInsert aChange) throws Exception {
             Object oData = sChange.getMember(CHANGE_DATA_NAME);
             aChange.getData().addAll(parseObjectProperties(oData));
         }
 
         @Override
-        public void visit(Update aChange) throws Exception {
+        public void visit(EntityUpdate aChange) throws Exception {
             Object oData = sChange.getMember(CHANGE_DATA_NAME);
             aChange.getData().addAll(parseObjectProperties(oData));
             Object oKeys = sChange.getMember(CHANGE_KEYS_NAME);
@@ -74,20 +74,20 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
         }
 
         @Override
-        public void visit(Delete aChange) throws Exception {
+        public void visit(EntityDelete aChange) throws Exception {
             Object oKeys = sChange.getMember(CHANGE_KEYS_NAME);
             aChange.getKeys().addAll(parseObjectProperties(oKeys));
         }
 
         @Override
-        public void visit(Command aRequest) throws Exception {
+        public void visit(EntityCommand aRequest) throws Exception {
             Object oParameters = sChange.getMember(CHANGE_PARAMETERS_NAME);
             List<NamedValue> values = parseObjectProperties(oParameters);
             values.stream().forEach(cv -> aRequest.getArguments().put(cv.name, cv));
         }
 
-        public static List<Change.Transferable> read(String aChangesJson, Scripts.Space aSpace) throws Exception {
-            List<Change.Transferable> changes = new ArrayList<>();
+        public static List<EntityChange.Transferable> read(String aChangesJson, Scripts.Space aSpace) throws Exception {
+            List<EntityChange.Transferable> changes = new ArrayList<>();
             Object sChanges = aSpace.parseJsonWithDates(aChangesJson);
             if (sChanges instanceof JSObject) {
                 JSObject jsChanges = (JSObject) sChanges;
@@ -100,22 +100,22 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
                             String sKind = JSType.toString(sChange.getMember("kind"));
                             String sEntityName = JSType.toString(sChange.getMember("entity"));
                             ChangesJSONReader reader = new ChangesJSONReader(sChange, sEntityName, aSpace);
-                            Change.Transferable change = null;
+                            EntityChange.Transferable change = null;
                             switch (sKind) {
                                 case "insert":
-                                    change = new Insert(sEntityName);
+                                    change = new EntityInsert(sEntityName);
                                     change.accept(reader);
                                     break;
                                 case "update":
-                                    change = new Update(sEntityName);
+                                    change = new EntityUpdate(sEntityName);
                                     change.accept(reader);
                                     break;
                                 case "delete":
-                                    change = new Delete(sEntityName);
+                                    change = new EntityDelete(sEntityName);
                                     change.accept(reader);
                                     break;
                                 case "command":
-                                    change = new Command(sEntityName);
+                                    change = new EntityCommand(sEntityName);
                                     change.accept(reader);
                                     break;
                             }
@@ -140,17 +140,17 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
     }
     private static final class ChangesSortProcess {
 
-        private final List<Change.Applicable> expectedChanges = new ArrayList<>();
+        private final List<EntityChange.Applicable> expectedChanges = new ArrayList<>();
         private final String defaultDatasource;
         private int factCalls;
-        private final Consumer<Map<String, List<Change.Applicable>>> onSuccess;
+        private final Consumer<Map<String, List<EntityChange.Applicable>>> onSuccess;
         private final Consumer<Exception> onFailure;
 
         private final List<AccessControlException> accessDeniedEntities = new ArrayList<>();
         private final List<Exception> notRetrievedEntities = new ArrayList<>();
         private final Map<String, String> datasourcesOfEntities = new HashMap();
 
-        public ChangesSortProcess(String aDefaultDatasource, Consumer<Map<String, List<Change.Applicable>>> aOnSuccess, Consumer<Exception> aOnFailure) {
+        public ChangesSortProcess(String aDefaultDatasource, Consumer<Map<String, List<EntityChange.Applicable>>> aOnSuccess, Consumer<Exception> aOnFailure) {
             super();
             defaultDatasource = aDefaultDatasource;
             onSuccess = aOnSuccess;
@@ -178,7 +178,7 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
             }
         }
 
-        public void complete(Change.Applicable aChange, AccessControlException accessDenied, Exception failed) {
+        public void complete(EntityChange.Applicable aChange, AccessControlException accessDenied, Exception failed) {
             expectedChanges.add(aChange);
             if (accessDenied != null) {
                 accessDeniedEntities.add(accessDenied);
@@ -189,8 +189,8 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
             if (++factCalls == expectedChanges.size()) {
                 if (accessDeniedEntities.isEmpty() && notRetrievedEntities.isEmpty()) {
                     if (onSuccess != null) {
-                        Map<String, List<Change.Applicable>> changeLogs = new HashMap<>();
-                        expectedChanges.stream().forEach((Change.Applicable aSortedChange) -> {
+                        Map<String, List<EntityChange.Applicable>> changeLogs = new HashMap<>();
+                        expectedChanges.stream().forEach((EntityChange.Applicable aSortedChange) -> {
                             String datasourceName = datasourcesOfEntities.get(aSortedChange.getEntity());
                             // defaultDatasource is needed here transform avoid multi transaction
                             // actions against the same datasource, leading transform unexpected
@@ -198,7 +198,7 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
                             if (datasourceName == null || datasourceName.isEmpty()) {
                                 datasourceName = defaultDatasource;
                             }
-                            List<Change.Applicable> targetChangeLog = changeLogs.get(datasourceName);
+                            List<EntityChange.Applicable> targetChangeLog = changeLogs.get(datasourceName);
                             if (targetChangeLog == null) {
                                 targetChangeLog = new ArrayList<>();
                                 changeLogs.put(datasourceName, targetChangeLog);
@@ -232,11 +232,11 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
     @Override
     public void handle(Session aSession, Consumer<CommitRequest.Response> onSuccess, Consumer<Exception> onFailure) {
         try {
-            List<Change.Transferable> changes = ChangesJSONReader.read(getRequest().getChangesJson(), Scripts.getSpace());
+            List<EntityChange.Transferable> changes = ChangesJSONReader.read(getRequest().getChangesJson(), Scripts.getSpace());
             DatabasesClient client = getServerCore().getDatabases();
             Map<String, SqlCompiledQuery> compiledEntities = new HashMap<>();
 
-            ChangesSortProcess process = new ChangesSortProcess(client.getDefaultDatasourceName(), (Map<String, List<Change.Applicable>> changeLogs) -> {
+            ChangesSortProcess process = new ChangesSortProcess(client.getDefaultDatasourceName(), (Map<String, List<EntityChange.Applicable>> changeLogs) -> {
                 try {
                     client.commit(changeLogs, (Integer aUpdated) -> {
                         if (onSuccess != null) {
@@ -263,8 +263,8 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
                                         process.complete(null, accessControlEx, null);
                                     } else {
                                         try {
-                                            if (change instanceof Command) {
-                                                Command command = (Command)change;
+                                            if (change instanceof EntityCommand) {
+                                                EntityCommand entityCommand = (EntityCommand)change;
                                                 SqlCompiledQuery compiled = compiledEntities.computeIfAbsent(change.getEntity(), en -> {
                                                     try {
                                                         return query.compile();
@@ -272,9 +272,9 @@ public class CommitRequestHandler extends RequestHandler<CommitRequest, CommitRe
                                                         throw new IllegalStateException(ex);
                                                     }
                                                 });
-                                                process.complete(compiled.prepareCommand(command.getArguments()), null, null);
+                                                process.complete(compiled.prepareCommand(entityCommand.getArguments()), null, null);
                                             } else {
-                                                process.complete((Change.Applicable)change, null, null);
+                                                process.complete((EntityChange.Applicable)change, null, null);
                                             }
                                         } catch (Exception ex) {
                                             Logger.getLogger(CommitRequestHandler.class.getName()).log(Level.SEVERE, null, ex);

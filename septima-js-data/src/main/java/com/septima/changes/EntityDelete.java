@@ -5,17 +5,17 @@ import java.util.Map;
 /**
  * @author mg
  */
-public class Delete extends Change {
+public class EntityDelete extends EntityChange {
 
     private final Map<String, Object> keys;
 
-    public Delete(String aEntityName, Map<String, Object> aKeys) {
+    public EntityDelete(String aEntityName, Map<String, Object> aKeys) {
         super(aEntityName);
         keys = aKeys;
     }
 
     @Override
-    public void accept(ChangesVisitor aChangeVisitor) {
+    public void accept(EntityChangesVisitor aChangeVisitor) {
         aChangeVisitor.visit(this);
     }
 

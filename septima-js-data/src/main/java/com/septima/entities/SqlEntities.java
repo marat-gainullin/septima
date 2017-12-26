@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.septima.Database;
 import com.septima.Metadata;
 import com.septima.Parameter;
-import com.septima.changes.Change;
+import com.septima.changes.EntityChange;
 import com.septima.dataflow.DataProvider;
-import com.septima.dataflow.StatementsGenerator;
+import com.septima.dataflow.EntityChangesBinder;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
 import com.septima.metadata.ForeignKey;
@@ -132,10 +132,10 @@ public class SqlEntities {
         }
     }
 
-    public List<StatementsGenerator.GeneratedStatement> bindChanges(List<Change> aChangeLog) {
-        List<StatementsGenerator.GeneratedStatement> statements = new ArrayList<>();
-        for (Change change : aChangeLog) {
-            StatementsGenerator generator = new StatementsGenerator(this);
+    public List<EntityChangesBinder.BoundStatement> bindChanges(List<EntityChange> aChangeLog) {
+        List<EntityChangesBinder.BoundStatement> statements = new ArrayList<>();
+        for (EntityChange change : aChangeLog) {
+            EntityChangesBinder generator = new EntityChangesBinder(this);
             change.accept(generator);
             statements.addAll(generator.getLogEntries());
         }

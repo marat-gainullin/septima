@@ -116,7 +116,7 @@ public class RequestReaderTest {
     @Test
     public void changesJsonReadTest() throws Exception {
         System.out.println("changesJsonReadTest");
-        List<Change> changes = ChangesJSONReader.read(WRITTEN_CHANGES, Scripts.getSpace());
+        List<EntityChange> changes = ChangesJSONReader.read(WRITTEN_CHANGES, Scripts.getSpace());
 
         NamedValue key1 = new NamedValue("key1", 78.9000015258789D);
         NamedValue key2 = new NamedValue("key2", "key2Value");
@@ -132,14 +132,14 @@ public class RequestReaderTest {
 
         assertNotNull(changes);
         assertEquals(4, changes.size());
-        assertTrue(changes.get(0) instanceof Insert);
-        assertTrue(changes.get(1) instanceof Update);
-        assertTrue(changes.get(2) instanceof Delete);
-        assertTrue(changes.get(3) instanceof Command);
-        Insert i = (Insert) changes.get(0);
-        Update u = (Update) changes.get(1);
-        Delete d = (Delete) changes.get(2);
-        Command c = (Command) changes.get(3);
+        assertTrue(changes.get(0) instanceof EntityInsert);
+        assertTrue(changes.get(1) instanceof EntityUpdate);
+        assertTrue(changes.get(2) instanceof EntityDelete);
+        assertTrue(changes.get(3) instanceof EntityCommand);
+        EntityInsert i = (EntityInsert) changes.get(0);
+        EntityUpdate u = (EntityUpdate) changes.get(1);
+        EntityDelete d = (EntityDelete) changes.get(2);
+        EntityCommand c = (EntityCommand) changes.get(3);
         assertEquals("testEntity", i.entityName);
         assertEquals("testEntity", u.entityName);
         assertEquals("testEntity", d.entityName);

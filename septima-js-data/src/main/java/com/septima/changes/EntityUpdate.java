@@ -5,19 +5,19 @@ import java.util.Map;
 /**
  * @author mg
  */
-public class Update extends Change {
+public class EntityUpdate extends EntityChange {
 
     private final Map<String, Object> keys;
     private final Map<String, Object> data;
 
-    public Update(String aEntityName, Map<String, Object> aKeys, Map<String, Object> aData) {
+    public EntityUpdate(String aEntityName, Map<String, Object> aKeys, Map<String, Object> aData) {
         super(aEntityName);
         keys = aKeys;
         data = aData;
     }
 
     @Override
-    public void accept(ChangesVisitor aChangeVisitor) {
+    public void accept(EntityChangesVisitor aChangeVisitor) {
         aChangeVisitor.visit(this);
     }
 

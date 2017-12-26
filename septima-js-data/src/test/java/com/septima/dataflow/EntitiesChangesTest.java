@@ -2,10 +2,10 @@ package com.septima.dataflow;
 
 import com.septima.Database;
 import com.septima.TestDataSource;
-import com.septima.changes.Command;
-import com.septima.changes.Delete;
-import com.septima.changes.Insert;
-import com.septima.changes.Update;
+import com.septima.changes.EntityCommand;
+import com.septima.changes.EntityDelete;
+import com.septima.changes.EntityInsert;
+import com.septima.changes.EntityUpdate;
 import com.septima.entities.SqlEntities;
 import com.septima.entities.SqlEntity;
 import org.junit.BeforeClass;
@@ -45,7 +45,7 @@ public class EntitiesChangesTest {
                 .thenApply(data -> {
                     assertTrue(data.size() > 1);
                     return compoundEntity.getDatabase().commit(entities.bindChanges(List.of(
-                            new Insert(compoundEntity.getName(), Map.of(
+                            new EntityInsert(compoundEntity.getName(), Map.of(
                                     "k_id", k_id,
                                     "k_name", k_name,
                                     "t_id", t_id,
@@ -58,7 +58,7 @@ public class EntitiesChangesTest {
                 .thenApply(inserted -> {
                     assertEquals(3L, (long) inserted);
                     return compoundEntity.getDatabase().commit(entities.bindChanges(List.of(
-                            new Update(compoundEntity.getName(),
+                            new EntityUpdate(compoundEntity.getName(),
                                     Map.of(
                                             "k_id", k_id,
                                             "t_id", t_id,
@@ -70,7 +70,7 @@ public class EntitiesChangesTest {
                                             "g_name", g_name + " updated"
                                     )
                             ),
-                            new Delete(compoundEntity.getName(), Map.of(
+                            new EntityDelete(compoundEntity.getName(), Map.of(
                                     "k_id", k_id,
                                     "t_id", t_id,
                                     "g_id", g_id
@@ -99,7 +99,7 @@ public class EntitiesChangesTest {
                 .thenApply(data -> {
                     assertTrue(data.size() > 1);
                     return compoundEntity.getDatabase().commit(entities.bindChanges(List.of(
-                            new Insert(compoundEntity.getName(), Map.of(
+                            new EntityInsert(compoundEntity.getName(), Map.of(
                                     "k_id", k_id,
                                     "k_name", k_name,
                                     "t_id", t_id,
@@ -112,7 +112,7 @@ public class EntitiesChangesTest {
                 .thenApply(inserted -> {
                     assertEquals(1L, (long) inserted);
                     return compoundEntity.getDatabase().commit(entities.bindChanges(List.of(
-                            new Update(compoundEntity.getName(),
+                            new EntityUpdate(compoundEntity.getName(),
                                     Map.of(
                                             "k_id", k_id,
                                             "t_id", t_id,
@@ -124,7 +124,7 @@ public class EntitiesChangesTest {
                                             "g_name", g_name + " updated"
                                     )
                             ),
-                            new Delete(compoundEntity.getName(), Map.of(
+                            new EntityDelete(compoundEntity.getName(), Map.of(
                                     "k_id", k_id,
                                     "t_id", t_id,
                                     "g_id", g_id
@@ -146,20 +146,20 @@ public class EntitiesChangesTest {
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
         database.commit(entities.bindChanges(List.of(
-                new Command("dml/insert-asset",
+                new EntityCommand("dml/insert-asset",
                         Map.of(
                                 "field7", assetField7,
                                 "name", assetName,
                                 "id", assetId
                         )
                 ),
-                new Command("dml/update-asset",
+                new EntityCommand("dml/update-asset",
                         Map.of(
                                 "id", assetId,
                                 "name", assetName + " updated"
                         )
                 ),
-                new Command("dml/delete-asset",
+                new EntityCommand("dml/delete-asset",
                         Map.of(
                                 "id", assetId
                         )

@@ -3,11 +3,11 @@ package com.septima.changes;
 /**
  * @author mg
  */
-public abstract class Change {
+public abstract class EntityChange {
 
     private final String entityName;
 
-    public Change(String aEntityName) {
+    public EntityChange(String aEntityName) {
         super();
         entityName = aEntityName;
     }
@@ -21,5 +21,5 @@ public abstract class Change {
         return getClass().getSimpleName();
     }
 
-    public abstract void accept(ChangesVisitor aChangeVisitor);
+    public abstract void accept(EntityChangesVisitor aChangeVisitor);
 }

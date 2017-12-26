@@ -122,7 +122,7 @@ Create Table public.table1(
 );
 Alter Table public.table1 Add Constraint public.table1_pk Primary Key(id);
 
-Create Table public.TABLE2(
+Create Table public.table2(
     id decimal(38, 19) not null,
     fielda decimal(38, 19),
     fieldb decimal(38, 19),
@@ -230,3 +230,6 @@ Insert Into public.table2(id, fielda, fieldb, fieldc) Values
 (0.0000, 1.0000, 2.0000, 3.0000),
 (100.0000, 101.0000, 102.0000, 103.0000),
 (104.0000, 105.0000, 106.0000, 107.0000);
+
+Insert Into public.VariousTypedFields(s5) Values
+('Some text')

@@ -1,8 +1,8 @@
-package com.septima.dataflow;
+package com.septima.jdbc;
 
 import com.septima.DataTypes;
 import com.septima.Parameter;
-import com.septima.jdbc.UncheckedSQLException;
+import com.septima.dataflow.DataProvider;
 import com.septima.metadata.Field;
 
 import javax.sql.DataSource;
@@ -33,7 +33,7 @@ public abstract class JdbcDataProvider implements DataProvider {
     private final String clause;
     private final DataSource dataSource;
     private final boolean procedure;
-    protected final StatementResultSetHandler statementResultSetHandler;
+    protected final JdbcReaderAssigner jdbcReaderAssigner;
 
     protected final Executor asyncDataPuller;
     protected final Executor futureExecutor;
@@ -52,20 +52,20 @@ public abstract class JdbcDataProvider implements DataProvider {
      * @param aDataSource      A DataSource instance, that would supply resources for
      *                         use them by flow dataSource in single operations, like retriving data of
      *                         applying data changes.
-     * @param aStatementResultSetHandler Jdbc {@link PreparedStatement} and {@link CallableStatement} parameters handler.
+     * @param aJdbcReaderAssigner Jdbc {@link PreparedStatement} and {@link CallableStatement} parameters handler.
      * @param aAsyncDataPuller {@link Executor} for Jdbc blocking tasks.
      * @param aClause          A sql clause, dataSource should use transform achieve
      *                         PreparedStatement instance transform use it in the result set querying process.
      * @param aExpectedFields  Fields, expected by Septima according transform metadata analysis.
      * @see DataSource
      */
-    public JdbcDataProvider(DataSource aDataSource, StatementResultSetHandler aStatementResultSetHandler, Executor aAsyncDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
+    public JdbcDataProvider(DataSource aDataSource, JdbcReaderAssigner aJdbcReaderAssigner, Executor aAsyncDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
         super();
         Objects.requireNonNull(aClause, "Flow provider cant't exist without a selecting sql clause");
         Objects.requireNonNull(aDataSource, "Flow provider can't exist without a data source");
-        Objects.requireNonNull(aStatementResultSetHandler, "aStatementResultSetHandler is required argument");
+        Objects.requireNonNull(aJdbcReaderAssigner, "aJdbcReaderAssigner is required argument");
         dataSource = aDataSource;
-        statementResultSetHandler = aStatementResultSetHandler;
+        jdbcReaderAssigner = aJdbcReaderAssigner;
         asyncDataPuller = aAsyncDataPuller;
         futureExecutor = aFutureExecutor;
         clause = aClause;
@@ -103,7 +103,7 @@ public abstract class JdbcDataProvider implements DataProvider {
                         Map<Integer, Integer> assignedJdbcTypes = new HashMap<>();
                         for (int i = 1; i <= aParams.size(); i++) {
                             Parameter param = aParams.get(i - 1);
-                            int assignedJdbcType = statementResultSetHandler.assignInParameter(param, statement, i, connection);
+                            int assignedJdbcType = jdbcReaderAssigner.assignInParameter(param, statement, i, connection);
                             assignedJdbcTypes.put(i, assignedJdbcType);
                         }
                         logQuery(sqlClause, aParams, assignedJdbcTypes);
@@ -115,7 +115,7 @@ public abstract class JdbcDataProvider implements DataProvider {
                             // let's return parameters
                             for (int i = 1; i <= aParams.size(); i++) {
                                 Parameter param = aParams.get(i - 1);
-                                statementResultSetHandler.acceptOutParameter(param, cStmt, i, connection);
+                                jdbcReaderAssigner.acceptOutParameter(param, cStmt, i, connection);
                             }
                             // let's return a ResultSet
                             results = cStmt.getResultSet();

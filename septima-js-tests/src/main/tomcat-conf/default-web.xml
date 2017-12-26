@@ -292,7 +292,7 @@
   <!--   outputEncoding      The encoding to use for the page that results  -->
   <!--                       from the SSI processing. [UTF-8]               -->
   <!--                                                                      -->
-  <!--   allowExec           Is use of the exec command enabled? [false]    -->
+  <!--   allowExec           Is use of the exec entityCommand enabled? [false]    -->
 
 <!--
     <servlet>
@@ -521,7 +521,7 @@
   <!--                       relative to the context root, instead of       -->
   <!--                       the server root? [false]                       -->
   <!--                                                                      -->
-  <!--   allowExec           Is use of the exec command enabled? [false]    -->
+  <!--   allowExec           Is use of the exec entityCommand enabled? [false]    -->
 
 <!--
     <filter>

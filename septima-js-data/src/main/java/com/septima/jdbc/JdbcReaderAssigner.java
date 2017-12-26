@@ -1,8 +1,7 @@
-package com.septima.dataflow;
+package com.septima.jdbc;
 
 import com.septima.DataTypes;
 import com.septima.Parameter;
-import com.septima.jdbc.UncheckedSQLException;
 import com.septima.sqldrivers.NamedJdbcValue;
 import com.septima.sqldrivers.SqlDriver;
 
@@ -13,29 +12,27 @@ import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class JdbcStatementResultSetHandler implements StatementResultSetHandler {
+public class JdbcReaderAssigner {
 
     private final boolean procedure;
     private final SqlDriver sqlDriver;
 
-    public JdbcStatementResultSetHandler(SqlDriver aSqlDriver, boolean aProcedure) {
+    public JdbcReaderAssigner(SqlDriver aSqlDriver, boolean aProcedure) {
         sqlDriver = aSqlDriver;
         procedure = aProcedure;
     }
 
-    @Override
     public SqlDriver getSqlDriver() {
         return sqlDriver;
     }
 
-    @Override
     public int assignInParameter(Parameter aParameter, PreparedStatement aStatement, int aParameterIndex, Connection aConnection) throws SQLException {
         /*
          * Crazy DBMS-es in most cases can't answer the question about parameter's type properly!
          * PostgreSQL, for example starts answer the question after some time (about 4-8 hours).
-         * But before it raises SQLException. And after that, starts transform report TIMESTAMP parameters
-         * as DATE parameters.
-         * This leads transform parameters values shifting while statement.setDate() and  erroneous select results!
+         * But before it raises SQLException. And after that, reports TIMESTAMP parameters
+         * as DATE parameters. It leads to parameters' values shifting while statement.setDate() and
+         * erroneous select results!
          * So, don't use {@code aStatement.getParameterMetaData().getParameterType()} call chain.
          */
         Object paramValue = aParameter.getValue();
@@ -47,20 +44,14 @@ public class JdbcStatementResultSetHandler implements StatementResultSetHandler 
             jdbcType = jv.getJdbcType();
             sqlTypeName = jv.getSqlTypeName();
         } else {
-            if (paramValue != null || aParameter.getType() == null) {
-                jdbcType = assumeJdbcType(paramValue);
-                sqlTypeName = null;
-            } else {
-                jdbcType = calcJdbcType(aParameter.getType(), null);
-                sqlTypeName = null;
-            }
+            jdbcType = jdbcTypeBySeptimaType(aParameter.getType(), paramValue);
+            sqlTypeName = null;
         }
-        int assignedJdbcType = toStatement(paramValue, aParameterIndex, aStatement, jdbcType, sqlTypeName);
+        int assignedJdbcType = toStatement(paramValue, aStatement, aParameterIndex, jdbcType, sqlTypeName);
         checkOutParameter(aParameter, aStatement, aParameterIndex, jdbcType);
         return assignedJdbcType;
     }
 
-    @Override
     public void acceptOutParameter(Parameter aParameter, CallableStatement aStatement, int aParameterIndex, Connection aConnection) throws SQLException {
         if (aParameter.getMode() == Parameter.Mode.Out
                 || aParameter.getMode() == Parameter.Mode.InOut) {
@@ -269,9 +260,9 @@ public class JdbcStatementResultSetHandler implements StatementResultSetHandler 
         }
     }
 
-    private static int toStatement(Object aValue, int aParameterIndex, PreparedStatement aStmt, int aParameterJdbcType, String aParameterSqlTypeName) throws SQLException {
+    private static int toStatement(Object aValue, PreparedStatement aStatement, int aValuePosition, int aValueJdbcType, String aValueSqlTypeName) throws SQLException {
         if (aValue != null) {
-            switch (aParameterJdbcType) {
+            switch (aValueJdbcType) {
                 // Some strange types. No one knows how work with them.
                 case Types.JAVA_OBJECT:
                 case Types.DATALINK:
@@ -283,18 +274,18 @@ public class JdbcStatementResultSetHandler implements StatementResultSetHandler 
                 case Types.ARRAY:
                 case Types.OTHER:
                     try {
-                        aStmt.setObject(aParameterIndex, aValue, aParameterJdbcType);
+                        aStatement.setObject(aValuePosition, aValue, aValueJdbcType);
                     } catch (SQLException | UncheckedSQLException ex) {
-                        aStmt.setNull(aParameterIndex, aParameterJdbcType, aParameterSqlTypeName);
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
+                        aStatement.setNull(aValuePosition, aValueJdbcType, aValueSqlTypeName);
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.STRUCT:
                     try {
-                        aStmt.setObject(aParameterIndex, aValue, Types.STRUCT);
+                        aStatement.setObject(aValuePosition, aValue, Types.STRUCT);
                     } catch (SQLException | UncheckedSQLException ex) {
-                        aStmt.setNull(aParameterIndex, aParameterJdbcType, aParameterSqlTypeName);
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
+                        aStatement.setNull(aValuePosition, aValueJdbcType, aValueSqlTypeName);
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.BINARY:
@@ -302,38 +293,37 @@ public class JdbcStatementResultSetHandler implements StatementResultSetHandler 
                 case Types.LONGVARBINARY:
                     // target type - byte[]
                     if (aValue instanceof byte[]) {
-                        aStmt.setBytes(aParameterIndex, (byte[]) aValue);
+                        aStatement.setBytes(aValuePosition, (byte[]) aValue);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.BLOB:
                     // target type - java.sql.Blob
                     if (aValue instanceof Blob) {
-                        aStmt.setBlob(aParameterIndex, (Blob) aValue);
+                        aStatement.setBlob(aValuePosition, (Blob) aValue);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.CLOB:
                     // target type - java.sql.Clob
                     if (aValue instanceof Clob) {
-                        aStmt.setClob(aParameterIndex, (Clob) aValue);
+                        aStatement.setClob(aValuePosition, (Clob) aValue);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.NCLOB:
                     // target type - java.sql.NClob
                     if (aValue instanceof NClob) {
-                        aStmt.setNClob(aParameterIndex, (NClob) aValue);
+                        aStatement.setNClob(aValuePosition, (NClob) aValue);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.DECIMAL:
                 case Types.NUMERIC:
-                    // target type - BigDecimal
                     // target type - BigDecimal
                     BigDecimal castedBigDecimal = null;
                     if (aValue instanceof BigDecimal) {
@@ -348,9 +338,9 @@ public class JdbcStatementResultSetHandler implements StatementResultSetHandler 
                         castedBigDecimal = new BigDecimal(((java.util.Date) aValue).getTime());
                     }
                     if (castedBigDecimal != null) {
-                        aStmt.setBigDecimal(aParameterIndex, castedBigDecimal);
+                        aStatement.setBigDecimal(aValuePosition, castedBigDecimal);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.BIGINT:
@@ -368,9 +358,9 @@ public class JdbcStatementResultSetHandler implements StatementResultSetHandler 
                         castedBigInteger = BigInteger.valueOf(((java.util.Date) aValue).getTime());
                     }
                     if (castedBigInteger != null) {
-                        aStmt.setBigDecimal(aParameterIndex, new BigDecimal(castedBigInteger));
+                        aStatement.setBigDecimal(aValuePosition, new BigDecimal(castedBigInteger));
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.SMALLINT:
@@ -388,9 +378,9 @@ public class JdbcStatementResultSetHandler implements StatementResultSetHandler 
                         castedShort = Integer.valueOf((int) ((java.util.Date) aValue).getTime()).shortValue();
                     }
                     if (castedShort != null) {
-                        aStmt.setShort(aParameterIndex, castedShort);
+                        aStatement.setShort(aValuePosition, castedShort);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.TINYINT:
@@ -409,9 +399,9 @@ public class JdbcStatementResultSetHandler implements StatementResultSetHandler 
                         castedInteger = (int) ((java.util.Date) aValue).getTime();
                     }
                     if (castedInteger != null) {
-                        aStmt.setInt(aParameterIndex, castedInteger);
+                        aStatement.setInt(aValuePosition, castedInteger);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.REAL:
@@ -430,9 +420,9 @@ public class JdbcStatementResultSetHandler implements StatementResultSetHandler 
                         castedFloat = (float) ((java.util.Date) aValue).getTime();
                     }
                     if (castedFloat != null) {
-                        aStmt.setFloat(aParameterIndex, castedFloat);
+                        aStatement.setFloat(aValuePosition, castedFloat);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.DOUBLE:
@@ -450,9 +440,9 @@ public class JdbcStatementResultSetHandler implements StatementResultSetHandler 
                         castedDouble = (double) ((java.util.Date) aValue).getTime();
                     }
                     if (castedDouble != null) {
-                        aStmt.setDouble(aParameterIndex, castedDouble);
+                        aStatement.setDouble(aValuePosition, castedDouble);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.CHAR:
@@ -476,13 +466,13 @@ public class JdbcStatementResultSetHandler implements StatementResultSetHandler 
                         castedString = ((Clob) aValue).getSubString(1, (int) ((Clob) aValue).length());
                     }
                     if (castedString != null) {
-                        if (aParameterJdbcType == Types.NCHAR || aParameterJdbcType == Types.NVARCHAR || aParameterJdbcType == Types.LONGNVARCHAR) {
-                            aStmt.setNString(aParameterIndex, castedString);
+                        if (aValueJdbcType == Types.NCHAR || aValueJdbcType == Types.NVARCHAR || aValueJdbcType == Types.LONGNVARCHAR) {
+                            aStatement.setNString(aValuePosition, castedString);
                         } else {
-                            aStmt.setString(aParameterIndex, castedString);
+                            aStatement.setString(aValuePosition, castedString);
                         }
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.BIT:
@@ -505,9 +495,9 @@ public class JdbcStatementResultSetHandler implements StatementResultSetHandler 
                         castedBoolean = !aValue.equals(new java.util.Date(0));
                     }
                     if (castedBoolean != null) {
-                        aStmt.setBoolean(aParameterIndex, castedBoolean);
+                        aStatement.setBoolean(aValuePosition, castedBoolean);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.DATE:
@@ -525,60 +515,66 @@ public class JdbcStatementResultSetHandler implements StatementResultSetHandler 
                         castedDate = (java.util.Date) aValue;
                     }
                     if (castedDate != null) {
-                        if (aParameterJdbcType == Types.DATE) {
-                            aStmt.setDate(aParameterIndex, new java.sql.Date(castedDate.getTime()));//, Calendar.getInstance(TimeZone.getTimeZone("UTC")));
-                        } else if (aParameterJdbcType == Types.TIMESTAMP) {
-                            aStmt.setTimestamp(aParameterIndex, new java.sql.Timestamp(castedDate.getTime()));//, Calendar.getInstance(TimeZone.getTimeZone("UTC")));
-                        } else if (aParameterJdbcType == Types.TIME) {
-                            aStmt.setTime(aParameterIndex, new java.sql.Time(castedDate.getTime()));//, Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+                        if (aValueJdbcType == Types.DATE) {
+                            aStatement.setDate(aValuePosition, new java.sql.Date(castedDate.getTime()));//, Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+                        } else if (aValueJdbcType == Types.TIMESTAMP) {
+                            aStatement.setTimestamp(aValuePosition, new java.sql.Timestamp(castedDate.getTime()));//, Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+                        } else if (aValueJdbcType == Types.TIME) {
+                            aStatement.setTime(aValuePosition, new java.sql.Time(castedDate.getTime()));//, Calendar.getInstance(TimeZone.getTimeZone("UTC")));
                         } else {
                             assert false;
                         }
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALLED_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
             }
         } else {
             try {
-                if (aParameterJdbcType == Types.TIME
-                        || aParameterJdbcType == Types.TIME_WITH_TIMEZONE
-                        || aParameterJdbcType == Types.TIMESTAMP
-                        || aParameterJdbcType == Types.TIMESTAMP_WITH_TIMEZONE) {// Crazy jdbc drivers of some databases (PostgreSQL for example) ignore such types, while setting nulls
-                    aParameterJdbcType = Types.DATE;
-                    aParameterSqlTypeName = null;
+                if (aValueJdbcType == Types.TIME
+                        || aValueJdbcType == Types.TIME_WITH_TIMEZONE
+                        || aValueJdbcType == Types.TIMESTAMP
+                        || aValueJdbcType == Types.TIMESTAMP_WITH_TIMEZONE) {// Crazy jdbc drivers of some databases (PostgreSQL for example) ignore such types, while setting nulls
+                    aValueJdbcType = Types.DATE;
+                    aValueSqlTypeName = null;
                 }
-                if (aParameterSqlTypeName != null && !aParameterSqlTypeName.isEmpty()) {
-                    aStmt.setNull(aParameterIndex, aParameterJdbcType, aParameterSqlTypeName);
+                if (aValueSqlTypeName != null && !aValueSqlTypeName.isEmpty()) {
+                    aStatement.setNull(aValuePosition, aValueJdbcType, aValueSqlTypeName);
                 } else {
-                    aStmt.setNull(aParameterIndex, aParameterJdbcType);
+                    aStatement.setNull(aValuePosition, aValueJdbcType);
                 }
-            } catch (SQLException | UncheckedSQLException ex) {
-                aStmt.setNull(aParameterIndex, aParameterJdbcType, aParameterSqlTypeName);
+            } catch (SQLException ex) {
+                aStatement.setNull(aValuePosition, aValueJdbcType, aValueSqlTypeName);
             }
         }
-        return aParameterJdbcType;
+        return aValueJdbcType;
     }
 
-    private static final String FALLED_TO_NULL_MSG = "Some value falled transform null while tranferring transform a database. May be it''s class is unsupported: {0}";
+    private static final String FALL_BACK_TO_NULL_MSG = "Some value falled transform null while tranferring transform a database. May be it''s class is unsupported: {0}";
 
-    private static int assumeJdbcType(Object aValue) {
+    private static int jdbcTypeByValue(Object aValue) {
         int jdbcType;
         if (aValue instanceof CharSequence) {
             jdbcType = Types.VARCHAR;
+        } else if (aValue instanceof Integer) {
+            jdbcType = Types.INTEGER;
+        } else if (aValue instanceof Float) {
+            jdbcType = Types.FLOAT;
         } else if (aValue instanceof Number) {
             jdbcType = Types.DOUBLE;
         } else if (aValue instanceof java.util.Date) {
             jdbcType = Types.TIMESTAMP;
         } else if (aValue instanceof Boolean) {
             jdbcType = Types.BOOLEAN;
+        } else if (aValue instanceof byte[]) {
+            jdbcType = Types.VARBINARY;
         } else {
             jdbcType = Types.VARCHAR;
         }
         return jdbcType;
     }
 
-    private static int calcJdbcType(String aType, Object aParamValue) {
+    private static int jdbcTypeBySeptimaType(String aType, Object aValue) {
         if (aType != null) {
             switch (aType) {
                 case DataTypes.STRING_TYPE_NAME:
@@ -590,10 +586,10 @@ public class JdbcStatementResultSetHandler implements StatementResultSetHandler 
                 case DataTypes.BOOLEAN_TYPE_NAME:
                     return java.sql.Types.BOOLEAN;
                 default:
-                    return assumeJdbcType(aParamValue);
+                    return jdbcTypeByValue(aValue);
             }
         } else {
-            return assumeJdbcType(aParamValue);
+            return jdbcTypeByValue(aValue);
         }
     }
 

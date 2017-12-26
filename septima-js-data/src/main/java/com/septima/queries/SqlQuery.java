@@ -1,9 +1,9 @@
 package com.septima.queries;
 
 import com.septima.Database;
-import com.septima.DynamicDataProvider;
+import com.septima.dataflow.DynamicTypingDataProvider;
 import com.septima.Parameter;
-import com.septima.dataflow.StatementResultSetHandler;
+import com.septima.jdbc.JdbcReaderAssigner;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
 
@@ -88,7 +88,7 @@ public class SqlQuery {
     public CompletableFuture<Collection<Map<String, Object>>> requestData(Map<String, Object> aParametersValues) {
         Objects.requireNonNull(aParametersValues, "aParametersValues is required argument");
         Objects.requireNonNull(database);
-        DynamicDataProvider dataProvider = database.createDataProvider(entityName, sqlClause, procedure, pageSize, expectedFields);
+        DynamicTypingDataProvider dataProvider = database.createDataProvider(entityName, sqlClause, procedure, pageSize, expectedFields);
         return dataProvider.pull(mergeParametersValues(aParametersValues));
     }
 
@@ -115,7 +115,7 @@ public class SqlQuery {
         CompletableFuture<Integer> updating = new CompletableFuture<>();
         database.getJdbcPerformer().execute(() -> {
             try {
-                StatementResultSetHandler parametersHandler = database.createParametersHandler(procedure);
+                JdbcReaderAssigner jdbcReaderAssigner = database.jdbcReaderAssigner(procedure);
                 DataSource dataSource = database.getDataSource();
                 try (Connection connection = dataSource.getConnection()) {
                     boolean autoCommit = connection.getAutoCommit();
@@ -123,7 +123,7 @@ public class SqlQuery {
                     try {
                         try (PreparedStatement stmt = connection.prepareStatement(sqlClause)) {
                             for (int i = 0; i < linearParameters.size(); i++) {
-                                parametersHandler.assignInParameter(linearParameters.get(i), stmt, i + 1, connection);
+                                jdbcReaderAssigner.assignInParameter(linearParameters.get(i), stmt, i + 1, connection);
                             }
                             try {
                                 int rowsAffected = stmt.executeUpdate();

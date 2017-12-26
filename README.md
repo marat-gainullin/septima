@@ -45,7 +45,7 @@ gradlew build
 ```
 
 ## Test
-The following command will run all tests for Platypus.js
+The following entityCommand will run all tests for Platypus.js
 ```
 gradlew test
 ```

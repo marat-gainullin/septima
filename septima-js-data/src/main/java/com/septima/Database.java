@@ -1,8 +1,8 @@
 package com.septima;
 
-import com.septima.dataflow.JdbcStatementResultSetHandler;
-import com.septima.dataflow.StatementResultSetHandler;
-import com.septima.dataflow.StatementsGenerator;
+import com.septima.dataflow.DynamicTypingDataProvider;
+import com.septima.jdbc.JdbcReaderAssigner;
+import com.septima.dataflow.EntityChangesBinder;
 import com.septima.jdbc.DataSources;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
@@ -62,9 +62,9 @@ public class Database {
         return futuresExecutor;
     }
 
-    public DynamicDataProvider createDataProvider(String aEntityName, String aSqlClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
-        return new DynamicDataProvider(
-                createParametersHandler(aProcedure),
+    public DynamicTypingDataProvider createDataProvider(String aEntityName, String aSqlClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
+        return new DynamicTypingDataProvider(
+                jdbcReaderAssigner(aProcedure),
                 aEntityName,
                 dataSource,
                 jdbcPerformer,
@@ -76,11 +76,11 @@ public class Database {
         );
     }
 
-    public StatementResultSetHandler createParametersHandler(boolean aProcedure){
-        return new JdbcStatementResultSetHandler(sqlDriver, aProcedure);
+    public JdbcReaderAssigner jdbcReaderAssigner(boolean aProcedure){
+        return new JdbcReaderAssigner(sqlDriver, aProcedure);
     }
 
-    public CompletableFuture<Integer> commit(List<StatementsGenerator.GeneratedStatement> statements) {
+    public CompletableFuture<Integer> commit(List<EntityChangesBinder.BoundStatement> statements) {
         Objects.requireNonNull(statements);
         CompletableFuture<Integer> committing = new CompletableFuture<>();
         jdbcPerformer.execute(() -> {
@@ -103,12 +103,12 @@ public class Database {
         return committing;
     }
 
-    private static int riddleStatements(List<StatementsGenerator.GeneratedStatement> aStatements, Connection aConnection) throws SQLException {
+    private static int riddleStatements(List<EntityChangesBinder.BoundStatement> aStatements, Connection aConnection) throws SQLException {
         int rowsAffected = 0;
         if (!aStatements.isEmpty()) {
-            List<StatementsGenerator.GeneratedStatement> errorStatements = new ArrayList<>();
+            List<EntityChangesBinder.BoundStatement> errorStatements = new ArrayList<>();
             List<String> errors = new ArrayList<>();
-            for (StatementsGenerator.GeneratedStatement entry : aStatements) {
+            for (EntityChangesBinder.BoundStatement entry : aStatements) {
                 try {
                     rowsAffected += entry.apply(aConnection);
                 } catch (SQLException | UncheckedSQLException ex) {

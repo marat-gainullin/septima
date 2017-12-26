@@ -4,6 +4,7 @@ import com.septima.Parameter;
 import com.septima.changes.*;
 import com.septima.entities.SqlEntities;
 import com.septima.entities.SqlEntity;
+import com.septima.jdbc.JdbcReaderAssigner;
 import com.septima.metadata.Field;
 import com.septima.queries.SqlQuery;
 
@@ -19,16 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-/**
- * Writer for jdbc data sources. Performs writing indices data. There are two modes
- * indices database updating. The first one "write mode" is update/delete/insert
- * statements preparation and batch execution. The second one "log mode" is
- * logging indices statements transform be executed with parameters values. In log mode no
- * execution is performed.
- *
- * @author mg
- */
-public class StatementsGenerator implements ChangesVisitor {
+public class EntityChangesBinder implements EntityChangesVisitor {
 
     /**
      * Short live information about sqlClause and its parameters.
@@ -36,25 +28,25 @@ public class StatementsGenerator implements ChangesVisitor {
      * Performs parametrized prepared statements
      * execution.
      */
-    public static class GeneratedStatement {
+    public static class BoundStatement {
 
-        private static final Logger QUERIES_LOGGER = Logger.getLogger(GeneratedStatement.class.getName());
+        private static final Logger QUERIES_LOGGER = Logger.getLogger(BoundStatement.class.getName());
 
         private final String clause;
         private final List<Parameter> parameters;
-        private final StatementResultSetHandler parametersHandler;
+        private final JdbcReaderAssigner jdbcReaderAssigner;
 
-        GeneratedStatement(String aClause, List<Parameter> aParameters, StatementResultSetHandler aParametersHandler) {
+        BoundStatement(String aClause, List<Parameter> aParameters, JdbcReaderAssigner aJdbcReaderAssigner) {
             super();
             clause = aClause;
             parameters = aParameters;
-            parametersHandler = aParametersHandler;
+            jdbcReaderAssigner = aJdbcReaderAssigner;
         }
 
         public int apply(Connection aConnection) throws SQLException {
             try (PreparedStatement stmt = aConnection.prepareStatement(clause)) {
                 for (int i = 0; i < parameters.size(); i++) {
-                    parametersHandler.assignInParameter(parameters.get(i), stmt, i + 1, aConnection);
+                    jdbcReaderAssigner.assignInParameter(parameters.get(i), stmt, i + 1, aConnection);
                 }
                 if (QUERIES_LOGGER.isLoggable(Level.FINE)) {
                     QUERIES_LOGGER.log(Level.FINE, "Executing sql with {0} parameters: {1}", new Object[]{parameters.size(), clause});
@@ -68,15 +60,15 @@ public class StatementsGenerator implements ChangesVisitor {
     private static final String DELETE_CLAUSE = "delete from %s where %s";
     private static final String UPDATE_CLAUSE = "update %s set %s where %s";
 
-    private final List<GeneratedStatement> logEntries = new ArrayList<>();
+    private final List<BoundStatement> logEntries = new ArrayList<>();
     private final SqlEntities entities;
 
-    public StatementsGenerator(SqlEntities aEntities) {
+    public EntityChangesBinder(SqlEntities aEntities) {
         super();
         entities = aEntities;
     }
 
-    public List<GeneratedStatement> getLogEntries() {
+    public List<BoundStatement> getLogEntries() {
         return logEntries;
     }
 
@@ -96,9 +88,9 @@ public class StatementsGenerator implements ChangesVisitor {
     }
 
     @Override
-    public void visit(Insert aInsert) {
+    public void visit(EntityInsert aInsert) {
         SqlEntity entity = entities.loadEntity(aInsert.getEntityName());
-        StatementResultSetHandler parametersHandler = entity.getDatabase().createParametersHandler(entity.isProcedure());
+        JdbcReaderAssigner jdbcReaderAssigner = entity.getDatabase().jdbcReaderAssigner(entity.isProcedure());
         aInsert.getData().entrySet().stream()
                 .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
@@ -108,22 +100,22 @@ public class StatementsGenerator implements ChangesVisitor {
                         !entry.getValue().isEmpty() &&
                                 (entity.getWritable().isEmpty() || entity.getWritable().contains(entry.getKey()))
                 )
-                .map(entry -> new GeneratedStatement(
+                .map(entry -> new BoundStatement(
                         String.format(INSERT_CLAUSE,
                                 entry.getKey(),
                                 generateInsertColumnsClause(entry.getValue()),
                                 generatePlaceholders(entry.getValue().size())
                         ),
                         Collections.unmodifiableList(entry.getValue()),
-                        parametersHandler
+                        jdbcReaderAssigner
                 ))
                 .forEach(logEntries::add);
     }
 
     @Override
-    public void visit(Update aUpdate) {
+    public void visit(EntityUpdate aUpdate) {
         SqlEntity entity = entities.loadEntity(aUpdate.getEntityName());
-        StatementResultSetHandler parametersHandler = entity.getDatabase().createParametersHandler(entity.isProcedure());
+        JdbcReaderAssigner jdbcReaderAssigner = entity.getDatabase().jdbcReaderAssigner(entity.isProcedure());
         Map<String, List<Parameter>> updatesKeys = aUpdate.getKeys().entrySet().stream()
                 .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
@@ -136,14 +128,14 @@ public class StatementsGenerator implements ChangesVisitor {
                 .filter(entry -> !entry.getValue().isEmpty() && !updatesKeys.getOrDefault(entry.getKey(), List.of()).isEmpty() &&
                         (entity.getWritable().isEmpty() || entity.getWritable().contains(entry.getKey()))
                 )
-                .map(entry -> new GeneratedStatement(
+                .map(entry -> new BoundStatement(
                         String.format(UPDATE_CLAUSE,
                                 entry.getKey(),
                                 generateUpdateColumnsClause(entry.getValue()),
                                 generateWhereClause(updatesKeys.getOrDefault(entry.getKey(), List.of()))
                         ),
                         Collections.unmodifiableList(concat(entry.getValue(), updatesKeys.getOrDefault(entry.getKey(), List.of()))),
-                        parametersHandler
+                        jdbcReaderAssigner
                 ))
                 .forEach(logEntries::add);
     }
@@ -158,9 +150,9 @@ public class StatementsGenerator implements ChangesVisitor {
      * @param aDeletion Deletion command transform delete from all underlying tables indices an entity
      */
     @Override
-    public void visit(Delete aDeletion) {
+    public void visit(EntityDelete aDeletion) {
         SqlEntity entity = entities.loadEntity(aDeletion.getEntityName());
-        StatementResultSetHandler parametersHandler = entity.getDatabase().createParametersHandler(entity.isProcedure());
+        JdbcReaderAssigner jdbcReaderAssigner = entity.getDatabase().jdbcReaderAssigner(entity.isProcedure());
         aDeletion.getKeys().entrySet().stream()
                 .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
@@ -170,34 +162,34 @@ public class StatementsGenerator implements ChangesVisitor {
                         !entry.getValue().isEmpty() &&
                                 (entity.getWritable().isEmpty() || entity.getWritable().contains(entry.getKey()))
                 )
-                .map(entry -> new GeneratedStatement(
+                .map(entry -> new BoundStatement(
                         String.format(DELETE_CLAUSE,
                                 entry.getKey(),
                                 generateWhereClause(entry.getValue())
                         ),
                         Collections.unmodifiableList(entry.getValue()),
-                        parametersHandler
+                        jdbcReaderAssigner
                 ))
                 .forEach(logEntries::add);
     }
 
     @Override
-    public void visit(Command aCommand) {
-        SqlEntity entity = entities.loadEntity(aCommand.getEntityName());
-        StatementResultSetHandler parametersHandler = entity.getDatabase().createParametersHandler(entity.isProcedure());
+    public void visit(EntityCommand aEntityCommand) {
+        SqlEntity entity = entities.loadEntity(aEntityCommand.getEntityName());
+        JdbcReaderAssigner jdbcReaderAssigner = entity.getDatabase().jdbcReaderAssigner(entity.isProcedure());
         SqlQuery query = entity.toQuery();
-        logEntries.add(new GeneratedStatement(
+        logEntries.add(new BoundStatement(
                 query.getSqlClause(),
                 Collections.unmodifiableList(query.getParameters().stream()
                         .map(queryParameter -> new Parameter(
                                 queryParameter.getName(),
-                                aCommand.getArguments().getOrDefault(queryParameter.getName(), queryParameter.getValue()),
+                                aEntityCommand.getArguments().getOrDefault(queryParameter.getName(), queryParameter.getValue()),
                                 queryParameter.getType(),
                                 queryParameter.getMode(),
                                 queryParameter.getDescription())
                         )
                         .collect(Collectors.toList())),
-                parametersHandler
+                jdbcReaderAssigner
         ));
     }
 
