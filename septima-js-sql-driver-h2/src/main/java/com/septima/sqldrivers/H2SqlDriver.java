@@ -277,7 +277,7 @@ public class H2SqlDriver extends SqlDriver {
         assert aOldFieldMd.getName().toLowerCase().equals(aNewFieldMd.getName().toLowerCase());
         List<String> sql = new ArrayList<>();
 
-        //EntityChange data type
+        //EntityAction data type
         String lOldTypeName = aOldFieldMd.getType();
         if (lOldTypeName == null) {
             lOldTypeName = "";
@@ -298,7 +298,7 @@ public class H2SqlDriver extends SqlDriver {
                     getFieldTypeDefinition(aNewFieldMd)));
         }
 
-        //EntityChange nullable
+        //EntityAction nullable
         String not = "";
         if (aOldFieldMd.isNullable() != aNewFieldMd.isNullable()) {
             if (!aNewFieldMd.isNullable()) {

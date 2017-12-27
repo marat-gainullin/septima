@@ -5,17 +5,17 @@ import java.util.Map;
 /**
  * @author mg
  */
-public class EntityInsert extends EntityChange {
+public class EntityAdd extends EntityAction {
 
     private final Map<String, Object> data;
 
-    public EntityInsert(String aEntityName, Map<String, Object> aData) {
+    public EntityAdd(String aEntityName, Map<String, Object> aData) {
         super(aEntityName);
         data = aData;
     }
 
     @Override
-    public void accept(EntityChangesVisitor aChangeVisitor) {
+    public void accept(EntityActionsVisitor aChangeVisitor) {
         aChangeVisitor.visit(this);
     }
 

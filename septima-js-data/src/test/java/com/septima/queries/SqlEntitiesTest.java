@@ -1,6 +1,6 @@
 package com.septima.queries;
 
-import com.septima.DataTypes;
+import com.septima.GenericDataTypes;
 import com.septima.Parameter;
 import com.septima.TestDataSource;
 import com.septima.entities.SqlEntities;
@@ -159,7 +159,7 @@ public class SqlEntitiesTest {
         assertEquals(1, entity.getParameters().size());
         Parameter quantity = entity.getParameters().get("quantity");
         assertNotNull(quantity);
-        assertEquals(DataTypes.NUMBER_TYPE_NAME, quantity.getType());
+        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, quantity.getType());
         assertEquals("Quantity desc", quantity.getDescription());
         assertEquals("Simon", quantity.getValue());
         assertEquals(Parameter.Mode.InOut, quantity.getMode());
@@ -242,7 +242,7 @@ public class SqlEntitiesTest {
         assertEquals("Disabled key", order_id.getDescription());
         assertEquals("un-existent-table", order_id.getTableName());
         assertFalse(order_id.isNullable());
-        assertEquals(DataTypes.STRING_TYPE_NAME, order_id.getType());
+        assertEquals(GenericDataTypes.STRING_TYPE_NAME, order_id.getType());
         assertNotNull(order_id.getFk());
     }
 
@@ -277,19 +277,19 @@ public class SqlEntitiesTest {
         assertEquals(4, entity.getFields().size());
         Field mdent_id = entity.getFields().get("mdent_id");
         assertEquals("MDENt_ID", mdent_id.getName());
-        assertEquals(DataTypes.STRING_TYPE_NAME, mdent_id.getType());
+        assertEquals(GenericDataTypes.STRING_TYPE_NAME, mdent_id.getType());
         assertTrue(mdent_id.isPk());
         Field mdent_name = entity.getFields().get("mdent_name");
         assertEquals("MDENT_NAME", mdent_name.getName());
-        assertEquals(DataTypes.STRING_TYPE_NAME, mdent_name.getType());
+        assertEquals(GenericDataTypes.STRING_TYPE_NAME, mdent_name.getType());
         assertFalse(mdent_name.isPk());
         Field mdent_type = entity.getFields().get("mdent_type");
         assertEquals("MDENT_TYPe", mdent_type.getName());
-        assertEquals(DataTypes.NUMBER_TYPE_NAME, mdent_type.getType());
+        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, mdent_type.getType());
         assertFalse(mdent_type.isPk());
         Field mdent_order = entity.getFields().get("mdent_order");
         assertEquals("MDENT_ORDER", mdent_order.getName());
-        assertEquals(DataTypes.NUMBER_TYPE_NAME, mdent_order.getType());
+        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, mdent_order.getType());
         assertFalse(mdent_order.isPk());
     }
 
@@ -391,12 +391,12 @@ public class SqlEntitiesTest {
         assertEquals(2, entity.getFields().size());
         Field mdent_name = entity.getFields().get("mdent_name");
         assertEquals("MDENT_NAME", mdent_name.getName());
-        assertEquals(DataTypes.STRING_TYPE_NAME, mdent_name.getType());
+        assertEquals(GenericDataTypes.STRING_TYPE_NAME, mdent_name.getType());
         assertEquals("MTD_ENTITIES", mdent_name.getTableName());
         assertFalse(mdent_name.isPk());
         Field f1 = entity.getFields().get("f1");
         assertEquals("F1", f1.getName());
-        assertEquals(DataTypes.NUMBER_TYPE_NAME, f1.getType());
+        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, f1.getType());
         assertEquals("TABLE1", f1.getTableName());
         assertFalse(f1.isPk());
     }
@@ -412,7 +412,7 @@ public class SqlEntitiesTest {
         assertEquals(3, entity.getFields().size());
         assertTrue(entity.getFields().containsKey("id"));
         assertTrue(entity.getFields().containsKey("amt"));
-        assertEquals(DataTypes.NUMBER_TYPE_NAME, entity.getFields().get("amt").getType());
+        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, entity.getFields().get("amt").getType());
         assertTrue(entity.getFields().containsKey("customer"));
     }
 
@@ -427,7 +427,7 @@ public class SqlEntitiesTest {
         assertEquals(3, entity.getFields().size());
         assertTrue(entity.getFields().containsKey("ORDER_ID"));
         assertTrue(entity.getFields().containsKey("AMOUNT"));
-        assertEquals(DataTypes.NUMBER_TYPE_NAME, entity.getFields().get("AMOUNT").getType());
+        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, entity.getFields().get("AMOUNT").getType());
         assertTrue(entity.getFields().containsKey("CUSTOMER_NAME"));
     }
 
@@ -442,7 +442,7 @@ public class SqlEntitiesTest {
         assertEquals(3, entity.getFields().size());
         assertTrue(entity.getFields().containsKey("ORDER_ID"));
         assertTrue(entity.getFields().containsKey("AMOUNT"));
-        assertEquals(DataTypes.NUMBER_TYPE_NAME, entity.getFields().get("AMOUNT").getType());
+        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, entity.getFields().get("AMOUNT").getType());
         assertTrue(entity.getFields().containsKey("CUSTOMER_NAME"));
     }
 
@@ -456,19 +456,19 @@ public class SqlEntitiesTest {
         assertEquals(4, entity.getFields().size());
         Field mdent_id = entity.getFields().get("mdent_id");
         assertEquals("MDENt_ID", mdent_id.getName());
-        assertEquals(DataTypes.STRING_TYPE_NAME, mdent_id.getType());
+        assertEquals(GenericDataTypes.STRING_TYPE_NAME, mdent_id.getType());
         assertTrue(mdent_id.isPk());
         Field mdent_name = entity.getFields().get("mdent_name");
         assertEquals("MDENT_NAME", mdent_name.getName());
-        assertEquals(DataTypes.STRING_TYPE_NAME, mdent_name.getType());
+        assertEquals(GenericDataTypes.STRING_TYPE_NAME, mdent_name.getType());
         assertFalse(mdent_name.isPk());
         Field mdent_type = entity.getFields().get("mdent_type");
         assertEquals("MDENT_TYPe", mdent_type.getName());
-        assertEquals(DataTypes.NUMBER_TYPE_NAME, mdent_type.getType());
+        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, mdent_type.getType());
         assertFalse(mdent_type.isPk());
         Field mdent_order = entity.getFields().get("mdent_order");
         assertEquals("MDENT_ORDER", mdent_order.getName());
-        assertEquals(DataTypes.NUMBER_TYPE_NAME, mdent_order.getType());
+        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, mdent_order.getType());
         assertFalse(mdent_order.isPk());
     }
 
@@ -481,7 +481,7 @@ public class SqlEntitiesTest {
         SqlEntity entity = entities.loadEntity("entities/columns/expression-column");
         assertNotNull(entity);
         assertTrue(entity.getFields().containsKey("txt"));
-        assertEquals(DataTypes.STRING_TYPE_NAME, entity.getFields().get("txt").getType());
+        assertEquals(GenericDataTypes.STRING_TYPE_NAME, entity.getFields().get("txt").getType());
     }
 
     @Test

@@ -25,7 +25,7 @@
 SELECT * FROM items WHERE items.seller=? AND items.end_date>=NOW()
 #end
 true
-items.id items.name items.description items.initial_price items.quantity items.reserve_price items.buy_now items.nb_of_bids items.max_bid items.start_date items.end_date items.seller items.category
+items.id items.comment items.description items.initial_price items.quantity items.reserve_price items.buy_now items.nb_of_bids items.max_bid items.start_date items.end_date items.seller items.category
 items
 items.seller items.end_date
 CACHEABLE
@@ -36,7 +36,7 @@ SELECT * FROM old_items
 WHERE old_items.seller=? AND TO_DAYS(NOW()) - TO_DAYS(old_items.end_date) < 30.3
 #end
 true
-old_items.id old_items.name old_items.description old_items.initial_price old_items.quantity old_items.reserve_price old_items.buy_now old_items.nb_of_bids old_items.max_bid old_items.start_date old_items.end_date old_items.seller old_items.category
+old_items.id old_items.comment old_items.description old_items.initial_price old_items.quantity old_items.reserve_price old_items.buy_now old_items.nb_of_bids old_items.max_bid old_items.start_date old_items.end_date old_items.seller old_items.category
 old_items
 old_items.seller old_items.end_date
 CACHEABLE
@@ -83,7 +83,7 @@ CACHEABLE
 SELECT * FROM old_items WHERE id=?
 #end
 true
-old_items.id old_items.name old_items.description old_items.initial_price old_items.quantity old_items.reserve_price old_items.buy_now old_items.nb_of_bids old_items.max_bid old_items.start_date old_items.end_date old_items.seller old_items.category
+old_items.id old_items.comment old_items.description old_items.initial_price old_items.quantity old_items.reserve_price old_items.buy_now old_items.nb_of_bids old_items.max_bid old_items.start_date old_items.end_date old_items.seller old_items.category
 old_items
 old_items.id
 UNIQUE_CACHEABLE
@@ -113,7 +113,7 @@ CACHEABLE
 SELECT * FROM items WHERE id=?
 #end
 true
-items.id items.name items.description items.initial_price items.quantity items.reserve_price items.buy_now items.nb_of_bids items.max_bid items.start_date items.end_date items.seller items.category
+items.id items.comment items.description items.initial_price items.quantity items.reserve_price items.buy_now items.nb_of_bids items.max_bid items.start_date items.end_date items.seller items.category
 items
 items.id
 UNIQUE_CACHEABLE
@@ -140,30 +140,30 @@ CACHEABLE
 
 //12
 #begin
-SELECT name, id FROM categories
+SELECT comment, id FROM categories
 #end
 true
-categories.id categories.name
+categories.id categories.comment
 categories
 null
 CACHEABLE
 
 //13
 #begin
-SELECT id FROM regions WHERE name=?
+SELECT id FROM regions WHERE comment=?
 #end
 true
 regions.id
 regions
-regions.name
+regions.comment
 CACHEABLE
 
 //14
 #begin
-SELECT name, id FROM regions
+SELECT comment, id FROM regions
 #end
 true
-regions.id regions.name
+regions.id regions.comment
 regions
 null
 CACHEABLE
@@ -180,22 +180,22 @@ CACHEABLE
 
 //16
 #begin
-SELECT name FROM items WHERE id=?
+SELECT comment FROM items WHERE id=?
 #end
 true
-items.name
+items.comment
 items
 items.id
 UNIQUE_CACHEABLE
 
 //17
 #begin
-SELECT id FROM items WHERE name=?
+SELECT id FROM items WHERE comment=?
 #end
 true
 items.id
 items
-items.name
+items.comment
 CACHEABLE
 
 //18
@@ -220,13 +220,13 @@ CACHEABLE
 
 //20
 #begin
-SELECT items.name, items.id, items.end_date, items.max_bid, items.nb_of_bids, items.initial_price
+SELECT items.comment, items.id, items.end_date, items.max_bid, items.nb_of_bids, items.initial_price
 FROM items
 WHERE items.category=? AND end_date>=NOW()
 LIMIT ?,?
 #end
 true
-items.name items.id items.end_date items.max_bid items.nb_of_bids items.initial_price
+items.comment items.id items.end_date items.max_bid items.nb_of_bids items.initial_price
 items
 items.category items.end_date
 CACHEABLE
@@ -234,7 +234,7 @@ CACHEABLE
 //21
 #begin
 SELECT
-	items.name, items.id, items.end_date, items.max_bid, items.nb_of_bids, items.initial_price
+	items.comment, items.id, items.end_date, items.max_bid, items.nb_of_bids, items.initial_price
 FROM
 	items,users
 WHERE
@@ -242,7 +242,7 @@ WHERE
 LIMIT ?,?
 #end
 true
-items.name items.id items.end_date items.max_bid items.nb_of_bids items.initial_price
+items.comment items.id items.end_date items.max_bid items.nb_of_bids items.initial_price
 items users
 items.category items.seller users.id users.region items.end_date
 CACHEABLE
@@ -415,20 +415,20 @@ CACHEABLE
 
 //38
 #begin
-SELECT id FROM regions WHERE name = 5 and name = 6
+SELECT id FROM regions WHERE comment = 5 and comment = 6
 #end
 true
 regions.id
 regions
-regions.name
+regions.comment
 CACHEABLE
 
 //39
 #begin
-SELECT regions.name,regions.id FROM regions WHERE regions.id = 1
+SELECT regions.comment,regions.id FROM regions WHERE regions.id = 1
 #end
 true
-regions.id regions.name
+regions.id regions.comment
 regions
 regions.id
 UNIQUE_CACHEABLE
@@ -436,10 +436,10 @@ UNIQUE_CACHEABLE
 
 //40
 #begin
-SELECT regions.name,regions.id FROM regions WHERE regions.id =    1234
+SELECT regions.comment,regions.id FROM regions WHERE regions.id =    1234
 #end
 true
-regions.id regions.name
+regions.id regions.comment
 regions
 regions.id
 UNIQUE_CACHEABLE

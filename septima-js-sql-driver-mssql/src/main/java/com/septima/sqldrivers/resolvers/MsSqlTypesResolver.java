@@ -1,6 +1,6 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.DataTypes;
+import com.septima.GenericDataTypes;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,38 +15,38 @@ import java.util.Set;
 public class MsSqlTypesResolver implements TypesResolver {
 
     private static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
-        put("varchar", DataTypes.STRING_TYPE_NAME);
-        put("numeric", DataTypes.NUMBER_TYPE_NAME);
-        put("decimal", DataTypes.NUMBER_TYPE_NAME);
-        put("money", DataTypes.NUMBER_TYPE_NAME);
-        put("bit", DataTypes.BOOLEAN_TYPE_NAME);
-        put("datetime", DataTypes.DATE_TYPE_NAME);
-        put("int", DataTypes.NUMBER_TYPE_NAME);
-        put("smallint", DataTypes.NUMBER_TYPE_NAME);
-        put("tinyint", DataTypes.NUMBER_TYPE_NAME);
-        put("bigint", DataTypes.NUMBER_TYPE_NAME);
-        put("real", DataTypes.NUMBER_TYPE_NAME);
-        put("float", DataTypes.NUMBER_TYPE_NAME);
-        put("smallmoney", DataTypes.NUMBER_TYPE_NAME);
-        put("tinyint identity", DataTypes.NUMBER_TYPE_NAME);
-        put("bigint identity", DataTypes.NUMBER_TYPE_NAME);
-        put("numeric identity", DataTypes.NUMBER_TYPE_NAME);
-        put("decimal identity", DataTypes.NUMBER_TYPE_NAME);
-        put("int identity", DataTypes.NUMBER_TYPE_NAME);
-        put("smallint identity", DataTypes.NUMBER_TYPE_NAME);
-        put("nvarchar", DataTypes.STRING_TYPE_NAME);
-        put("char", DataTypes.STRING_TYPE_NAME);
-        put("nchar", DataTypes.STRING_TYPE_NAME);
+        put("varchar", GenericDataTypes.STRING_TYPE_NAME);
+        put("numeric", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("decimal", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("money", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("bit", GenericDataTypes.BOOLEAN_TYPE_NAME);
+        put("datetime", GenericDataTypes.DATE_TYPE_NAME);
+        put("int", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("smallint", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("tinyint", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("bigint", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("real", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("float", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("smallmoney", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("tinyint identity", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("bigint identity", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("numeric identity", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("decimal identity", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("int identity", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("smallint identity", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("nvarchar", GenericDataTypes.STRING_TYPE_NAME);
+        put("char", GenericDataTypes.STRING_TYPE_NAME);
+        put("nchar", GenericDataTypes.STRING_TYPE_NAME);
 
-        put("smalldatetime", DataTypes.DATE_TYPE_NAME);
-        put("datetime2", DataTypes.DATE_TYPE_NAME);
-        put("date", DataTypes.DATE_TYPE_NAME);
-        put("time", DataTypes.DATE_TYPE_NAME);
-        put("text", DataTypes.STRING_TYPE_NAME);
-        put("ntext", DataTypes.STRING_TYPE_NAME);
-        put("uniqueidentifier", DataTypes.STRING_TYPE_NAME);
-        put("sysname", DataTypes.STRING_TYPE_NAME);
-        put("xml", DataTypes.STRING_TYPE_NAME);
+        put("smalldatetime", GenericDataTypes.DATE_TYPE_NAME);
+        put("datetime2", GenericDataTypes.DATE_TYPE_NAME);
+        put("date", GenericDataTypes.DATE_TYPE_NAME);
+        put("time", GenericDataTypes.DATE_TYPE_NAME);
+        put("text", GenericDataTypes.STRING_TYPE_NAME);
+        put("ntext", GenericDataTypes.STRING_TYPE_NAME);
+        put("uniqueidentifier", GenericDataTypes.STRING_TYPE_NAME);
+        put("sysname", GenericDataTypes.STRING_TYPE_NAME);
+        put("xml", GenericDataTypes.STRING_TYPE_NAME);
         put("image", null);
         put("sql_variant", null);
         put("varbinary", null);

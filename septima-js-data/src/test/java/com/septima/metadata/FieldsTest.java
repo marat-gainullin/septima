@@ -1,6 +1,6 @@
 package com.septima.metadata;
 
-import com.septima.DataTypes;
+import com.septima.GenericDataTypes;
 import org.junit.Test;
 
 import java.sql.Types;
@@ -13,7 +13,7 @@ public class FieldsTest {
     public void fieldConstructors() {
         Field field = new Field("test");
         assertEquals("test", field.getName());
-        assertEquals(DataTypes.STRING_TYPE_NAME, field.getType());
+        assertEquals(GenericDataTypes.STRING_TYPE_NAME, field.getType());
         assertEquals("test", field.getOriginalName());
         assertNull(field.getDescription());
         assertTrue(field.isNullable());
@@ -128,7 +128,7 @@ public class FieldsTest {
                 "test desc",
                 null,
                 "test_table",
-                DataTypes.DATE_TYPE_NAME,
+                GenericDataTypes.DATE_TYPE_NAME,
                 true,
                 true,
                 new ForeignKey(
@@ -153,7 +153,7 @@ public class FieldsTest {
                 "test desc",
                 "TEST",
                 "test_table",
-                DataTypes.DATE_TYPE_NAME,
+                GenericDataTypes.DATE_TYPE_NAME,
                 true,
                 true,
                 new ForeignKey(

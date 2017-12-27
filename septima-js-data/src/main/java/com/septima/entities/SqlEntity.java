@@ -1,6 +1,6 @@
 package com.septima.entities;
 
-import com.septima.DataTypes;
+import com.septima.GenericDataTypes;
 import com.septima.Database;
 import com.septima.dataflow.DataProvider;
 import com.septima.metadata.Field;
@@ -198,7 +198,7 @@ public class SqlEntity {
                             p.getMode(),
                             p.getDescription()
                     ));
-                    return postgreSQL && DataTypes.DATE_TYPE_NAME.equals(p.getType()) ? "?::timestamp" : "?";
+                    return postgreSQL && GenericDataTypes.DATE_TYPE_NAME.equals(p.getType()) ? "?::timestamp" : "?";
                 }
         );
         return new SqlQuery(
@@ -253,7 +253,7 @@ public class SqlEntity {
         Map<String, Parameter> params = new LinkedHashMap<>();
         if (aSource != null && !aSource.isEmpty()) {
             riddleParameters(aSource, paramName -> {
-                params.put(paramName, new Parameter(paramName, null, DataTypes.STRING_TYPE_NAME));
+                params.put(paramName, new Parameter(paramName, null, GenericDataTypes.STRING_TYPE_NAME));
                 return paramName;
             });
         }

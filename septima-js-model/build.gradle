@@ -1,0 +1,81 @@
+apply plugin: 'jacoco'
+
+configurations {
+    h2
+}
+
+dependencies {
+    compile project(':septima-js-data'),
+            'com.fasterxml.jackson.core:jackson-core:2.9.2',
+            'com.fasterxml.jackson.core:jackson-databind:2.9.2'
+    testCompile 'com.h2database:h2:1.4.193',
+            'com.vividsolutions:jts:1.13'
+
+    h2 'com.h2database:h2:1.4.193',
+            'com.vividsolutions:jts:1.13'
+    testRuntime project(':septima-js-sql-driver-db2'),
+            project(':septima-js-sql-driver-h2'),
+            project(':septima-js-sql-driver-mssql'),
+            project(':septima-js-sql-driver-mysql'),
+            project(':septima-js-sql-driver-postgresql'),
+            project(':septima-js-sql-driver-oracle'),
+            'com.hynnet:oracle-driver-ojdbc6:12.1.0.1',
+            'org.postgresql:postgresql:42.1.4',
+            'org.postgis:postgis-jdbc:2.1.0',
+            'com.h2database:h2:1.4.193',
+            'com.vividsolutions:jts:1.13'
+}
+
+def appDirName = "${projectDir}/src/test/resources"
+def h2Dir = "${buildDir}/h2"
+def testBasesDirectory = "${buildDir}/test-databases"
+def dataSourceName = 'septima'
+def dataSourceUrl = "jdbc:h2:/${testBasesDirectory}/septima"
+def dataSourceUser = 'sa'
+def dataSourcePassword = 'sa'
+def dataSourceSchema = 'PUBLIC'
+
+task buildH2(type: Copy) {
+    configurations.h2.each {
+        from file(it)
+    }
+    into h2Dir
+}
+
+task fillTestBase(type: JavaExec) {
+    delete testBasesDirectory
+    classpath fileTree(h2Dir)
+    main 'org.h2.tools.RunScript'
+    args '-url', dataSourceUrl, '-user', dataSourceUser, '-password', dataSourcePassword, '-script', "${projectDir}/src/test/resources/septima.sql"
+    doLast {
+        println 'Test database "septima" filled.'
+    }
+}
+fillTestBase.dependsOn buildH2
+
+task eraseTestBase(type: Delete) {
+    delete testBasesDirectory
+    doLast {
+        println 'Test database "septima" erased'
+    }
+}
+
+test.dependsOn fillTestBase
+fillTestBase.finalizedBy eraseTestBase
+eraseTestBase.mustRunAfter test
+
+test {
+    systemProperties["datasource.name"] = dataSourceName
+    systemProperties["datasource.url"] = dataSourceUrl
+    systemProperties["datasource.user"] = dataSourceUser
+    systemProperties["datasource.password"] = dataSourcePassword
+    systemProperties["datasource.schema"] = dataSourceSchema
+    systemProperties["testsource.path"] = appDirName
+}
+
+task coverage() {
+    doLast {
+        java.awt.Desktop.desktop.browse jacocoTestReport.reports.html.entryPoint.toURI()
+    }
+}
+coverage.dependsOn jacocoTestReport

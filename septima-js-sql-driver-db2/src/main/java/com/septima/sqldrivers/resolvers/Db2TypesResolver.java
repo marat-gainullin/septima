@@ -1,6 +1,6 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.DataTypes;
+import com.septima.GenericDataTypes;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,32 +15,32 @@ import java.util.Set;
 public class Db2TypesResolver implements TypesResolver {
 
     private static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
-        put("VARCHAR", DataTypes.STRING_TYPE_NAME);
-        put("NUMERIC", DataTypes.NUMBER_TYPE_NAME);
-        put("DECIMAL", DataTypes.NUMBER_TYPE_NAME);
-        put("TIMESTAMP", DataTypes.DATE_TYPE_NAME);
-        put("INT", DataTypes.NUMBER_TYPE_NAME);
-        put("SMALLINT", DataTypes.NUMBER_TYPE_NAME);
-        put("INTEGER", DataTypes.NUMBER_TYPE_NAME);
-        put("BIGINT", DataTypes.NUMBER_TYPE_NAME);
-        put("DEC", DataTypes.NUMBER_TYPE_NAME);
-        put("NUM", DataTypes.NUMBER_TYPE_NAME);
-        put("FLOAT", DataTypes.NUMBER_TYPE_NAME);
-        put("REAL", DataTypes.NUMBER_TYPE_NAME);
-        put("DOUBLE", DataTypes.NUMBER_TYPE_NAME);
-        put("DOUBLE PRECISION", DataTypes.NUMBER_TYPE_NAME);
-        put("DECFLOAT", DataTypes.NUMBER_TYPE_NAME);
-        put("LONG VARCHAR", DataTypes.STRING_TYPE_NAME);
-        put("CHAR", DataTypes.STRING_TYPE_NAME);
-        put("CHARACTER", DataTypes.STRING_TYPE_NAME);
-        put("CHAR VARYING", DataTypes.STRING_TYPE_NAME);
-        put("CHARACTER VARYING", DataTypes.STRING_TYPE_NAME);
-        put("CLOB", DataTypes.STRING_TYPE_NAME);
-        put("CHAR LARGE OBJECT", DataTypes.STRING_TYPE_NAME);
-        put("CHARACTER LARGE OBJECT", DataTypes.STRING_TYPE_NAME);
-        put("DATE", DataTypes.DATE_TYPE_NAME);
-        put("TIME", DataTypes.DATE_TYPE_NAME);
-        put("XML", DataTypes.STRING_TYPE_NAME); //?? OTHER  || SQLXML || BLOB
+        put("VARCHAR", GenericDataTypes.STRING_TYPE_NAME);
+        put("NUMERIC", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("DECIMAL", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("TIMESTAMP", GenericDataTypes.DATE_TYPE_NAME);
+        put("INT", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("SMALLINT", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("INTEGER", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("BIGINT", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("DEC", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("NUM", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("FLOAT", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("REAL", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("DOUBLE", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("DOUBLE PRECISION", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("DECFLOAT", GenericDataTypes.NUMBER_TYPE_NAME);
+        put("LONG VARCHAR", GenericDataTypes.STRING_TYPE_NAME);
+        put("CHAR", GenericDataTypes.STRING_TYPE_NAME);
+        put("CHARACTER", GenericDataTypes.STRING_TYPE_NAME);
+        put("CHAR VARYING", GenericDataTypes.STRING_TYPE_NAME);
+        put("CHARACTER VARYING", GenericDataTypes.STRING_TYPE_NAME);
+        put("CLOB", GenericDataTypes.STRING_TYPE_NAME);
+        put("CHAR LARGE OBJECT", GenericDataTypes.STRING_TYPE_NAME);
+        put("CHARACTER LARGE OBJECT", GenericDataTypes.STRING_TYPE_NAME);
+        put("DATE", GenericDataTypes.DATE_TYPE_NAME);
+        put("TIME", GenericDataTypes.DATE_TYPE_NAME);
+        put("XML", GenericDataTypes.STRING_TYPE_NAME); //?? OTHER  || SQLXML || BLOB
         put("BLOB", null);
         put("BINARY LARGE OBJECT", null);
         put("LONG VARCHAR FOR BIT DATA", null);

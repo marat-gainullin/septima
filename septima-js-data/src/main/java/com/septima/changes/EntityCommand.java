@@ -5,7 +5,7 @@ import java.util.Map;
 /**
  * @author mg
  */
-public class EntityCommand extends EntityChange {
+public class EntityCommand extends EntityAction {
 
     private final Map<String, Object> arguments;
 
@@ -19,7 +19,7 @@ public class EntityCommand extends EntityChange {
     }
 
     @Override
-    public void accept(EntityChangesVisitor aChangeVisitor) {
+    public void accept(EntityActionsVisitor aChangeVisitor) {
         aChangeVisitor.visit(this);
     }
 

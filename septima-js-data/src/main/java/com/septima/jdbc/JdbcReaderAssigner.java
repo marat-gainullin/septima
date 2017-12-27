@@ -1,6 +1,6 @@
 package com.septima.jdbc;
 
-import com.septima.DataTypes;
+import com.septima.GenericDataTypes;
 import com.septima.Parameter;
 import com.septima.sqldrivers.NamedJdbcValue;
 import com.septima.sqldrivers.SqlDriver;
@@ -38,7 +38,7 @@ public class JdbcReaderAssigner {
         Object paramValue = aParameter.getValue();
         int jdbcType;
         String sqlTypeName;
-        if (DataTypes.GEOMETRY_TYPE_NAME.equals(aParameter.getType())) {
+        if (GenericDataTypes.GEOMETRY_TYPE_NAME.equals(aParameter.getType())) {
             NamedJdbcValue jv = sqlDriver.geometryFromWkt(aParameter.getName(), aParameter.getValue().toString(), aConnection);
             paramValue = jv.getValue();
             jdbcType = jv.getJdbcType();
@@ -56,7 +56,7 @@ public class JdbcReaderAssigner {
         if (aParameter.getMode() == Parameter.Mode.Out
                 || aParameter.getMode() == Parameter.Mode.InOut) {
             try {
-                Object outedParamValue = DataTypes.GEOMETRY_TYPE_NAME.equals(aParameter.getType()) ?
+                Object outedParamValue = GenericDataTypes.GEOMETRY_TYPE_NAME.equals(aParameter.getType()) ?
                         sqlDriver.geometryToWkt(aStatement, aParameterIndex, aConnection) :
                         readTypedValue(aStatement, aParameterIndex);
                 aParameter.setValue(outedParamValue);
@@ -64,16 +64,16 @@ public class JdbcReaderAssigner {
                 String pType = aParameter.getType();
                 if (pType != null) {
                     switch (pType) {
-                        case DataTypes.STRING_TYPE_NAME:
+                        case GenericDataTypes.STRING_TYPE_NAME:
                             aParameter.setValue(aStatement.getString(aParameterIndex));
                             break;
-                        case DataTypes.NUMBER_TYPE_NAME:
+                        case GenericDataTypes.NUMBER_TYPE_NAME:
                             aParameter.setValue(aStatement.getDouble(aParameterIndex));
                             break;
-                        case DataTypes.DATE_TYPE_NAME:
+                        case GenericDataTypes.DATE_TYPE_NAME:
                             aParameter.setValue(aStatement.getDate(aParameterIndex));
                             break;
-                        case DataTypes.BOOLEAN_TYPE_NAME:
+                        case GenericDataTypes.BOOLEAN_TYPE_NAME:
                             aParameter.setValue(aStatement.getBoolean(aParameterIndex));
                             break;
                         default:
@@ -577,13 +577,13 @@ public class JdbcReaderAssigner {
     private static int jdbcTypeBySeptimaType(String aType, Object aValue) {
         if (aType != null) {
             switch (aType) {
-                case DataTypes.STRING_TYPE_NAME:
+                case GenericDataTypes.STRING_TYPE_NAME:
                     return java.sql.Types.VARCHAR;
-                case DataTypes.NUMBER_TYPE_NAME:
+                case GenericDataTypes.NUMBER_TYPE_NAME:
                     return java.sql.Types.DOUBLE;
-                case DataTypes.DATE_TYPE_NAME:
+                case GenericDataTypes.DATE_TYPE_NAME:
                     return java.sql.Types.TIMESTAMP;
-                case DataTypes.BOOLEAN_TYPE_NAME:
+                case GenericDataTypes.BOOLEAN_TYPE_NAME:
                     return java.sql.Types.BOOLEAN;
                 default:
                     return jdbcTypeByValue(aValue);

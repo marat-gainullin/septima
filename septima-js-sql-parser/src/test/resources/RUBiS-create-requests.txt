@@ -26,24 +26,24 @@
 #begin
 CREATE TABLE categories (
    id   SERIAL,
-   name VARCHAR(50),
+   comment VARCHAR(50),
    PRIMARY KEY(id)
 )
 #end
 true
 categories
-id.unique name
+id.unique comment
 
 #begin
 CREATE TABLE regions (
    id   SERIAL,
-   name VARCHAR(25),
+   comment VARCHAR(25),
    PRIMARY KEY(id)
 )
 #end
 true
 regions
-id.unique name
+id.unique comment
 
 #begin
 CREATE TABLE users (
@@ -70,7 +70,7 @@ id.unique firstname lastname nickname.unique password email rating balance creat
 #begin
 CREATE TABLE items (
    id            SERIAL,
-   name          VARCHAR(100),
+   comment          VARCHAR(100),
    description   TEXT,
    initial_price FLOAT NOT NULL,
    quantity      INTEGER NOT NULL,
@@ -87,7 +87,7 @@ CREATE TABLE items (
 #end
 true
 items
-id.unique name description initial_price quantity reserve_price buy_now nb_of_bids max_bid start_date end_date seller category
+id.unique comment description initial_price quantity reserve_price buy_now nb_of_bids max_bid start_date end_date seller category
 
 //CREATE INDEX seller_id ON items (seller);
 //CREATE INDEX category_id ON items (category);
@@ -95,7 +95,7 @@ id.unique name description initial_price quantity reserve_price buy_now nb_of_bi
 #begin
 CREATE TABLE old_items (
    id            SERIAL,
-   name          VARCHAR(100),
+   comment          VARCHAR(100),
    description   TEXT,
    initial_price FLOAT NOT NULL,
    quantity      INTEGER NOT NULL,
@@ -112,7 +112,7 @@ CREATE TABLE old_items (
 #end
 true
 old_items
-id.unique name description initial_price quantity reserve_price buy_now nb_of_bids max_bid start_date end_date seller category
+id.unique comment description initial_price quantity reserve_price buy_now nb_of_bids max_bid start_date end_date seller category
 
 //CREATE INDEX old_seller_id ON old_items (seller);
 //CREATE INDEX old_category_id ON old_items (category);
@@ -197,24 +197,24 @@ id.unique category region users item comment bid buynow
 #begin
 CREATE TABLE categories (
    id INTEGER UNSIGNED NOT NULL UNIQUE AUTO_INCREMENT,
-   name VARCHAR(50),
+   comment VARCHAR(50),
    PRIMARY KEY(id)
 )
 #end
 true
 categories
-id.unique name
+id.unique comment
 
 #begin
 CREATE TABLE regions (
    id INTEGER UNSIGNED NOT NULL UNIQUE AUTO_INCREMENT,
-   name VARCHAR(25),
+   comment VARCHAR(25),
    PRIMARY KEY(id)
 )
 #end
 true
 regions
-id.unique name
+id.unique comment
 
 #begin
 CREATE TABLE users (
@@ -240,7 +240,7 @@ id.unique firstname lastname nickname.unique password email rating balance creat
 #begin
 CREATE TABLE items (
    id            INTEGER UNSIGNED NOT NULL UNIQUE AUTO_INCREMENT,
-   name          VARCHAR(100),
+   comment          VARCHAR(100),
    description   TEXT,
    initial_price FLOAT UNSIGNED NOT NULL,
    quantity      INTEGER UNSIGNED NOT NULL,
@@ -259,12 +259,12 @@ CREATE TABLE items (
 #end
 true
 items
-id.unique name description initial_price quantity reserve_price buy_now nb_of_bids max_bid start_date end_date seller category
+id.unique comment description initial_price quantity reserve_price buy_now nb_of_bids max_bid start_date end_date seller category
 
 #begin
 CREATE TABLE old_items (
    id            INTEGER UNSIGNED NOT NULL UNIQUE,
-   name          VARCHAR(100),
+   comment          VARCHAR(100),
    description   TEXT,
    initial_price FLOAT UNSIGNED NOT NULL,
    quantity      INTEGER UNSIGNED NOT NULL,
@@ -283,7 +283,7 @@ CREATE TABLE old_items (
 #end
 true
 old_items
-id.unique name description initial_price quantity reserve_price buy_now nb_of_bids max_bid start_date end_date seller category
+id.unique comment description initial_price quantity reserve_price buy_now nb_of_bids max_bid start_date end_date seller category
 
 #begin
 CREATE TABLE bids (
@@ -377,43 +377,43 @@ foo
 null
 
 #begin
-CREATE TABLE foo(id int4, name text
+CREATE TABLE foo(id int4, comment text
 #end
 false
-Syntax error in this CREATE statement: 'create table foo(id int4, name text'
+Syntax error in this CREATE statement: 'create table foo(id int4, comment text'
 
 #begin
-CREATE TABLE foo id int4, name text)
+CREATE TABLE foo id int4, comment text)
 #end
 false
-Syntax error in this CREATE statement: 'create table foo id int4, name text)'
+Syntax error in this CREATE statement: 'create table foo id int4, comment text)'
 
 #begin
-CREATE TABLE foo(id int4, name)
+CREATE TABLE foo(id int4, comment)
 #end
 false
-Syntax error in this CREATE statement: 'create table foo(id int4, name)'
+Syntax error in this CREATE statement: 'create table foo(id int4, comment)'
 
 //#begin
-//CREATE TABLE foo(id int4 name text)
+//CREATE TABLE foo(id int4 comment text)
 //#end
 //false
-//Syntax error in this CREATE statement: 'create table foo(id int4 name text)'
+//Syntax error in this CREATE statement: 'create table foo(id int4 comment text)'
 
 //#begin
-//CREATE TABLE foo(id int4, name text)foo
+//CREATE TABLE foo(id int4, comment text)foo
 //#end
 //false
-//Syntax error in this CREATE statement: 'create table foo(id int4, name text)foo'
+//Syntax error in this CREATE statement: 'create table foo(id int4, comment text)foo'
 
 //#begin
-//CREATE TABLE foo((id int4, name text)
+//CREATE TABLE foo((id int4, comment text)
 //#end
 //false
-//Syntax error in this CREATE statement: 'create table foo((id int4, name text)'
+//Syntax error in this CREATE statement: 'create table foo((id int4, comment text)'
 
 #begin
-CREATE TABLE categories(id INT4, name TEXT, PRIMARY KEY((id))
+CREATE TABLE categories(id INT4, comment TEXT, PRIMARY KEY((id))
 #end
 false
-Syntax error in this CREATE statement: 'create table categories(id int4, name text, primary key((id))'
+Syntax error in this CREATE statement: 'create table categories(id int4, comment text, primary key((id))'

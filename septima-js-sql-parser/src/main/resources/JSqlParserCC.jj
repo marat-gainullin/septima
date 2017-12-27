@@ -175,7 +175,7 @@ SKIP:
 }
 
 
-TOKEN: /* SQL Keywords. prefixed with K_ to avoid name clashes */
+TOKEN: /* SQL Keywords. prefixed with K_ to avoid comment clashes */
 {
     <K_AS: "AS">
 |   <K_START:"START">
@@ -1409,18 +1409,18 @@ List<WithItem> WithList(Select select):
 WithItem WithItem():
 {
 	WithItem with = new WithItem();
-	String name = null;
+	String comment = null;
 	List<SelectItem> selectItems = null;
 	SelectBody selectBody = null;
 	Token tk = null;
 	List<String> commentComma = new ArrayList();
 }
 {
-	 name=RelObjectName() { 
+	 comment=RelObjectName() {
 	 if (token.specialToken != null) {
       with.setCommentName(token.specialToken.image);
      } 
-	 with.setName(name); 
+	 with.setName(comment);
 	 }
 	 [ tk="("
        {if (tk.specialToken != null) {
@@ -3130,7 +3130,7 @@ Function Function():
          } 
 		}
     	| 
-    	// workaround for replace(string) function (name clash with mysql REPLACE expression)
+    	// workaround for replace(string) function (comment clash with mysql REPLACE expression)
 	    tk=<K_REPLACE> { funcName = "REPLACE"; 
 		 if (tk.specialToken != null) {
           retval.setCommentName(tk.specialToken.image);

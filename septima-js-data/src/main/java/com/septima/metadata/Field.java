@@ -1,6 +1,6 @@
 package com.septima.metadata;
 
-import com.septima.DataTypes;
+import com.septima.GenericDataTypes;
 
 /**
  * This class is table field representation. It holds information about field
@@ -49,7 +49,7 @@ public class Field {
      * @param aDescription Description of the created field.
      */
     public Field(String aName, String aDescription) {
-        this(aName, aDescription, DataTypes.STRING_TYPE_NAME);
+        this(aName, aDescription, GenericDataTypes.STRING_TYPE_NAME);
     }
 
     public Field(String aName, String aDescription, String aType) {
@@ -148,16 +148,16 @@ public class Field {
         Object value;
         if (type != null) {
             switch (type) {
-                case DataTypes.NUMBER_TYPE_NAME:
+                case GenericDataTypes.NUMBER_TYPE_NAME:
                     value = IdGenerator.genId();
                     break;
-                case DataTypes.STRING_TYPE_NAME:
+                case GenericDataTypes.STRING_TYPE_NAME:
                     value = IdGenerator.genStringId();
                     break;
-                case DataTypes.DATE_TYPE_NAME:
+                case GenericDataTypes.DATE_TYPE_NAME:
                     value = new Date();
                     break;
-                case DataTypes.BOOLEAN_TYPE_NAME:
+                case GenericDataTypes.BOOLEAN_TYPE_NAME:
                     value = false;
                     break;
                 default:

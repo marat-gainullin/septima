@@ -2,7 +2,7 @@ package com.septima;
 
 import com.septima.dataflow.DynamicTypingDataProvider;
 import com.septima.jdbc.JdbcReaderAssigner;
-import com.septima.dataflow.EntityChangesBinder;
+import com.septima.dataflow.EntityActionsBinder;
 import com.septima.jdbc.DataSources;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
@@ -80,7 +80,7 @@ public class Database {
         return new JdbcReaderAssigner(sqlDriver, aProcedure);
     }
 
-    public CompletableFuture<Integer> commit(List<EntityChangesBinder.BoundStatement> statements) {
+    public CompletableFuture<Integer> commit(List<EntityActionsBinder.BoundStatement> statements) {
         Objects.requireNonNull(statements);
         CompletableFuture<Integer> committing = new CompletableFuture<>();
         jdbcPerformer.execute(() -> {
@@ -103,12 +103,12 @@ public class Database {
         return committing;
     }
 
-    private static int riddleStatements(List<EntityChangesBinder.BoundStatement> aStatements, Connection aConnection) throws SQLException {
+    private static int riddleStatements(List<EntityActionsBinder.BoundStatement> aStatements, Connection aConnection) throws SQLException {
         int rowsAffected = 0;
         if (!aStatements.isEmpty()) {
-            List<EntityChangesBinder.BoundStatement> errorStatements = new ArrayList<>();
+            List<EntityActionsBinder.BoundStatement> errorStatements = new ArrayList<>();
             List<String> errors = new ArrayList<>();
-            for (EntityChangesBinder.BoundStatement entry : aStatements) {
+            for (EntityActionsBinder.BoundStatement entry : aStatements) {
                 try {
                     rowsAffected += entry.apply(aConnection);
                 } catch (SQLException | UncheckedSQLException ex) {

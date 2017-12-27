@@ -2,7 +2,6 @@ package com.septima.dataflow;
 
 import com.septima.Parameter;
 import com.septima.changes.*;
-import com.septima.entities.SqlEntities;
 import com.septima.entities.SqlEntity;
 import com.septima.jdbc.JdbcReaderAssigner;
 import com.septima.metadata.Field;
@@ -20,7 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class EntityChangesBinder implements EntityChangesVisitor {
+public class EntityActionsBinder implements EntityActionsVisitor {
 
     /**
      * Short live information about sqlClause and its parameters.
@@ -61,11 +60,11 @@ public class EntityChangesBinder implements EntityChangesVisitor {
     private static final String UPDATE_CLAUSE = "update %s set %s where %s";
 
     private final List<BoundStatement> logEntries = new ArrayList<>();
-    private final SqlEntities entities;
+    private final SqlEntity entity;
 
-    public EntityChangesBinder(SqlEntities aEntities) {
+    public EntityActionsBinder(SqlEntity aEntity) {
         super();
-        entities = aEntities;
+        entity = aEntity;
     }
 
     public List<BoundStatement> getLogEntries() {
@@ -88,10 +87,9 @@ public class EntityChangesBinder implements EntityChangesVisitor {
     }
 
     @Override
-    public void visit(EntityInsert aInsert) {
-        SqlEntity entity = entities.loadEntity(aInsert.getEntityName());
+    public void visit(EntityAdd aAdd) {
         JdbcReaderAssigner jdbcReaderAssigner = entity.getDatabase().jdbcReaderAssigner(entity.isProcedure());
-        aInsert.getData().entrySet().stream()
+        aAdd.getData().entrySet().stream()
                 .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
                         Collectors.flatMapping(entry -> entry.getValue().stream(), Collectors.toList())))
@@ -113,8 +111,7 @@ public class EntityChangesBinder implements EntityChangesVisitor {
     }
 
     @Override
-    public void visit(EntityUpdate aUpdate) {
-        SqlEntity entity = entities.loadEntity(aUpdate.getEntityName());
+    public void visit(EntityChange aUpdate) {
         JdbcReaderAssigner jdbcReaderAssigner = entity.getDatabase().jdbcReaderAssigner(entity.isProcedure());
         Map<String, List<Parameter>> updatesKeys = aUpdate.getKeys().entrySet().stream()
                 .map(asTableDatumEntry(entity))
@@ -147,13 +144,12 @@ public class EntityChangesBinder implements EntityChangesVisitor {
      * In general, you shouldn't meet such case, because interlinked tables should interact via
      * foreign keys rather than via this multi tables deletion.
      *
-     * @param aDeletion Deletion command transform delete from all underlying tables indices an entity
+     * @param aRemove Deletion command transform delete from all underlying tables indices an entity
      */
     @Override
-    public void visit(EntityDelete aDeletion) {
-        SqlEntity entity = entities.loadEntity(aDeletion.getEntityName());
+    public void visit(EntityRemove aRemove) {
         JdbcReaderAssigner jdbcReaderAssigner = entity.getDatabase().jdbcReaderAssigner(entity.isProcedure());
-        aDeletion.getKeys().entrySet().stream()
+        aRemove.getKeys().entrySet().stream()
                 .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
                         Collectors.flatMapping(entry -> entry.getValue().stream(), Collectors.toList())))
@@ -174,8 +170,7 @@ public class EntityChangesBinder implements EntityChangesVisitor {
     }
 
     @Override
-    public void visit(EntityCommand aEntityCommand) {
-        SqlEntity entity = entities.loadEntity(aEntityCommand.getEntityName());
+    public void visit(EntityCommand aCommand) {
         JdbcReaderAssigner jdbcReaderAssigner = entity.getDatabase().jdbcReaderAssigner(entity.isProcedure());
         SqlQuery query = entity.toQuery();
         logEntries.add(new BoundStatement(
@@ -183,7 +178,7 @@ public class EntityChangesBinder implements EntityChangesVisitor {
                 Collections.unmodifiableList(query.getParameters().stream()
                         .map(queryParameter -> new Parameter(
                                 queryParameter.getName(),
-                                aEntityCommand.getArguments().getOrDefault(queryParameter.getName(), queryParameter.getValue()),
+                                aCommand.getArguments().getOrDefault(queryParameter.getName(), queryParameter.getValue()),
                                 queryParameter.getType(),
                                 queryParameter.getMode(),
                                 queryParameter.getDescription())

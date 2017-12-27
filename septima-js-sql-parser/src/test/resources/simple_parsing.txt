@@ -146,8 +146,8 @@ select (case when a > 0 then b + a else 0 end) p from mytable
 SELECT BTI.*, BTI_PREDECESSOR.objid AS predecessor_objid, BTI_PREDECESSOR.item_id
 AS predecessor_item_id, BTIT_PREDECESSOR.bt_item_type_key AS predecessor_type_key,
 CAT.catalog_key, S.objid AS state_objid, S.state_key, S.is_init_state,
-S.is_final_state, mlS.name AS state, BTIT.bt_item_type_key, BTP.bt_processor_key,
-mlBTP.name AS bt_processor_name , CU.objid AS cust_user_objid , CU.title AS
+S.is_final_state, mlS.comment AS state, BTIT.bt_item_type_key, BTP.bt_processor_key,
+mlBTP.comment AS bt_processor_name , CU.objid AS cust_user_objid , CU.title AS
 cust_user_title , CU.firstname AS cust_user_firstname , CU.lastname AS
 cust_user_lastname , CU.salutation2pv AS cust_user_salutation2pv , PV_CU.name_option
 AS cust_user_salutation , A_CU.email AS cust_user_email , '' AS use_option_field,

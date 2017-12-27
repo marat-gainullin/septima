@@ -1,5 +1,6 @@
 package com.septima.jdbc;
 
+import com.septima.GenericDataTypes;
 import com.septima.metadata.Field;
 
 import java.sql.Connection;
@@ -72,7 +73,12 @@ public class ResultSetReader {
                 Field readField = aReadFields.get(i);
                 Field expectedField = aExpectedFields.get(readField.getName());
                 Field field = expectedField != null ? expectedField : readField;
-                Object value = jdbcReaderAssigner.readTypedValue(aResultSet, i + 1);
+                Object value;
+                if (GenericDataTypes.GEOMETRY_TYPE_NAME.equals(field.getType())) {
+                    value = jdbcReaderAssigner.getSqlDriver().geometryToWkt(aResultSet, i + 1, aConnection);
+                } else {
+                    value = jdbcReaderAssigner.readTypedValue(aResultSet, i + 1);
+                }
                 row.put(field.getName(), value);
             }
             return row;

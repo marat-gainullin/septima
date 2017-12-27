@@ -1,25 +1,32 @@
 package com.septima.changes;
 
+import java.util.Map;
+
 /**
  * @author mg
  */
-public abstract class EntityChange {
+public class EntityChange extends EntityAction {
 
-    private final String entityName;
+    private final Map<String, Object> keys;
+    private final Map<String, Object> data;
 
-    public EntityChange(String aEntityName) {
-        super();
-        entityName = aEntityName;
-    }
-
-    public String getEntityName() {
-        return entityName;
+    public EntityChange(String aEntityName, Map<String, Object> aKeys, Map<String, Object> aData) {
+        super(aEntityName);
+        keys = aKeys;
+        data = aData;
     }
 
     @Override
-    public String toString() {
-        return getClass().getSimpleName();
+    public void accept(EntityActionsVisitor aActionsVisitor) {
+        aActionsVisitor.visit(this);
     }
 
-    public abstract void accept(EntityChangesVisitor aChangeVisitor);
+    public Map<String, Object> getKeys() {
+        return keys;
+    }
+
+    public Map<String, Object> getData() {
+        return data;
+    }
+
 }

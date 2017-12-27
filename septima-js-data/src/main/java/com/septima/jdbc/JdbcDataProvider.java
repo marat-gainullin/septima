@@ -1,6 +1,6 @@
 package com.septima.jdbc;
 
-import com.septima.DataTypes;
+import com.septima.GenericDataTypes;
 import com.septima.Parameter;
 import com.septima.dataflow.DataProvider;
 import com.septima.metadata.Field;
@@ -193,7 +193,7 @@ public abstract class JdbcDataProvider implements DataProvider {
                 for (int i = 1; i <= aParams.size(); i++) {
                     Parameter param = aParams.get(i - 1);
                     Object paramValue = param.getValue();
-                    if (paramValue != null && DataTypes.DATE_TYPE_NAME.equals(param.getType())) {
+                    if (paramValue != null && GenericDataTypes.DATE_TYPE_NAME.equals(param.getType())) {
                         java.util.Date dateValue = (java.util.Date) paramValue;
                         SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
                         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));

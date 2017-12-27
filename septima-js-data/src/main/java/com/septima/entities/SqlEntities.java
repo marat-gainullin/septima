@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.septima.Database;
 import com.septima.Metadata;
 import com.septima.Parameter;
-import com.septima.changes.EntityChange;
+import com.septima.changes.EntityAction;
 import com.septima.dataflow.DataProvider;
-import com.septima.dataflow.EntityChangesBinder;
+import com.septima.dataflow.EntityActionsBinder;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.Field;
 import com.septima.metadata.ForeignKey;
@@ -132,14 +132,16 @@ public class SqlEntities {
         }
     }
 
-    public List<EntityChangesBinder.BoundStatement> bindChanges(List<EntityChange> aChangeLog) {
-        List<EntityChangesBinder.BoundStatement> statements = new ArrayList<>();
-        for (EntityChange change : aChangeLog) {
-            EntityChangesBinder generator = new EntityChangesBinder(this);
-            change.accept(generator);
-            statements.addAll(generator.getLogEntries());
+    public Map<Database, List<EntityActionsBinder.BoundStatement>> bindChanges(List<EntityAction> aChangeLog) {
+        Map<Database, List<EntityActionsBinder.BoundStatement>> bound = new HashMap<>();
+        for (EntityAction change : aChangeLog) {
+            SqlEntity entity = loadEntity(change.getEntityName());
+            EntityActionsBinder binder = new EntityActionsBinder(entity);
+            change.accept(binder);
+            List<EntityActionsBinder.BoundStatement> boundToDatabase = bound.computeIfAbsent(entity.getDatabase(), d -> new ArrayList<>());
+            boundToDatabase.addAll(binder.getLogEntries());
         }
-        return Collections.unmodifiableList(statements);
+        return Collections.unmodifiableMap(bound);
     }
 
     private Map<String, JdbcColumn> resolveTableColumns(Database database, Table aTable) throws SQLException {
