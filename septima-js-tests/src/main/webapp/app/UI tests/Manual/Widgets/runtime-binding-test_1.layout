@@ -14,10 +14,10 @@
   </Button>
   <ModelGrid cursor="0" frozenRows="5" name="modelGrid" parent="view" prefHeight="160px" prefWidth="372px">
     <AnchorsPaneConstraints bottom="11px" left="10px" right="7px" top="80px"/>
-    <ModelGridColumn field="key" maxWidth="800px" name="column1" title="key" width="206px">
+    <ModelGridColumn entityField="key" maxWidth="800px" name="column1" title="key" width="206px">
       <ModelSpin/>
     </ModelGridColumn>
-    <ModelGridColumn field="txt" maxWidth="200px" name="column2" title="txt" width="98px">
+    <ModelGridColumn entityField="txt" maxWidth="200px" name="column2" title="txt" width="98px">
       <ModelFormattedField format=""/>
     </ModelGridColumn>
     <ServiceGridColumn name="column" resizable="true"/>

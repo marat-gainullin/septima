@@ -55,22 +55,22 @@ public class ForeignKey extends PrimaryKey {
      *
      * @param aSchema     Database schema. Null means application schema in application database.
      * @param aTable      Table name. Null and empty string are not allowed.
-     * @param aField      Field name. Null and empty string are not allowed.
+     * @param aColumn      EntityField name. Null and empty string are not allowed.
      * @param aFkName     Constraint name. Null and empty string are not allowed.
      * @param aUpdateRule EntityChange rule for foreign key been constructed.
      * @param aDeleteRule EntityRemove rule for foreign key been constructed.
      * @param aDeferrable Deferrable rule for foreign key check.
      * @param aPkSchema   Database schema for referent primary key. Null means application schema in application database.
      * @param aPkTable    Table name indices referent primary key. Null and empty string are not allowed.
-     * @param aPkField    Field name indices referent primary key. Null and empty string are not allowed.
+     * @param aPkColumn    EntityField name indices referent primary key. Null and empty string are not allowed.
      * @param aPkName     Referent primary key constraint name. Null and empty string are not allowed.
      */
-    public ForeignKey(String aSchema, String aTable, String aField, String aFkName, ForeignKeyRule aUpdateRule, ForeignKeyRule aDeleteRule, boolean aDeferrable, String aPkSchema, String aPkTable, String aPkField, String aPkName) {
-        super(aSchema, aTable, aField, aFkName);
+    public ForeignKey(String aSchema, String aTable, String aColumn, String aFkName, ForeignKeyRule aUpdateRule, ForeignKeyRule aDeleteRule, boolean aDeferrable, String aPkSchema, String aPkTable, String aPkColumn, String aPkName) {
+        super(aSchema, aTable, aColumn, aFkName);
         updateRule = aUpdateRule;
         deleteRule = aDeleteRule;
         deferrable = aDeferrable;
-        referee = new PrimaryKey(aPkSchema, aPkTable, aPkField, aPkName);
+        referee = new PrimaryKey(aPkSchema, aPkTable, aPkColumn, aPkName);
     }
 
     /**

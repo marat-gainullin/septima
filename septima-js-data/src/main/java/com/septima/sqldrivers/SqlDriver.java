@@ -19,8 +19,8 @@ import java.util.regex.Pattern;
  */
 public class SqlDriver {
 
-    static final String DROP_FIELD_SQL_PREFIX = "alter table %s drop column ";
-    static final String ADD_FIELD_SQL_PREFIX = "alter table %s add ";
+    static final String DROP_COLUMN_SQL_PREFIX = "alter table %s drop column ";
+    static final String ADD_COLUMN_SQL_PREFIX = "alter table %s add ";
 
     static final String PRIMARY_KEY_NAME_SUFFIX = "_pk";
 
@@ -153,7 +153,7 @@ public class SqlDriver {
      * @param listPk      Primary key columns specifications list
      * @return Sql text
      */
-    public String[] getSqls4CreatePkConstraint(String aSchemaName, List<PrimaryKey> listPk) {
+    public String[] getSqlsOfCreatePkConstraint(String aSchemaName, List<PrimaryKey> listPk) {
         return new String[]{};
     }
 
@@ -200,7 +200,7 @@ public class SqlDriver {
      * @param aField A field information transform deal with.
      * @return Sql string for field definition
      */
-    public String getSql4FieldDefinition(JdbcColumn aField) {
+    public String getSqlOfColumnDefinition(JdbcColumn aField) {
         return null;
     }
 
@@ -215,7 +215,7 @@ public class SqlDriver {
      * @param aField      A field information
      * @return Sql array string for field modification.
      */
-    public String[] getSqls4FieldAdd(String aSchemaName, String aTableName, JdbcColumn aField) {
+    public String[] getSqlsOfColumnAdd(String aSchemaName, String aTableName, JdbcColumn aField) {
         return new String[]{};
     }
 
@@ -225,16 +225,16 @@ public class SqlDriver {
      *
      * @param aSchemaName Schema name
      * @param aTableName  Name indices a table the field transform dropped from.
-     * @param aFieldName  Field name transform drop
+     * @param aFieldName  EntityField name transform drop
      * @return Sql strings generated.
      */
-    public String[] getSql4FieldDrop(String aSchemaName, String aTableName, String aFieldName) {
+    public String[] getSqlOfColumnDrop(String aSchemaName, String aTableName, String aFieldName) {
         String fullTableName = escapeNameIfNeeded(aTableName);
         if (aSchemaName != null && !aSchemaName.isEmpty()) {
             fullTableName = escapeNameIfNeeded(aSchemaName) + "." + fullTableName;
         }
         return new String[]{
-                String.format(DROP_FIELD_SQL_PREFIX, fullTableName) + escapeNameIfNeeded(aFieldName)
+                String.format(DROP_COLUMN_SQL_PREFIX, fullTableName) + escapeNameIfNeeded(aFieldName)
         };
     }
 
@@ -250,7 +250,7 @@ public class SqlDriver {
      * @param aNewFieldMd A field information transform migrate transform.
      * @return Sql array string for field modification.
      */
-    public String[] getSqls4FieldModify(String aSchemaName, String aTableName, JdbcColumn aOldFieldMd, JdbcColumn aNewFieldMd) {
+    public String[] getSqlsOfColumnModify(String aSchemaName, String aTableName, JdbcColumn aOldFieldMd, JdbcColumn aNewFieldMd) {
         return new String[]{};
     }
 
@@ -264,7 +264,7 @@ public class SqlDriver {
      * @param aNewFieldMd   New field
      * @return Sql array string for field modification.
      */
-    public String[] getSqls4FieldRename(String aSchemaName, String aTableName, String aOldFieldName, JdbcColumn aNewFieldMd) {
+    public String[] getSqlsOfColumnRename(String aSchemaName, String aTableName, String aOldFieldName, JdbcColumn aNewFieldMd) {
         return new String[]{};
     }
 

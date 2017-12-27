@@ -31,7 +31,7 @@
   </widget>
   <widget name="modelGrid" parent="Form" prefHeight="180px" prefWidth="519px" type="DbGridDesignInfo">
     <rowsColumnsDesignInfo>
-      <rowsDatasource entityId="140410667793902" field="false"/>
+      <rowsDatasource entityId="140410667793902" entityField="false"/>
     </rowsColumnsDesignInfo>
     <treeDesignInfo>
       <unaryLinkField entityId="140410667793902" fieldName="MDENT_PARENT_ID"/>

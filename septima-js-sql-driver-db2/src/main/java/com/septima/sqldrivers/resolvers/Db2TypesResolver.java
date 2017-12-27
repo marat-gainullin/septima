@@ -1,6 +1,6 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.GenericDataTypes;
+import com.septima.GenericType;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,33 +14,33 @@ import java.util.Set;
  */
 public class Db2TypesResolver implements TypesResolver {
 
-    private static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
-        put("VARCHAR", GenericDataTypes.STRING_TYPE_NAME);
-        put("NUMERIC", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("DECIMAL", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("TIMESTAMP", GenericDataTypes.DATE_TYPE_NAME);
-        put("INT", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("SMALLINT", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("INTEGER", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("BIGINT", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("DEC", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("NUM", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("FLOAT", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("REAL", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("DOUBLE", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("DOUBLE PRECISION", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("DECFLOAT", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("LONG VARCHAR", GenericDataTypes.STRING_TYPE_NAME);
-        put("CHAR", GenericDataTypes.STRING_TYPE_NAME);
-        put("CHARACTER", GenericDataTypes.STRING_TYPE_NAME);
-        put("CHAR VARYING", GenericDataTypes.STRING_TYPE_NAME);
-        put("CHARACTER VARYING", GenericDataTypes.STRING_TYPE_NAME);
-        put("CLOB", GenericDataTypes.STRING_TYPE_NAME);
-        put("CHAR LARGE OBJECT", GenericDataTypes.STRING_TYPE_NAME);
-        put("CHARACTER LARGE OBJECT", GenericDataTypes.STRING_TYPE_NAME);
-        put("DATE", GenericDataTypes.DATE_TYPE_NAME);
-        put("TIME", GenericDataTypes.DATE_TYPE_NAME);
-        put("XML", GenericDataTypes.STRING_TYPE_NAME); //?? OTHER  || SQLXML || BLOB
+    private static final Map<String, GenericType> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
+        put("VARCHAR", GenericType.STRING);
+        put("LONG VARCHAR", GenericType.STRING);
+        put("CHAR", GenericType.STRING);
+        put("CHARACTER", GenericType.STRING);
+        put("CHAR VARYING", GenericType.STRING);
+        put("CHARACTER VARYING", GenericType.STRING);
+        put("CLOB", GenericType.STRING);
+        put("CHAR LARGE OBJECT", GenericType.STRING);
+        put("CHARACTER LARGE OBJECT", GenericType.STRING);
+        put("XML", GenericType.STRING); //?? OTHER  || SQLXML || BLOB
+        put("INT", GenericType.LONG);
+        put("SMALLINT", GenericType.LONG);
+        put("INTEGER", GenericType.LONG);
+        put("BIGINT", GenericType.LONG);
+        put("NUMERIC", GenericType.DOUBLE);
+        put("DECIMAL", GenericType.DOUBLE);
+        put("DEC", GenericType.DOUBLE);
+        put("NUM", GenericType.DOUBLE);
+        put("FLOAT", GenericType.DOUBLE);
+        put("REAL", GenericType.DOUBLE);
+        put("DOUBLE", GenericType.DOUBLE);
+        put("DOUBLE PRECISION", GenericType.DOUBLE);
+        put("DECFLOAT", GenericType.DOUBLE);
+        put("TIMESTAMP", GenericType.DATE);
+        put("DATE", GenericType.DATE);
+        put("TIME", GenericType.DATE);
         put("BLOB", null);
         put("BINARY LARGE OBJECT", null);
         put("LONG VARCHAR FOR BIT DATA", null);
@@ -88,7 +88,7 @@ public class Db2TypesResolver implements TypesResolver {
     }};
 
     @Override
-    public String toApplicationType(int aJdbcType, String aRdbmsTypeName) {
+    public GenericType toGenericType(int aJdbcType, String aRdbmsTypeName) {
         return aRdbmsTypeName != null ? rdbmsTypes2ApplicationTypes.get(aRdbmsTypeName.toUpperCase()) : null;
     }
 

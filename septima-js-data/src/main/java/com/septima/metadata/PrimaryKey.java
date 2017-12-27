@@ -7,7 +7,7 @@ public class PrimaryKey {
 
     private final String schema;
     private final String table;
-    private final String field;
+    private final String column;
     private final String cName;
 
     /**
@@ -15,13 +15,13 @@ public class PrimaryKey {
      *
      * @param aSchema Database schema. Null means application schema in application database.
      * @param aTable  Table name. Null and empty string are not allowed.
-     * @param aField  Field name. Null and empty string are not allowed.
+     * @param aColumn  Column name. Null and empty string are not allowed.
      * @param aCName  Constraint name. Null and empty string are not allowed.
      */
-    public PrimaryKey(String aSchema, String aTable, String aField, String aCName) {
+    public PrimaryKey(String aSchema, String aTable, String aColumn, String aCName) {
         schema = aSchema;
         table = aTable;
-        field = aField;
+        column = aColumn;
         cName = aCName;
     }
 
@@ -44,12 +44,12 @@ public class PrimaryKey {
     }
 
     /**
-     * Returns field name of this constraint.
+     * Returns column name of this constraint.
      *
-     * @return Field name of this constraint.
+     * @return EntityField name of this constraint.
      */
-    public String getField() {
-        return field;
+    public String getColumn() {
+        return column;
     }
 
     /**

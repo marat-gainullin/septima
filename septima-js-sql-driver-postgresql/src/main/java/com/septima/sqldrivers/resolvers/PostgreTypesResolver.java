@@ -1,6 +1,6 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.GenericDataTypes;
+import com.septima.GenericType;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,56 +14,56 @@ import java.util.Set;
  */
 public class PostgreTypesResolver implements TypesResolver {
 
-    private static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
-        put("character varying", GenericDataTypes.STRING_TYPE_NAME);
-        put("decimal", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("boolean", GenericDataTypes.BOOLEAN_TYPE_NAME);
-        put("timestamp", GenericDataTypes.DATE_TYPE_NAME);
-        put("geometry", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("int8", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("bigint", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("bigserial", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("oid", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("numeric", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("integer", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("int", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("int4", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("serial", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("smallint", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("int2", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("real", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("float4", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("double precision", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("float", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("float8", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("money", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("bool", GenericDataTypes.BOOLEAN_TYPE_NAME);
-        put("bit", GenericDataTypes.BOOLEAN_TYPE_NAME);
-        put("bpchar", GenericDataTypes.STRING_TYPE_NAME);
-        put("char", GenericDataTypes.STRING_TYPE_NAME);
-        put("character", GenericDataTypes.STRING_TYPE_NAME);
-        put("varchar", GenericDataTypes.STRING_TYPE_NAME);
-        put("name", GenericDataTypes.STRING_TYPE_NAME);
-        put("text", GenericDataTypes.STRING_TYPE_NAME);
-        put("date", GenericDataTypes.DATE_TYPE_NAME);
-        put("time", GenericDataTypes.DATE_TYPE_NAME);
-        put("timetz", GenericDataTypes.DATE_TYPE_NAME);
-        put("time with time zone", GenericDataTypes.DATE_TYPE_NAME);
-        put("time without time zone", GenericDataTypes.DATE_TYPE_NAME);
-        put("timestamptz", GenericDataTypes.DATE_TYPE_NAME);
-        put("timestamp with time zone", GenericDataTypes.DATE_TYPE_NAME);
-        put("timestamp without time zone", GenericDataTypes.DATE_TYPE_NAME);
+    private static final Map<String, GenericType> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
+        put("character varying", GenericType.STRING);
+        put("bpchar", GenericType.STRING);
+        put("char", GenericType.STRING);
+        put("character", GenericType.STRING);
+        put("varchar", GenericType.STRING);
+        put("name", GenericType.STRING);
+        put("text", GenericType.STRING);
+        put("int8", GenericType.LONG);
+        put("bigint", GenericType.LONG);
+        put("serial", GenericType.LONG);
+        put("bigserial", GenericType.LONG);
+        put("oid", GenericType.LONG);
+        put("integer", GenericType.LONG);
+        put("int", GenericType.LONG);
+        put("int4", GenericType.LONG);
+        put("smallint", GenericType.LONG);
+        put("int2", GenericType.LONG);
+        put("decimal", GenericType.DOUBLE);
+        put("numeric", GenericType.DOUBLE);
+        put("real", GenericType.DOUBLE);
+        put("float4", GenericType.DOUBLE);
+        put("double precision", GenericType.DOUBLE);
+        put("float", GenericType.DOUBLE);
+        put("float8", GenericType.DOUBLE);
+        put("money", GenericType.DOUBLE);
+        put("bool", GenericType.BOOLEAN);
+        put("bit", GenericType.BOOLEAN);
+        put("boolean", GenericType.BOOLEAN);
+        put("date", GenericType.DATE);
+        put("time", GenericType.DATE);
+        put("timetz", GenericType.DATE);
+        put("time with time zone", GenericType.DATE);
+        put("time without time zone", GenericType.DATE);
+        put("timestamptz", GenericType.DATE);
+        put("timestamp with time zone", GenericType.DATE);
+        put("timestamp without time zone", GenericType.DATE);
+        put("timestamp", GenericType.DATE);
         put("bytea", null);
         // gis types
-        put("geography", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("geometry", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("point", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("line", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("lseg", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("box", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("path", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("polygon", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("circle", GenericDataTypes.GEOMETRY_TYPE_NAME);
+        put("geometry", GenericType.GEOMETRY);
+        put("geography", GenericType.GEOMETRY);
+        put("geometry", GenericType.GEOMETRY);
+        put("point", GenericType.GEOMETRY);
+        put("line", GenericType.GEOMETRY);
+        put("lseg", GenericType.GEOMETRY);
+        put("box", GenericType.GEOMETRY);
+        put("path", GenericType.GEOMETRY);
+        put("polygon", GenericType.GEOMETRY);
+        put("circle", GenericType.GEOMETRY);
     }};
     private static final Set<String> jdbcTypesWithSize = new HashSet<>() {{
         add("decimal");
@@ -97,7 +97,7 @@ public class PostgreTypesResolver implements TypesResolver {
     }};
 
     @Override
-    public String toApplicationType(int aJdbcType, String aRdbmsTypeName) {
+    public GenericType toGenericType(int aJdbcType, String aRdbmsTypeName) {
         return aRdbmsTypeName != null ? rdbmsTypes2ApplicationTypes.get(aRdbmsTypeName.toLowerCase()) : null;
     }
 

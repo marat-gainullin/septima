@@ -1,6 +1,6 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.GenericDataTypes;
+import com.septima.GenericType;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,27 +14,27 @@ import java.util.Set;
  */
 public class H2TypesResolver implements TypesResolver {
 
-    private static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
-        put("VARCHAR", GenericDataTypes.STRING_TYPE_NAME);
-        put("NUMERIC", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("DECIMAL", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("BOOLEAN", GenericDataTypes.BOOLEAN_TYPE_NAME);
-        put("TIMESTAMP", GenericDataTypes.DATE_TYPE_NAME);
-        put("TINYINT", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("BIGINT", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("IDENTITY", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("INTEGER", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("SMALLINT", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("FLOAT", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("REAL", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("DOUBLE", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("LONGVARCHAR", GenericDataTypes.STRING_TYPE_NAME);
-        put("CHAR", GenericDataTypes.STRING_TYPE_NAME);
-        put("VARCHAR_IGNORECASE", GenericDataTypes.STRING_TYPE_NAME);
-        put("DATE", GenericDataTypes.DATE_TYPE_NAME);
-        put("TIME", GenericDataTypes.DATE_TYPE_NAME);
-        put("GEOMETRY", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("CLOB", GenericDataTypes.STRING_TYPE_NAME);
+    private static final Map<String, GenericType> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
+        put("VARCHAR", GenericType.STRING);
+        put("LONGVARCHAR", GenericType.STRING);
+        put("CHAR", GenericType.STRING);
+        put("VARCHAR_IGNORECASE", GenericType.STRING);
+        put("CLOB", GenericType.STRING);
+        put("TINYINT", GenericType.LONG);
+        put("BIGINT", GenericType.LONG);
+        put("IDENTITY", GenericType.LONG);
+        put("INTEGER", GenericType.LONG);
+        put("SMALLINT", GenericType.LONG);
+        put("NUMERIC", GenericType.DOUBLE);
+        put("DECIMAL", GenericType.DOUBLE);
+        put("FLOAT", GenericType.DOUBLE);
+        put("REAL", GenericType.DOUBLE);
+        put("DOUBLE", GenericType.DOUBLE);
+        put("BOOLEAN", GenericType.BOOLEAN);
+        put("TIMESTAMP", GenericType.DATE);
+        put("DATE", GenericType.DATE);
+        put("TIME", GenericType.DATE);
+        put("GEOMETRY", GenericType.GEOMETRY);
         put("LONGVARBINARY", null);
         put("VARBINARY", null);
         put("BINARY", null);
@@ -78,7 +78,7 @@ public class H2TypesResolver implements TypesResolver {
     }};
 
     @Override
-    public String toApplicationType(int aJdbcType, String aRdbmsTypeName) {
+    public GenericType toGenericType(int aJdbcType, String aRdbmsTypeName) {
         return aRdbmsTypeName != null ? rdbmsTypes2ApplicationTypes.get(aRdbmsTypeName.toUpperCase()) : null;
     }
 

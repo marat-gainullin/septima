@@ -2,10 +2,10 @@ package com.septima.queries;
 
 import com.septima.Database;
 import com.septima.dataflow.DynamicTypingDataProvider;
-import com.septima.Parameter;
+import com.septima.metadata.Parameter;
 import com.septima.jdbc.JdbcReaderAssigner;
 import com.septima.jdbc.UncheckedSQLException;
-import com.septima.metadata.Field;
+import com.septima.metadata.EntityField;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -34,9 +34,9 @@ public class SqlQuery {
     private final List<Parameter> parameters;
     private final boolean procedure;
     private final int pageSize;
-    private final Map<String, Field> expectedFields;
+    private final Map<String, EntityField> expectedFields;
 
-    public SqlQuery(Database aDatabase, String aEntityName, String aSqlClause, List<Parameter> aParams, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
+    public SqlQuery(Database aDatabase, String aEntityName, String aSqlClause, List<Parameter> aParams, boolean aProcedure, int aPageSize, Map<String, EntityField> aExpectedFields) {
         super();
         database = aDatabase;
         entityName = aEntityName;

@@ -192,7 +192,7 @@ Describes the input token stream.
 <TD><CODE><B><A HREF="../../../../net/sf/jsqlparser/parser/Token.html#specialToken">specialToken</A></B></CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This field is used to access special tokens that occur prior to this
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This entityField is used to access special tokens that occur prior to this
  token, but after the immediately preceding regular (non-special) token.</TD>
 </TR>
 </TABLE>
@@ -385,10 +385,10 @@ public <A HREF="../../../../net/sf/jsqlparser/parser/Token.html" title="class in
 <DL>
 <DD>A reference to the next regular (non-special) token from the input
  stream.  If this is the last token from the input stream, or if the
- token manager has not read tokens beyond this one, this field is
+ token manager has not read tokens beyond this one, this entityField is
  set to null.  This is true only if this token is also a regular
  token.  Otherwise, see below for a description of the contents of
- this field.
+ this entityField.
 <P>
 <DL>
 </DL>
@@ -400,16 +400,16 @@ specialToken</H3>
 <PRE>
 public <A HREF="../../../../net/sf/jsqlparser/parser/Token.html" title="class in net.sf.jsqlparser.parser">Token</A> <B>specialToken</B></PRE>
 <DL>
-<DD>This field is used to access special tokens that occur prior to this
+<DD>This entityField is used to access special tokens that occur prior to this
  token, but after the immediately preceding regular (non-special) token.
- If there are no such special tokens, this field is set to null.
- When there are more than one such special token, this field refers
+ If there are no such special tokens, this entityField is set to null.
+ When there are more than one such special token, this entityField refers
  to the last of these special tokens, which in turn refers to the next
- previous special token through its specialToken field, and so on
- until the first special token (whose specialToken field is null).
+ previous special token through its specialToken entityField, and so on
+ until the first special token (whose specialToken entityField is null).
  The next fields of special tokens refer to other special tokens that
  immediately follow it (without an intervening regular token).  If there
- is no such token, this field is null.
+ is no such token, this entityField is null.
 <P>
 <DL>
 </DL>

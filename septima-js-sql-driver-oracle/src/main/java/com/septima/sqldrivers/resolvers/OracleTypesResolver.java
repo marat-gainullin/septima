@@ -1,6 +1,6 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.GenericDataTypes;
+import com.septima.GenericType;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,36 +14,36 @@ import java.util.Set;
  */
 public class OracleTypesResolver implements TypesResolver {
 
-    private static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
-        put("VARCHAR2", GenericDataTypes.STRING_TYPE_NAME);
-        put("DECIMAL", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("NUMBER", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("TIMESTAMP", GenericDataTypes.DATE_TYPE_NAME);
-        put("MDSYS.SDO_GEOMETRY", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("INTEGER", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("FLOAT", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("REAL", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("DATE", GenericDataTypes.DATE_TYPE_NAME);
-        put("NVARCHAR2", GenericDataTypes.STRING_TYPE_NAME);
-        put("NCHAR", GenericDataTypes.STRING_TYPE_NAME);
-        put("TIMESTAMP(6)", GenericDataTypes.DATE_TYPE_NAME);
-        put("TIMESTAMP WITH TIME ZONE", GenericDataTypes.DATE_TYPE_NAME);
-        put("TIMESTAMP WITH LOCAL TIME ZONE", GenericDataTypes.DATE_TYPE_NAME);
-        put("TIMESTAMP(6) WITH TIME ZONE", GenericDataTypes.DATE_TYPE_NAME);
-        put("TIMESTAMP(6) WITH LOCAL TIME ZONE", GenericDataTypes.DATE_TYPE_NAME);
-        put("LONG RAW", GenericDataTypes.STRING_TYPE_NAME);
-        put("RAW", GenericDataTypes.STRING_TYPE_NAME);
-        put("LONG", GenericDataTypes.STRING_TYPE_NAME);
-        put("CHAR", GenericDataTypes.STRING_TYPE_NAME);
-        put("CLOB", GenericDataTypes.STRING_TYPE_NAME);
-        put("NCLOB", GenericDataTypes.STRING_TYPE_NAME);
-        put("GEOMETRY", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("CURVE", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("POLYGON", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("LINESTRING", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("POINT", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("SURFACE", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("SDO_GEOMETRY", GenericDataTypes.GEOMETRY_TYPE_NAME);
+    private static final Map<String, GenericType> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
+        put("VARCHAR2", GenericType.STRING);
+        put("NVARCHAR2", GenericType.STRING);
+        put("NCHAR", GenericType.STRING);
+        put("LONG RAW", GenericType.STRING);
+        put("RAW", GenericType.STRING);
+        put("LONG", GenericType.STRING);
+        put("CHAR", GenericType.STRING);
+        put("CLOB", GenericType.STRING);
+        put("NCLOB", GenericType.STRING);
+        put("DECIMAL", GenericType.DOUBLE);
+        put("DOUBLE", GenericType.DOUBLE);
+        put("INTEGER", GenericType.LONG);
+        put("FLOAT", GenericType.DOUBLE);
+        put("REAL", GenericType.DOUBLE);
+        put("DATE", GenericType.DATE);
+        put("TIMESTAMP", GenericType.DATE);
+        put("TIMESTAMP(6)", GenericType.DATE);
+        put("TIMESTAMP WITH TIME ZONE", GenericType.DATE);
+        put("TIMESTAMP WITH LOCAL TIME ZONE", GenericType.DATE);
+        put("TIMESTAMP(6) WITH TIME ZONE", GenericType.DATE);
+        put("TIMESTAMP(6) WITH LOCAL TIME ZONE", GenericType.DATE);
+        put("MDSYS.SDO_GEOMETRY", GenericType.GEOMETRY);
+        put("GEOMETRY", GenericType.GEOMETRY);
+        put("CURVE", GenericType.GEOMETRY);
+        put("POLYGON", GenericType.GEOMETRY);
+        put("LINESTRING", GenericType.GEOMETRY);
+        put("POINT", GenericType.GEOMETRY);
+        put("SURFACE", GenericType.GEOMETRY);
+        put("SDO_GEOMETRY", GenericType.GEOMETRY);
         put("BLOB", null);
     }};
     private static final Set<String> jdbcTypesWithSize = new HashSet<>() {{
@@ -52,20 +52,20 @@ public class OracleTypesResolver implements TypesResolver {
         add("VARCHAR2");
         add("NCHAR");
         add("NVARCHAR2");
-        add("NUMBER");
+        add("DOUBLE");
         add("DECIMAL");
         add("RAW");
     }};
     private static final Set<String> jdbcTypesWithScale = new HashSet<>() {{
         add("DECIMAL");
-        add("NUMBER");
+        add("DOUBLE");
     }};
     private static final Map<String, Integer> jdbcTypesMaxSize = new HashMap<>() {{
         put("CHAR", 255);
         put("VARCHAR2", 4000);
         put("NCHAR", 255);
         put("NVARCHAR2", 4000);
-        put("NUMBER", 38);
+        put("DOUBLE", 38);
         put("DECIMAL", 38);
         put("RAW", 2000);
     }};
@@ -75,11 +75,11 @@ public class OracleTypesResolver implements TypesResolver {
         put("NCHAR2", 1);
         put("NVARCHAR2", 200);
         put("RAW", 1);
-        put("NUMBER", 38);
+        put("DOUBLE", 38);
     }};
 
     @Override
-    public String toApplicationType(int aJdbcType, String aRdbmsTypeName) {
+    public GenericType toGenericType(int aJdbcType, String aRdbmsTypeName) {
         return aRdbmsTypeName != null ? rdbmsTypes2ApplicationTypes.get(aRdbmsTypeName.toUpperCase()) : null;
     }
 

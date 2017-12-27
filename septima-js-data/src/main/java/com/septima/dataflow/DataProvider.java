@@ -1,6 +1,6 @@
 package com.septima.dataflow;
 
-import com.septima.Parameter;
+import com.septima.metadata.Parameter;
 
 import java.util.Collection;
 import java.util.List;

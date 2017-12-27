@@ -27,7 +27,7 @@ public class GenericDriverTest {
         assertFalse(driver.isConstraintsDeferrable());
         assertEquals(Integer.MAX_VALUE, driver.getTypesResolver().resolveSize("Whatever", Integer.MAX_VALUE));
         assertEquals(Integer.MAX_VALUE, driver.getTypesResolver().resolveSize("AnyType", Integer.MAX_VALUE));
-        assertArrayEquals(new String[]{"alter table schema.table drop column field"}, driver.getSql4FieldDrop("schema", "table", "field"));
+        assertArrayEquals(new String[]{"alter table schema.table drop column field"}, driver.getSqlOfColumnDrop("schema", "table", "field"));
         assertEquals("\"", "" + driver.getEscape());
         assertEquals("schema.table", driver.makeFullName("schema", "table"));
         assertEquals("\"schem a\".\"ta ble\"", driver.makeFullName("schem a", "ta ble"));
@@ -45,13 +45,13 @@ public class GenericDriverTest {
         assertNull(driver.getSql4DropPkConstraint("Whatever", null));
         assertNull(driver.getSql4CreateFkConstraint("Whatever", List.of()));
         assertNull(driver.getSql4EmptyTableCreation("Whatever", "Whatever", "Whatever"));
-        assertNull(driver.getSql4FieldDefinition(null));
+        assertNull(driver.getSqlOfColumnDefinition(null));
         assertNull(driver.geometryFromWkt(null, null, null));
         assertNull(driver.geometryToWkt(null, 1, null));
-        assertArrayEquals(new String[]{}, driver.getSqls4FieldAdd("Whatever", "Whatever", null));
-        assertArrayEquals(new String[]{}, driver.getSqls4FieldModify("Whatever", "Whatever", null, null));
-        assertArrayEquals(new String[]{}, driver.getSqls4FieldRename("Whatever", "Whatever", null, null));
+        assertArrayEquals(new String[]{}, driver.getSqlsOfColumnAdd("Whatever", "Whatever", null));
+        assertArrayEquals(new String[]{}, driver.getSqlsOfColumnModify("Whatever", "Whatever", null, null));
+        assertArrayEquals(new String[]{}, driver.getSqlsOfColumnRename("Whatever", "Whatever", null, null));
         assertArrayEquals(new String[]{}, driver.getSqls4CreateColumnComment("Whatever", "Whatever", "Whatever", "Whatever"));
-        assertArrayEquals(new String[]{}, driver.getSqls4CreatePkConstraint("Whatever", List.of()));
+        assertArrayEquals(new String[]{}, driver.getSqlsOfCreatePkConstraint("Whatever", List.of()));
     }
 }

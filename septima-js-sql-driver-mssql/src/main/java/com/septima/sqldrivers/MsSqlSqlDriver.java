@@ -40,7 +40,7 @@ public class MsSqlSqlDriver extends SqlDriver {
             + "  EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'%s' , @level0type=N'SCHEMA',@level0name=N'%s', @level1type=N'TABLE',@level1name=N'%s' "
             + " commit "
             + "end ";
-    private static final String ALTER_FIELD_SQL_PREFIX = "alter table %s alter column ";
+    private static final String ALTER_COLUMN_SQL_PREFIX = "alter table %s alter column ";
 
     public MsSqlSqlDriver() {
         super();
@@ -63,20 +63,20 @@ public class MsSqlSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String getSql4EmptyTableCreation(String aSchemaName, String aTableName, String aPkFieldName) {
+    public String getSql4EmptyTableCreation(String aSchemaName, String aTableName, String aPkColumnName) {
         String fullName = makeFullName(aSchemaName, aTableName);
         return "CREATE TABLE " + fullName + " ("
-                + escapeNameIfNeeded(aPkFieldName) + " NUMERIC(18, 0) NOT NULL,"
-                + "CONSTRAINT " + escapeNameIfNeeded(aTableName + PRIMARY_KEY_NAME_SUFFIX) + " PRIMARY KEY (" + escapeNameIfNeeded(aPkFieldName) + " ASC))";
+                + escapeNameIfNeeded(aPkColumnName) + " NUMERIC(18, 0) NOT NULL,"
+                + "CONSTRAINT " + escapeNameIfNeeded(aTableName + PRIMARY_KEY_NAME_SUFFIX) + " PRIMARY KEY (" + escapeNameIfNeeded(aPkColumnName) + " ASC))";
     }
 
-    private String getFieldTypeDefinition(JdbcColumn aField) {
+    private String getColumnTypeDefinition(JdbcColumn aColumn) {
         String typeDefine = "";
-        String sqlTypeName = aField.getType().toLowerCase();
+        String sqlTypeName = aColumn.getRdbmsType().toLowerCase();
         typeDefine += sqlTypeName;
         // field length
-        int size = aField.getSize();
-        int scale = aField.getScale();
+        int size = aColumn.getSize();
+        int scale = aColumn.getScale();
 
         if (resolver.isScaled(sqlTypeName) && resolver.isSized(sqlTypeName) && size > 0) {
             typeDefine += "(" + String.valueOf(size) + "," + String.valueOf(scale) + ")";
@@ -92,16 +92,16 @@ public class MsSqlSqlDriver extends SqlDriver {
      * {@inheritDoc}
      */
     @Override
-    public String getSql4FieldDefinition(JdbcColumn aField) {
-        String fieldName = escapeNameIfNeeded(aField.getName());
-        String fieldDefinition = fieldName + " " + getFieldTypeDefinition(aField);
+    public String getSqlOfColumnDefinition(JdbcColumn aColumn) {
+        String columnName = escapeNameIfNeeded(aColumn.getName());
+        String columnDefinition = columnName + " " + getColumnTypeDefinition(aColumn);
 
-        if (!aField.isNullable()) {
-            fieldDefinition += " not null";
+        if (!aColumn.isNullable()) {
+            columnDefinition += " not null";
         } else {
-            fieldDefinition += " null";
+            columnDefinition += " null";
         }
-        return fieldDefinition;
+        return columnDefinition;
     }
 
     @Override
@@ -119,25 +119,25 @@ public class MsSqlSqlDriver extends SqlDriver {
      * {@inheritDoc}
      */
     @Override
-    public String[] getSqls4FieldModify(String aSchemaName, String aTableName, JdbcColumn aOldFieldMd, JdbcColumn aNewFieldMd) {
+    public String[] getSqlsOfColumnModify(String aSchemaName, String aTableName, JdbcColumn aOldColumn, JdbcColumn aNewColumn) {
         String fullTableName = makeFullName(aSchemaName, aTableName);
-        String alterFieldSql = String.format(ALTER_FIELD_SQL_PREFIX, fullTableName);
-        return new String[]{alterFieldSql + getSql4FieldDefinition(aNewFieldMd)};
+        String alterColumnSql = String.format(ALTER_COLUMN_SQL_PREFIX, fullTableName);
+        return new String[]{alterColumnSql + getSqlOfColumnDefinition(aNewColumn)};
     }
 
     @Override
-    public String[] getSqls4FieldRename(String aSchemaName, String aTableName, String aOldFieldName, JdbcColumn aNewFieldMd) {
+    public String[] getSqlsOfColumnRename(String aSchemaName, String aTableName, String aOldColumnName, JdbcColumn aNewColumn) {
         String fullTableName = makeFullName(aSchemaName, aTableName);
-        String sql = String.format("EXEC sp_rename '%s.%s','%s','COLUMN'", fullTableName, aOldFieldName, aNewFieldMd.getName());
+        String sql = String.format("EXEC sp_rename '%s.%s','%s','COLUMN'", fullTableName, aOldColumnName, aNewColumn.getName());
         return new String[]{sql};
     }
 
     @Override
-    public String[] getSqls4CreateColumnComment(String aOwnerName, String aTableName, String aFieldName, String aDescription) {
+    public String[] getSqls4CreateColumnComment(String aOwnerName, String aTableName, String aColumnName, String aDescription) {
         if (aDescription == null) {
             aDescription = "";
         }
-        return new String[]{String.format(ADD_COLUMN_COMMENT_CLAUSE, unescapeNameIfNeeded(aOwnerName), unescapeNameIfNeeded(aTableName), unescapeNameIfNeeded(aFieldName), aDescription, unescapeNameIfNeeded(aOwnerName), unescapeNameIfNeeded(aTableName), unescapeNameIfNeeded(aFieldName))};
+        return new String[]{String.format(ADD_COLUMN_COMMENT_CLAUSE, unescapeNameIfNeeded(aOwnerName), unescapeNameIfNeeded(aTableName), unescapeNameIfNeeded(aColumnName), aDescription, unescapeNameIfNeeded(aOwnerName), unescapeNameIfNeeded(aTableName), unescapeNameIfNeeded(aColumnName))};
     }
 
     @Override
@@ -179,13 +179,13 @@ public class MsSqlSqlDriver extends SqlDriver {
             // String pkSchemaName = pk.getSchema();
             String pkTableName = makeFullName(aSchemaName, pk.getTable());
 
-            StringBuilder fkColumnName = new StringBuilder(escapeNameIfNeeded(fk.getField()));
-            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getField()));
+            StringBuilder fkColumnName = new StringBuilder(escapeNameIfNeeded(fk.getColumn()));
+            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getColumn()));
             for (int i = 1; i < listFk.size(); i++) {
                 fk = listFk.get(i);
                 pk = fk.getReferee();
-                fkColumnName.append(", ").append(escapeNameIfNeeded(fk.getField()));
-                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getField()));
+                fkColumnName.append(", ").append(escapeNameIfNeeded(fk.getColumn()));
+                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getColumn()));
             }
 
             String fkRule = "";
@@ -224,17 +224,17 @@ public class MsSqlSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String[] getSqls4CreatePkConstraint(String aSchemaName, List<PrimaryKey> listPk) {
+    public String[] getSqlsOfCreatePkConstraint(String aSchemaName, List<PrimaryKey> listPk) {
         if (listPk != null && listPk.size() > 0) {
             PrimaryKey pk = listPk.get(0);
             String tableName = pk.getTable();
             String pkTableName = makeFullName(aSchemaName, tableName);
             String pkName = escapeNameIfNeeded(tableName + PRIMARY_KEY_NAME_SUFFIX);
 
-            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getField()));
+            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getColumn()));
             for (int i = 1; i < listPk.size(); i++) {
                 pk = listPk.get(i);
-                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getField()));
+                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getColumn()));
             }
             return new String[]{
                 String.format("ALTER TABLE %s ADD CONSTRAINT %s PRIMARY KEY (%s)", pkTableName, pkName, pkColumnName.toString())
@@ -249,10 +249,10 @@ public class MsSqlSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String[] getSqls4FieldAdd(String aSchemaName, String aTableName, JdbcColumn aField) {
+    public String[] getSqlsOfColumnAdd(String aSchemaName, String aTableName, JdbcColumn aColumn) {
         String fullTableName = makeFullName(aSchemaName, aTableName);
         return new String[]{
-            String.format(SqlDriver.ADD_FIELD_SQL_PREFIX, fullTableName) + getSql4FieldDefinition(aField)
+            String.format(SqlDriver.ADD_COLUMN_SQL_PREFIX, fullTableName) + getSqlOfColumnDefinition(aColumn)
         };
     }
 

@@ -3,13 +3,14 @@ package com.septima.entities;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.septima.Database;
+import com.septima.GenericType;
 import com.septima.Metadata;
-import com.septima.Parameter;
+import com.septima.metadata.Parameter;
 import com.septima.changes.EntityAction;
 import com.septima.dataflow.DataProvider;
 import com.septima.dataflow.EntityActionsBinder;
 import com.septima.jdbc.UncheckedSQLException;
-import com.septima.metadata.Field;
+import com.septima.metadata.EntityField;
 import com.septima.metadata.ForeignKey;
 import com.septima.metadata.JdbcColumn;
 import com.septima.queries.CaseInsensitiveMap;
@@ -150,14 +151,14 @@ public class SqlEntities {
                 .orElse(Map.of());
     }
 
-    private static Map<String, Field> columnsToApplicationFields(Map<String, JdbcColumn> tableFields, TypesResolver typesResolver) {
-        return tableFields.values().stream()
-                .map(column -> new Field(
+    private static Map<String, EntityField> columnsToApplicationFields(Map<String, JdbcColumn> tableColumns, TypesResolver typesResolver) {
+        return tableColumns.values().stream()
+                .map(column -> new EntityField(
                                 column.getName(),
                                 column.getDescription(),
                                 column.getOriginalName(),
                                 column.getTableName(),
-                                typesResolver.toApplicationType(column.getJdbcType(), column.getType()),
+                                typesResolver.toGenericType(column.getJdbcType(), column.getRdbmsType()),
                                 column.isNullable(),
                                 column.isPk(),
                                 column.getFk()
@@ -201,7 +202,7 @@ public class SqlEntities {
             Parameter parameter = params.getOrDefault(parameterName, new Parameter(parameterName));
             JsonNode parameterNode = parameterEntry.getValue();
             JsonNode typeNode = parameterNode.get("type");
-            String type = typeNode != null && typeNode.isTextual() ? typeNode.asText(parameter.getType()) : parameter.getType();
+            GenericType type = typeNode != null && typeNode.isTextual() ? GenericType.of(typeNode.asText(), parameter.getType()) : parameter.getType();
             JsonNode descriptionNode = parameterNode.get("description");
             String description = descriptionNode != null && descriptionNode.isTextual() ? descriptionNode.asText(parameter.getDescription()) : parameter.getDescription();
             JsonNode valueNode = parameterNode.get("value");
@@ -237,23 +238,23 @@ public class SqlEntities {
         };
     }
 
-    private static Consumer<Map.Entry<String, JsonNode>> fieldReader(Map<String, Field> fields, String entityName) {
+    private static Consumer<Map.Entry<String, JsonNode>> fieldReader(Map<String, EntityField> fields, String entityName) {
         return (fieldEntry) -> {
             String fieldName = fieldEntry.getKey();
-            Field field = fields.getOrDefault(fieldName, new Field(fieldName));
+            EntityField entityField = fields.getOrDefault(fieldName, new EntityField(fieldName));
             JsonNode fieldNode = fieldEntry.getValue();
             JsonNode typeNode = fieldNode.get("type");
-            String type = typeNode != null && typeNode.isTextual() ? typeNode.asText(field.getType()) : field.getType();
+            GenericType type = typeNode != null && typeNode.isTextual() ? GenericType.of(typeNode.asText(), entityField.getType()) : entityField.getType();
             JsonNode descriptionNode = fieldNode.get("description");
-            String description = descriptionNode != null && descriptionNode.isTextual() ? descriptionNode.asText(field.getDescription()) : field.getDescription();
+            String description = descriptionNode != null && descriptionNode.isTextual() ? descriptionNode.asText(entityField.getDescription()) : entityField.getDescription();
             JsonNode nullableNode = fieldNode.get("nullable");
-            boolean nullable = nullableNode != null && nullableNode.isBoolean() ? nullableNode.asBoolean() : field.isNullable();
+            boolean nullable = nullableNode != null && nullableNode.isBoolean() ? nullableNode.asBoolean() : entityField.isNullable();
             JsonNode originalNameNode = fieldNode.get("originalName");
-            String originalName = originalNameNode != null && originalNameNode.isTextual() ? originalNameNode.asText(field.getOriginalName()) : field.getOriginalName();
+            String originalName = originalNameNode != null && originalNameNode.isTextual() ? originalNameNode.asText(entityField.getOriginalName()) : entityField.getOriginalName();
             JsonNode tableNameNode = fieldNode.get("tableName");
-            String tableName = tableNameNode != null && tableNameNode.isTextual() ? tableNameNode.asText(field.getTableName()) : field.getTableName();
+            String tableName = tableNameNode != null && tableNameNode.isTextual() ? tableNameNode.asText(entityField.getTableName()) : entityField.getTableName();
             JsonNode keyNode = fieldNode.get("key");
-            boolean key = keyNode != null && keyNode.isBoolean() ? keyNode.asBoolean() : field.isPk();
+            boolean key = keyNode != null && keyNode.isBoolean() ? keyNode.asBoolean() : entityField.isPk();
             String referencedEntity;
             String referencedKey;
             JsonNode referenceNode = fieldNode.get("reference");
@@ -275,7 +276,7 @@ public class SqlEntities {
                 referencedEntity = null;
                 referencedKey = null;
             }
-            fields.put(fieldName, new Field(
+            fields.put(fieldName, new EntityField(
                             fieldName,
                             description,
                             originalName,
@@ -289,7 +290,7 @@ public class SqlEntities {
                                             null, entityName, fieldName, null,
                                             ForeignKey.ForeignKeyRule.NO_ACTION, ForeignKey.ForeignKeyRule.NO_ACTION, false,
                                             null, referencedEntity, referencedKey, null)
-                                    : field.getFk()
+                                    : entityField.getFk()
                     )
             );
         };
@@ -353,7 +354,7 @@ public class SqlEntities {
 
             InlineEntities.to(querySyntax, this, paramsBinds, anEntityJsonFile.getParentFile().toPath(), aIllegalRefrences);
             String sqlWithSubQueries = StatementDeParser.assemble(querySyntax);
-            Map<String, Field> fields = columnsToApplicationFields(
+            Map<String, EntityField> fields = columnsToApplicationFields(
                     resolveColumnsBySyntax(database, querySyntax), database.getSqlDriver().getTypesResolver()
             );
 
@@ -461,7 +462,7 @@ public class SqlEntities {
                 resolved.getDescription(),
                 resolved.getOriginalName(),
                 resolved.getTableName(),
-                resolved.getType(),
+                resolved.getRdbmsType(),
                 resolved.isNullable(),
                 resolved.isPk(),
                 resolved.getFk(),
@@ -469,7 +470,7 @@ public class SqlEntities {
                 resolved.getScale(),
                 resolved.getPrecision(),
                 resolved.isSigned(),
-                resolved.getSchemaName(),
+                resolved.getSchema(),
                 resolved.getJdbcType()
         );
     }

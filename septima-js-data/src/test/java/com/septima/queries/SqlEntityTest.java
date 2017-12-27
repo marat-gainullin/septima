@@ -1,7 +1,7 @@
 package com.septima.queries;
 
 import com.septima.Database;
-import com.septima.Parameter;
+import com.septima.metadata.Parameter;
 import com.septima.TestDataSource;
 import com.septima.dataflow.DataProvider;
 import com.septima.entities.SqlEntity;

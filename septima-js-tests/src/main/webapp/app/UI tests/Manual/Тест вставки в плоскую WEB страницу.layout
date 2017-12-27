@@ -6,7 +6,7 @@
   </widget>
   <widget deletable="false" insertable="false" name="dbGrid1" parent="Form" prefHeight="267px" prefWidth="536px" rowsHeight="15" showHorizontalLines="false" showOddRowsInOtherColor="false" showVerticalLines="false" type="DbGridDesignInfo">
     <rowsColumnsDesignInfo rowsHeaderType="3">
-      <rowsDatasource entityId="134123372648433" field="false"/>
+      <rowsDatasource entityId="134123372648433" entityField="false"/>
     </rowsColumnsDesignInfo>
     <treeDesignInfo>
       <unaryLinkField/>

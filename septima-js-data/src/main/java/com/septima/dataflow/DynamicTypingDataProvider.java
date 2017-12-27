@@ -1,11 +1,11 @@
 package com.septima.dataflow;
 
-import com.septima.Parameter;
+import com.septima.metadata.Parameter;
 import com.septima.jdbc.JdbcDataProvider;
 import com.septima.jdbc.JdbcReaderAssigner;
 import com.septima.jdbc.ResultSetReader;
 import com.septima.jdbc.UncheckedSQLException;
-import com.septima.metadata.Field;
+import com.septima.metadata.EntityField;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
@@ -22,7 +22,7 @@ public class DynamicTypingDataProvider extends JdbcDataProvider {
 
     private final String entityName;
 
-    public DynamicTypingDataProvider(JdbcReaderAssigner aJdbcReaderAssigner, String aEntityName, DataSource aDataSource, Executor aDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
+    public DynamicTypingDataProvider(JdbcReaderAssigner aJdbcReaderAssigner, String aEntityName, DataSource aDataSource, Executor aDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, EntityField> aExpectedFields) {
         super(aDataSource, aJdbcReaderAssigner, aDataPuller, aFutureExecutor, aClause, aProcedure, aPageSize, aExpectedFields);
         entityName = aEntityName;
     }

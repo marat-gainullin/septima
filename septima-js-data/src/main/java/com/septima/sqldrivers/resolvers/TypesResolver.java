@@ -1,16 +1,18 @@
 package com.septima.sqldrivers.resolvers;
 
+import com.septima.GenericType;
+
 import java.util.Set;
 
 /**
- * Resolver incapsulates functionality, involved in fields types resolving
+ * Resolver encapsulates functionality, involved in fields types resolving
  * from/transform RDBMS friendly form.
  *
  * @author mg
  */
 public interface TypesResolver {
 
-    String toApplicationType(int aJdbcType, String aRdbmsTypeName);
+    GenericType toGenericType(int aJdbcType, String aRdbmsTypeName);
     
     Set<String> getSupportedTypes();
     

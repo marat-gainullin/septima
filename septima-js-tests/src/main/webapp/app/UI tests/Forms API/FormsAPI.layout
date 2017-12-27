@@ -85,7 +85,7 @@
       </headerStyle>
     </column>
     <rowsColumnsDesignInfo>
-      <rowsDatasource entityId="-1" field="false"/>
+      <rowsDatasource entityId="-1" entityField="false"/>
     </rowsColumnsDesignInfo>
     <constraints bottom="31px" height="160px" left="20px" type="MarginConstraintsDesignInfo" width="410px"/>
   </widget>
@@ -304,7 +304,7 @@
       </headerStyle>
     </column>
     <rowsColumnsDesignInfo fixedColumns="1" fixedRows="2">
-      <rowsDatasource entityId="135151532000209" field="false"/>
+      <rowsDatasource entityId="135151532000209" entityField="false"/>
     </rowsColumnsDesignInfo>
     <constraints height="130px" left="20px" right="540px" top="590px" type="MarginConstraintsDesignInfo"/>
     <easFont name="Tahoma" size="11" style="1"/>
@@ -458,7 +458,7 @@
       </headerStyle>
     </column>
     <rowsColumnsDesignInfo>
-      <rowsDatasource entityId="-1" field="false"/>
+      <rowsDatasource entityId="-1" entityField="false"/>
     </rowsColumnsDesignInfo>
     <constraints bottom="201px" height="160px" left="20px" type="MarginConstraintsDesignInfo" width="680px"/>
   </widget>
@@ -530,7 +530,7 @@
   <widget name="grdAddresses" parent="Form" prefHeight="160px" prefWidth="260px" type="DbGridDesignInfo">
     <treeDesignInfo>
       <unaryLinkField entityId="136091764773245" fieldName="MDENT_PARENT_ID"/>
-      <param2GetChildren entityId="136091764773245" field="false" fieldName="parent"/>
+      <param2GetChildren entityId="136091764773245" entityField="false" fieldName="parent"/>
       <paramSourceField entityId="136091764773245" fieldName="MDENT_ID"/>
     </treeDesignInfo>
     <column name="mDENT_ID">
@@ -654,7 +654,7 @@
       </headerStyle>
     </column>
     <rowsColumnsDesignInfo>
-      <rowsDatasource entityId="136091764773245" field="false"/>
+      <rowsDatasource entityId="136091764773245" entityField="false"/>
     </rowsColumnsDesignInfo>
     <constraints bottom="31px" height="160px" left="440px" type="MarginConstraintsDesignInfo" width="260px"/>
   </widget>

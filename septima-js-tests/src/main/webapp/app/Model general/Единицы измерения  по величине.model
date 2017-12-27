@@ -2,7 +2,7 @@
 <datamodel>
 <parameters>
 <parameter description="Измеряемая величина" name="VALUE" nullable="true" parameterMode="0" precision="10" scale="0" selectionForm="null" signed="true" size="22" type="3" typeName="NUMBER">
-<primaryKey field="ID" name="PK_MEASURANDS" schema="EAS" table="MEASURANDS"/>
+<primaryKey entityField="ID" name="PK_MEASURANDS" schema="EAS" table="MEASURANDS"/>
 </parameter>
 </parameters>
 <parametersEntity entityHeight="200" entityIconified="false" entityLocationX="10" entityLocationY="20" entityWidth="150"/>

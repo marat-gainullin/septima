@@ -1,10 +1,10 @@
 package com.septima.entities;
 
-import com.septima.GenericDataTypes;
+import com.septima.GenericType;
 import com.septima.Database;
 import com.septima.dataflow.DataProvider;
-import com.septima.metadata.Field;
-import com.septima.Parameter;
+import com.septima.metadata.EntityField;
+import com.septima.metadata.Parameter;
 import com.septima.queries.SqlQuery;
 
 import java.util.*;
@@ -44,7 +44,7 @@ public class SqlEntity {
     private final String title;
     private final int pageSize;
     private final Map<String, Parameter> params;
-    private final Map<String, Field> fields;
+    private final Map<String, EntityField> fields;
     private final Set<String> writable;
     private final Set<String> readRoles;
     private final Set<String> writeRoles;
@@ -84,7 +84,7 @@ public class SqlEntity {
                      String aTitle,
                      int aPageSize,
                      Map<String, Parameter> aParams,
-                     Map<String, Field> aFields,
+                     Map<String, EntityField> aFields,
                      Set<String> aWritable,
                      Set<String> aReadRoles,
                      Set<String> aWriteRoles
@@ -157,7 +157,7 @@ public class SqlEntity {
         return procedure;
     }
 
-    public Map<String, Field> getFields() {
+    public Map<String, EntityField> getFields() {
         return fields;
     }
 
@@ -198,7 +198,7 @@ public class SqlEntity {
                             p.getMode(),
                             p.getDescription()
                     ));
-                    return postgreSQL && GenericDataTypes.DATE_TYPE_NAME.equals(p.getType()) ? "?::timestamp" : "?";
+                    return postgreSQL && GenericType.DATE == p.getType() ? "?::timestamp" : "?";
                 }
         );
         return new SqlQuery(
@@ -253,7 +253,7 @@ public class SqlEntity {
         Map<String, Parameter> params = new LinkedHashMap<>();
         if (aSource != null && !aSource.isEmpty()) {
             riddleParameters(aSource, paramName -> {
-                params.put(paramName, new Parameter(paramName, null, GenericDataTypes.STRING_TYPE_NAME));
+                params.put(paramName, new Parameter(paramName, null, GenericType.STRING));
                 return paramName;
             });
         }

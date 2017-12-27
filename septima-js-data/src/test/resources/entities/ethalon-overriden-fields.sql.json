@@ -4,7 +4,7 @@
   "fields": {
     "id": {
       "key": true,
-      "type": "Number",
+      "type": "Long",
       "description": "Newly added key"
     },
     "order_id": {

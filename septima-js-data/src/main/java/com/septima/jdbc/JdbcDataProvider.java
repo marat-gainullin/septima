@@ -1,9 +1,9 @@
 package com.septima.jdbc;
 
-import com.septima.GenericDataTypes;
-import com.septima.Parameter;
+import com.septima.GenericType;
+import com.septima.metadata.Parameter;
 import com.septima.dataflow.DataProvider;
-import com.septima.metadata.Field;
+import com.septima.metadata.EntityField;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -39,7 +39,7 @@ public abstract class JdbcDataProvider implements DataProvider {
     protected final Executor futureExecutor;
     protected final int pageSize;
 
-    protected final Map<String, Field> expectedFields;
+    protected final Map<String, EntityField> expectedFields;
 
     private Connection lowLevelConnection;
     private PreparedStatement lowLevelStatement;
@@ -59,7 +59,7 @@ public abstract class JdbcDataProvider implements DataProvider {
      * @param aExpectedFields  Fields, expected by Septima according transform metadata analysis.
      * @see DataSource
      */
-    public JdbcDataProvider(DataSource aDataSource, JdbcReaderAssigner aJdbcReaderAssigner, Executor aAsyncDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
+    public JdbcDataProvider(DataSource aDataSource, JdbcReaderAssigner aJdbcReaderAssigner, Executor aAsyncDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, EntityField> aExpectedFields) {
         super();
         Objects.requireNonNull(aClause, "Flow provider cant't exist without a selecting sql clause");
         Objects.requireNonNull(aDataSource, "Flow provider can't exist without a data source");
@@ -193,7 +193,7 @@ public abstract class JdbcDataProvider implements DataProvider {
                 for (int i = 1; i <= aParams.size(); i++) {
                     Parameter param = aParams.get(i - 1);
                     Object paramValue = param.getValue();
-                    if (paramValue != null && GenericDataTypes.DATE_TYPE_NAME.equals(param.getType())) {
+                    if (paramValue != null && GenericType.DATE == param.getType()) {
                         java.util.Date dateValue = (java.util.Date) paramValue;
                         SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
                         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));

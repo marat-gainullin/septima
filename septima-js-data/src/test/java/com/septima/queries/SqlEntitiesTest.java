@@ -1,12 +1,12 @@
 package com.septima.queries;
 
-import com.septima.GenericDataTypes;
-import com.septima.Parameter;
+import com.septima.GenericType;
+import com.septima.metadata.Parameter;
 import com.septima.TestDataSource;
 import com.septima.entities.SqlEntities;
 import com.septima.entities.SqlEntity;
 import com.septima.entities.SqlEntityCyclicReferenceException;
-import com.septima.metadata.Field;
+import com.septima.metadata.EntityField;
 import net.sf.jsqlparser.UncheckedJSqlParserException;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -159,55 +159,55 @@ public class SqlEntitiesTest {
         assertEquals(1, entity.getParameters().size());
         Parameter quantity = entity.getParameters().get("quantity");
         assertNotNull(quantity);
-        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, quantity.getType());
+        assertSame(GenericType.DOUBLE, quantity.getType());
         assertEquals("Quantity desc", quantity.getDescription());
         assertEquals("Simon", quantity.getValue());
         assertEquals(Parameter.Mode.InOut, quantity.getMode());
-        // Select o.order_id id, o.amount amt, o.good goodik, o.customer orderer, o.field1 other From ...
+        // Select o.order_id id, o.amount amt, o.good goodik, o.customer orderer, o.entityField1 other From ...
         // Fields
         assertEquals(5, entity.getFields().size());
-        Field order_id = entity.getFields().get("id");
+        EntityField order_id = entity.getFields().get("id");
         assertNotNull(order_id);
         assertEquals("id", order_id.getName());
         assertEquals("ORDER_ID", order_id.getOriginalName());
         assertTrue(order_id.isPk());
         assertEquals("Order key", order_id.getDescription());
         assertEquals("GOODORDER", order_id.getTableName());
-        assertEquals("Number", order_id.getType());
+        assertSame(GenericType.DOUBLE, order_id.getType());
         assertNull(order_id.getFk());
-        Field amount = entity.getFields().get("amt");
+        EntityField amount = entity.getFields().get("amt");
         assertNotNull(amount);
         assertEquals("amt", amount.getName());
         assertEquals("AMOUNT", amount.getOriginalName());
         assertFalse(amount.isPk());
         assertEquals("Goods amount", amount.getDescription());
         assertEquals("GOODORDER", amount.getTableName());
-        assertEquals("Number", amount.getType());
+        assertSame(GenericType.DOUBLE, amount.getType());
         assertNull(amount.getFk());
-        Field good = entity.getFields().get("goodik");
+        EntityField good = entity.getFields().get("goodik");
         assertNotNull(good);
         assertEquals("goodik", good.getName());
         assertEquals("GOOD", good.getOriginalName());
         assertEquals("Ordered good", good.getDescription());
         assertEquals("GOODORDER", good.getTableName());
-        assertEquals("Number", good.getType());
+        assertSame(GenericType.DOUBLE, good.getType());
         assertNotNull(good.getFk());
-        Field customer = entity.getFields().get("orderer");
+        EntityField customer = entity.getFields().get("orderer");
         assertNotNull(customer);
         assertEquals("orderer", customer.getName());
         assertEquals("CUSTOMER", customer.getOriginalName());
         assertEquals("Good orderer", customer.getDescription());
         assertEquals("GOODORDER", customer.getTableName());
-        assertEquals("Number", customer.getType());
+        assertSame(GenericType.DOUBLE, customer.getType());
         assertNotNull(customer.getFk());
-        Field field1 = entity.getFields().get("other");
-        assertNotNull(field1);
-        assertEquals("other", field1.getName());
-        assertEquals("FIELD1", field1.getOriginalName());
-        assertEquals("", field1.getDescription());
-        assertEquals("GOODORDER", field1.getTableName());
-        assertNull(field1.getType());
-        assertNull(field1.getFk());
+        EntityField entityField1 = entity.getFields().get("other");
+        assertNotNull(entityField1);
+        assertEquals("other", entityField1.getName());
+        assertEquals("FIELD1", entityField1.getOriginalName());
+        assertEquals("", entityField1.getDescription());
+        assertEquals("GOODORDER", entityField1.getTableName());
+        assertNull(entityField1.getType());
+        assertNull(entityField1.getFk());
 
         assertEquals(Set.of("orders"), entity.getWritable());
         assertEquals(Set.of("disp", "mech"), entity.getReadRoles());
@@ -225,16 +225,16 @@ public class SqlEntitiesTest {
         // Fields
         assertEquals(6, entity.getFields().size());
         // Surrogate field
-        Field id = entity.getFields().get("id");
+        EntityField id = entity.getFields().get("id");
         assertNotNull(id);
         assertEquals("id", id.getName());
         assertEquals("id", id.getOriginalName());
         assertTrue(id.isPk());
         assertEquals("Newly added key", id.getDescription());
-        assertEquals("Number", id.getType());
+        assertSame(GenericType.LONG, id.getType());
         assertNull(id.getFk());
         // Overriden field
-        Field order_id = entity.getFields().get("order_id");
+        EntityField order_id = entity.getFields().get("order_id");
         assertNotNull(order_id);
         assertEquals("order_id", order_id.getName());
         assertEquals("ORDER_ID", order_id.getOriginalName());
@@ -242,7 +242,7 @@ public class SqlEntitiesTest {
         assertEquals("Disabled key", order_id.getDescription());
         assertEquals("un-existent-table", order_id.getTableName());
         assertFalse(order_id.isNullable());
-        assertEquals(GenericDataTypes.STRING_TYPE_NAME, order_id.getType());
+        assertSame(GenericType.STRING, order_id.getType());
         assertNotNull(order_id.getFk());
     }
 
@@ -275,21 +275,21 @@ public class SqlEntitiesTest {
         );
         SqlEntity entity = entities.loadEntity("entities/case/with-various-case");
         assertEquals(4, entity.getFields().size());
-        Field mdent_id = entity.getFields().get("mdent_id");
+        EntityField mdent_id = entity.getFields().get("mdent_id");
         assertEquals("MDENt_ID", mdent_id.getName());
-        assertEquals(GenericDataTypes.STRING_TYPE_NAME, mdent_id.getType());
+        assertSame(GenericType.STRING, mdent_id.getType());
         assertTrue(mdent_id.isPk());
-        Field mdent_name = entity.getFields().get("mdent_name");
+        EntityField mdent_name = entity.getFields().get("mdent_name");
         assertEquals("MDENT_NAME", mdent_name.getName());
-        assertEquals(GenericDataTypes.STRING_TYPE_NAME, mdent_name.getType());
+        assertSame(GenericType.STRING, mdent_name.getType());
         assertFalse(mdent_name.isPk());
-        Field mdent_type = entity.getFields().get("mdent_type");
+        EntityField mdent_type = entity.getFields().get("mdent_type");
         assertEquals("MDENT_TYPe", mdent_type.getName());
-        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, mdent_type.getType());
+        assertSame(GenericType.DOUBLE, mdent_type.getType());
         assertFalse(mdent_type.isPk());
-        Field mdent_order = entity.getFields().get("mdent_order");
+        EntityField mdent_order = entity.getFields().get("mdent_order");
         assertEquals("MDENT_ORDER", mdent_order.getName());
-        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, mdent_order.getType());
+        assertSame(GenericType.DOUBLE, mdent_order.getType());
         assertFalse(mdent_order.isPk());
     }
 
@@ -300,10 +300,10 @@ public class SqlEntitiesTest {
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
         SqlEntity entity = entities.loadEntity("entities/keys/with-multiple-primary-keys");
-        Field mdent_id = entity.getFields().get("mdent_id");
+        EntityField mdent_id = entity.getFields().get("mdent_id");
         assertNotNull(mdent_id);
         assertTrue(mdent_id.isPk());
-        Field mdlog_id = entity.getFields().get("mdlog_id");
+        EntityField mdlog_id = entity.getFields().get("mdlog_id");
         assertNotNull(mdlog_id);
         assertTrue(mdlog_id.isPk());
     }
@@ -389,14 +389,14 @@ public class SqlEntitiesTest {
         SqlEntity entity = entities.loadEntity("entities/columns/without-source");
         assertNotNull(entity);
         assertEquals(2, entity.getFields().size());
-        Field mdent_name = entity.getFields().get("mdent_name");
+        EntityField mdent_name = entity.getFields().get("mdent_name");
         assertEquals("MDENT_NAME", mdent_name.getName());
-        assertEquals(GenericDataTypes.STRING_TYPE_NAME, mdent_name.getType());
+        assertSame(GenericType.STRING, mdent_name.getType());
         assertEquals("MTD_ENTITIES", mdent_name.getTableName());
         assertFalse(mdent_name.isPk());
-        Field f1 = entity.getFields().get("f1");
+        EntityField f1 = entity.getFields().get("f1");
         assertEquals("F1", f1.getName());
-        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, f1.getType());
+        assertSame(GenericType.DOUBLE, f1.getType());
         assertEquals("TABLE1", f1.getTableName());
         assertFalse(f1.isPk());
     }
@@ -412,7 +412,7 @@ public class SqlEntitiesTest {
         assertEquals(3, entity.getFields().size());
         assertTrue(entity.getFields().containsKey("id"));
         assertTrue(entity.getFields().containsKey("amt"));
-        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, entity.getFields().get("amt").getType());
+        assertSame(GenericType.DOUBLE, entity.getFields().get("amt").getType());
         assertTrue(entity.getFields().containsKey("customer"));
     }
 
@@ -427,7 +427,7 @@ public class SqlEntitiesTest {
         assertEquals(3, entity.getFields().size());
         assertTrue(entity.getFields().containsKey("ORDER_ID"));
         assertTrue(entity.getFields().containsKey("AMOUNT"));
-        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, entity.getFields().get("AMOUNT").getType());
+        assertSame(GenericType.DOUBLE, entity.getFields().get("AMOUNT").getType());
         assertTrue(entity.getFields().containsKey("CUSTOMER_NAME"));
     }
 
@@ -442,7 +442,7 @@ public class SqlEntitiesTest {
         assertEquals(3, entity.getFields().size());
         assertTrue(entity.getFields().containsKey("ORDER_ID"));
         assertTrue(entity.getFields().containsKey("AMOUNT"));
-        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, entity.getFields().get("AMOUNT").getType());
+        assertSame(GenericType.DOUBLE, entity.getFields().get("AMOUNT").getType());
         assertTrue(entity.getFields().containsKey("CUSTOMER_NAME"));
     }
 
@@ -454,21 +454,21 @@ public class SqlEntitiesTest {
         );
         SqlEntity entity = entities.loadEntity("entities/columns/with-schema-in-columns");
         assertEquals(4, entity.getFields().size());
-        Field mdent_id = entity.getFields().get("mdent_id");
+        EntityField mdent_id = entity.getFields().get("mdent_id");
         assertEquals("MDENt_ID", mdent_id.getName());
-        assertEquals(GenericDataTypes.STRING_TYPE_NAME, mdent_id.getType());
+        assertSame(GenericType.STRING, mdent_id.getType());
         assertTrue(mdent_id.isPk());
-        Field mdent_name = entity.getFields().get("mdent_name");
+        EntityField mdent_name = entity.getFields().get("mdent_name");
         assertEquals("MDENT_NAME", mdent_name.getName());
-        assertEquals(GenericDataTypes.STRING_TYPE_NAME, mdent_name.getType());
+        assertSame(GenericType.STRING, mdent_name.getType());
         assertFalse(mdent_name.isPk());
-        Field mdent_type = entity.getFields().get("mdent_type");
+        EntityField mdent_type = entity.getFields().get("mdent_type");
         assertEquals("MDENT_TYPe", mdent_type.getName());
-        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, mdent_type.getType());
+        assertSame(GenericType.DOUBLE, mdent_type.getType());
         assertFalse(mdent_type.isPk());
-        Field mdent_order = entity.getFields().get("mdent_order");
+        EntityField mdent_order = entity.getFields().get("mdent_order");
         assertEquals("MDENT_ORDER", mdent_order.getName());
-        assertEquals(GenericDataTypes.NUMBER_TYPE_NAME, mdent_order.getType());
+        assertSame(GenericType.DOUBLE, mdent_order.getType());
         assertFalse(mdent_order.isPk());
     }
 
@@ -481,7 +481,7 @@ public class SqlEntitiesTest {
         SqlEntity entity = entities.loadEntity("entities/columns/expression-column");
         assertNotNull(entity);
         assertTrue(entity.getFields().containsKey("txt"));
-        assertEquals(GenericDataTypes.STRING_TYPE_NAME, entity.getFields().get("txt").getType());
+        assertSame(GenericType.STRING, entity.getFields().get("txt").getType());
     }
 
     @Test

@@ -21,8 +21,8 @@ public class Db2SqlDriver extends SqlDriver {
     private static final String GET_SCHEMA_CLAUSE = "VALUES CURRENT SCHEMA";
     private static final String CREATE_SCHEMA_CLAUSE = "CREATE SCHEMA %s";
     private static final Db2TypesResolver resolver = new Db2TypesResolver();
-    private static final String SQL_RENAME_FIELD = "alter table %s rename column %s transform %s";
-    private static final String ALTER_FIELD_SQL_PREFIX = "alter table %s alter column ";
+    private static final String SQL_RENAME_COLUMN = "alter table %s rename column %s transform %s";
+    private static final String ALTER_COLUMN_SQL_PREFIX = "alter table %s alter column ";
     private static final String RE_ORG_TABLE = "CALL SYSPROC.ADMIN_CMD('REORG TABLE %s')";
     private static final String VOLATILE_TABLE = "ALTER TABLE %s VOLATILE CARDINALITY";
 
@@ -45,11 +45,11 @@ public class Db2SqlDriver extends SqlDriver {
     }
 
     @Override
-    public String[] getSqls4CreateColumnComment(String aOwnerName, String aTableName, String aFieldName, String aDescription) {
+    public String[] getSqls4CreateColumnComment(String aOwnerName, String aTableName, String aColumnName, String aDescription) {
         aOwnerName = escapeNameIfNeeded(aOwnerName);
         aTableName = escapeNameIfNeeded(aTableName);
-        aFieldName = escapeNameIfNeeded(aFieldName);
-        String sqlText = aOwnerName == null ? String.join(".", aTableName, aFieldName) : String.join(".", aOwnerName, aTableName, aFieldName);
+        aColumnName = escapeNameIfNeeded(aColumnName);
+        String sqlText = aOwnerName == null ? String.join(".", aTableName, aColumnName) : String.join(".", aOwnerName, aTableName, aColumnName);
         if (aDescription == null) {
             aDescription = "";
         }
@@ -78,18 +78,18 @@ public class Db2SqlDriver extends SqlDriver {
     }
 
     @Override
-    public String getSql4EmptyTableCreation(String aSchemaName, String aTableName, String aPkFieldName) {
+    public String getSql4EmptyTableCreation(String aSchemaName, String aTableName, String aPkColumnName) {
         String tableName = makeFullName(aSchemaName, aTableName);
-        aPkFieldName = escapeNameIfNeeded(aPkFieldName);
+        aPkColumnName = escapeNameIfNeeded(aPkColumnName);
         return "CREATE TABLE " + tableName + " ("
-                + aPkFieldName + " DECIMAL(18,0) NOT NULL,"
-                + "CONSTRAINT " + escapeNameIfNeeded(aTableName + PRIMARY_KEY_NAME_SUFFIX) + " PRIMARY KEY (" + aPkFieldName + "))";
+                + aPkColumnName + " DECIMAL(18,0) NOT NULL,"
+                + "CONSTRAINT " + escapeNameIfNeeded(aTableName + PRIMARY_KEY_NAME_SUFFIX) + " PRIMARY KEY (" + aPkColumnName + "))";
     }
 
-    private String getFieldTypeDefinition(JdbcColumn aField) {
-        String typeName = aField.getType();
-        int size = aField.getSize();
-        int scale = aField.getScale();
+    private String getColumnTypeDefinition(JdbcColumn aColumn) {
+        String typeName = aColumn.getRdbmsType();
+        int size = aColumn.getSize();
+        int scale = aColumn.getScale();
         if (resolver.isScaled(typeName) && resolver.isSized(typeName) && size > 0) {
             typeName += "(" + String.valueOf(size) + "," + String.valueOf(scale) + ")";
         } else if (resolver.isSized(typeName) && size > 0) {
@@ -101,38 +101,38 @@ public class Db2SqlDriver extends SqlDriver {
     }
 
     @Override
-    public String getSql4FieldDefinition(JdbcColumn aField) {
-        return escapeNameIfNeeded(aField.getName()) + " " + getFieldTypeDefinition(aField);
+    public String getSqlOfColumnDefinition(JdbcColumn aColumn) {
+        return escapeNameIfNeeded(aColumn.getName()) + " " + getColumnTypeDefinition(aColumn);
     }
 
     @Override
-    public String[] getSqls4FieldModify(String aSchemaName, String aTableName, JdbcColumn aOldFieldMd, JdbcColumn aNewField) {
+    public String[] getSqlsOfColumnModify(String aSchemaName, String aTableName, JdbcColumn aOldColumn, JdbcColumn aNewColumn) {
         List<String> sqls = new ArrayList<>();
         String fullTableName = makeFullName(aSchemaName, aTableName);
-        String updateDefinition = String.format(ALTER_FIELD_SQL_PREFIX, fullTableName) + escapeNameIfNeeded(aOldFieldMd.getName()) + " ";
-        String fieldDefination = getFieldTypeDefinition(aNewField);
+        String updateDefinition = String.format(ALTER_COLUMN_SQL_PREFIX, fullTableName) + escapeNameIfNeeded(aOldColumn.getName()) + " ";
+        String columnDefinition = getColumnTypeDefinition(aNewColumn);
 
-        String newSqlTypeName = aNewField.getType();
+        String newSqlTypeName = aNewColumn.getRdbmsType();
         if (newSqlTypeName == null) {
             newSqlTypeName = "";
         }
-        int newScale = aNewField.getScale();
-        int newSize = aNewField.getSize();
-        boolean newNullable = aNewField.isNullable();
+        int newScale = aNewColumn.getScale();
+        int newSize = aNewColumn.getSize();
+        boolean newNullable = aNewColumn.isNullable();
 
-        String oldSqlTypeName = aOldFieldMd.getType();
+        String oldSqlTypeName = aOldColumn.getRdbmsType();
         if (oldSqlTypeName == null) {
             oldSqlTypeName = "";
         }
-        int oldScale = aOldFieldMd.getScale();
-        int oldSize = aOldFieldMd.getSize();
-        boolean oldNullable = aOldFieldMd.isNullable();
+        int oldScale = aOldColumn.getScale();
+        int oldSize = aOldColumn.getSize();
+        boolean oldNullable = aOldColumn.isNullable();
 
         sqls.add(getSql4VolatileTable(fullTableName));
         if (!oldSqlTypeName.equalsIgnoreCase(newSqlTypeName)
                 || (resolver.isSized(newSqlTypeName) && newSize != oldSize)
                 || (resolver.isScaled(newSqlTypeName) && newScale != oldScale)) {
-            sqls.add(updateDefinition + " set data type " + fieldDefination);
+            sqls.add(updateDefinition + " set data type " + columnDefinition);
         }
         if (oldNullable != newNullable) {
             sqls.add(updateDefinition + (newNullable ? " drop not null" : " set not null"));
@@ -140,18 +140,18 @@ public class Db2SqlDriver extends SqlDriver {
         if (sqls.size() == 1) {
             sqls.clear();
         } else {
-            sqls.add(getSql4ReorgTable(fullTableName));
+            sqls.add(getSql4ReOrgTable(fullTableName));
         }
         return sqls.toArray(new String[sqls.size()]);
     }
 
     @Override
-    public String[] getSql4FieldDrop(String aSchemaName, String aTableName, String aFieldName) {
+    public String[] getSqlOfColumnDrop(String aSchemaName, String aTableName, String aColumnName) {
         String fullTableName = makeFullName(aSchemaName, aTableName);
         return new String[]{
             getSql4VolatileTable(fullTableName),
-            String.format(DROP_FIELD_SQL_PREFIX, fullTableName) + escapeNameIfNeeded(aFieldName),
-            getSql4ReorgTable(fullTableName)
+            String.format(DROP_COLUMN_SQL_PREFIX, fullTableName) + escapeNameIfNeeded(aColumnName),
+            getSql4ReOrgTable(fullTableName)
         };
     }
 
@@ -159,13 +159,13 @@ public class Db2SqlDriver extends SqlDriver {
      * DB2 9.7 or later
      */
     @Override
-    public String[] getSqls4FieldRename(String aSchemaName, String aTableName, String aOldFieldName, JdbcColumn aNewFieldMd) {
+    public String[] getSqlsOfColumnRename(String aSchemaName, String aTableName, String aOldColumnName, JdbcColumn aNewColumn) {
         String fullTableName = makeFullName(aSchemaName, aTableName);
-        String sqlText = String.format(SQL_RENAME_FIELD, fullTableName, escapeNameIfNeeded(aOldFieldName), escapeNameIfNeeded(aNewFieldMd.getName()));
+        String sqlText = String.format(SQL_RENAME_COLUMN, fullTableName, escapeNameIfNeeded(aOldColumnName), escapeNameIfNeeded(aNewColumn.getName()));
         return new String[]{
             getSql4VolatileTable(fullTableName),
             sqlText,
-            getSql4ReorgTable(fullTableName)
+            getSql4ReOrgTable(fullTableName)
         };
     }
 
@@ -173,7 +173,7 @@ public class Db2SqlDriver extends SqlDriver {
         return String.format(VOLATILE_TABLE, aTableName);
     }
 
-    private String getSql4ReorgTable(String aTableName) {
+    private String getSql4ReOrgTable(String aTableName) {
         return String.format(RE_ORG_TABLE, aTableName);
     }
 
@@ -201,13 +201,13 @@ public class Db2SqlDriver extends SqlDriver {
             String fkTableName = makeFullName(aSchemaName, fk.getTable());
             String pkTableName = makeFullName(aSchemaName, pk.getTable());
 
-            StringBuilder fkColumnName = new StringBuilder(escapeNameIfNeeded(fk.getField()));
-            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getField()));
+            StringBuilder fkColumnName = new StringBuilder(escapeNameIfNeeded(fk.getColumn()));
+            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getColumn()));
             for (int i = 1; i < listFk.size(); i++) {
                 fk = listFk.get(i);
                 pk = fk.getReferee();
-                fkColumnName.append(", ").append(escapeNameIfNeeded(fk.getField()));
-                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getField()));
+                fkColumnName.append(", ").append(escapeNameIfNeeded(fk.getColumn()));
+                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getColumn()));
             }
 
             /*
@@ -235,21 +235,21 @@ public class Db2SqlDriver extends SqlDriver {
     }
 
     @Override
-    public String[] getSqls4CreatePkConstraint(String aSchemaName, List<PrimaryKey> listPk) {
+    public String[] getSqlsOfCreatePkConstraint(String aSchemaName, List<PrimaryKey> listPk) {
         if (listPk != null && !listPk.isEmpty()) {
             PrimaryKey pk = listPk.get(0);
             String tableName = pk.getTable();
             String pkTableName = makeFullName(aSchemaName, tableName);
             String pkName = escapeNameIfNeeded(tableName + PRIMARY_KEY_NAME_SUFFIX);
-            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getField()));
+            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getColumn()));
             for (int i = 1; i < listPk.size(); i++) {
                 pk = listPk.get(i);
-                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getField()));
+                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getColumn()));
             }
             return new String[]{
                 getSql4VolatileTable(pkTableName),
                 String.format("ALTER TABLE %s ADD CONSTRAINT %s PRIMARY KEY (%s)", pkTableName, pkName, pkColumnName),
-                getSql4ReorgTable(pkTableName)
+                getSql4ReOrgTable(pkTableName)
             };
         }
         return null;
@@ -261,15 +261,15 @@ public class Db2SqlDriver extends SqlDriver {
     }
 
     @Override
-    public String[] getSqls4FieldAdd(String aSchemaName, String aTableName, JdbcColumn aField) {
+    public String[] getSqlsOfColumnAdd(String aSchemaName, String aTableName, JdbcColumn aColumn) {
         List<String> sqls = new ArrayList<>();
         String fullTableName = makeFullName(aSchemaName, aTableName);
         sqls.add(getSql4VolatileTable(fullTableName));
-        sqls.add(String.format(SqlDriver.ADD_FIELD_SQL_PREFIX, fullTableName) + getSql4FieldDefinition(aField));
-        if (!aField.isNullable()) {
-            sqls.add(String.format(ALTER_FIELD_SQL_PREFIX, fullTableName) + escapeNameIfNeeded(aField.getName()) + " set not null");
+        sqls.add(String.format(SqlDriver.ADD_COLUMN_SQL_PREFIX, fullTableName) + getSqlOfColumnDefinition(aColumn));
+        if (!aColumn.isNullable()) {
+            sqls.add(String.format(ALTER_COLUMN_SQL_PREFIX, fullTableName) + escapeNameIfNeeded(aColumn.getName()) + " set not null");
         }
-        sqls.add(getSql4ReorgTable(fullTableName));
+        sqls.add(getSql4ReOrgTable(fullTableName));
         return sqls.toArray(new String[]{});
     }
 

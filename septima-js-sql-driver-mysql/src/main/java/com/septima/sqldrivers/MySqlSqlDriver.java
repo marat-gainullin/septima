@@ -56,7 +56,7 @@ public class MySqlSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String[] getSqls4CreateColumnComment(String aOwnerName, String aTableName, String aFieldName, String aDescription) {
+    public String[] getSqls4CreateColumnComment(String aOwnerName, String aTableName, String aColumnName, String aDescription) {
         String schemaClause = ((aOwnerName != null && !aOwnerName.trim().isEmpty()) ? escapeNameIfNeeded(aOwnerName) + "." : "");
         if (aDescription == null) {
             aDescription = "";
@@ -66,7 +66,7 @@ public class MySqlSqlDriver extends SqlDriver {
                 + "CREATE PROCEDURE " + schemaClause + "setColumnComment("
                 + "    IN aOwnerName VARCHAR(100), "
                 + "    IN aTableName VARCHAR(100), "
-                + "    IN aFieldName VARCHAR(100), "
+                + "    IN aColumnName VARCHAR(100), "
                 + "    IN aDescription VARCHAR(100),"
                 + "    OUT res text)"
                 + "	LANGUAGE SQL"
@@ -89,12 +89,12 @@ public class MySqlSqlDriver extends SqlDriver {
                 + "    'FROM information_schema.COLUMNS ',"
                 + "    'WHERE table_schema = ''',aOwnerName,''' AND',"
                 + "    '  table_name = ''',aTableName,''' AND', "
-                + "    '  column_name = ''',aFieldName,'''');"
+                + "    '  column_name = ''',aColumnName,'''');"
                 + "   PREPARE result_select FROM @select_stm;"
                 + "   EXECUTE result_select;"
                 + "   DROP PREPARE result_select;"
                 + "   SET @stm = CONCAT('ALTER TABLE ', IF(LENGTH(aOwnerName), CONCAT('`',aOwnerName,'`.'), ''), '`',aTableName,'`'"
-                + "   	' MODIFY COLUMN `',aFieldName,'` ',@define_column,"
+                + "   	' MODIFY COLUMN `',aColumnName,'` ',@define_column,"
                 + "     IF(aDescription is null,'''',CONCAT(' COMMENT ''',aDescription,'''')));"
                 + "   PREPARE alter_stm FROM @stm;"
                 + "   EXECUTE alter_stm;"
@@ -102,7 +102,7 @@ public class MySqlSqlDriver extends SqlDriver {
                 + "   SET res = CONCAT(@select_stm,';',@stm); "
                 + "END";
         String sql2 = "CALL " + schemaClause + "setColumnComment('"
-                + unescapeNameIfNeeded(aOwnerName) + "','" + unescapeNameIfNeeded(aTableName) + "','" + unescapeNameIfNeeded(aFieldName) + "','" + aDescription + "',@a)";
+                + unescapeNameIfNeeded(aOwnerName) + "','" + unescapeNameIfNeeded(aTableName) + "','" + unescapeNameIfNeeded(aColumnName) + "','" + aDescription + "',@a)";
         String sql3 = "DROP PROCEDURE " + schemaClause + "setColumnComment";
         return new String[]{sql0, sql1, sql2, sql3};
     }
@@ -138,14 +138,14 @@ public class MySqlSqlDriver extends SqlDriver {
             String fkName = fk.getCName();
 
             // String pkSchemaName = pk.getSchema();
-            StringBuilder fkColumnName = new StringBuilder(escapeNameIfNeeded(fk.getField()));
-            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getField()));
+            StringBuilder fkColumnName = new StringBuilder(escapeNameIfNeeded(fk.getColumn()));
+            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getColumn()));
 
             for (int i = 1; i < listFk.size(); i++) {
                 fk = listFk.get(i);
                 pk = fk.getReferee();
-                fkColumnName.append(", ").append(escapeNameIfNeeded(fk.getField()));
-                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getField()));
+                fkColumnName.append(", ").append(escapeNameIfNeeded(fk.getColumn()));
+                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getColumn()));
             }
 
             String fkRule = "";
@@ -185,19 +185,19 @@ public class MySqlSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String getSql4EmptyTableCreation(String aSchemaName, String aTableName, String aPkFieldName) {
+    public String getSql4EmptyTableCreation(String aSchemaName, String aTableName, String aPkColumnName) {
         String fullName = makeFullName(aSchemaName, aTableName);
         return String.format("CREATE TABLE %s (%s DECIMAL(18,0) NOT NULL,"
-                + "CONSTRAINT PRIMARY KEY (%s)) ENGINE=InnoDB", fullName, escapeNameIfNeeded(aPkFieldName), escapeNameIfNeeded(aPkFieldName));
+                + "CONSTRAINT PRIMARY KEY (%s)) ENGINE=InnoDB", fullName, escapeNameIfNeeded(aPkColumnName), escapeNameIfNeeded(aPkColumnName));
     }
 
-    private String getFieldTypeDefinition(JdbcColumn aField) {
+    private String getColumnTypeDefinition(JdbcColumn aColumn) {
         String typeDefine = "";
-        String sqlTypeName = aField.getType().toLowerCase();
+        String sqlTypeName = aColumn.getRdbmsType().toLowerCase();
         typeDefine += sqlTypeName;
         // field length
-        int size = aField.getSize();
-        int scale = aField.getScale();
+        int size = aColumn.getSize();
+        int scale = aColumn.getScale();
 
         if (resolver.isScaled(sqlTypeName) && resolver.isSized(sqlTypeName) && size > 0) {
             typeDefine += "(" + String.valueOf(size) + "," + String.valueOf(scale) + ")";
@@ -211,28 +211,28 @@ public class MySqlSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String getSql4FieldDefinition(JdbcColumn aField) {
-        String fieldDefinition = escapeNameIfNeeded(aField.getName()) + " " + getFieldTypeDefinition(aField);
-        if (!aField.isSigned() && isNumeric(aField.getType())) {
-            fieldDefinition += " UNSIGNED";
+    public String getSqlOfColumnDefinition(JdbcColumn aColumn) {
+        String columnDefinition = escapeNameIfNeeded(aColumn.getName()) + " " + getColumnTypeDefinition(aColumn);
+        if (!aColumn.isSigned() && isNumeric(aColumn.getRdbmsType())) {
+            columnDefinition += " UNSIGNED";
         }
-        if (!aField.isNullable()) {
-            fieldDefinition += " NOT NULL";
+        if (!aColumn.isNullable()) {
+            columnDefinition += " NOT NULL";
         } else {
-            fieldDefinition += " NULL";
+            columnDefinition += " NULL";
         }
-        return fieldDefinition;
+        return columnDefinition;
     }
 
     @Override
-    public String[] getSqls4FieldModify(String aSchemaName, String aTableName, JdbcColumn aOldFieldMd, JdbcColumn aNewFieldMd) {
-        return getSqls4FieldRename(aSchemaName, aTableName, aOldFieldMd.getName(), aNewFieldMd);
+    public String[] getSqlsOfColumnModify(String aSchemaName, String aTableName, JdbcColumn aOldColumn, JdbcColumn aNewColumn) {
+        return getSqlsOfColumnRename(aSchemaName, aTableName, aOldColumn.getName(), aNewColumn);
     }
 
     @Override
-    public String[] getSqls4FieldRename(String aSchemaName, String aTableName, String aOldFieldName, JdbcColumn aNewFieldMd) {
+    public String[] getSqlsOfColumnRename(String aSchemaName, String aTableName, String aOldColumnName, JdbcColumn aNewColumn) {
         String fullTableName = makeFullName(aSchemaName, aTableName);
-        return new String[]{String.format("ALTER TABLE %s CHANGE %s %s", fullTableName, escapeNameIfNeeded(aOldFieldName), getSql4FieldDefinition(aNewFieldMd))};
+        return new String[]{String.format("ALTER TABLE %s CHANGE %s %s", fullTableName, escapeNameIfNeeded(aOldColumnName), getSqlOfColumnDefinition(aNewColumn))};
     }
 
     @Override
@@ -249,17 +249,17 @@ public class MySqlSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String[] getSqls4CreatePkConstraint(String aSchemaName, List<PrimaryKey> listPk) {
+    public String[] getSqlsOfCreatePkConstraint(String aSchemaName, List<PrimaryKey> listPk) {
 
         if (listPk != null && listPk.size() > 0) {
             PrimaryKey pk = listPk.get(0);
             String tableName = pk.getTable();
             String pkTableName = makeFullName(aSchemaName, tableName);
             String pkName = escapeNameIfNeeded(tableName + PRIMARY_KEY_NAME_SUFFIX);
-            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getField()));
+            StringBuilder pkColumnName = new StringBuilder(escapeNameIfNeeded(pk.getColumn()));
             for (int i = 1; i < listPk.size(); i++) {
                 pk = listPk.get(i);
-                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getField()));
+                pkColumnName.append(", ").append(escapeNameIfNeeded(pk.getColumn()));
             }
             return new String[]{
                 String.format("ALTER TABLE %s ADD CONSTRAINT %s PRIMARY KEY (%s)", pkTableName, pkName, pkColumnName.toString())
@@ -280,10 +280,10 @@ public class MySqlSqlDriver extends SqlDriver {
     }
 
     @Override
-    public String[] getSqls4FieldAdd(String aSchemaName, String aTableName, JdbcColumn aField) {
+    public String[] getSqlsOfColumnAdd(String aSchemaName, String aTableName, JdbcColumn aColumn) {
         String fullTableName = makeFullName(aSchemaName, aTableName);
         return new String[]{
-            String.format(SqlDriver.ADD_FIELD_SQL_PREFIX, fullTableName) + getSql4FieldDefinition(aField)
+            String.format(SqlDriver.ADD_COLUMN_SQL_PREFIX, fullTableName) + getSqlOfColumnDefinition(aColumn)
         };
     }
 

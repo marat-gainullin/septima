@@ -1,10 +1,10 @@
 package com.septima.dataflow;
 
-import com.septima.Parameter;
+import com.septima.metadata.Parameter;
 import com.septima.changes.*;
 import com.septima.entities.SqlEntity;
 import com.septima.jdbc.JdbcReaderAssigner;
-import com.septima.metadata.Field;
+import com.septima.metadata.EntityField;
 import com.septima.queries.SqlQuery;
 
 import java.sql.Connection;
@@ -75,11 +75,11 @@ public class EntityActionsBinder implements EntityActionsVisitor {
         return datum -> {
             String datumName = datum.getKey();
             Object datumValue = datum.getValue();
-            Field entityField = aEntity.getFields().get(datumName);
-            if (entityField != null) {
-                String keyColumnName = entityField.getOriginalName() != null ? entityField.getOriginalName() : entityField.getName();
-                Parameter bound = new Parameter(keyColumnName, datumValue, entityField.getType());
-                return Map.entry(entityField.getTableName(), List.of(bound));
+            EntityField entityEntityField = aEntity.getFields().get(datumName);
+            if (entityEntityField != null) {
+                String keyColumnName = entityEntityField.getOriginalName() != null ? entityEntityField.getOriginalName() : entityEntityField.getName();
+                Parameter bound = new Parameter(keyColumnName, datumValue, entityEntityField.getType());
+                return Map.entry(entityEntityField.getTableName(), List.of(bound));
             } else {
                 throw new IllegalStateException("Entity field '" + datumName + "' is not found in entity '" + aEntity.getName() + "'");
             }

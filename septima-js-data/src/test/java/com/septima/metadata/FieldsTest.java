@@ -1,6 +1,6 @@
 package com.septima.metadata;
 
-import com.septima.GenericDataTypes;
+import com.septima.GenericType;
 import org.junit.Test;
 
 import java.sql.Types;
@@ -11,12 +11,12 @@ public class FieldsTest {
 
     @Test
     public void fieldConstructors() {
-        Field field = new Field("test");
-        assertEquals("test", field.getName());
-        assertEquals(GenericDataTypes.STRING_TYPE_NAME, field.getType());
-        assertEquals("test", field.getOriginalName());
-        assertNull(field.getDescription());
-        assertTrue(field.isNullable());
+        EntityField entityField = new EntityField("test");
+        assertEquals("test", entityField.getName());
+        assertEquals(GenericType.STRING, entityField.getType());
+        assertEquals("test", entityField.getOriginalName());
+        assertNull(entityField.getDescription());
+        assertTrue(entityField.isNullable());
     }
 
     @Test
@@ -45,9 +45,9 @@ public class FieldsTest {
         assertEquals(1000, column.getScale());
         assertEquals(2, column.getPrecision());
         assertEquals(true, column.isSigned());
-        assertEquals("test_schema", column.getSchemaName());
+        assertEquals("test_schema", column.getSchema());
         assertEquals(Types.VARCHAR, column.getJdbcType());
-        assertEquals("VARCHAR", column.getType());
+        assertEquals("VARCHAR", column.getRdbmsType());
     }
 
     @Test
@@ -123,12 +123,12 @@ public class FieldsTest {
 
     @Test
     public void fieldToString() {
-        Field field = new Field(
+        EntityField entityField = new EntityField(
                 "test",
                 "test desc",
                 null,
                 "test_table",
-                GenericDataTypes.DATE_TYPE_NAME,
+                GenericType.DATE,
                 true,
                 true,
                 new ForeignKey(
@@ -137,23 +137,23 @@ public class FieldsTest {
                         "test_schema", "test_table", "test", "test_pk"
                 )
         );
-        assertEquals("test_table.test (test desc), primary key, foreign key transform test_schema.test_table.test, Date, nullable", field.toString());
+        assertEquals("test_table.test (test desc), primary key, foreign key test_schema.test_table.test, DATE, nullable", entityField.toString());
     }
 
     @Test
     public void emptyFieldToString() {
-        Field field = new Field("test");
-        assertEquals("test, String, nullable", field.toString());
+        EntityField entityField = new EntityField("test");
+        assertEquals("test, STRING, nullable", entityField.toString());
     }
 
     @Test
     public void fieldOriginalNameToString() {
-        Field field = new Field(
+        EntityField entityField = new EntityField(
                 "test",
                 "test desc",
                 "TEST",
                 "test_table",
-                GenericDataTypes.DATE_TYPE_NAME,
+                GenericType.DATE,
                 true,
                 true,
                 new ForeignKey(
@@ -162,6 +162,6 @@ public class FieldsTest {
                         "test_schema", "test_table", "test", "test_pk"
                 )
         );
-        assertEquals("test_table.TEST (test desc), primary key, foreign key transform test_schema.test_table.test, Date, nullable", field.toString());
+        assertEquals("test_table.TEST (test desc), primary key, foreign key test_schema.test_table.test, DATE, nullable", entityField.toString());
     }
 }

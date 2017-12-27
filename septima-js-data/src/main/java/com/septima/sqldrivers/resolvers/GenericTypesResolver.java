@@ -1,6 +1,6 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.GenericDataTypes;
+import com.septima.GenericType;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -12,38 +12,38 @@ import java.util.Set;
  */
 public class GenericTypesResolver implements TypesResolver {
 
-    private static final Map<Integer, String> jdbcTypesToApplicationTypes = new LinkedHashMap<>(){{
-        put(java.sql.Types.VARCHAR, GenericDataTypes.STRING_TYPE_NAME);
-        put(java.sql.Types.CHAR, GenericDataTypes.STRING_TYPE_NAME);
-        put(java.sql.Types.CLOB, GenericDataTypes.STRING_TYPE_NAME);
-        put(java.sql.Types.DATALINK, GenericDataTypes.STRING_TYPE_NAME);
-        put(java.sql.Types.LONGNVARCHAR, GenericDataTypes.STRING_TYPE_NAME);
-        put(java.sql.Types.LONGVARCHAR, GenericDataTypes.STRING_TYPE_NAME);
-        put(java.sql.Types.NCHAR, GenericDataTypes.STRING_TYPE_NAME);
-        put(java.sql.Types.NCLOB, GenericDataTypes.STRING_TYPE_NAME);
-        put(java.sql.Types.NVARCHAR, GenericDataTypes.STRING_TYPE_NAME);
-        put(java.sql.Types.ROWID, GenericDataTypes.STRING_TYPE_NAME);
-        put(java.sql.Types.SQLXML, GenericDataTypes.STRING_TYPE_NAME);
-        put(java.sql.Types.BIGINT, GenericDataTypes.NUMBER_TYPE_NAME);
-        put(java.sql.Types.DECIMAL, GenericDataTypes.NUMBER_TYPE_NAME);
-        put(java.sql.Types.DOUBLE, GenericDataTypes.NUMBER_TYPE_NAME);
-        put(java.sql.Types.FLOAT, GenericDataTypes.NUMBER_TYPE_NAME);
-        put(java.sql.Types.INTEGER, GenericDataTypes.NUMBER_TYPE_NAME);
-        put(java.sql.Types.NUMERIC, GenericDataTypes.NUMBER_TYPE_NAME);
-        put(java.sql.Types.REAL, GenericDataTypes.NUMBER_TYPE_NAME);
-        put(java.sql.Types.SMALLINT, GenericDataTypes.NUMBER_TYPE_NAME);
-        put(java.sql.Types.TINYINT, GenericDataTypes.NUMBER_TYPE_NAME);
-        put(java.sql.Types.DATE, GenericDataTypes.DATE_TYPE_NAME);
-        put(java.sql.Types.TIME, GenericDataTypes.DATE_TYPE_NAME);
-        put(java.sql.Types.TIMESTAMP, GenericDataTypes.DATE_TYPE_NAME);
-        put(java.sql.Types.TIMESTAMP_WITH_TIMEZONE, GenericDataTypes.DATE_TYPE_NAME);
-        put(java.sql.Types.TIME_WITH_TIMEZONE, GenericDataTypes.DATE_TYPE_NAME);
-        put(java.sql.Types.BIT, GenericDataTypes.BOOLEAN_TYPE_NAME);
-        put(java.sql.Types.BOOLEAN, GenericDataTypes.BOOLEAN_TYPE_NAME);
+    private static final Map<Integer, GenericType> jdbcTypesToApplicationTypes = new LinkedHashMap<>(){{
+        put(java.sql.Types.VARCHAR, GenericType.STRING);
+        put(java.sql.Types.CHAR, GenericType.STRING);
+        put(java.sql.Types.CLOB, GenericType.STRING);
+        put(java.sql.Types.DATALINK, GenericType.STRING);
+        put(java.sql.Types.LONGNVARCHAR, GenericType.STRING);
+        put(java.sql.Types.LONGVARCHAR, GenericType.STRING);
+        put(java.sql.Types.NCHAR, GenericType.STRING);
+        put(java.sql.Types.NCLOB, GenericType.STRING);
+        put(java.sql.Types.NVARCHAR, GenericType.STRING);
+        put(java.sql.Types.ROWID, GenericType.STRING);
+        put(java.sql.Types.SQLXML, GenericType.STRING);
+        put(java.sql.Types.BIGINT, GenericType.LONG);
+        put(java.sql.Types.DECIMAL, GenericType.DOUBLE);
+        put(java.sql.Types.DOUBLE, GenericType.DOUBLE);
+        put(java.sql.Types.FLOAT, GenericType.DOUBLE);
+        put(java.sql.Types.INTEGER, GenericType.LONG);
+        put(java.sql.Types.NUMERIC, GenericType.DOUBLE);
+        put(java.sql.Types.REAL, GenericType.DOUBLE);
+        put(java.sql.Types.SMALLINT, GenericType.LONG);
+        put(java.sql.Types.TINYINT, GenericType.LONG);
+        put(java.sql.Types.DATE, GenericType.DATE);
+        put(java.sql.Types.TIME, GenericType.DATE);
+        put(java.sql.Types.TIMESTAMP, GenericType.DATE);
+        put(java.sql.Types.TIMESTAMP_WITH_TIMEZONE, GenericType.DATE);
+        put(java.sql.Types.TIME_WITH_TIMEZONE, GenericType.DATE);
+        put(java.sql.Types.BIT, GenericType.BOOLEAN);
+        put(java.sql.Types.BOOLEAN, GenericType.BOOLEAN);
     }};
 
     @Override
-    public String toApplicationType(int aJdbcType, String aRdbmsTypeName) {
+    public GenericType toGenericType(int aJdbcType, String aRdbmsTypeName) {
         return jdbcTypesToApplicationTypes.get(aJdbcType);
     }
 

@@ -2,7 +2,7 @@
 <layout defaultCloseOperation="2" name="Form" prefHeight="315px" prefWidth="485px">
   <widget componentRemoved="dbGrid1ComponentRemoved" componentResized="dbGrid1ComponentResized" name="dbGrid1" parent="Form" prefHeight="220px" prefWidth="485px" type="DbGridDesignInfo">
     <rowsColumnsDesignInfo generalRowFunction="dbGrid1OnRender" rowsHeaderType="2">
-      <rowsDatasource entityId="134174204786703" field="false"/>
+      <rowsDatasource entityId="134174204786703" entityField="false"/>
     </rowsColumnsDesignInfo>
     <treeDesignInfo>
       <unaryLinkField/>

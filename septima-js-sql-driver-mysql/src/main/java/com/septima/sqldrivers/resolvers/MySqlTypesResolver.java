@@ -1,6 +1,6 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.GenericDataTypes;
+import com.septima.GenericType;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,39 +15,39 @@ import java.util.Set;
  */
 public class MySqlTypesResolver implements TypesResolver {
 
-    private static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>(){{
-        put("varchar", GenericDataTypes.STRING_TYPE_NAME);
-        put("int", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("decimal", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("boolean", GenericDataTypes.BOOLEAN_TYPE_NAME);
-        put("timestamp", GenericDataTypes.DATE_TYPE_NAME);
-        put("datetime", GenericDataTypes.DATE_TYPE_NAME);
-        put("geometry", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("tinyint", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("smallint", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("mediumint", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("integer", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("bigint", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("serial", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("float", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("real", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("double", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("double precision", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("dec", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("numeric", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("bool", GenericDataTypes.BOOLEAN_TYPE_NAME);
-        put("bit", GenericDataTypes.BOOLEAN_TYPE_NAME);
-        put("char", GenericDataTypes.STRING_TYPE_NAME);
-        put("tinytext", GenericDataTypes.STRING_TYPE_NAME);
-        put("long varchar", GenericDataTypes.STRING_TYPE_NAME);
-        put("text", GenericDataTypes.STRING_TYPE_NAME);
-        put("mediumtext", GenericDataTypes.STRING_TYPE_NAME);
-        put("longtext", GenericDataTypes.STRING_TYPE_NAME);
-        put("date", GenericDataTypes.DATE_TYPE_NAME);
-        put("time", GenericDataTypes.DATE_TYPE_NAME);
-        put("year", GenericDataTypes.DATE_TYPE_NAME);
-        put("enum", GenericDataTypes.STRING_TYPE_NAME);
-        put("set", GenericDataTypes.STRING_TYPE_NAME);
+    private static final Map<String, GenericType> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>(){{
+        put("varchar", GenericType.STRING);
+        put("char", GenericType.STRING);
+        put("tinytext", GenericType.STRING);
+        put("enum", GenericType.STRING);
+        put("set", GenericType.STRING);
+        put("long varchar", GenericType.STRING);
+        put("text", GenericType.STRING);
+        put("mediumtext", GenericType.STRING);
+        put("longtext", GenericType.STRING);
+        put("int", GenericType.LONG);
+        put("tinyint", GenericType.LONG);
+        put("smallint", GenericType.LONG);
+        put("mediumint", GenericType.LONG);
+        put("integer", GenericType.LONG);
+        put("bigint", GenericType.LONG);
+        put("serial", GenericType.LONG);
+        put("decimal", GenericType.DOUBLE);
+        put("float", GenericType.DOUBLE);
+        put("real", GenericType.DOUBLE);
+        put("double", GenericType.DOUBLE);
+        put("double precision", GenericType.DOUBLE);
+        put("dec", GenericType.DOUBLE);
+        put("numeric", GenericType.DOUBLE);
+        put("bool", GenericType.BOOLEAN);
+        put("bit", GenericType.BOOLEAN);
+        put("boolean", GenericType.BOOLEAN);
+        put("timestamp", GenericType.DATE);
+        put("datetime", GenericType.DATE);
+        put("date", GenericType.DATE);
+        put("time", GenericType.DATE);
+        put("year", GenericType.DATE);
+        put("geometry", GenericType.GEOMETRY);
         put("binary", null);
         put("varbinary", null);
         put("tinyblob", null);
@@ -56,13 +56,13 @@ public class MySqlTypesResolver implements TypesResolver {
         put("longblob", null);
         put("long varbinary", null);
         // gis types
-        put("point", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("linestring", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("polygon", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("multipoint", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("multilinestring", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("multipolygon", GenericDataTypes.GEOMETRY_TYPE_NAME);
-        put("geometrycollection", GenericDataTypes.GEOMETRY_TYPE_NAME);
+        put("point", GenericType.GEOMETRY);
+        put("linestring", GenericType.GEOMETRY);
+        put("polygon", GenericType.GEOMETRY);
+        put("multipoint", GenericType.GEOMETRY);
+        put("multilinestring", GenericType.GEOMETRY);
+        put("multipolygon", GenericType.GEOMETRY);
+        put("geometrycollection", GenericType.GEOMETRY);
     }};
     private static final Set<String> jdbcTypesWithSize = new HashSet<>(){{
         add("float");
@@ -113,7 +113,7 @@ public class MySqlTypesResolver implements TypesResolver {
     }};
 
     @Override
-    public String toApplicationType(int aJdbcType, String aRdbmsTypeName) {
+    public GenericType toGenericType(int aJdbcType, String aRdbmsTypeName) {
         return aRdbmsTypeName != null ? rdbmsTypes2ApplicationTypes.get(aRdbmsTypeName.toLowerCase()) : null;
     }
 

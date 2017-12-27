@@ -72,7 +72,7 @@ public class TablesTest {
         }, assetsColumns.keySet().toArray(new String[]{}));
         JdbcColumn id = assetsColumns.get("id");
         assertEquals("assets", id.getTableName().toLowerCase());
-        assertEquals("public", id.getSchemaName().toLowerCase());
+        assertEquals("public", id.getSchema().toLowerCase());
         assertSame(Types.DECIMAL, id.getJdbcType());
         JdbcColumn name = assetsColumns.get("name");
         assertSame(Types.VARCHAR, name.getJdbcType());
@@ -137,9 +137,9 @@ public class TablesTest {
         assertFalse(fk.isDeferrable());
         assertSame(fk.getDeleteRule(), ForeignKey.ForeignKeyRule.CASCADE);
         assertSame(fk.getUpdateRule(), ForeignKey.ForeignKeyRule.NO_ACTION);
-        assertEquals("p_id", fk.getField().toLowerCase());
+        assertEquals("p_id", fk.getColumn().toLowerCase());
         assertEquals("asset_groups", fk.getReferee().getTable().toLowerCase());
-        assertEquals("id", fk.getReferee().getField().toLowerCase());
+        assertEquals("id", fk.getReferee().getColumn().toLowerCase());
         assertFalse(fk.getReferee().getCName().isEmpty());
         assertEquals("public", fk.getReferee().getSchema().toLowerCase());
     }

@@ -121,11 +121,11 @@
       </cellDesignInfo>
     </column>
     <rowsColumnsDesignInfo>
-      <rowsDatasource entityId="134148692619803" field="false"/>
+      <rowsDatasource entityId="134148692619803" entityField="false"/>
     </rowsColumnsDesignInfo>
     <treeDesignInfo>
       <unaryLinkField entityId="134148692619803" fieldName="MDENT_PARENT_ID"/>
-      <param2GetChildren entityId="134148692619803" field="false" fieldName="parent"/>
+      <param2GetChildren entityId="134148692619803" entityField="false" fieldName="parent"/>
       <paramSourceField entityId="134148692619803" fieldName="MDENT_ID"/>
     </treeDesignInfo>
     <constraints place="Center" type="BorderLayoutConstraintsDesignInfo"/>

@@ -1,6 +1,6 @@
 package com.septima.sqldrivers.resolvers;
 
-import com.septima.GenericDataTypes;
+import com.septima.GenericType;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,39 +14,39 @@ import java.util.Set;
  */
 public class MsSqlTypesResolver implements TypesResolver {
 
-    private static final Map<String, String> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
-        put("varchar", GenericDataTypes.STRING_TYPE_NAME);
-        put("numeric", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("decimal", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("money", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("bit", GenericDataTypes.BOOLEAN_TYPE_NAME);
-        put("datetime", GenericDataTypes.DATE_TYPE_NAME);
-        put("int", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("smallint", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("tinyint", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("bigint", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("real", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("float", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("smallmoney", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("tinyint identity", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("bigint identity", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("numeric identity", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("decimal identity", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("int identity", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("smallint identity", GenericDataTypes.NUMBER_TYPE_NAME);
-        put("nvarchar", GenericDataTypes.STRING_TYPE_NAME);
-        put("char", GenericDataTypes.STRING_TYPE_NAME);
-        put("nchar", GenericDataTypes.STRING_TYPE_NAME);
+    private static final Map<String, GenericType> rdbmsTypes2ApplicationTypes = new LinkedHashMap<>() {{
+        put("varchar", GenericType.STRING);
+        put("nvarchar", GenericType.STRING);
+        put("char", GenericType.STRING);
+        put("nchar", GenericType.STRING);
+        put("text", GenericType.STRING);
+        put("ntext", GenericType.STRING);
+        put("uniqueidentifier", GenericType.STRING);
+        put("sysname", GenericType.STRING);
+        put("xml", GenericType.STRING);
+        put("int", GenericType.LONG);
+        put("smallint", GenericType.LONG);
+        put("tinyint", GenericType.LONG);
+        put("bigint", GenericType.LONG);
+        put("tinyint identity", GenericType.LONG);
+        put("bigint identity", GenericType.LONG);
+        put("int identity", GenericType.LONG);
+        put("smallint identity", GenericType.LONG);
+        put("numeric", GenericType.DOUBLE);
+        put("decimal", GenericType.DOUBLE);
+        put("money", GenericType.DOUBLE);
+        put("real", GenericType.DOUBLE);
+        put("float", GenericType.DOUBLE);
+        put("smallmoney", GenericType.DOUBLE);
+        put("numeric identity", GenericType.DOUBLE);
+        put("decimal identity", GenericType.DOUBLE);
 
-        put("smalldatetime", GenericDataTypes.DATE_TYPE_NAME);
-        put("datetime2", GenericDataTypes.DATE_TYPE_NAME);
-        put("date", GenericDataTypes.DATE_TYPE_NAME);
-        put("time", GenericDataTypes.DATE_TYPE_NAME);
-        put("text", GenericDataTypes.STRING_TYPE_NAME);
-        put("ntext", GenericDataTypes.STRING_TYPE_NAME);
-        put("uniqueidentifier", GenericDataTypes.STRING_TYPE_NAME);
-        put("sysname", GenericDataTypes.STRING_TYPE_NAME);
-        put("xml", GenericDataTypes.STRING_TYPE_NAME);
+        put("bit", GenericType.BOOLEAN);
+        put("datetime", GenericType.DATE);
+        put("smalldatetime", GenericType.DATE);
+        put("datetime2", GenericType.DATE);
+        put("date", GenericType.DATE);
+        put("time", GenericType.DATE);
         put("image", null);
         put("sql_variant", null);
         put("varbinary", null);
@@ -79,7 +79,7 @@ public class MsSqlTypesResolver implements TypesResolver {
     }};
 
     @Override
-    public String toApplicationType(int aJdbcType, String aRdbmsTypeName) {
+    public GenericType toGenericType(int aJdbcType, String aRdbmsTypeName) {
         return aRdbmsTypeName != null ? rdbmsTypes2ApplicationTypes.get(aRdbmsTypeName.toLowerCase()) : null;
     }
 

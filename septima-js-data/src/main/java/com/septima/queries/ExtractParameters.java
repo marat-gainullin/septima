@@ -1,6 +1,6 @@
 package com.septima.queries;
 
-import com.septima.Parameter;
+import com.septima.metadata.Parameter;
 import net.sf.jsqlparser.expression.NamedParameter;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.syntax.SyntaxTreeVisitor;

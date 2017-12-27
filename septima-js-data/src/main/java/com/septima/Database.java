@@ -5,7 +5,7 @@ import com.septima.jdbc.JdbcReaderAssigner;
 import com.septima.dataflow.EntityActionsBinder;
 import com.septima.jdbc.DataSources;
 import com.septima.jdbc.UncheckedSQLException;
-import com.septima.metadata.Field;
+import com.septima.metadata.EntityField;
 import com.septima.sqldrivers.SqlDriver;
 
 import javax.naming.Context;
@@ -62,7 +62,7 @@ public class Database {
         return futuresExecutor;
     }
 
-    public DynamicTypingDataProvider createDataProvider(String aEntityName, String aSqlClause, boolean aProcedure, int aPageSize, Map<String, Field> aExpectedFields) {
+    public DynamicTypingDataProvider createDataProvider(String aEntityName, String aSqlClause, boolean aProcedure, int aPageSize, Map<String, EntityField> aExpectedFields) {
         return new DynamicTypingDataProvider(
                 jdbcReaderAssigner(aProcedure),
                 aEntityName,

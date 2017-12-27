@@ -29,7 +29,7 @@
       <unaryLinkField entityId="-1" fieldName="Param3"/>
     </treeDesignInfo>
     <rowsColumnsDesignInfo>
-      <rowsDatasource entityId="-1" field="false"/>
+      <rowsDatasource entityId="-1" entityField="false"/>
     </rowsColumnsDesignInfo>
     <column name="columnDate" title="Дата" width="150">
       <controlInfo classHint="DbLabelDesignInfo" format="dd.MM.yyyy SS" name="view" prefHeight="0px" prefWidth="0px" valueType="1"/>

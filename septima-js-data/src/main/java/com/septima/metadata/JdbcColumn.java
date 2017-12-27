@@ -11,8 +11,9 @@ public class JdbcColumn extends Field {
     private final int scale;
     private final int precision;
     private final boolean signed;
-    private final String schemaName;
+    private final String schema;
     private final int jdbcType;
+    private final String rdbmsType;
 
     public JdbcColumn(String aName) {
         this(
@@ -49,22 +50,20 @@ public class JdbcColumn extends Field {
             String aSchemaName,
             int aJdbcType
     ) {
-        super(
-                aName,
+        super(aName,
                 aDescription,
                 aOriginalName,
                 aTableName,
-                aType,
                 aNullable,
                 aPk,
-                aFk
-        );
+                aFk);
         size = aSize;
         scale = aScale;
         precision = aPrecision;
         signed = aSigned;
-        schemaName = aSchemaName;
+        schema = aSchemaName;
         jdbcType = aJdbcType;
+        rdbmsType = aType;
     }
 
     /**
@@ -72,8 +71,8 @@ public class JdbcColumn extends Field {
      *
      * @return The field's schema name.
      */
-    public String getSchemaName() {
-        return schemaName;
+    public String getSchema() {
+        return schema;
     }
 
     /**
@@ -121,14 +120,18 @@ public class JdbcColumn extends Field {
         return jdbcType;
     }
 
+    public String getRdbmsType() {
+        return rdbmsType;
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        if (schemaName != null && !schemaName.isEmpty()) {
-            sb.append(schemaName).append(".");
+        if (schema != null && !schema.isEmpty()) {
+            sb.append(schema).append(".");
         }
         if (getTableName() != null && !getTableName().isEmpty()) {
             sb.append(getTableName()).append(".");
@@ -153,9 +156,9 @@ public class JdbcColumn extends Field {
             if (rf.getTable() != null && !rf.getTable().isEmpty()) {
                 sb.append(rf.getTable()).append(".");
             }
-            sb.append(rf.getField());
+            sb.append(rf.getColumn());
         }
-        sb.append(", ").append(getType());
+        sb.append(", ").append(getRdbmsType());
         sb.append(", size ").append(size).append(", precision ").append(precision).append(", scale ").append(scale);
         if (signed) {
             sb.append(", signed");

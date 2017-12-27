@@ -43,7 +43,7 @@ public class Metadata {
 
     private final DataSource dataSource;
     private final Set<String> schemas;
-    // Schema, Table, Field
+    // Schema, Table, EntityField
     private final Map<String, Map<String, Map<String, JdbcColumn>>> schemasTablesColumns = new CaseInsensitiveMap<>(new ConcurrentHashMap<>());
     private final String defaultSchema;
     private final SqlDriver sqlDriver;
