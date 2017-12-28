@@ -1,5 +1,9 @@
+package com.septima.entities.customers;
 
-public class CustomerRow extends Observable {
+import com.septima.model.Observable;
+
+public class CustomersRow extends Observable {
+
     private long id;
     private String name;
 
@@ -7,9 +11,9 @@ public class CustomerRow extends Observable {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(long aId) {
         long old = id;
-        this.id = id;
+        id = aId;
         changeSupport.firePropertyChange("id", old, id);
     }
 
@@ -17,9 +21,9 @@ public class CustomerRow extends Observable {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(String aName) {
         String old = name;
-        this.name = name;
+        name = aName;
         changeSupport.firePropertyChange("name", old, name);
     }
 

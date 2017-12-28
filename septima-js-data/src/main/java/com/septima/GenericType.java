@@ -17,7 +17,6 @@ public enum GenericType {
     DATE,
     BOOLEAN;
 
-
     public static GenericType of(String aValue) {
         return of(aValue, null);
     }

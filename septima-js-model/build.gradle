@@ -6,6 +6,7 @@ configurations {
 
 dependencies {
     compile project(':septima-js-data'),
+            project(':septima-js-sql-parser'),
             'com.fasterxml.jackson.core:jackson-core:2.9.2',
             'com.fasterxml.jackson.core:jackson-databind:2.9.2'
     testCompile 'com.h2database:h2:1.4.193',
@@ -26,7 +27,9 @@ dependencies {
             'com.vividsolutions:jts:1.13'
 }
 
-def appDirName = "${projectDir}/src/test/resources"
+def appDirName = "${projectDir}/src/test/resources/application"
+def generatedDirName = "${projectDir}/src/main/java"
+def ethalonsDirName = "${projectDir}/src/test/resources/ethalons"
 def h2Dir = "${buildDir}/h2"
 def testBasesDirectory = "${buildDir}/test-databases"
 def dataSourceName = 'septima'
@@ -71,6 +74,8 @@ test {
     systemProperties["datasource.password"] = dataSourcePassword
     systemProperties["datasource.schema"] = dataSourceSchema
     systemProperties["testsource.path"] = appDirName
+    systemProperties["generated.path"] = generatedDirName
+    systemProperties["ethalons.path"] = ethalonsDirName
 }
 
 task coverage() {

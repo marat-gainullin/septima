@@ -6,7 +6,7 @@
   <Button cursor="0" name="btnCreateEntity" parent="view" prefHeight="23px" prefWidth="120px" text="createEntity Test">
     <AnchorsPaneConstraints height="23px" left="12px" top="84px" width="120px"/>
   </Button>
-  <Button cursor="0" name="btnModelAPI" parent="view" prefHeight="23px" prefWidth="120px" text="Model API test">
+  <Button cursor="0" name="btnModelAPI" parent="view" prefHeight="23px" prefWidth="120px" text="com.septima.model.Model API test">
     <AnchorsPaneConstraints height="23px" left="12px" top="12px" width="120px"/>
   </Button>
   <Button cursor="0" name="modifiedTest" parent="view" prefHeight="20px" prefWidth="130px" text="Modified Test">

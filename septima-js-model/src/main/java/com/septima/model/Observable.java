@@ -1,7 +1,10 @@
+package com.septima.model;
+
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
 public class Observable {
+
     protected final PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
 
     public Runnable addListener(PropertyChangeListener listener) {

@@ -1,7 +1,9 @@
+package com.septima.model;
+
 import com.septima.changes.EntityAction;
-import com.septima.changes.EntityRemove;
 import com.septima.changes.EntityAdd;
 import com.septima.changes.EntityChange;
+import com.septima.changes.EntityRemove;
 import com.septima.entities.SqlEntities;
 import com.septima.queries.SqlQuery;
 import javafx.collections.FXCollections;
@@ -9,18 +11,18 @@ import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
 
 import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Model {
 
-    protected static SqlEntities ENTITIES = new SqlEntities(new File("").toPath(), "septima");
+    protected final SqlEntities entities;
+
+    public Model(SqlEntities aEnities){
+        entities = aEnities;
+    }
 
     protected <K, D> Map<K, D> toDomainMap(
             String entityName,
@@ -52,6 +54,10 @@ public class Model {
         return observable;
     }
 
+    protected static <K, D> void toGroups(D instance, Map<K, Collection<D>> groups, K key) {
+        groups.computeIfAbsent(key, k -> new HashSet<>()).add(instance);
+    }
+
     protected final List<EntityAction> changes = new ArrayList<>();
 
     protected <D> PropertyChangeListener listener(SqlQuery query, String pkName, Function<D, Object> keyMapper) {
@@ -66,12 +72,16 @@ public class Model {
         changes.clear();
     }
 
-    public CompletableFuture<Void> save() {
-        return CompletableFuture.allOf(
-                ENTITIES.bindChanges(changes).entrySet().stream()
-                        .map(entry -> entry.getKey().commit(entry.getValue()))
-                        .collect(Collectors.toList())
-                        .toArray(new CompletableFuture[]{})
-        ).thenAccept(v -> changes.clear());
+    public CompletableFuture<Integer> save() {
+        List<CompletableFuture<Integer>> futures = entities.bindChanges(changes).entrySet().stream()
+                .map(entry -> entry.getKey().commit(entry.getValue()))
+                .collect(Collectors.toList());
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[]{}))
+                .thenApply(v -> {
+                    changes.clear();
+                    return futures.stream()
+                            .map(f -> f.getNow(0))
+                            .reduce(Integer::sum).orElse(0);
+                });
     }
 }
