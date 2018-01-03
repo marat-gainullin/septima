@@ -13,18 +13,77 @@ import javafx.collections.ObservableMap;
 import java.beans.PropertyChangeListener;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Model {
 
-    protected final SqlEntities entities;
+    public class Entity<K, D> {
+        private final SqlQuery query;
+        private final String keyFieldName;
+        private final PropertyChangeListener changesReflector;
+        private final Map<K, D> byKey = new HashMap<>();
+        private final Function<D, K> keyOf;
+        private final BiFunction<Map<String, Object>, PropertyChangeListener, D> forwardMapper;
+        private final Function<D, Map<String, Object>> reverseMapper;
+        private final Consumer<D> handler;
 
-    public Model(SqlEntities aEnities){
-        entities = aEnities;
+        public Entity(String anEntityName, String aKeyFieldName, Function<D, K> aKeyOf,
+                      BiFunction<Map<String, Object>, PropertyChangeListener, D> aForwardMapper,
+                      Function<D, Map<String, Object>> aReverseMapper) {
+            this(anEntityName, aKeyFieldName, aKeyOf, aForwardMapper, aReverseMapper, (instance) -> {});
+            //entities.add(this);
+        }
+
+        public Entity(String anEntityName, String aKeyFieldName, Function<D, K> aKeyOf,
+                      BiFunction<Map<String, Object>, PropertyChangeListener, D> aForwardMapper,
+                      Function<D, Map<String, Object>> aReverseMapper,
+                      Consumer<D> aHandler) {
+            query = sqlEntities.loadEntity(anEntityName).toQuery();
+            changesReflector = listener(query, aKeyFieldName, aKeyOf);
+            keyFieldName = aKeyFieldName;
+            keyOf = aKeyOf;
+            forwardMapper = aForwardMapper;
+            reverseMapper = aReverseMapper;
+            handler = aHandler;
+        }
+
+        public String getName() {
+            return query.getEntityName();
+        }
+
+        public Map<K, D> getByKey() {
+            return byKey;
+        }
+
+        public CompletableFuture<Map<K, D>> query(Map<String, Object> parameters) {
+            return query.requestData(parameters)
+                    .thenApply(data -> toDomain(query.getEntityName(),
+                            keyFieldName,
+                            keyOf,
+                            datum -> forwardMapper.apply(datum, changesReflector),
+                            reverseMapper,
+                            data,
+                            byKey
+                    ))
+                    .thenApply(data -> {
+                                data.values().forEach(handler);
+                                return data;
+                            }
+                    );
+        }
     }
 
-    protected <K, D> Map<K, D> toDomainMap(
+    private final SqlEntities sqlEntities;
+    //private final List<Entity> entities = new ArrayList<>();
+
+    public Model(SqlEntities aEntities) {
+        sqlEntities = aEntities;
+    }
+
+    private <K, D> Map<K, D> toDomain(
             String entityName,
             String keyName,
             Function<D, K> keyMapper,
@@ -58,9 +117,9 @@ public class Model {
         groups.computeIfAbsent(key, k -> new HashSet<>()).add(instance);
     }
 
-    protected final List<EntityAction> changes = new ArrayList<>();
+    private final List<EntityAction> changes = new ArrayList<>();
 
-    protected <D> PropertyChangeListener listener(SqlQuery query, String pkName, Function<D, Object> keyMapper) {
+    private <D, K> PropertyChangeListener listener(SqlQuery query, String pkName, Function<D, K> keyMapper) {
         return e ->
                 changes.add(new EntityChange(
                         query.getEntityName(),
@@ -73,7 +132,7 @@ public class Model {
     }
 
     public CompletableFuture<Integer> save() {
-        List<CompletableFuture<Integer>> futures = entities.bindChanges(changes).entrySet().stream()
+        List<CompletableFuture<Integer>> futures = sqlEntities.bindChanges(changes).entrySet().stream()
                 .map(entry -> entry.getKey().commit(entry.getValue()))
                 .collect(Collectors.toList());
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[]{}))

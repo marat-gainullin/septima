@@ -8,6 +8,7 @@ import org.junit.Test;
 import javax.naming.NamingException;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,14 +28,15 @@ public class EntitiesGeneratorTest {
     }
 
     @Test
-    public void generate() throws IOException {
+    public void generateRows() throws IOException, URISyntaxException {
+        Path testAppPath = new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath();
         SqlEntities entities = new SqlEntities(
-                new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
+                testAppPath,
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
         Path destination = new File(System.getProperty("generated.path")).toPath();
         Path ethalons = new File(System.getProperty("ethalons.path")).toPath();
-        EntitiesGenerator generator = new EntitiesGenerator(entities, destination);
+        EntitiesGenerator generator = EntitiesGenerator.fromResources(entities, testAppPath, destination);
         generator.generateRows();
         String customersEntityPathName = "com/septima/entities/customers/CustomersRow.java";
         String goodsEntityPathName = "com/septima/entities/goods/GoodsRow.java";
@@ -48,6 +50,6 @@ public class EntitiesGeneratorTest {
         String ethalonOrders = new String(Files.readAllBytes(ethalons.resolve(ordersEntityPathName)), StandardCharsets.UTF_8);
         String generatedOrders = new String(Files.readAllBytes(destination.resolve(ordersEntityPathName)), StandardCharsets.UTF_8);
         assertEquals(rn2n(ethalonOrders), rn2n(generatedOrders));
-        assertFalse(destination.resolve("entities/bad").toFile().exists());
+        assertFalse(destination.resolve("sqlEntities/bad").toFile().exists());
     }
 }

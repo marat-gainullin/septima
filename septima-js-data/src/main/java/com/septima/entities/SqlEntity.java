@@ -36,7 +36,8 @@ public class SqlEntity {
     private final Database database;
     private final String sqlText;
     private final String customSqlText;
-    private final String entityName;
+    private final String name;
+    private final String className;
     private final boolean readonly;
     private final boolean command;
     private final boolean procedure;
@@ -62,6 +63,7 @@ public class SqlEntity {
                 aSql,
                 null,
                 null,
+                null,
                 false,
                 false,
                 false,
@@ -76,7 +78,8 @@ public class SqlEntity {
     public SqlEntity(Database aDatabase,
                      String aSql,
                      String aCustomSql,
-                     String aEntityName,
+                     String aName,
+                     String aClassName,
                      boolean aReadonly,
                      boolean aCommand,
                      boolean aProcedure,
@@ -99,7 +102,8 @@ public class SqlEntity {
         database = aDatabase;
         sqlText = aSql;
         customSqlText = aCustomSql;
-        entityName = aEntityName;
+        name = aName;
+        className = aClassName;
         readonly = aReadonly;
         command = aCommand;
         procedure = aProcedure;
@@ -169,8 +173,12 @@ public class SqlEntity {
         return title;
     }
 
+    public String getClassName() {
+        return className;
+    }
+
     public String getName() {
-        return entityName;
+        return name;
     }
 
     public SqlQuery toQuery() {
@@ -179,7 +187,7 @@ public class SqlEntity {
             throw new IllegalStateException("Empty Sql query text is not supported");
         }
         if (customSqlText != null && !customSqlText.isEmpty()) {
-            Logger.getLogger(SqlEntity.class.getName()).log(Level.INFO, "Entity sql was substituted with customSql while compiling entity {0}", entityName);
+            Logger.getLogger(SqlEntity.class.getName()).log(Level.INFO, "Entity sql was substituted with customSql while compiling entity {0}", name);
         }
         List<Parameter> compiledParams = new ArrayList<>(params.size());
         String dialect = database.getSqlDriver().getDialect();
@@ -203,7 +211,7 @@ public class SqlEntity {
         );
         return new SqlQuery(
                 database,
-                entityName,
+                name,
                 jdbcSql,
                 Collections.unmodifiableList(compiledParams),
                 procedure,

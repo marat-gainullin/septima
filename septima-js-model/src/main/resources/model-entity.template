@@ -1,0 +1,25 @@
+    public class ${entityClass} extends ${entityBaseClass} {
+
+        ${navigationProperties}
+
+    }
+
+    ${groupsDeclarations}
+
+    private final Entity<${entityKeyType}, ${entityClass}> ${entityQuery} = new Entity<>(
+            "${entityRef}",
+            "${entityKey}",
+            ${entityClass}::${entityKeyGetter},
+            (datum, changesReflector) -> {
+                ${entityClass} instance = new ${entityClass}();
+                ${forwardMappings}
+                instance.addListener(changesReflector);
+                return instance;
+            },
+            instance -> Map.ofEntries(
+                    ${reverseMappings}
+            ),
+            instance -> {
+                ${groupsFulfills}
+            }
+    );

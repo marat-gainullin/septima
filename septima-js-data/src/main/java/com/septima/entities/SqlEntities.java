@@ -72,7 +72,7 @@ public class SqlEntities {
         Objects.requireNonNull(aDefaultDataSource, "aDefaultDataSource is required argument");
         Objects.requireNonNull(aJdbcPerformer, "aJdbcPerformer is required argument");
         Objects.requireNonNull(aFuturesExecutor, "aFuturesExecutor is required argument");
-        applicationPath = anApplicationPath;
+        applicationPath = anApplicationPath.normalize();
         defaultDataSource = aDefaultDataSource;
         jdbcPerformer = aJdbcPerformer;
         futuresExecutor = aFuturesExecutor;
@@ -95,8 +95,8 @@ public class SqlEntities {
      * random extra put operations are not harmful.
      * Warning! Don't use {@code entities.computeIfAbsent()} or {@code entities.putIfAbsent()} while caching here because of recursive nature of loadEntity()
      *
-     * @param anEntityName       Entity name as {@code #full/path} followed by hash sign, relative transform application root path.
-     * @param aIllegalReferences A {@link Set} with already processed entities names. Used transform avoid cyclic references.
+     * @param anEntityName       Entity name as {@code #full/path} followed by hash sign, relative to application root path.
+     * @param aIllegalReferences A {@link Set} with already processed entities names. Used to avoid cyclic references.
      * @return {@link SqlEntity} instance with inlined sub entities' sql text and substituted parameters names.
      * @throws SqlEntityCyclicReferenceException If entity body has a cyclic reference.
      * @see ConcurrentHashMap
@@ -328,6 +328,8 @@ public class SqlEntities {
 
             JsonNode titleNode = entityDocument != null ? entityDocument.get("title") : null;
             String title = titleNode != null && titleNode.isTextual() ? titleNode.asText() : anEntityName;
+            JsonNode classNameNode = entityDocument != null ? entityDocument.get("className") : null;
+            String className = classNameNode != null && classNameNode.isTextual() ? classNameNode.asText() : null;
             JsonNode sqlNode = entityDocument != null ? entityDocument.get("sql") : null;
             String customSql = sqlNode != null && sqlNode.isTextual() ? sqlNode.asText() : null;
             JsonNode readonlyNode = entityDocument != null ? entityDocument.get("readonly") : null;
@@ -382,6 +384,7 @@ public class SqlEntities {
                     sqlWithSubQueries,
                     customSql,
                     anEntityName,
+                    className,
                     readonly,
                     command,
                     procedure,
@@ -395,7 +398,7 @@ public class SqlEntities {
                     Collections.unmodifiableSet(writeRoles)
             );
         } else {
-            throw new IllegalStateException(anEntityName + " has an empty sql text.");
+            throw new IllegalStateException("'" + anEntityName + "' has an empty sql text.");
         }
     }
 
@@ -424,7 +427,7 @@ public class SqlEntities {
                 }
             } else if (selectItem instanceof AllTableColumns) {// t.*
                 AllTableColumns cols = (AllTableColumns) selectItem;
-                assert cols.getTable() != null : "<table>.* syntax must lead transform .getTable() != null";
+                assert cols.getTable() != null : "<table>.* syntax must lead to .getTable() != null";
                 FromItem source = sources.get(cols.getTable().getWholeTableName().toLowerCase());
                 if (source instanceof Table) {
                     Map<String, JdbcColumn> tableColumns = resolveTableColumns(database, (Table) source);

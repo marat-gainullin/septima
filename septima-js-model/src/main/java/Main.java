@@ -10,14 +10,14 @@ public class Main {
 
     public static void main(String[] args) {
         OrdersModel model = new OrdersModel(ENTITIES);
-        model.requestCustomers(Map.of())
+        model.getCustomers().query(Map.of())
                 .thenApply(customers -> {
                             customers.values().forEach(customer -> {
                             });
                             return model.save();
                         }
                 ).thenCompose(Function.identity())
-                .thenAccept(v -> {
+                .thenAccept(affected -> {
                 });
     }
 }

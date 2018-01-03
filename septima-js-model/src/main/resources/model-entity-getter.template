@@ -1,0 +1,3 @@
+    public Entity<${entityKeyType}, ${entityClass}> ${entityQueryGetter}() {
+        return ${entityQuery};
+    }

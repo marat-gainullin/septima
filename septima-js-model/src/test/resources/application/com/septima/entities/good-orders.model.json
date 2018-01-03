@@ -1,0 +1,24 @@
+{
+  "customers": {
+    "key": "customer_id",
+    "entity": "com/septima/entities/customers/customers"
+  },
+  "goods": {
+    "entity": "./goods/goods"
+  },
+  "orders": {
+    "entity": "../entities/orders/orders",
+    "references": {
+      "good_id": {
+        "target": "goods",
+        "scalar": "good",
+        "collection": "orders"
+      },
+      "customer_id": {
+        "target": "customers",
+        "scalar": "customer",
+        "collection": "orders"
+      }
+    }
+  }
+}

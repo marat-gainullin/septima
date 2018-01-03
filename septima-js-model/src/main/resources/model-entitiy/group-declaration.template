@@ -1,0 +1,1 @@
+    private Map<${entityKeyType}, Collection<${entityClass}>> ${entityQuery}By${scalarClass}Key = new HashMap<>();

@@ -14,17 +14,7 @@ dependencies {
 
     h2 'com.h2database:h2:1.4.193',
             'com.vividsolutions:jts:1.13'
-    testRuntime project(':septima-js-sql-driver-db2'),
-            project(':septima-js-sql-driver-h2'),
-            project(':septima-js-sql-driver-mssql'),
-            project(':septima-js-sql-driver-mysql'),
-            project(':septima-js-sql-driver-postgresql'),
-            project(':septima-js-sql-driver-oracle'),
-            'com.hynnet:oracle-driver-ojdbc6:12.1.0.1',
-            'org.postgresql:postgresql:42.1.4',
-            'org.postgis:postgis-jdbc:2.1.0',
-            'com.h2database:h2:1.4.193',
-            'com.vividsolutions:jts:1.13'
+    testRuntime project(':septima-js-sql-driver-h2')
 }
 
 def appDirName = "${projectDir}/src/test/resources/application"

@@ -1,5 +1,6 @@
 {
   "title": "Custom orders",
+  "className": "CustomOrder",
   "sql": "select o.*, co.body::json from orders o inner join customOrders co on(o.id = co.order_id)",
   "source": "septima",
   "command": true,

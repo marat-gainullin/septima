@@ -1,0 +1,18 @@
+package ${modelPackage};
+
+import com.septima.entities.SqlEntities;
+${entitiesRowsImports}
+import com.septima.model.Model;
+
+import java.util.*;
+
+public class ${modelClass} extends Model {
+
+    ${modelEntities}
+
+    public OrdersModel(SqlEntities aEntities) {
+        super(aEntities);
+    }
+
+    ${modelEntitiesGetters}
+}
