@@ -37,7 +37,6 @@ public class SqlEntity {
     private final String sqlText;
     private final String customSqlText;
     private final String name;
-    private final String className;
     private final boolean readonly;
     private final boolean command;
     private final boolean procedure;
@@ -63,7 +62,6 @@ public class SqlEntity {
                 aSql,
                 null,
                 null,
-                null,
                 false,
                 false,
                 false,
@@ -79,7 +77,6 @@ public class SqlEntity {
                      String aSql,
                      String aCustomSql,
                      String aName,
-                     String aClassName,
                      boolean aReadonly,
                      boolean aCommand,
                      boolean aProcedure,
@@ -103,7 +100,6 @@ public class SqlEntity {
         sqlText = aSql;
         customSqlText = aCustomSql;
         name = aName;
-        className = aClassName;
         readonly = aReadonly;
         command = aCommand;
         procedure = aProcedure;
@@ -171,10 +167,6 @@ public class SqlEntity {
 
     public String getTitle() {
         return title;
-    }
-
-    public String getClassName() {
-        return className;
     }
 
     public String getName() {

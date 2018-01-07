@@ -1,0 +1,14 @@
+{
+  "customers": {
+    "entity": "customers/customers"
+  },
+  "sellers": {
+    "entity": "customers/customers"
+  },
+  "goods": {
+    "entity": "./goods/goods"
+  },
+  "orders": {
+    "entity": "../references/orders/orders"
+  }
+}

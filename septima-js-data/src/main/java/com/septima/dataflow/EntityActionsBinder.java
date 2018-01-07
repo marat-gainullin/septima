@@ -71,7 +71,7 @@ public class EntityActionsBinder implements EntityActionsVisitor {
         return logEntries;
     }
 
-    private Function<Map.Entry<String, Object>, Map.Entry<String, List<Parameter>>> asTableDatumEntry(SqlEntity aEntity) {
+    private Function<Map.Entry<String, Object>, Map.Entry<String, Parameter>> asTableDatumEntry(SqlEntity aEntity) {
         return datum -> {
             String datumName = datum.getKey();
             Object datumValue = datum.getValue();
@@ -79,7 +79,7 @@ public class EntityActionsBinder implements EntityActionsVisitor {
             if (entityEntityField != null) {
                 String keyColumnName = entityEntityField.getOriginalName() != null ? entityEntityField.getOriginalName() : entityEntityField.getName();
                 Parameter bound = new Parameter(keyColumnName, datumValue, entityEntityField.getType());
-                return Map.entry(entityEntityField.getTableName(), List.of(bound));
+                return Map.entry(entityEntityField.getTableName(), bound);
             } else {
                 throw new IllegalStateException("Entity field '" + datumName + "' is not found in entity '" + aEntity.getName() + "'");
             }
@@ -92,7 +92,7 @@ public class EntityActionsBinder implements EntityActionsVisitor {
         aAdd.getData().entrySet().stream()
                 .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
-                        Collectors.flatMapping(entry -> entry.getValue().stream(), Collectors.toList())))
+                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())))
                 .entrySet().stream()
                 .filter(entry ->
                         !entry.getValue().isEmpty() &&
@@ -116,11 +116,11 @@ public class EntityActionsBinder implements EntityActionsVisitor {
         Map<String, List<Parameter>> updatesKeys = aUpdate.getKeys().entrySet().stream()
                 .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
-                        Collectors.flatMapping(entry -> entry.getValue().stream(), Collectors.toList())));
+                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
         aUpdate.getData().entrySet().stream()
                 .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
-                        Collectors.flatMapping(entry -> entry.getValue().stream(), Collectors.toList())))
+                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())))
                 .entrySet().stream()
                 .filter(entry -> !entry.getValue().isEmpty() && !updatesKeys.getOrDefault(entry.getKey(), List.of()).isEmpty() &&
                         (entity.getWritable().isEmpty() || entity.getWritable().contains(entry.getKey()))
@@ -152,7 +152,7 @@ public class EntityActionsBinder implements EntityActionsVisitor {
         aRemove.getKeys().entrySet().stream()
                 .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
-                        Collectors.flatMapping(entry -> entry.getValue().stream(), Collectors.toList())))
+                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())))
                 .entrySet().stream()
                 .filter(entry ->
                         !entry.getValue().isEmpty() &&

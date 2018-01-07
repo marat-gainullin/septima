@@ -1,25 +1,21 @@
     public class ${entityClass} extends ${entityBaseClass} {
-
-        ${navigationProperties}
-
+${scalarProperties}${collectionProperties}
     }
-
-    ${groupsDeclarations}
-
-    private final Entity<${entityKeyType}, ${entityClass}> ${entityQuery} = new Entity<>(
+${groupsDeclarations}
+    private final Entity<${entityKeyType}, ${entityClass}> ${modelEntity} = new Entity<>(
             "${entityRef}",
             "${entityKey}",
             ${entityClass}::${entityKeyGetter},
-            (datum, changesReflector) -> {
+            datum -> {
                 ${entityClass} instance = new ${entityClass}();
-                ${forwardMappings}
-                instance.addListener(changesReflector);
+
+${forwardMappings}
                 return instance;
             },
             instance -> Map.ofEntries(
-                    ${reverseMappings}
+${reverseMappings}
             ),
-            instance -> {
-                ${groupsFulfills}
+            instance -> {${groupsFulfills}
             }
     );
+

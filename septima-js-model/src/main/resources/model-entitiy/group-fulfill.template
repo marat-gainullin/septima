@@ -1,1 +1,0 @@
-                toGroups(instance, ${entityQuery}By${scalarClass}Key, instance.${referenceGetter}());

@@ -328,8 +328,6 @@ public class SqlEntities {
 
             JsonNode titleNode = entityDocument != null ? entityDocument.get("title") : null;
             String title = titleNode != null && titleNode.isTextual() ? titleNode.asText() : anEntityName;
-            JsonNode classNameNode = entityDocument != null ? entityDocument.get("className") : null;
-            String className = classNameNode != null && classNameNode.isTextual() ? classNameNode.asText() : null;
             JsonNode sqlNode = entityDocument != null ? entityDocument.get("sql") : null;
             String customSql = sqlNode != null && sqlNode.isTextual() ? sqlNode.asText() : null;
             JsonNode readonlyNode = entityDocument != null ? entityDocument.get("readonly") : null;
@@ -384,7 +382,6 @@ public class SqlEntities {
                     sqlWithSubQueries,
                     customSql,
                     anEntityName,
-                    className,
                     readonly,
                     command,
                     procedure,

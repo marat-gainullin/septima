@@ -1,0 +1,12 @@
+{
+  "hierarchy": {
+    "entity": "./goods-hierarchy",
+    "references": {
+      "parentId": {
+        "target": "hierarchy",
+        "scalar": "parent",
+        "collection": "children"
+      }
+    }
+  }
+}

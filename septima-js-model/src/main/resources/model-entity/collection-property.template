@@ -1,0 +1,3 @@
+        public Collection<${scalarClass}> ${collectionGetter}() {
+            return ${sourceModelEntity}By${Reference}.getOrDefault(${entityKeyGetter}(), List.of());
+        }

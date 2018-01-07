@@ -1,0 +1,1 @@
+    private Map<${entityKeyType}, Collection<${entityClass}>> ${modelEntity}By${Reference} = new HashMap<>();

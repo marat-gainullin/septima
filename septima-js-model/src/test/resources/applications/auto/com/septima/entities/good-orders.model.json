@@ -1,0 +1,11 @@
+{
+  "customers": {
+    "entity": "com/septima/entities/customers/customers"
+  },
+  "goods": {
+    "entity": "./goods/goods"
+  },
+  "orders": {
+    "entity": "../entities/orders/orders"
+  }
+}

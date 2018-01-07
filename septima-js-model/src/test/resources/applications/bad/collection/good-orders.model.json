@@ -1,0 +1,37 @@
+{
+  "customers": {
+    "key": "id",
+    "entity": "customers/customers",
+    "className": "Customer"
+  },
+  "sellers": {
+    "key": "id",
+    "entity": "customers/customers",
+    "className": "Seller"
+  },
+  "goods": {
+    "entity": "./goods/goods",
+    "className": "Good"
+  },
+  "orders": {
+    "entity": "../collection/orders/orders",
+    "references": {
+      "good_id": {
+        "target": "goods",
+        "scalar": "good",
+        "collection": "orderedGoods"
+      },
+      "customerId": {
+        "target": "customers",
+        "scalar": "customer",
+        "collection": ""
+      },
+      "seller_id": {
+        "target": "sellers",
+        "scalar": "seller",
+        "collection": null
+      }
+    },
+    "className": "Order"
+  }
+}

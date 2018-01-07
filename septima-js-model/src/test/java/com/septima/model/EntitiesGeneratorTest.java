@@ -29,13 +29,13 @@ public class EntitiesGeneratorTest {
 
     @Test
     public void generateRows() throws IOException, URISyntaxException {
-        Path testAppPath = new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath();
+        Path testAppPath = new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath().resolve("rows");
         SqlEntities entities = new SqlEntities(
                 testAppPath,
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
-        Path destination = new File(System.getProperty("generated.path")).toPath();
-        Path ethalons = new File(System.getProperty("ethalons.path")).toPath();
+        Path destination = new File(System.getProperty("generated.path")).toPath().resolve("rows");
+        Path ethalons = new File(System.getProperty("ethalons.path")).toPath().resolve("rows");
         EntitiesGenerator generator = EntitiesGenerator.fromResources(entities, testAppPath, destination);
         generator.generateRows();
         String customersEntityPathName = "com/septima/entities/customers/CustomersRow.java";
@@ -51,5 +51,70 @@ public class EntitiesGeneratorTest {
         String generatedOrders = new String(Files.readAllBytes(destination.resolve(ordersEntityPathName)), StandardCharsets.UTF_8);
         assertEquals(rn2n(ethalonOrders), rn2n(generatedOrders));
         assertFalse(destination.resolve("sqlEntities/bad").toFile().exists());
+    }
+
+    private void generateModel(String testAppSuffix) throws IOException, URISyntaxException {
+        Path testAppPath = new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath().resolve(testAppSuffix);
+        SqlEntities entities = new SqlEntities(
+                testAppPath,
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+        );
+        Path destination = new File(System.getProperty("generated.path")).toPath().resolve(testAppSuffix);
+        EntitiesGenerator generator = EntitiesGenerator.fromResources(entities, testAppPath, destination);
+        generator.generateRows();
+        generator.generateModels();
+    }
+
+    private void checkModel(String testAppSuffix, String modelRelativePathName) throws IOException, URISyntaxException {
+        Path destination = new File(System.getProperty("generated.path")).toPath().resolve(testAppSuffix);
+        Path ethalons = new File(System.getProperty("ethalons.path")).toPath().resolve(testAppSuffix);
+        String ethalonGoodOrders = new String(Files.readAllBytes(ethalons.resolve(modelRelativePathName)), StandardCharsets.UTF_8);
+        String generatedGoodOrders = new String(Files.readAllBytes(destination.resolve(modelRelativePathName)), StandardCharsets.UTF_8);
+        assertEquals(rn2n(ethalonGoodOrders), rn2n(generatedGoodOrders));
+    }
+
+    private void generateAndCheckModel(String testAppSuffix, String modelRelativePathName) throws IOException, URISyntaxException {
+        generateModel(testAppSuffix);
+        checkModel(testAppSuffix, modelRelativePathName);
+    }
+
+    @Test
+    public void generateModelWithManualReferences() throws IOException, URISyntaxException {
+        generateAndCheckModel("manual", "com/septima/entities/GoodOrders.java");
+    }
+
+    @Test
+    public void generateModelWithAutoReferences() throws IOException, URISyntaxException {
+        generateAndCheckModel("auto", "com/septima/entities/GoodOrders.java");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void generateModelWithAmbiguousPrimaryKey() throws IOException, URISyntaxException {
+        generateModel("ambiguous/key");
+    }
+
+    @Test
+    public void generateModelWithAmbiguousReferences() throws IOException, URISyntaxException {
+        generateAndCheckModel("ambiguous/references", "GoodOrders.java");
+    }
+
+    @Test
+    public void generateModelWithAutoUnaryReference() throws IOException, URISyntaxException {
+        generateAndCheckModel("unary/auto", "Goods.java");
+    }
+
+    @Test
+    public void generateModelWithManualUnaryReference() throws IOException, URISyntaxException {
+        generateAndCheckModel("unary/manual", "Goods.java");
+    }
+
+    @Test
+    public void generateModelWithBadScalarReference() throws IOException, URISyntaxException {
+        generateAndCheckModel("bad/scalar", "GoodOrders.java");
+    }
+
+    @Test
+    public void generateModelWithBadCollectionReference() throws IOException, URISyntaxException {
+        generateAndCheckModel("bad/collection", "GoodOrders.java");
     }
 }

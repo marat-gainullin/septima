@@ -1,0 +1,37 @@
+{
+  "customers": {
+    "key": "id",
+    "entity": "com/septima/entities/customers/customers",
+    "className": "Customer"
+  },
+  "sellers": {
+    "key": "id",
+    "entity": "com/septima/entities/customers/customers",
+    "className": "Seller"
+  },
+  "goods": {
+    "entity": "./goods/goods",
+    "className": "Good"
+  },
+  "orders": {
+    "entity": "../entities/orders/orders",
+    "references": {
+      "good_id": {
+        "target": "goods",
+        "scalar": "good",
+        "collection": "orders"
+      },
+      "customerId": {
+        "target": "customers",
+        "scalar": "customer",
+        "collection": "orders"
+      },
+      "seller_id": {
+        "target": "sellers",
+        "scalar": "seller",
+        "collection": "orders"
+      }
+    },
+    "className": "Order"
+  }
+}

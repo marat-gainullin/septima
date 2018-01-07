@@ -1,1 +1,0 @@
-                    Map.entry("${fieldName}", instance.${propertyGetter}())

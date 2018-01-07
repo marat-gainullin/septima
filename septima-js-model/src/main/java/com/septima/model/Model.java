@@ -13,32 +13,31 @@ import javafx.collections.ObservableMap;
 import java.beans.PropertyChangeListener;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Model {
 
-    public class Entity<K, D> {
+    public class Entity<K, D extends Observable> {
         private final SqlQuery query;
         private final String keyFieldName;
         private final PropertyChangeListener changesReflector;
         private final Map<K, D> byKey = new HashMap<>();
         private final Function<D, K> keyOf;
-        private final BiFunction<Map<String, Object>, PropertyChangeListener, D> forwardMapper;
+        private final Function<Map<String, Object>, D> forwardMapper;
         private final Function<D, Map<String, Object>> reverseMapper;
         private final Consumer<D> handler;
 
         public Entity(String anEntityName, String aKeyFieldName, Function<D, K> aKeyOf,
-                      BiFunction<Map<String, Object>, PropertyChangeListener, D> aForwardMapper,
+                      Function<Map<String, Object>, D> aForwardMapper,
                       Function<D, Map<String, Object>> aReverseMapper) {
-            this(anEntityName, aKeyFieldName, aKeyOf, aForwardMapper, aReverseMapper, (instance) -> {});
-            //entities.add(this);
+            this(anEntityName, aKeyFieldName, aKeyOf, aForwardMapper, aReverseMapper, (instance) -> {
+            });
         }
 
         public Entity(String anEntityName, String aKeyFieldName, Function<D, K> aKeyOf,
-                      BiFunction<Map<String, Object>, PropertyChangeListener, D> aForwardMapper,
+                      Function<Map<String, Object>, D> aForwardMapper,
                       Function<D, Map<String, Object>> aReverseMapper,
                       Consumer<D> aHandler) {
             query = sqlEntities.loadEntity(anEntityName).toQuery();
@@ -48,6 +47,7 @@ public class Model {
             forwardMapper = aForwardMapper;
             reverseMapper = aReverseMapper;
             handler = aHandler;
+            //entities.add(this);
         }
 
         public String getName() {
@@ -60,61 +60,54 @@ public class Model {
 
         public CompletableFuture<Map<K, D>> query(Map<String, Object> parameters) {
             return query.requestData(parameters)
-                    .thenApply(data -> toDomain(query.getEntityName(),
-                            keyFieldName,
-                            keyOf,
-                            datum -> forwardMapper.apply(datum, changesReflector),
-                            reverseMapper,
-                            data,
-                            byKey
-                    ))
-                    .thenApply(data -> {
-                                data.values().forEach(handler);
-                                return data;
-                            }
-                    );
+                    .thenApply(this::toDomain);
+        }
+
+        /**
+         * Transforms untyped data to map of domain entities.
+         * It is used in {@link #query(Map)} method to process results of a query.
+         * It also can be used separately with any data. For example, {@code data} can be received from
+         * http request/response, or manual {@link SqlQuery} execution. Last case is useful when you want
+         * to fetch some data only once with use of a {@code JOIN} and construct multiple domain entities from that data.
+         * A classic ORM would do the same thing when it is asked to fetched linked entities with 'EAGER' policy.
+         * In both cases you are able to use navigation properties as usual.
+         *
+         * @param data Collection of #Map instances with properties of domain objects in key-value form.
+         * @return Map of domain objects, identified by values of a key property.
+         */
+        public Map<K, D> toDomain(Collection<Map<String, Object>> data) {
+            Map<K, D> domainData = data.stream()
+                            .map(datum -> {
+                                D instance = forwardMapper.apply(datum);
+                                K key = keyOf.apply(instance);
+                                byKey.putIfAbsent(key, instance);
+                                return byKey.get(key);
+                            })
+                            .collect(Collectors.toMap(keyOf, Function.identity()));
+            domainData.values().forEach(handler);
+            ObservableMap<K, D> observable = FXCollections.observableMap(domainData);
+            observable.addListener((MapChangeListener.Change<? extends K, ? extends D> change) -> {
+                        if (change.wasAdded()) {
+                            D added = change.getValueAdded();
+                            added.addListener(changesReflector);
+                            changes.add(new EntityAdd(query.getEntityName(), reverseMapper.apply(added)));
+                        }
+                        if (change.wasRemoved()) {
+                            D removed = change.getValueRemoved();
+                            removed.removeListener(changesReflector);
+                            changes.add(new EntityRemove(query.getEntityName(), Map.of(keyFieldName, keyOf.apply(removed))));
+                        }
+                    }
+            );
+            return observable;
         }
     }
 
     private final SqlEntities sqlEntities;
-    //private final List<Entity> entities = new ArrayList<>();
+    //private final Collection<Entity> entities = new ArrayList<>();
 
     public Model(SqlEntities aEntities) {
         sqlEntities = aEntities;
-    }
-
-    private <K, D> Map<K, D> toDomain(
-            String entityName,
-            String keyName,
-            Function<D, K> keyMapper,
-            Function<Map<String, Object>, D> forwardMapper,
-            Function<D, Map<String, Object>> reverseMapper,
-            Collection<Map<String, Object>> data,
-            Map<K, D> fetched
-    ) {
-        ObservableMap<K, D> observable = FXCollections.observableMap(
-                data.stream()
-                        .map(datum -> {
-                            D domainValue = forwardMapper.apply(datum);
-                            K key = keyMapper.apply(domainValue);
-                            fetched.putIfAbsent(key, domainValue);
-                            return fetched.get(key);
-                        })
-                        .collect(Collectors.toMap(keyMapper, Function.identity())));
-        observable.addListener((MapChangeListener.Change<? extends K, ? extends D> change) -> {
-                    if (change.wasAdded()) {
-                        changes.add(new EntityAdd(entityName, reverseMapper.apply(change.getValueAdded())));
-                    }
-                    if (change.wasRemoved()) {
-                        changes.add(new EntityRemove(entityName, Map.of(keyName, keyMapper.apply(change.getValueRemoved()))));
-                    }
-                }
-        );
-        return observable;
-    }
-
-    protected static <K, D> void toGroups(D instance, Map<K, Collection<D>> groups, K key) {
-        groups.computeIfAbsent(key, k -> new HashSet<>()).add(instance);
     }
 
     private final List<EntityAction> changes = new ArrayList<>();
@@ -143,4 +136,9 @@ public class Model {
                             .reduce(Integer::sum).orElse(0);
                 });
     }
+
+    protected static <K, D> void toGroups(D instance, Map<K, Collection<D>> groups, K key) {
+        groups.computeIfAbsent(key, k -> new HashSet<>()).add(instance);
+    }
+
 }
