@@ -1,11 +1,18 @@
         public ${scalarClass} ${scalarGetter}() {
             return Optional.ofNullable(${scalarModelEntity}.getByKey().get(${referenceGetter}()))
-                    .orElseThrow(() -> new IllegalStateException("Unresolved reference '" + ${scalarModelEntity}.getName() + "' (" + ${referenceGetter}() + ")' in entity '" + ${modelEntity}.getName() + "' (" + ${entityKeyGetter}() + ")'"));
+                    .orElseThrow(() -> new IllegalStateException("Unresolved reference '" + ${scalarModelEntity}.getName() + " (" + ${referenceGetter}() + ")' in entity '" + ${modelEntity}.getName() + " (" + ${entityKeyGetter}() + ")'"));
         }
 
         public void ${scalarMutator}(${scalarClass} a${scalarClass}) {
-            ${scalarClass} old = ${scalarGetter}();
-            old.${collectionGetter}().remove(this);
             ${referenceMutator}(a${scalarClass}.${scalarKeyGetter}());
-            a${scalarClass}.${collectionGetter}().add(this);
+        }
+
+        @Override
+        public void ${referenceMutator}(${referenceType} aValue){
+            ${referenceType} old = ${referenceGetter}();
+            if(old != aValue){
+                fromGroups(this, ${modelEntity}By${Reference}, old);
+                super.${referenceMutator}(aValue);
+                toGroups(this, ${modelEntity}By${Reference}, aValue);
+            }
         }

@@ -1,8 +1,20 @@
     public class ${entityClass} extends ${entityBaseClass} {
+
+        @Override
+        public void ${entityKeyMutator}(${entityKeyType} aValue) {
+            ${entityKeyType} old = ${entityKeyGetter}();
+            if (${modelEntity}.getByKey().containsKey(old)){
+                ${modelEntity}.getByKey().remove(old);
+                super.${entityKeyMutator}(aValue);
+                ${modelEntity}.getByKey().put(aValue, this);
+            } else {
+                super.${entityKeyMutator}(aValue);
+            }
+        }
 ${scalarProperties}${collectionProperties}
     }
 ${groupsDeclarations}
-    private final Entity<${entityKeyType}, ${entityClass}> ${modelEntity} = new Entity<>(
+    private final Entity<${entityKeyBoxedType}, ${entityClass}> ${modelEntity} = new Entity<>(
             "${entityRef}",
             "${entityKey}",
             ${entityClass}::${entityKeyGetter},
@@ -12,10 +24,12 @@ ${groupsDeclarations}
 ${forwardMappings}
                 return instance;
             },
-            instance -> Map.ofEntries(
+            instance -> map(
 ${reverseMappings}
             ),
             instance -> {${groupsFulfills}
+            },
+            instance -> {${groupsEvicts}
             }
     );
 

@@ -11,8 +11,20 @@ public class GoodOrders extends Model {
 
     public class Good extends GoodsRow {
 
-        public Collection<Order> getOrderedGoods() {
-            return ordersByGoodId.getOrDefault(getId(), List.of());
+        @Override
+        public void setId(long aValue) {
+            long old = getId();
+            if (goods.getByKey().containsKey(old)){
+                goods.getByKey().remove(old);
+                super.setId(aValue);
+                goods.getByKey().put(aValue, this);
+            } else {
+                super.setId(aValue);
+            }
+        }
+
+        public Collection<Order> getOrders() {
+            return ordersByGoodId.computeIfAbsent(getId(), key -> new HashSet<>());
         }
 
     }
@@ -29,26 +41,47 @@ public class GoodOrders extends Model {
 
                 return instance;
             },
-            instance -> Map.ofEntries(
-                    Map.entry("id", instance.getId()),
-                    Map.entry("name", instance.getName())
+            instance -> map(
+                    entry("id", instance.getId()),
+                    entry("name", instance.getName())
             ),
+            instance -> {
+            },
             instance -> {
             }
     );
 
     public class Order extends OrdersRow {
 
+        @Override
+        public void setId(long aValue) {
+            long old = getId();
+            if (orders.getByKey().containsKey(old)){
+                orders.getByKey().remove(old);
+                super.setId(aValue);
+                orders.getByKey().put(aValue, this);
+            } else {
+                super.setId(aValue);
+            }
+        }
+
         public Good getGood() {
             return Optional.ofNullable(goods.getByKey().get(getGoodId()))
-                    .orElseThrow(() -> new IllegalStateException("Unresolved reference '" + goods.getName() + "' (" + getGoodId() + ")' in entity '" + orders.getName() + "' (" + getId() + ")'"));
+                    .orElseThrow(() -> new IllegalStateException("Unresolved reference '" + goods.getName() + " (" + getGoodId() + ")' in entity '" + orders.getName() + " (" + getId() + ")'"));
         }
 
         public void setGood(Good aGood) {
-            Good old = getGood();
-            old.getOrderedGoods().remove(this);
             setGoodId(aGood.getId());
-            aGood.getOrderedGoods().add(this);
+        }
+
+        @Override
+        public void setGoodId(long aValue){
+            long old = getGoodId();
+            if(old != aValue){
+                fromGroups(this, ordersByGoodId, old);
+                super.setGoodId(aValue);
+                toGroups(this, ordersByGoodId, aValue);
+            }
         }
 
     }
@@ -75,24 +108,39 @@ public class GoodOrders extends Model {
 
                 return instance;
             },
-            instance -> Map.ofEntries(
-                    Map.entry("id", instance.getId()),
-                    Map.entry("customer_id", instance.getCustomerId()),
-                    Map.entry("seller_id", instance.getSellerId()),
-                    Map.entry("good_id", instance.getGoodId()),
-                    Map.entry("comment", instance.getComment()),
-                    Map.entry("moment", instance.getMoment()),
-                    Map.entry("paid", instance.getPaid()),
-                    Map.entry("summ", instance.getSumm()),
-                    Map.entry("destination", instance.getDestination()),
-                    Map.entry("bad_data", instance.getBadData())
+            instance -> map(
+                    entry("id", instance.getId()),
+                    entry("customer_id", instance.getCustomerId()),
+                    entry("seller_id", instance.getSellerId()),
+                    entry("good_id", instance.getGoodId()),
+                    entry("comment", instance.getComment()),
+                    entry("moment", instance.getMoment()),
+                    entry("paid", instance.getPaid()),
+                    entry("summ", instance.getSumm()),
+                    entry("destination", instance.getDestination()),
+                    entry("bad_data", instance.getBadData())
             ),
             instance -> {
                 toGroups(instance, ordersByGoodId, instance.getGoodId());
+            },
+            instance -> {
+                fromGroups(instance, ordersByGoodId, instance.getGoodId());
             }
     );
 
     public class Customer extends CustomersRow {
+
+        @Override
+        public void setId(long aValue) {
+            long old = getId();
+            if (customers.getByKey().containsKey(old)){
+                customers.getByKey().remove(old);
+                super.setId(aValue);
+                customers.getByKey().put(aValue, this);
+            } else {
+                super.setId(aValue);
+            }
+        }
 
     }
 
@@ -108,15 +156,29 @@ public class GoodOrders extends Model {
 
                 return instance;
             },
-            instance -> Map.ofEntries(
-                    Map.entry("id", instance.getId()),
-                    Map.entry("name", instance.getName())
+            instance -> map(
+                    entry("id", instance.getId()),
+                    entry("name", instance.getName())
             ),
+            instance -> {
+            },
             instance -> {
             }
     );
 
     public class Seller extends CustomersRow {
+
+        @Override
+        public void setId(long aValue) {
+            long old = getId();
+            if (sellers.getByKey().containsKey(old)){
+                sellers.getByKey().remove(old);
+                super.setId(aValue);
+                sellers.getByKey().put(aValue, this);
+            } else {
+                super.setId(aValue);
+            }
+        }
 
     }
 
@@ -132,10 +194,12 @@ public class GoodOrders extends Model {
 
                 return instance;
             },
-            instance -> Map.ofEntries(
-                    Map.entry("id", instance.getId()),
-                    Map.entry("name", instance.getName())
+            instance -> map(
+                    entry("id", instance.getId()),
+                    entry("name", instance.getName())
             ),
+            instance -> {
+            },
             instance -> {
             }
     );

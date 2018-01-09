@@ -39,7 +39,7 @@ public class JdbcReaderAssigner {
         int jdbcType;
         String sqlTypeName;
         if (GenericType.GEOMETRY == aParameter.getType()) {
-            NamedJdbcValue jv = sqlDriver.geometryFromWkt(aParameter.getName(), aParameter.getValue().toString(), aConnection);
+            NamedJdbcValue jv = sqlDriver.geometryFromWkt(aParameter.getName(), aParameter.getValue() != null ? aParameter.getValue().toString() : null, aConnection);
             paramValue = jv.getValue();
             jdbcType = jv.getJdbcType();
             sqlTypeName = jv.getSqlTypeName();
@@ -58,7 +58,9 @@ public class JdbcReaderAssigner {
             try {
                 Object outedParamValue = GenericType.GEOMETRY == aParameter.getType() ?
                         sqlDriver.geometryToWkt(aStatement, aParameterIndex, aConnection) :
-                        readTypedValue(aStatement, aParameterIndex);
+                        aParameter.getType() != null ?
+                                aParameter.getType().narrow(readTypedValue(aStatement, aParameterIndex)) :
+                                readTypedValue(aStatement, aParameterIndex);
                 aParameter.setValue(outedParamValue);
             } catch (SQLException | UncheckedSQLException ex) {
                 GenericType pType = aParameter.getType();

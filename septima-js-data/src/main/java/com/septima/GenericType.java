@@ -40,4 +40,19 @@ public enum GenericType {
             return defaultValue;
         }
     }
+
+    public Object narrow(Object aValue) {
+        if (aValue != null) {
+            switch (this) {
+                case DOUBLE:
+                    return aValue instanceof Double ? aValue : ((Number) aValue).doubleValue();
+                case LONG:
+                    return aValue instanceof Long ? aValue : ((Number) aValue).longValue();
+                default:
+                    return aValue;
+            }
+        } else {
+            return aValue;
+        }
+    }
 }

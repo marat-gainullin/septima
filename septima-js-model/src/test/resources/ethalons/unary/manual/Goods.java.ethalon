@@ -8,28 +8,47 @@ public class Goods extends Model {
 
     public class Hierarchy extends GoodsHierarchyRow {
 
+        @Override
+        public void setId(long aValue) {
+            long old = getId();
+            if (hierarchy.getByKey().containsKey(old)){
+                hierarchy.getByKey().remove(old);
+                super.setId(aValue);
+                hierarchy.getByKey().put(aValue, this);
+            } else {
+                super.setId(aValue);
+            }
+        }
+
         public Hierarchy getParent() {
             if (getParentId() != null) {
                 return Optional.ofNullable(hierarchy.getByKey().get(getParentId()))
-                        .orElseThrow(() -> new IllegalStateException("Unresolved reference '" + hierarchy.getName() + "' (" + getParentId() + ")' in entity '" + hierarchy.getName() + "' (" + getId() + ")'"));
+                        .orElseThrow(() -> new IllegalStateException("Unresolved reference '" + hierarchy.getName() + " (" + getParentId() + ")' in entity '" + hierarchy.getName() + " (" + getId() + ")'"));
             } else {
                 return null;
             }
         }
 
         public void setParent(Hierarchy aHierarchy) {
-            Hierarchy old = getParent();
-            if (old != null) {
-                old.getChildren().remove(this);
-            }
             setParentId(aHierarchy != null ? aHierarchy.getId() : null);
-            if (aHierarchy != null) {
-                aHierarchy.getChildren().add(this);
+        }
+
+        @Override
+        public void setParentId(Long aValue){
+            Long old = getParentId();
+            if (old != null ? !old.equals(aValue) : aValue != null){
+                if (old != null){
+                    fromGroups(this, hierarchyByParentId, old);
+                }
+                super.setParentId(aValue);
+                if (aValue != null){
+                    toGroups(this, hierarchyByParentId, aValue);
+                }
             }
         }
 
         public Collection<Hierarchy> getChildren() {
-            return hierarchyByParentId.getOrDefault(getId(), List.of());
+            return hierarchyByParentId.computeIfAbsent(getId(), key -> new HashSet<>());
         }
 
     }
@@ -49,13 +68,16 @@ public class Goods extends Model {
 
                 return instance;
             },
-            instance -> Map.ofEntries(
-                    Map.entry("id", instance.getId()),
-                    Map.entry("name", instance.getName()),
-                    Map.entry("parent_id", instance.getParentId())
+            instance -> map(
+                    entry("id", instance.getId()),
+                    entry("name", instance.getName()),
+                    entry("parent_id", instance.getParentId())
             ),
             instance -> {
                 toGroups(instance, hierarchyByParentId, instance.getParentId());
+            },
+            instance -> {
+                fromGroups(instance, hierarchyByParentId, instance.getParentId());
             }
     );
 

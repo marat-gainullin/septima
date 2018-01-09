@@ -21,32 +21,36 @@ public class Model {
 
     public class Entity<K, D extends Observable> {
         private final SqlQuery query;
-        private final String keyFieldName;
+        private final String keyName;
         private final PropertyChangeListener changesReflector;
         private final Map<K, D> byKey = new HashMap<>();
         private final Function<D, K> keyOf;
         private final Function<Map<String, Object>, D> forwardMapper;
         private final Function<D, Map<String, Object>> reverseMapper;
-        private final Consumer<D> handler;
+        private final Consumer<D> classifier;
+        private final Consumer<D> unclassifier;
 
         public Entity(String anEntityName, String aKeyFieldName, Function<D, K> aKeyOf,
                       Function<Map<String, Object>, D> aForwardMapper,
                       Function<D, Map<String, Object>> aReverseMapper) {
             this(anEntityName, aKeyFieldName, aKeyOf, aForwardMapper, aReverseMapper, (instance) -> {
+            }, (instance) -> {
             });
         }
 
-        public Entity(String anEntityName, String aKeyFieldName, Function<D, K> aKeyOf,
+        public Entity(String anEntityName, String aKeyName, Function<D, K> aKeyOf,
                       Function<Map<String, Object>, D> aForwardMapper,
                       Function<D, Map<String, Object>> aReverseMapper,
-                      Consumer<D> aHandler) {
+                      Consumer<D> aClassifier,
+                      Consumer<D> aUnclassifier) {
             query = sqlEntities.loadEntity(anEntityName).toQuery();
-            changesReflector = listener(query, aKeyFieldName, aKeyOf);
-            keyFieldName = aKeyFieldName;
+            changesReflector = listener(query, aKeyName, aKeyOf);
+            keyName = aKeyName;
             keyOf = aKeyOf;
             forwardMapper = aForwardMapper;
             reverseMapper = aReverseMapper;
-            handler = aHandler;
+            classifier = aClassifier;
+            unclassifier = aUnclassifier;
             //entities.add(this);
         }
 
@@ -76,26 +80,44 @@ public class Model {
          * @return Map of domain objects, identified by values of a key property.
          */
         public Map<K, D> toDomain(Collection<Map<String, Object>> data) {
+            Function<D, D> onRemoved = removed -> {
+                byKey.remove(keyOf.apply(removed));
+                unclassifier.accept(removed);
+                removed.removeListener(changesReflector);
+                return removed;
+            };
+            Function<D, D> onAdded = added -> {
+                byKey.put(keyOf.apply(added), added);
+                classifier.accept(added);
+                added.addListener(changesReflector);
+                return added;
+            };
             Map<K, D> domainData = data.stream()
-                            .map(datum -> {
-                                D instance = forwardMapper.apply(datum);
-                                K key = keyOf.apply(instance);
-                                byKey.putIfAbsent(key, instance);
-                                return byKey.get(key);
-                            })
-                            .collect(Collectors.toMap(keyOf, Function.identity()));
-            domainData.values().forEach(handler);
+                    .map(datum -> {
+                        D instance = forwardMapper.apply(datum);
+                        K key = keyOf.apply(instance);
+                        if (!byKey.containsKey(key)) {
+                            onAdded.apply(instance);
+                        }
+                        return byKey.get(key);
+                    })
+                    .collect(Collectors.toMap(keyOf, Function.identity()));
+            domainData.values().forEach(classifier);
             ObservableMap<K, D> observable = FXCollections.observableMap(domainData);
             observable.addListener((MapChangeListener.Change<? extends K, ? extends D> change) -> {
-                        if (change.wasAdded()) {
-                            D added = change.getValueAdded();
-                            added.addListener(changesReflector);
-                            changes.add(new EntityAdd(query.getEntityName(), reverseMapper.apply(added)));
-                        }
-                        if (change.wasRemoved()) {
-                            D removed = change.getValueRemoved();
-                            removed.removeListener(changesReflector);
-                            changes.add(new EntityRemove(query.getEntityName(), Map.of(keyFieldName, keyOf.apply(removed))));
+                        if (change.wasRemoved() && change.wasAdded()) {
+                            onRemoved.apply(change.getValueRemoved());
+                            D added = onAdded.apply(change.getValueAdded());
+                            changes.add(new EntityChange(query.getEntityName(), Map.of(keyName, keyOf.apply(added)), reverseMapper.apply(added)));
+                        } else {
+                            if (change.wasRemoved()) {
+                                D removed = onRemoved.apply(change.getValueRemoved());
+                                changes.add(new EntityRemove(query.getEntityName(), Map.of(keyName, keyOf.apply(removed))));
+                            }
+                            if (change.wasAdded()) {
+                                D added = onAdded.apply(change.getValueAdded());
+                                changes.add(new EntityAdd(query.getEntityName(), reverseMapper.apply(added)));
+                            }
                         }
                     }
             );
@@ -112,11 +134,11 @@ public class Model {
 
     private final List<EntityAction> changes = new ArrayList<>();
 
-    private <D, K> PropertyChangeListener listener(SqlQuery query, String pkName, Function<D, K> keyMapper) {
+    private <D, K> PropertyChangeListener listener(SqlQuery query, String keyName, Function<D, K> keyMapper) {
         return e ->
                 changes.add(new EntityChange(
                         query.getEntityName(),
-                        Map.of(pkName, pkName.equals(e.getPropertyName()) ? e.getOldValue() : keyMapper.apply((D) e.getSource())),
+                        Map.of(keyName, keyName.equals(e.getPropertyName()) ? e.getOldValue() : keyMapper.apply((D) e.getSource())),
                         Map.of(e.getPropertyName(), e.getNewValue())));
     }
 
@@ -141,4 +163,40 @@ public class Model {
         groups.computeIfAbsent(key, k -> new HashSet<>()).add(instance);
     }
 
+    protected static <K, D> void fromGroups(D instance, Map<K, Collection<D>> groups, K key) {
+        groups.computeIfAbsent(key, k -> new HashSet<>()).remove(instance);
+    }
+
+    /**
+     * Returns a {@link Map.Entry} with specified key and value.
+     * Unlike {@link Map#entry(Object, Object)} retains {@code null} values to preserve datum structure.
+     *
+     * @param aKey   A key.
+     * @param aValue A value.
+     * @param <K>    Map's key type.
+     * @param <V>    Map's value type.
+     * @return A {@link Map.Entry} with specified key and value.
+     */
+    public static <K, V> Map.Entry<K, V> entry(K aKey, V aValue) {
+        return new AbstractMap.SimpleEntry<>(aKey, aValue);
+    }
+
+    /**
+     * Returns map with specified entries.
+     * Unlike {@link Map#ofEntries(Map.Entry[])} retains {@code null} values to preserve datum structure.
+     *
+     * @param aEntries An array of entries.
+     * @param <K>      Map's key type.
+     * @param <V>      Map's value type.
+     * @return A map with specified entries.
+     * Unlike {@link Map#ofEntries(Map.Entry[])} retains {@code null} values to preserve datum structure.
+     */
+    public static <K, V> Map<K, V> map(Map.Entry<K, V> ...aEntries) {
+        Map<K, V> map = new HashMap<>();
+        for (Map.Entry<K, V> e : aEntries) {
+            Objects.requireNonNull(e.getKey());
+            map.put(e.getKey(), e.getValue());
+        }
+        return Collections.unmodifiableMap(map);
+    }
 }

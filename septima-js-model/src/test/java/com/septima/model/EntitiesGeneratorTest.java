@@ -14,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 public class EntitiesGeneratorTest {
 
@@ -41,16 +40,15 @@ public class EntitiesGeneratorTest {
         String customersEntityPathName = "com/septima/entities/customers/CustomersRow.java";
         String goodsEntityPathName = "com/septima/entities/goods/GoodsRow.java";
         String ordersEntityPathName = "com/septima/entities/orders/OrdersRow.java";
-        String ethalonCustomers = new String(Files.readAllBytes(ethalons.resolve(customersEntityPathName)), StandardCharsets.UTF_8);
+        String ethalonCustomers = new String(Files.readAllBytes(ethalons.resolve(customersEntityPathName + ".ethalon")), StandardCharsets.UTF_8);
         String generatedCustomers = new String(Files.readAllBytes(destination.resolve(customersEntityPathName)), StandardCharsets.UTF_8);
         assertEquals(rn2n(ethalonCustomers), rn2n(generatedCustomers));
-        String ethalonGoods = new String(Files.readAllBytes(ethalons.resolve(goodsEntityPathName)), StandardCharsets.UTF_8);
+        String ethalonGoods = new String(Files.readAllBytes(ethalons.resolve(goodsEntityPathName + ".ethalon")), StandardCharsets.UTF_8);
         String generatedGoods = new String(Files.readAllBytes(destination.resolve(goodsEntityPathName)), StandardCharsets.UTF_8);
         assertEquals(rn2n(ethalonGoods), rn2n(generatedGoods));
-        String ethalonOrders = new String(Files.readAllBytes(ethalons.resolve(ordersEntityPathName)), StandardCharsets.UTF_8);
+        String ethalonOrders = new String(Files.readAllBytes(ethalons.resolve(ordersEntityPathName + ".ethalon")), StandardCharsets.UTF_8);
         String generatedOrders = new String(Files.readAllBytes(destination.resolve(ordersEntityPathName)), StandardCharsets.UTF_8);
         assertEquals(rn2n(ethalonOrders), rn2n(generatedOrders));
-        assertFalse(destination.resolve("sqlEntities/bad").toFile().exists());
     }
 
     private void generateModel(String testAppSuffix) throws IOException, URISyntaxException {
@@ -65,10 +63,10 @@ public class EntitiesGeneratorTest {
         generator.generateModels();
     }
 
-    private void checkModel(String testAppSuffix, String modelRelativePathName) throws IOException, URISyntaxException {
+    private void checkModel(String testAppSuffix, String modelRelativePathName) throws IOException {
         Path destination = new File(System.getProperty("generated.path")).toPath().resolve(testAppSuffix);
         Path ethalons = new File(System.getProperty("ethalons.path")).toPath().resolve(testAppSuffix);
-        String ethalonGoodOrders = new String(Files.readAllBytes(ethalons.resolve(modelRelativePathName)), StandardCharsets.UTF_8);
+        String ethalonGoodOrders = new String(Files.readAllBytes(ethalons.resolve(modelRelativePathName + ".ethalon")), StandardCharsets.UTF_8);
         String generatedGoodOrders = new String(Files.readAllBytes(destination.resolve(modelRelativePathName)), StandardCharsets.UTF_8);
         assertEquals(rn2n(ethalonGoodOrders), rn2n(generatedGoodOrders));
     }

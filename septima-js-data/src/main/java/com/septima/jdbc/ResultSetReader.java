@@ -77,7 +77,8 @@ public class ResultSetReader {
                 if (GenericType.GEOMETRY == entityField.getType()) {
                     value = jdbcReaderAssigner.getSqlDriver().geometryToWkt(aResultSet, i + 1, aConnection);
                 } else {
-                    value = jdbcReaderAssigner.readTypedValue(aResultSet, i + 1);
+                    Object typedValue = jdbcReaderAssigner.readTypedValue(aResultSet, i + 1);
+                    value = entityField.getType() != null ? entityField.getType().narrow(typedValue) : typedValue;
                 }
                 row.put(entityField.getName(), value);
             }
