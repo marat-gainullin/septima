@@ -51,7 +51,6 @@ public class Model {
             reverseMapper = aReverseMapper;
             classifier = aClassifier;
             unclassifier = aUnclassifier;
-            //entities.add(this);
         }
 
         public String getName() {
@@ -126,7 +125,6 @@ public class Model {
     }
 
     private final SqlEntities sqlEntities;
-    //private final Collection<Entity> entities = new ArrayList<>();
 
     public Model(SqlEntities aEntities) {
         sqlEntities = aEntities;

@@ -21,6 +21,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -196,8 +198,7 @@ public class EntitiesGenerator {
                             complementReferences(modelEntities);
                             resolveInReferences(modelEntities);
                             String modelBody = (modelRelativeDirPath != null ? ("package " + modelRelativeDirPath.toString().replace('\\', '/').replace('/', '.') + ";" + lf + lf) : "")
-                                    + generateModelBody(modelEntities)
-                                    .replaceAll("\\$\\{modelClass\\}", modelClassName);
+                                    + generateModelBody(modelEntities, modelClassName);
                             Path modelClassFile = destination.resolve(modelRelativePath.resolveSibling(modelClassName + ".java"));
                             if (!modelClassFile.getParent().toFile().exists()) {
                                 modelClassFile.getParent().toFile().mkdirs();
@@ -277,8 +278,8 @@ public class EntitiesGenerator {
 
             fieldsByProperty = aFieldsByProperty;
             key = aKey;
-            keyType = aKeyType;//javaType(aKeyField);
-            boxedKeyType = aKeyBoxedType;//javaType(aKeyField, true);
+            keyType = aKeyType;
+            boxedKeyType = aKeyBoxedType;
             String keyAccessor = toPascalCase(aKey);
 
             keyGetter = "get" + keyAccessor;
@@ -300,14 +301,15 @@ public class EntitiesGenerator {
         }
     }
 
-    private String generateGroupsDeclarations(ModelEntity aEntity, Map<String, ModelEntity> modelEntities) {
+    private String generateGroupsDeclarations(ModelEntity aEntity) {
         return aEntity.outReferences.values().stream()
-                .map(reference -> new StringBuilder(
-                        groupDeclarationTemplate
-                                .replaceAll("\\$\\{entityKeyType\\}", aEntity.boxedKeyType)
-                                .replaceAll("\\$\\{entityClass\\}", aEntity.className)
-                                .replaceAll("\\$\\{modelEntity\\}", aEntity.modelName)
-                                .replaceAll("\\$\\{Reference\\}", reference.getter.substring(3))
+                .map(reference -> replaceVariables(
+                        groupDeclarationTemplate, Map.of(
+                                "entityKeyType", aEntity.boxedKeyType,
+                                "entityClass", aEntity.className,
+                                "modelEntity", aEntity.modelName,
+                                "Reference", reference.getter.substring(3)
+                        )
                 ))
                 .reduce(StringBuilder::append)
                 .map(r -> new StringBuilder(lf).append(r))
@@ -315,13 +317,14 @@ public class EntitiesGenerator {
                 .toString();
     }
 
-    private String generateGroupsFulfills(ModelEntity aEntity, Map<String, ModelEntity> modelEntities) {
+    private String generateGroupsFulfills(ModelEntity aEntity) {
         return aEntity.outReferences.values().stream()
-                .map(reference -> new StringBuilder(
-                        groupFulfillTemplate
-                                .replaceAll("\\$\\{modelEntity\\}", aEntity.modelName)
-                                .replaceAll("\\$\\{Reference\\}", reference.getter.substring(3))
-                                .replaceAll("\\$\\{referenceGetter\\}", reference.getter)
+                .map(reference -> replaceVariables(
+                        groupFulfillTemplate, Map.of(
+                                "modelEntity", aEntity.modelName,
+                                "Reference", reference.getter.substring(3),
+                                "referenceGetter", reference.getter
+                        )
                 ))
                 .reduce((g1, g2) -> g1.append(lf).append(g2))
                 .map(r -> new StringBuilder(lf).append(r))
@@ -329,13 +332,14 @@ public class EntitiesGenerator {
                 .toString();
     }
 
-    private String generateGroupsEvicts(ModelEntity aEntity, Map<String, ModelEntity> modelEntities) {
+    private String generateGroupsEvicts(ModelEntity aEntity) {
         return aEntity.outReferences.values().stream()
-                .map(reference -> new StringBuilder(
-                        groupEvictTemplate
-                                .replaceAll("\\$\\{modelEntity\\}", aEntity.modelName)
-                                .replaceAll("\\$\\{Reference\\}", reference.getter.substring(3))
-                                .replaceAll("\\$\\{referenceGetter\\}", reference.getter)
+                .map(reference -> replaceVariables(
+                        groupEvictTemplate, Map.of(
+                                "modelEntity", aEntity.modelName,
+                                "Reference", reference.getter.substring(3),
+                                "referenceGetter", reference.getter
+                        )
                 ))
                 .reduce((g1, g2) -> g1.append(lf).append(g2))
                 .map(r -> new StringBuilder(lf).append(r))
@@ -346,11 +350,12 @@ public class EntitiesGenerator {
     private String generateForwardMappings(ModelEntity aEntity) {
         return aEntity.entity.getFields().values().stream()
                 .map(ModelField::new)
-                .map(modelField -> new StringBuilder(
-                        forwardMappingTemplate
-                                .replaceAll("\\$\\{propertyMutator\\}", modelField.propertyMutator)
-                                .replaceAll("\\$\\{propertyType\\}", modelField.propertyType)
-                                .replaceAll("\\$\\{fieldName\\}", modelField.fieldName)
+                .map(modelField -> replaceVariables(
+                        forwardMappingTemplate, Map.of(
+                                "propertyMutator", modelField.propertyMutator,
+                                "propertyType", modelField.propertyType,
+                                "fieldName", modelField.fieldName
+                        )
                 ))
                 .reduce(StringBuilder::append)
                 .orElse(new StringBuilder())
@@ -361,15 +366,15 @@ public class EntitiesGenerator {
     private String generateReverseMappings(ModelEntity aEntity) {
         return aEntity.entity.getFields().values().stream()
                 .map(ModelField::new)
-                .map(modelField -> new StringBuilder(
-                        reverseMappingTemplate
-                                .replaceAll("\\$\\{propertyGetter\\}", modelField.propertyGetter)
-                                .replaceAll("\\$\\{fieldName\\}", modelField.fieldName)
+                .map(modelField -> replaceVariables(
+                        reverseMappingTemplate, Map.of(
+                                "propertyGetter", modelField.propertyGetter,
+                                "fieldName", modelField.fieldName
+                        )
                 ))
                 .reduce((m1, m2) -> m1.append(",").append(lf).append(m2))
                 .orElse(new StringBuilder())
                 .toString();
-
     }
 
     private String generateScalarProperties(ModelEntity aEntity, Map<String, ModelEntity> modelEntities) {
@@ -389,19 +394,20 @@ public class EntitiesGenerator {
                 .map(reference -> {
                     ModelEntity target = modelEntities.get(reference.destination);
                     Field field = aEntity.fieldsByProperty.get(reference.property);
-                    return new StringBuilder(
-                            (field.isNullable() ? nullableScalarPropertyTemplate : requiredScalarPropertyTemplate)
-                                    .replaceAll("\\$\\{scalarClass\\}", target.className)
-                                    .replaceAll("\\$\\{scalarGetter\\}", reference.scalarGetter)
-                                    .replaceAll("\\$\\{referenceGetter\\}", reference.getter)
-                                    .replaceAll("\\$\\{Reference\\}", reference.getter.substring(3))
-                                    .replaceAll("\\$\\{referenceType\\}", reference.type)
-                                    .replaceAll("\\$\\{scalarModelEntity\\}", target.modelName)
-                                    .replaceAll("\\$\\{modelEntity\\}", aEntity.modelName)
-                                    .replaceAll("\\$\\{entityKeyGetter\\}", aEntity.keyGetter)
-                                    .replaceAll("\\$\\{scalarMutator\\}", reference.scalarMutator)
-                                    .replaceAll("\\$\\{referenceMutator\\}", reference.mutator)
-                                    .replaceAll("\\$\\{scalarKeyGetter\\}", target.keyGetter)
+                    return replaceVariables(
+                            (field.isNullable() ? nullableScalarPropertyTemplate : requiredScalarPropertyTemplate), Map.ofEntries(
+                                    Map.entry("scalarClass", target.className),
+                                    Map.entry("scalarGetter", reference.scalarGetter),
+                                    Map.entry("referenceGetter", reference.getter),
+                                    Map.entry("Reference", reference.getter.substring(3)),
+                                    Map.entry("referenceType", reference.type),
+                                    Map.entry("scalarModelEntity", target.modelName),
+                                    Map.entry("modelEntity", aEntity.modelName),
+                                    Map.entry("entityKeyGetter", aEntity.keyGetter),
+                                    Map.entry("scalarMutator", reference.scalarMutator),
+                                    Map.entry("referenceMutator", reference.mutator),
+                                    Map.entry("scalarKeyGetter", target.keyGetter)
+                            )
                     );
                 })
                 .reduce((p1, p2) -> p1.append(lf).append(p2))
@@ -414,13 +420,13 @@ public class EntitiesGenerator {
         return aEntity.inReferences.values().stream()
                 .map(reference -> {
                     ModelEntity sourceEntity = modelEntities.get(reference.source);
-                    return new StringBuilder(collectionPropertyTemplate
-                            .replaceAll("\\$\\{scalarClass\\}", sourceEntity.className)
-                            .replaceAll("\\$\\{collectionGetter\\}", reference.collectionGetter)
-                            .replaceAll("\\$\\{sourceModelEntity\\}", sourceEntity.modelName)
-                            .replaceAll("\\$\\{Reference\\}", reference.getter.substring(3))
-                            .replaceAll("\\$\\{entityKeyGetter\\}", aEntity.keyGetter)
-                    );
+                    return replaceVariables(collectionPropertyTemplate, Map.of(
+                            "scalarClass", sourceEntity.className,
+                            "collectionGetter", reference.collectionGetter,
+                            "sourceModelEntity", sourceEntity.modelName,
+                            "Reference", reference.getter.substring(3),
+                            "entityKeyGetter", aEntity.keyGetter
+                    ));
                 })
                 .reduce(StringBuilder::append)
                 .map(r -> new StringBuilder(lf).append(r))
@@ -429,26 +435,28 @@ public class EntitiesGenerator {
     }
 
     private String generateModelEntityBody(ModelEntity aEntity, Map<String, ModelEntity> modelEntities) {
-        return modelEntityTemplate
-                .replaceAll("\\$\\{entityClass\\}", aEntity.className)
-                .replaceAll("\\$\\{entityBaseClass\\}", aEntity.baseClassName)
-                .replaceAll("\\$\\{scalarProperties\\}", generateScalarProperties(aEntity, modelEntities))
-                .replaceAll("\\$\\{collectionProperties\\}", generateCollectionProperties(aEntity, modelEntities))
-                .replaceAll("\\$\\{groupsDeclarations\\}", generateGroupsDeclarations(aEntity, modelEntities))
-                .replaceAll("\\$\\{forwardMappings\\}", generateForwardMappings(aEntity))
-                .replaceAll("\\$\\{reverseMappings\\}", generateReverseMappings(aEntity))
-                .replaceAll("\\$\\{groupsFulfills\\}", generateGroupsFulfills(aEntity, modelEntities))
-                .replaceAll("\\$\\{groupsEvicts\\}", generateGroupsEvicts(aEntity, modelEntities))
-                .replaceAll("\\$\\{entityKeyType\\}", aEntity.keyType)
-                .replaceAll("\\$\\{entityKeyBoxedType\\}", aEntity.boxedKeyType)
-                .replaceAll("\\$\\{modelEntity\\}", aEntity.modelName)
-                .replaceAll("\\$\\{entityRef\\}", aEntity.entity.getName())
-                .replaceAll("\\$\\{entityKey\\}", aEntity.key)
-                .replaceAll("\\$\\{entityKeyGetter\\}", aEntity.keyGetter)
-                .replaceAll("\\$\\{entityKeyMutator\\}", aEntity.keyMutator);
+        return replaceVariables(modelEntityTemplate, Map.ofEntries(
+                Map.entry("entityClass", aEntity.className),
+                Map.entry("entityBaseClass", aEntity.baseClassName),
+                Map.entry("scalarProperties", generateScalarProperties(aEntity, modelEntities)),
+                Map.entry("collectionProperties", generateCollectionProperties(aEntity, modelEntities)),
+                Map.entry("groupsDeclarations", generateGroupsDeclarations(aEntity)),
+                Map.entry("forwardMappings", generateForwardMappings(aEntity)),
+                Map.entry("reverseMappings", generateReverseMappings(aEntity)),
+                Map.entry("groupsFulfills", generateGroupsFulfills(aEntity)),
+                Map.entry("groupsEvicts", generateGroupsEvicts(aEntity)),
+                Map.entry("entityKeyType", aEntity.keyType),
+                Map.entry("entityKeyBoxedType", aEntity.boxedKeyType),
+                Map.entry("modelEntity", aEntity.modelName),
+                Map.entry("entityRef", aEntity.entity.getName()),
+                Map.entry("entityKey", aEntity.key),
+                Map.entry("entityKeyGetter", aEntity.keyGetter),
+                Map.entry("entityKeyMutator", aEntity.keyMutator)
+        ))
+                .toString();
     }
 
-    private String generateModelBody(Map<String, ModelEntity> modelEntities) {
+    private String generateModelBody(Map<String, ModelEntity> modelEntities, String modelClassName) {
         StringBuilder entitiesRowsImports = modelEntities.values().stream()
                 .filter(modelEntity -> modelEntity.baseClassPackage != null && !modelEntity.baseClassPackage.isEmpty())
                 .map(modelEntity -> "import " + modelEntity.baseClassPackage + "." + modelEntity.baseClassName + ";" + lf)
@@ -462,18 +470,21 @@ public class EntitiesGenerator {
                 .reduce(StringBuilder::append)
                 .orElse(new StringBuilder());
         StringBuilder modelEntitiesGetters = modelEntities.values().stream()
-                .map(modelEntity -> new StringBuilder(modelEntityGetterTemplate
-                        .replaceAll("\\$\\{entityKeyType\\}", modelEntity.boxedKeyType)
-                        .replaceAll("\\$\\{entityClass\\}", modelEntity.className)
-                        .replaceAll("\\$\\{modelEntityGetter\\}", "get" + toPascalCase(modelEntity.modelName))
-                        .replaceAll("\\$\\{modelEntity\\}", modelEntity.modelName)
-                ))
+                .map(modelEntity -> replaceVariables(modelEntityGetterTemplate, Map.of(
+                        "entityKeyType", modelEntity.boxedKeyType,
+                        "entityClass", modelEntity.className,
+                        "modelEntityGetter", "get" + toPascalCase(modelEntity.modelName),
+                        "modelEntity", modelEntity.modelName
+                )))
                 .reduce((eg1, eg2) -> eg1.append(lf).append(eg2))
                 .orElse(new StringBuilder());
-        return modelTemplate
-                .replaceAll("\\$\\{entitiesRowsImports\\}", entitiesRowsImports.toString())
-                .replaceAll("\\$\\{modelEntities\\}", modelEntitiesBodies.toString())
-                .replaceAll("\\$\\{modelEntitiesGetters\\}", modelEntitiesGetters.toString());
+        return replaceVariables(modelTemplate, Map.of(
+                "modelClass", modelClassName,
+                "entitiesRowsImports", entitiesRowsImports.toString(),
+                "modelEntities", modelEntitiesBodies.toString(),
+                "modelEntitiesGetters", modelEntitiesGetters.toString()
+        ))
+                .toString();
     }
 
     private void complementReferences(Map<String, ModelEntity> aEntities) {
@@ -679,6 +690,21 @@ public class EntitiesGenerator {
 
     private static String loadResource(String resourceName, Charset aCharset) throws IOException, URISyntaxException {
         return new String(Files.readAllBytes(Paths.get(EntitiesGenerator.class.getResource(resourceName).toURI())), aCharset);
+    }
+
+    private static Pattern VAR_PATTERN = Pattern.compile("\\$\\{([a-zA-Z0-9_]+)\\}");
+
+    private StringBuilder replaceVariables(String aBody, Map<String, String> aVariables) {
+        StringBuilder body = new StringBuilder();
+        Matcher matcher = VAR_PATTERN.matcher(aBody);
+        while (matcher.find()) {
+            if (!aVariables.containsKey(matcher.group(1))) {
+                throw new IllegalStateException("Unbound variable '" + matcher.group(1) + "' in template:" + lf + aBody);
+            }
+            matcher.appendReplacement(body, aVariables.get(matcher.group(1)));
+        }
+        matcher.appendTail(body);
+        return body;
     }
 
 }

@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class EntitiesGeneratorTest {
 
@@ -36,7 +37,7 @@ public class EntitiesGeneratorTest {
         Path destination = new File(System.getProperty("generated.path")).toPath().resolve("rows");
         Path ethalons = new File(System.getProperty("ethalons.path")).toPath().resolve("rows");
         EntitiesGenerator generator = EntitiesGenerator.fromResources(entities, testAppPath, destination);
-        generator.generateRows();
+        assertTrue(generator.generateRows() > 0);
         String customersEntityPathName = "com/septima/entities/customers/CustomersRow.java";
         String goodsEntityPathName = "com/septima/entities/goods/GoodsRow.java";
         String ordersEntityPathName = "com/septima/entities/orders/OrdersRow.java";
@@ -60,7 +61,7 @@ public class EntitiesGeneratorTest {
         Path destination = new File(System.getProperty("generated.path")).toPath().resolve(testAppSuffix);
         EntitiesGenerator generator = EntitiesGenerator.fromResources(entities, testAppPath, destination);
         generator.generateRows();
-        generator.generateModels();
+        assertTrue(generator.generateModels() > 0);
     }
 
     private void checkModel(String testAppSuffix, String modelRelativePathName) throws IOException {

@@ -16,7 +16,7 @@ import jdk.nashorn.api.scripting.JSObject;
 
 /**
  *
- * @author mgainullin
+ * @author mg
  */
 public class Messages {
 
@@ -64,6 +64,7 @@ public class Messages {
         message.setRecipients(MimeMessage.RecipientType.TO, to);
         message.setSubject(subject);
         message.setContent(body, contentType);
+
         Scripts.Space callingSpace = Scripts.getSpace();
         Scripts.LocalContext callingContext = Scripts.getContext();
         callingContext.incAsyncsCount();

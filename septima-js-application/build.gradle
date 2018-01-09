@@ -2,6 +2,5 @@ dependencies {
     compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
     compileOnly 'javax.websocket:javax.websocket-api:1.1'
     compileOnly 'javax.mail:mail:1.4.7'
-    compile project(':septima-js-common')
-    compile project(':septima-js-data')
+    compile project(':septima-js-model')
 }
