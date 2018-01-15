@@ -10,6 +10,7 @@ import com.septima.metadata.EntityField;
 import com.septima.metadata.Field;
 import net.sf.jsqlparser.UncheckedJSqlParserException;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -29,8 +30,14 @@ import java.util.stream.StreamSupport;
 
 public class EntitiesGenerator {
 
+    private static final ObjectMapper JSON = new ObjectMapper();
+
+    private final String rowTemplate;
+    private final String rowPropertyFieldAccessorsTemplate;
+    private final String rowPropertyFieldTemplate;
     private final String modelTemplate;
     private final String modelEntityGetterTemplate;
+    private final String modelInstanceFactoryTemplate;
     private final String modelEntityTemplate;
     private final String forwardMappingTemplate;
     private final String reverseMappingTemplate;
@@ -42,21 +49,23 @@ public class EntitiesGenerator {
     private final String collectionPropertyTemplate;
 
     private final SqlEntities entities;
-    private final Path source;
     private final Path destination;
-    private final String indent;
     private final String lf;
     private final Charset charset;
 
-    public static EntitiesGenerator fromResources(SqlEntities anEntities, Path aSource, Path aDestination) throws IOException, URISyntaxException {
-        return fromResources(anEntities, aSource, aDestination, StandardCharsets.UTF_8);
+    public static EntitiesGenerator fromResources(SqlEntities anEntities, Path aDestination) throws IOException, URISyntaxException {
+        return fromResources(anEntities, aDestination, StandardCharsets.UTF_8);
     }
 
-    public static EntitiesGenerator fromResources(SqlEntities anEntities, Path aSource, Path aDestination, Charset aCharset) throws IOException, URISyntaxException {
-        return new EntitiesGenerator(anEntities, aSource, aDestination,
+    public static EntitiesGenerator fromResources(SqlEntities anEntities, Path aDestination, Charset aCharset) throws IOException, URISyntaxException {
+        return new EntitiesGenerator(anEntities, aDestination,
+                loadResource("/row.template", aCharset),
+                loadResource("/row/property-field.template", aCharset),
+                loadResource("/row/property-field-accessors.template", aCharset),
                 loadResource("/model.template", aCharset),
                 loadResource("/model-entity.template", aCharset),
                 loadResource("/model-entity-getter.template", aCharset),
+                loadResource("/model-instance-factory.template", aCharset),
                 loadResource("/model-entity/forward-mapping.template", aCharset),
                 loadResource("/model-entity/reverse-mapping.template", aCharset),
                 loadResource("/model-entity/group-declaration.template", aCharset),
@@ -65,13 +74,17 @@ public class EntitiesGenerator {
                 loadResource("/model-entity/required-scalar-property.template", aCharset),
                 loadResource("/model-entity/nullable-scalar-property.template", aCharset),
                 loadResource("/model-entity/collection-property.template", aCharset),
-                "    ", System.getProperty("line.separator"), aCharset);
+                System.getProperty("line.separator"), aCharset);
     }
 
-    public EntitiesGenerator(SqlEntities anEntities, Path aSource, Path aDestination,
+    public EntitiesGenerator(SqlEntities anEntities, Path aDestination,
+                             String aRowTemplate,
+                             String aRowPropertyFieldTemplate,
+                             String aRowPropertyFieldAccessorsTemplate,
                              String aModelTemplate,
                              String aModelEntityTemplate,
                              String aModelEntityGetterTemplate,
+                             String aModelInstanceFactoryTemplate,
                              String aForwardMappingTemplate,
                              String aReverseMappingTemplate,
                              String aGroupDeclarationTemplate,
@@ -80,13 +93,16 @@ public class EntitiesGenerator {
                              String aRequiredScalarPropertyTemplate,
                              String aNullableScalarPropertyTemplate,
                              String aCollectionPropertyTemplate,
-                             String aIndent, String aLf, Charset aCharset) {
+                             String aLf, Charset aCharset) {
         entities = anEntities;
-        source = aSource;
         destination = aDestination;
+        rowTemplate = aRowTemplate;
+        rowPropertyFieldTemplate = aRowPropertyFieldTemplate;
+        rowPropertyFieldAccessorsTemplate = aRowPropertyFieldAccessorsTemplate;
         modelTemplate = aModelTemplate;
         modelEntityTemplate = aModelEntityTemplate;
         modelEntityGetterTemplate = aModelEntityGetterTemplate;
+        modelInstanceFactoryTemplate = aModelInstanceFactoryTemplate;
         forwardMappingTemplate = aForwardMappingTemplate;
         reverseMappingTemplate = aReverseMappingTemplate;
         groupDeclarationTemplate = aGroupDeclarationTemplate;
@@ -95,7 +111,6 @@ public class EntitiesGenerator {
         requiredScalarPropertyTemplate = aRequiredScalarPropertyTemplate;
         nullableScalarPropertyTemplate = aNullableScalarPropertyTemplate;
         collectionPropertyTemplate = aCollectionPropertyTemplate;
-        indent = aIndent;
         lf = aLf;
         charset = aCharset;
     }
@@ -105,76 +120,82 @@ public class EntitiesGenerator {
         private final String property;
         private final String propertyGetter;
         private final String propertyMutator;
-        private final String mutatorArg;
         private final String fieldName;
 
         private ModelField(EntityField field) {
             propertyType = javaType(field);
             String accessor = toPascalCase(field.getName());
-            property = accessor.substring(0, 1).toLowerCase() + accessor.substring(1);
             propertyGetter = "get" + accessor;
             propertyMutator = "set" + accessor;
-            mutatorArg = mutatorArg(field.getName());
+            property = accessor.substring(0, 1).toLowerCase() + accessor.substring(1);
             fieldName = field.getName();
         }
     }
 
-    public int generateRows() throws IOException {
+    public File rowClassFile(File entityFile) {
+        Path entityRelativePath = entities.getApplicationPath().relativize(entityFile.toPath());
+        String entityRelativePathName = entityRelativePath.toString().replace('\\', '/');
+        String entityRef = entityRelativePathName.substring(0, entityRelativePathName.length() - 4);
+        String entityBaseClassName = entityRowClass(entityRef.substring(entityRef.lastIndexOf('/') + 1));
+        return destination.resolve(entityRelativePath.resolveSibling(entityBaseClassName + ".java")).toFile();
+    }
+
+    public Path generateRow(Path path) throws IOException {
+        Path entityRelativePath = entities.getApplicationPath().relativize(path);
+        Path entityRelativeDirPath = entityRelativePath.getParent();
+        String entityRelativePathName = entityRelativePath.toString().replace('\\', '/');
+        String entityRef = entityRelativePathName.substring(0, entityRelativePathName.length() - 4);
+        SqlEntity entity = entities.loadEntity(entityRef);
+        String entityBaseClassName = entityRowClass(entityRef.substring(entityRef.lastIndexOf('/') + 1));
+        Path entityClassFile = destination.resolve(entityRelativePath.resolveSibling(entityBaseClassName + ".java"));
+
+        StringBuilder propertiesFields = entity.getFields().values().stream()
+                .sorted(Comparator.comparing(EntityField::getName))
+                .map(ModelField::new)
+                .map(f -> replaceVariables(rowPropertyFieldTemplate, Map.of(
+                        "propertyType", f.propertyType,
+                        "property", f.property
+                )))
+                .reduce(StringBuilder::append)
+                .orElse(new StringBuilder());
+        StringBuilder propertiesAccessors = entity.getFields().values().stream()
+                .sorted(Comparator.comparing(EntityField::getName))
+                .map(ModelField::new)
+                .map(f -> replaceVariables(rowPropertyFieldAccessorsTemplate, Map.of(
+                        "propertyType", f.propertyType,
+                        "propertyGetter", f.propertyGetter,
+                        "property", f.property,
+                        "propertyMutator", f.propertyMutator,
+                        "fieldName", f.fieldName
+                )))
+                .reduce(StringBuilder::append)
+                .orElse(new StringBuilder());
+        String entityRow = replaceVariables(rowTemplate, Map.of(
+                "package", entityRelativeDirPath != null ?
+                        ("package " + entityRelativeDirPath.toString().replace('\\', '/').replace('/', '.') + ";" + lf) :
+                        "",
+                "dateImport", entity.getFields().values().stream().anyMatch(f -> GenericType.DATE == f.getType()) ? lf + "import java.util.Date;" : "",
+                "entityBaseClass", entityBaseClassName,
+                "propertiesFields", propertiesFields.toString(),
+                "propertiesAccessors", propertiesAccessors.toString()
+        )).toString();
+        if (!entityClassFile.getParent().toFile().exists()) {
+            entityClassFile.getParent().toFile().mkdirs();
+        }
+        Files.write(entityClassFile, entityRow.getBytes(charset));
+        Logger.getLogger(EntitiesGenerator.class.getName()).log(Level.INFO, "Sql entity definition '" + path + "' transformed and written to: " + entityClassFile);
+        return entityClassFile;
+    }
+
+    public int generateRows(Path source) throws IOException {
         return Files.walk(source)
                 .filter(entityPath -> entityPath.toString().toLowerCase().endsWith(".sql"))
                 .map(path -> {
-                    Path entityRelativePath = entities.getApplicationPath().relativize(path);
-                    Path entityRelativeDirPath = entityRelativePath.getParent();
-                    String entityRelativePathName = entityRelativePath.toString().replace('\\', '/');
-                    String entityRef = entityRelativePathName.substring(0, entityRelativePathName.length() - 4);
                     try {
-                        SqlEntity entity = entities.loadEntity(entityRef);
-                        StringBuilder propertiesFields = entity.getFields().values().stream()
-                                .sorted(Comparator.comparing(EntityField::getName))
-                                .map(ModelField::new)
-                                .map(f ->
-                                        new StringBuilder(indent).append("private").append(" ").append(f.propertyType).append(" ").append(f.property).append(";").append(lf))
-                                .reduce(StringBuilder::append)
-                                .orElse(new StringBuilder());
-                        StringBuilder propertiesGettersMutators = entity.getFields().values().stream()
-                                .sorted(Comparator.comparing(EntityField::getName))
-                                .map(ModelField::new)
-                                .map(f -> new StringBuilder(""
-                                                + indent + "public " + f.propertyType + " " + f.propertyGetter + "() {" + lf
-                                                + indent + indent + "return " + f.property + ";" + lf
-                                                + indent + "}" + lf
-                                                + lf
-                                                + indent + "public void " + f.propertyMutator + "(" + f.propertyType + " " + f.mutatorArg + ") {" + lf
-                                                + indent + indent + f.propertyType + " old = " + f.property + ";" + lf
-                                                + indent + indent + f.property + " = " + f.mutatorArg + ";" + lf
-                                                + indent + indent + "changeSupport.firePropertyChange(\"" + f.fieldName + "\", old, " + f.property + ");" + lf
-                                                + indent + "}" + lf
-                                                + lf
-                                        )
-                                )
-                                .reduce(StringBuilder::append)
-                                .orElse(new StringBuilder());
-                        String entityRowClassName = entityRowClass(entity.getName().substring(entity.getName().lastIndexOf('/') + 1));
-                        String entityRow = (entityRelativeDirPath != null ? ("package " + entityRelativeDirPath.toString().replace('\\', '/').replace('/', '.') + ";" + lf + lf) : "")
-                                + "import com.septima.model.Observable;" + lf
-                                + (entity.getFields().values().stream().anyMatch(f -> GenericType.DATE == f.getType()) ? "import java.util.Date;" + lf : "")
-                                + lf
-                                + "public class " + entityRowClassName + " extends Observable {" + lf
-                                + lf
-                                + propertiesFields
-                                + lf
-                                + propertiesGettersMutators
-                                + "}"
-                                + lf;
-                        Path entityClassFile = destination.resolve(entityRelativePath.resolveSibling(entityRowClassName + ".java"));
-                        if (!entityClassFile.getParent().toFile().exists()) {
-                            entityClassFile.getParent().toFile().mkdirs();
-                        }
-                        Files.write(entityClassFile, entityRow.getBytes(charset));
-                        Logger.getLogger(EntitiesGenerator.class.getName()).log(Level.INFO, "Sql entity '" + entityRef + "' transformed and written to: " + entityClassFile);
+                        generateRow(path);
                         return 1;
                     } catch (UncheckedSQLException | UncheckedJSqlParserException | IOException ex) {
-                        Logger.getLogger(EntitiesGenerator.class.getName()).log(Level.SEVERE, "Entity '" + entityRef + "' skipped due to an exception", ex);
+                        Logger.getLogger(EntitiesGenerator.class.getName()).log(Level.SEVERE, "Sql entity definition '" + path + "' skipped due to an exception", ex);
                         return 0;
                     }
                 })
@@ -182,35 +203,45 @@ public class EntitiesGenerator {
                 .orElse(0);
     }
 
-    public int generateModels() throws IOException {
+    public File modelClassFile(File modelDefinition) {
+        Path modelRelativePath = entities.getApplicationPath().relativize(modelDefinition.toPath()).normalize();
+        String modelName = modelRelativePath.getFileName().toString();
+        String modelClassName = toPascalCase(modelName.substring(0, modelName.length() - 11));
+        return destination.resolve(modelRelativePath.resolveSibling(modelClassName + ".java")).toFile();
+    }
+
+    public Path generateModel(Path modelPath) throws IOException {
+        Path modelRelativePath = entities.getApplicationPath().relativize(modelPath).normalize();
+        Path modelRelativeDirPath = modelRelativePath.getParent();
+        String modelName = modelRelativePath.getFileName().toString();
+        String modelClassName = toPascalCase(modelName.substring(0, modelName.length() - 11));
+        JsonNode modelDocument = JSON.readTree(modelPath.toFile());
+        if (modelDocument != null && modelDocument.isObject()) {
+            Map<String, ModelEntity> modelEntities = readModelEntities(modelDocument, modelPath);
+            complementReferences(modelEntities);
+            resolveInReferences(modelEntities);
+            String modelBody = generateModelBody(modelEntities, modelClassName, modelRelativeDirPath != null ? ("package " + modelRelativeDirPath.toString().replace('\\', '/').replace('/', '.') + ";" + lf) : "");
+            Path modelClassFile = destination.resolve(modelRelativePath.resolveSibling(modelClassName + ".java"));
+            if (!modelClassFile.getParent().toFile().exists()) {
+                modelClassFile.getParent().toFile().mkdirs();
+            }
+            Files.write(modelClassFile, modelBody.getBytes(charset));
+            Logger.getLogger(EntitiesGenerator.class.getName()).log(Level.INFO, "Model definition '" + modelPath + "' transformed and written to: " + modelClassFile);
+            return modelClassFile;
+        } else {
+            throw new IllegalArgumentException("Bad '*.model.json' format detected in '" + modelPath + "'. 'sqlEntities' is required object in model definition");
+        }
+    }
+
+    public int generateModels(Path source) throws IOException {
         return Files.walk(source)
                 .filter(path -> path.toString().toLowerCase().endsWith(".model.json"))
                 .map(modelPath -> {
                     try {
-                        Path modelRelativePath = entities.getApplicationPath().relativize(modelPath).normalize();
-                        Path modelRelativeDirPath = modelRelativePath.getParent();
-                        String modelRelativePathName = modelRelativePath.getFileName().toString();
-                        String modelClassName = toPascalCase(modelRelativePathName.substring(0, modelRelativePathName.length() - 11));
-                        ObjectMapper jsonMapper = new ObjectMapper();
-                        JsonNode modelDocument = jsonMapper.readTree(modelPath.toFile());
-                        if (modelDocument != null && modelDocument.isObject()) {
-                            Map<String, ModelEntity> modelEntities = readModelEntities(modelDocument, modelPath);
-                            complementReferences(modelEntities);
-                            resolveInReferences(modelEntities);
-                            String modelBody = (modelRelativeDirPath != null ? ("package " + modelRelativeDirPath.toString().replace('\\', '/').replace('/', '.') + ";" + lf + lf) : "")
-                                    + generateModelBody(modelEntities, modelClassName);
-                            Path modelClassFile = destination.resolve(modelRelativePath.resolveSibling(modelClassName + ".java"));
-                            if (!modelClassFile.getParent().toFile().exists()) {
-                                modelClassFile.getParent().toFile().mkdirs();
-                            }
-                            Files.write(modelClassFile, modelBody.getBytes(charset));
-                            Logger.getLogger(EntitiesGenerator.class.getName()).log(Level.INFO, "Model definition '" + modelPath + "' transformed and written to: " + modelClassFile);
-                            return 1;
-                        } else {
-                            Logger.getLogger(EntitiesGenerator.class.getName()).log(Level.INFO, "Bad '*.model.json' format detected in '" + modelPath + "'. 'sqlEntities' is required object in model definition");
-                            return 0;
-                        }
-                    } catch (IOException ex) {
+                        generateModel(modelPath);
+                        return 1;
+                    } catch (IOException | IllegalArgumentException ex) {
+                        Logger.getLogger(EntitiesGenerator.class.getName()).log(Level.SEVERE, "Model definition '" + modelPath + "' skipped due to an exception", ex);
                         return 0;
                     }
                 })
@@ -456,7 +487,7 @@ public class EntitiesGenerator {
                 .toString();
     }
 
-    private String generateModelBody(Map<String, ModelEntity> modelEntities, String modelClassName) {
+    private String generateModelBody(Map<String, ModelEntity> modelEntities, String modelClassName, String packageName) {
         StringBuilder entitiesRowsImports = modelEntities.values().stream()
                 .filter(modelEntity -> modelEntity.baseClassPackage != null && !modelEntity.baseClassPackage.isEmpty())
                 .map(modelEntity -> "import " + modelEntity.baseClassPackage + "." + modelEntity.baseClassName + ";" + lf)
@@ -478,13 +509,20 @@ public class EntitiesGenerator {
                 )))
                 .reduce((eg1, eg2) -> eg1.append(lf).append(eg2))
                 .orElse(new StringBuilder());
+        StringBuilder modelInstancesFactories = modelEntities.values().stream()
+                .map(modelEntity -> replaceVariables(modelInstanceFactoryTemplate, Map.of(
+                        "entityClass", modelEntity.className
+                )))
+                .reduce((eg1, eg2) -> eg1.append(lf).append(eg2))
+                .orElse(new StringBuilder());
         return replaceVariables(modelTemplate, Map.of(
+                "package", packageName,
                 "modelClass", modelClassName,
                 "entitiesRowsImports", entitiesRowsImports.toString(),
                 "modelEntities", modelEntitiesBodies.toString(),
-                "modelEntitiesGetters", modelEntitiesGetters.toString()
-        ))
-                .toString();
+                "modelEntitiesGetters", modelEntitiesGetters.toString(),
+                "modelInstancesFactories", modelInstancesFactories.toString()
+        )).toString();
     }
 
     private void complementReferences(Map<String, ModelEntity> aEntities) {

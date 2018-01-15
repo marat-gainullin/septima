@@ -18,7 +18,7 @@ dependencies {
 }
 
 def appDirName = "${projectDir}/src/test/resources/applications"
-def generatedDirName = "${projectDir}/src/generated"
+def generatedDirName = "${buildDir}/generated"
 def ethalonsDirName = "${projectDir}/src/test/resources/ethalons"
 def h2Dir = "${buildDir}/h2"
 def testBasesDirectory = "${buildDir}/test-databases"

@@ -1,5 +1,0 @@
-/**
- * @name 128049508301511
- * @public
-*/
-SELECT * FROM ASSET_GROUPS T_ASSET_GROUPS_1

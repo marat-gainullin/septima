@@ -1,0 +1,16 @@
+/*
+ * This source file is generated automatically.
+ * Please, don't edit it manually.
+ */
+${package}
+import java.io.Serializable;
+import com.septima.model.Observable;${dateImport}
+
+public class ${entityBaseClass} extends Observable {
+
+    private static final long serialVersionUID = 1L;
+
+${propertiesFields}
+
+${propertiesAccessors}
+}

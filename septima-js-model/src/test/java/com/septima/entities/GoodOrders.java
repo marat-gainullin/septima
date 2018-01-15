@@ -1,3 +1,7 @@
+/*
+ * This source file is generated automatically.
+ * Please, don't edit it manually.
+ */
 package com.septima.entities;
 
 import com.septima.entities.customers.CustomersRow;
@@ -215,7 +219,11 @@ public class GoodOrders extends Model {
             instance -> map(
                     entry("id", instance.getId()),
                     entry("name", instance.getName())
-            )
+            ),
+            instance -> {
+            },
+            instance -> {
+            }
     );
 
     public GoodOrders(SqlEntities aEntities) {
@@ -232,6 +240,18 @@ public class GoodOrders extends Model {
 
     public Entity<Long, Customer> getCustomers() {
         return customers;
+    }
+
+    public Good newGood() {
+        return new Good();
+    }
+
+    public Order newOrder() {
+        return new Order();
+    }
+
+    public Customer newCustomer() {
+        return new Customer();
     }
 
 }

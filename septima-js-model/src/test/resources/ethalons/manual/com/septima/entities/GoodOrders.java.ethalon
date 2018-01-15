@@ -1,3 +1,7 @@
+/*
+ * This source file is generated automatically.
+ * Please, don't edit it manually.
+ */
 package com.septima.entities;
 
 import com.septima.entities.SqlEntities;
@@ -284,6 +288,22 @@ public class GoodOrders extends Model {
 
     public Entity<Long, Seller> getSellers() {
         return sellers;
+    }
+
+    public Good newGood() {
+        return new Good();
+    }
+
+    public Order newOrder() {
+        return new Order();
+    }
+
+    public Customer newCustomer() {
+        return new Customer();
+    }
+
+    public Seller newSeller() {
+        return new Seller();
     }
 
 }

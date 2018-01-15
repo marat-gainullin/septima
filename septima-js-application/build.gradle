@@ -1,6 +1,9 @@
 dependencies {
-    compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
-    compileOnly 'javax.websocket:javax.websocket-api:1.1'
-    compileOnly 'javax.mail:mail:1.4.7'
-    compile project(':septima-js-model')
+    compileOnly 'javax.servlet:javax.servlet-api:3.1.0',
+            'javax.websocket:javax.websocket-api:1.1',
+            'javax.mail:mail:1.4.7'
+    compile project(':septima-js-model'),
+            project(':septima-js-data'),
+            'com.fasterxml.jackson.core:jackson-core:2.9.2',
+            'com.fasterxml.jackson.core:jackson-databind:2.9.2'
 }

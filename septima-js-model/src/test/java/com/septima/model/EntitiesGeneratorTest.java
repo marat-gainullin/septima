@@ -36,8 +36,8 @@ public class EntitiesGeneratorTest {
         );
         Path destination = new File(System.getProperty("generated.path")).toPath().resolve("rows");
         Path ethalons = new File(System.getProperty("ethalons.path")).toPath().resolve("rows");
-        EntitiesGenerator generator = EntitiesGenerator.fromResources(entities, testAppPath, destination);
-        assertTrue(generator.generateRows() > 0);
+        EntitiesGenerator generator = EntitiesGenerator.fromResources(entities, destination);
+        assertTrue(generator.generateRows(testAppPath) > 0);
         String customersEntityPathName = "com/septima/entities/customers/CustomersRow.java";
         String goodsEntityPathName = "com/septima/entities/goods/GoodsRow.java";
         String ordersEntityPathName = "com/septima/entities/orders/OrdersRow.java";
@@ -59,9 +59,9 @@ public class EntitiesGeneratorTest {
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
         Path destination = new File(System.getProperty("generated.path")).toPath().resolve(testAppSuffix);
-        EntitiesGenerator generator = EntitiesGenerator.fromResources(entities, testAppPath, destination);
-        generator.generateRows();
-        assertTrue(generator.generateModels() > 0);
+        EntitiesGenerator generator = EntitiesGenerator.fromResources(entities, destination);
+        generator.generateRows(testAppPath);
+        assertTrue(generator.generateModels(testAppPath) > 0);
     }
 
     private void checkModel(String testAppSuffix, String modelRelativePathName) throws IOException {

@@ -1,9 +1,16 @@
+/*
+ * This source file is generated automatically.
+ * Please, don't edit it manually.
+ */
 package com.septima.entities.orders;
 
+import java.io.Serializable;
 import com.septima.model.Observable;
 import java.util.Date;
 
 public class OrdersRow extends Observable {
+
+    private static final long serialVersionUID = 1L;
 
     private String badData;
     private String comment;
@@ -16,103 +23,95 @@ public class OrdersRow extends Observable {
     private Long sellerId;
     private Double summ;
 
+
     public String getBadData() {
         return badData;
     }
 
-    public void setBadData(String aBadData) {
+    public void setBadData(String aValue) {
         String old = badData;
-        badData = aBadData;
+        badData = aValue;
         changeSupport.firePropertyChange("bad_data", old, badData);
     }
-
     public String getComment() {
         return comment;
     }
 
-    public void setComment(String aComment) {
+    public void setComment(String aValue) {
         String old = comment;
-        comment = aComment;
+        comment = aValue;
         changeSupport.firePropertyChange("comment", old, comment);
     }
-
     public long getCustomerId() {
         return customerId;
     }
 
-    public void setCustomerId(long aCustomerId) {
+    public void setCustomerId(long aValue) {
         long old = customerId;
-        customerId = aCustomerId;
+        customerId = aValue;
         changeSupport.firePropertyChange("customer_id", old, customerId);
     }
-
     public String getDestination() {
         return destination;
     }
 
-    public void setDestination(String aDestination) {
+    public void setDestination(String aValue) {
         String old = destination;
-        destination = aDestination;
+        destination = aValue;
         changeSupport.firePropertyChange("destination", old, destination);
     }
-
     public long getGoodId() {
         return goodId;
     }
 
-    public void setGoodId(long aGoodId) {
+    public void setGoodId(long aValue) {
         long old = goodId;
-        goodId = aGoodId;
+        goodId = aValue;
         changeSupport.firePropertyChange("good_id", old, goodId);
     }
-
     public long getId() {
         return id;
     }
 
-    public void setId(long aId) {
+    public void setId(long aValue) {
         long old = id;
-        id = aId;
+        id = aValue;
         changeSupport.firePropertyChange("id", old, id);
     }
-
     public Date getMoment() {
         return moment;
     }
 
-    public void setMoment(Date aMoment) {
+    public void setMoment(Date aValue) {
         Date old = moment;
-        moment = aMoment;
+        moment = aValue;
         changeSupport.firePropertyChange("moment", old, moment);
     }
-
     public Boolean getPaid() {
         return paid;
     }
 
-    public void setPaid(Boolean aPaid) {
+    public void setPaid(Boolean aValue) {
         Boolean old = paid;
-        paid = aPaid;
+        paid = aValue;
         changeSupport.firePropertyChange("paid", old, paid);
     }
-
     public Long getSellerId() {
         return sellerId;
     }
 
-    public void setSellerId(Long aSellerId) {
+    public void setSellerId(Long aValue) {
         Long old = sellerId;
-        sellerId = aSellerId;
+        sellerId = aValue;
         changeSupport.firePropertyChange("seller_id", old, sellerId);
     }
-
     public Double getSumm() {
         return summ;
     }
 
-    public void setSumm(Double aSumm) {
+    public void setSumm(Double aValue) {
         Double old = summ;
-        summ = aSumm;
+        summ = aValue;
         changeSupport.firePropertyChange("summ", old, summ);
     }
 

@@ -1,3 +1,8 @@
+/*
+ * This source file is generated automatically.
+ * Please, don't edit it manually.
+ */
+
 import com.septima.entities.SqlEntities;
 
 import com.septima.model.Model;
@@ -87,6 +92,10 @@ public class Goods extends Model {
 
     public Entity<Long, Hierarchy> getHierarchy() {
         return hierarchy;
+    }
+
+    public Hierarchy newHierarchy() {
+        return new Hierarchy();
     }
 
 }

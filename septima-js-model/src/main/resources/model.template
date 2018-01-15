@@ -1,3 +1,8 @@
+/*
+ * This source file is generated automatically.
+ * Please, don't edit it manually.
+ */
+${package}
 import com.septima.entities.SqlEntities;
 ${entitiesRowsImports}
 import com.septima.model.Model;
@@ -11,4 +16,5 @@ ${modelEntities}    public ${modelClass}(SqlEntities aEntities) {
     }
 
 ${modelEntitiesGetters}
+${modelInstancesFactories}
 }

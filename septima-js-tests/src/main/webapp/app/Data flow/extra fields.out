@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?><outputFields>
-  <entityField bindedColumn="extra1" sqlType="12"/>
-  <entityField bindedColumn="extra2" sqlType="2"/>
-</outputFields>

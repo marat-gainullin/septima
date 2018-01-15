@@ -1,0 +1,3 @@
+    public ${entityClass} new${entityClass}() {
+        return new ${entityClass}();
+    }

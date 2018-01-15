@@ -163,7 +163,7 @@ public class GoodOrdersTest {
         good1.setName("Good 1");
         goods.put(good1.getId(), good1);
 
-        Good good2 = model.new Good();
+        Good good2 = model.newGood();
         good2.setId(sequence.incrementAndGet());
         good2.setName("Good 2");
         goods.put(good2.getId(), good2);

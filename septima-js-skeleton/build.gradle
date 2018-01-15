@@ -1,0 +1,400 @@
+buildscript {
+    repositories {
+        jcenter()
+        mavenLocal()
+    }
+    dependencies {
+        classpath 'com.h2database:h2:1.4.193'
+        classpath 'com.septimajs:septima-js-model:0.0.1'
+    }
+}
+
+apply plugin: 'war'
+apply plugin: 'war'
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/server/main/java']
+        }
+        resources {
+            srcDirs = ['src/server/main/resources']
+        }
+    }
+    test {
+        java {
+            srcDirs = ['src/server/test/java']
+        }
+        resources {
+            srcDirs = ['src/server/test/resources']
+        }
+    }
+}
+
+configurations {
+    compile.transitive = false
+    tomcat
+    containerLibs
+}
+
+def tomcatVersion = '8.5.8'
+
+dependencies {
+    compileOnly 'javax.servlet:javax.servlet-api:3.1.0',
+            'javax.websocket:javax.websocket-api:1.1',
+            'javax.mail:mail:1.4.7'
+    compile project(':septima-js-model'),
+            project(':septima-js-data'),
+            project(':septima-js-application'),
+            'com.fasterxml.jackson.core:jackson-core:2.9.2',
+            'com.fasterxml.jackson.core:jackson-databind:2.9.2'
+    tomcat "org.apache.tomcat:tomcat-catalina:$tomcatVersion",
+            "org.apache.tomcat:tomcat-jasper:$tomcatVersion",
+            "org.apache.tomcat:tomcat-dbcp:$tomcatVersion",
+            "org.apache.tomcat:tomcat-websocket:$tomcatVersion",
+            "org.apache.tomcat:tomcat-jaspic-api:$tomcatVersion"
+    containerLibs 'com.h2database:h2:1.4.193'
+    // , ... another jdbc driver for another database
+}
+
+def tomcatDir = "${buildDir}/tomcat"
+def tomcatBinDir = "${tomcatDir}/bin"
+def sharedLibDir = "${tomcatDir}/lib"
+
+task buildTomcatBin(type: Copy) {
+    configurations.tomcat.each {
+        from file(it)
+    }
+    into tomcatBinDir
+}
+
+task buildSharedLibs(type: Copy) {
+    configurations.containerLibs.each {
+        from file(it)
+    }
+    into sharedLibDir
+}
+
+task buildTomcat() {
+}
+
+buildTomcat.dependsOn buildTomcatBin,
+        buildSharedLibs
+
+task cleanTomcat(type: Delete) {
+    delete tomcatDir
+}
+
+clean.dependsOn cleanTomcat
+
+def asProps = { fileName ->
+    def loaded = new Properties()
+    def inputFile = file(fileName)
+    if (inputFile.exists()) {
+        inputFile.withInputStream {
+            loaded.load(it)
+        }
+    }
+    return loaded
+}
+
+def check = { map, prop, value ->
+    if (!map.containsKey(prop)) {
+        map[prop] = value
+    }
+}
+
+def props = asProps('project.properties')
+check props, 'application.context', 'change-me-context'
+
+def privateProps = asProps('private.properties')
+check privateProps, 'tomcat.http.port', 8085
+check privateProps, 'tomcat.log.level', 'INFO'
+check privateProps, 'tomcat.debug.port', 5007
+check privateProps, 'application.security', false
+
+task warExplode(type: Copy) {
+    with war
+    into "$tomcatDir/web-apps/${props['application.context']}"
+}
+
+task h2Command(type: JavaExec) {
+    classpath fileTree(sharedLibDir)
+    main 'org.h2.tools.Server'
+    args '-tcp'
+}
+
+def launchH2 = {
+    def h2Server = new ProcessBuilder(h2Command.commandLine)
+            .redirectErrorStream(true)
+            .start()
+    def h2StdOut = new InputStreamReader(h2Server.getInputStream())
+    try {
+        def h2NextLine = h2StdOut.readLine()
+        while (!h2NextLine.contains('TCP server running at')) {
+            if (!h2NextLine.isEmpty())
+                println(h2NextLine)
+            h2NextLine = h2StdOut.readLine()
+        }
+        if (!h2NextLine.isEmpty())
+            println(h2NextLine)
+        println("H2 server started")
+        println()
+    } finally {
+        h2StdOut.close()
+    }
+    return h2Server
+}
+
+def shutdownH2 = { instance ->
+    instance.destroy()
+    instance.waitFor()
+    println 'H2 shutted down'
+}
+
+def webAppUrl = privateProps['browser.url'] ? privateProps['browser.url'] : "http://localhost:${privateProps['tomcat.http.port']}/${props['application.context']}"
+
+task configureTomcat(type: Copy) {
+    def confSourceDir = 'src/server/tomcat'
+    def confDestDir = "${tomcatDir}/conf"
+    outputs.upToDateWhen { false }
+    from confSourceDir
+    into confDestDir
+    include 'default-web.xml'
+    rename 'default-web.xml', 'web.xml'
+    doLast {
+        def conf = file("${confSourceDir}/server.xml").withInputStream {
+            return new XmlParser().parse(it)
+        }
+        def connectors = conf.Service.Connector
+        if (connectors.isEmpty())
+            throw new GradleException("'Connector' tag not found in server.xml or it is not on path: 'Server/Service/Connector'")
+        def connectorNode = connectors[0]
+        connectorNode.attributes()['port'] = privateProps['tomcat.http.port']
+
+        def contexts = conf.Service.Engine.Host.Context
+        if (contexts.isEmpty())
+            throw new GradleException("'Context' tag not found in server.xml or it is not on path: 'Server/Service/Engine/Host/Context'")
+        def contextNode = contexts[0]
+        contextNode.attributes()['path'] = "/${props['application.context']}"
+        contextNode.attributes()['docBase'] = "${tomcatDir}/web-apps/${props['application.context']}"
+        def dataSources = [] as Set
+        props.each {
+            def matcher = (it.key =~ "data-source\\.([a-zA-Z_/\\-]+)\\..*")
+            if (matcher.matches()) {
+                def dsName = matcher.group(1)
+                dataSources << dsName
+            }
+        }
+        def generalDsName = props['application.data-source']
+        def enableSecurityRealm = privateProps['application.security'] == 'true'
+        def realmAdded = false
+        dataSources.each {
+            def dsName = it
+            def dbUrl = props["data-source.${it}.dburl"]
+            if (!dbUrl)
+                throw new GradleException("'data-source.${it}.dburl' project property not found or is not defined")
+            def jdbcDriverClass = props["data-source.${it}.jdbcDriverClass"]
+            if (!jdbcDriverClass)
+                throw new GradleException("'data-source.${it}.jdbcDriverClass' project property not found or is not defined")
+            def dbUser = props["data-source.${it}.dbuser"]
+            if (!dbUser)
+                throw new GradleException("'data-source.${it}.dbuser' project property not found or is not defined")
+            def dbPassword = props["data-source.${it}.dbpassword"]
+            def dbSchema = props["data-source.${it}.dbschema"]
+            def maxConnections = props["data-source.${it}.max.connections"]
+            def maxStatements = props["data-source.${it}.max.statements"]
+            if (enableSecurityRealm && generalDsName && generalDsName == dsName) {
+                def realmNode = contextNode.appendNode(new groovy.xml.QName("Realm"), [
+                        'className'      : "org.apache.catalina.realm.DataSourceRealm",
+                        'dataSourceName' : dsName,
+                        'localDataSource': "true",
+                        'roleNameCol'    : "GROUP_NAME",
+                        'userCredCol'    : "USR_PASSWD",
+                        'userNameCol'    : "USR_NAME",
+                        'userRoleTable'  : "APP_USERS_GROUPS",
+                        'userTable'      : "APP_USERS"
+                ])
+                realmNode.appendNode(new groovy.xml.QName("CredentialHandler"), [
+                        className: "org.apache.catalina.realm.MessageDigestCredentialHandler",
+                        algorithm: "md5"
+                ])
+                realmAdded = true
+            }
+            def dsAttributes = [
+                    'name'           : dsName,
+                    'url'            : dbUrl,
+                    'username'       : dbUser,
+                    'driverClassName': jdbcDriverClass,
+                    'type'           : 'javax.sql.DataSource'
+            ]
+            if (dbPassword != null)
+                dsAttributes['password'] = dbPassword
+
+//            if(dbSchema != null)
+//                dsAttributes['schema'] = dbSchema
+//            if(maxConnections != null)
+//                dsAttributes['maxActive'] = maxConnections
+//            if(maxStatements != null)
+//                dsAttributes['maxStatements'] = maxStatements
+
+            contextNode.appendNode(new groovy.xml.QName('Resource'), dsAttributes)
+        }
+        if (enableSecurityRealm && !realmAdded) {
+            throw new GradleException("Security realm can not be added because application data source is not found.")
+        }
+        file("${confDestDir}/server.xml").withOutputStream {
+            groovy.xml.XmlUtil.serialize(conf, it)
+        }
+        def loggingProps = asProps("${confSourceDir}/logging.properties")
+        loggingProps['org.apache.juli.FileHandler.level'] = privateProps['tomcat.log.level']
+        loggingProps['java.util.logging.ConsoleHandler.level'] = privateProps['tomcat.log.level']
+        file("${confDestDir}/logging.properties").withOutputStream {
+            loggingProps.store(it, 'Tomcat logging configuration. Septima profile.')
+        }
+    }
+}
+
+task tomcatCommand(type: JavaExec) {
+    workingDir tomcatDir
+    classpath fileTree(tomcatBinDir)
+    main 'org.apache.catalina.startup.Bootstrap'
+    jvmArgs '-Xdebug',
+            "-Xrunjdwp:server=y,transport=dt_socket,address=${privateProps['tomcat.debug.port']},suspend=n",
+            "-Djava.util.logging.config.file=${file(tomcatDir)}/conf/logging.properties"
+}
+
+def launchTomcat = {
+    def instance = new ProcessBuilder(tomcatCommand.commandLine)
+            .directory(file(tomcatCommand.workingDir))
+            .redirectErrorStream(true).start()
+    def stdOut = new InputStreamReader(instance.getInputStream())
+    try {
+        def tomcatNextLine = stdOut.readLine()
+        while (!tomcatNextLine.contains('Server startup in')) {
+            if (!tomcatNextLine.isEmpty())
+                println(tomcatNextLine)
+            tomcatNextLine = stdOut.readLine()
+        }
+        if (!tomcatNextLine.isEmpty())
+            println(tomcatNextLine)
+        println()
+        println 'Tomcat started.'
+        println "Further logs you can find at: ${tomcatDir}/logs"
+    } finally {
+        stdOut.close()
+    }
+    return instance
+}
+
+def shutdownTomcat = { instance ->
+    instance.destroy()
+    instance.waitFor()
+    println()
+    println 'Tomcat shutted down'
+}
+
+def cleanH2 = {
+    def baseFile = file("${System.getProperty('user.home')}/septima-skeleton.mv.db")
+    if (baseFile.exists()) {
+        baseFile.delete()
+        println 'Application database erased'
+    }
+}
+
+def fillH2 = {
+    org.h2.tools.RunScript.main(
+            '-url', props["data-source.${props['application.data-source']}.dburl"],
+            '-user', props["data-source.${props['application.data-source']}.dbuser"],
+            '-password', props["data-source.${props['application.data-source']}.dbpassword"],
+            '-script', 'base.sql'
+    )
+    println 'Application database filled'
+    println()
+}
+
+task run() {
+    doFirst {
+        def h2Server = launchH2()
+        try {
+            cleanH2()
+            fillH2()
+            def tomcatServer = launchTomcat()
+            println "Application is now served at ${webAppUrl}"
+            println()
+            println 'To terminate press enter ...'
+            System.in.read()
+            shutdownTomcat tomcatServer
+        } finally {
+            shutdownH2 h2Server
+            cleanH2()
+        }
+        println()
+        println 'See you next time :)'
+    }
+}
+run.dependsOn buildTomcat,
+        configureTomcat,
+        warExplode
+
+
+import com.septima.model.EntitiesGenerator
+import com.septima.entities.SqlEntities
+
+class Entities extends DefaultTask {
+
+    def EntitiesGenerator generator
+
+    @InputFile
+    def File databaseInit
+
+    @InputDirectory
+    def File sqlDir
+
+    @OutputDirectory
+    def File javaDir
+
+    @TaskAction
+    void execute(IncrementalTaskInputs inputs) {
+        if (databaseInit == null)
+            throw new GradleException("Database init file is needed to watch after")
+        if (generator == null)
+            generator = EntitiesGenerator.fromResources(new SqlEntities(sqlDir,), javaDir)
+        println inputs.incremental ? "SOME sql entities are out of date"
+                : "ALL sql entities are out of date"
+        if (!inputs.incremental) {
+            project.delete destination.listFiles()
+        }
+
+        inputs.outOfDate { change ->
+            if (change.file.name.endsWith(".sql"))
+                generator.generateRow(change.file.toPath())
+            if (change.file.name.endsWith(".sql.json")) {
+                Path origin = change.file.toPath().resolveSibling(change.file.name.substring(0, change.file.name.length() - 5))
+                if (origin.toFile().exists()) {
+                    generator.generateRow(origin)
+                }
+            }
+        }
+
+        def removeGeneratedClassBySqlFile = { file ->
+            def targetFile = generator.rowClassFile(file)
+            if (targetFile.exists()) {
+                targetFile.delete()
+                println "Removed generated class for sql entity : ${targetFile}"
+            }
+        }
+
+        inputs.removed { change ->
+            if (change.file.name.endsWith(".sql")) {
+                removeGeneratedClassBySqlFile(change.file)
+            }
+            if (change.file.name.endsWith(".sql.json")) {
+                File origin = change.file.toPath().resolveSibling(change.file.name.substring(0, change.file.name.length() - 5)).toFile()
+                if (origin.exists()) {
+                    removeGeneratedClassBySqlFile(origin)
+                }
+            }
+        }
+    }
+}

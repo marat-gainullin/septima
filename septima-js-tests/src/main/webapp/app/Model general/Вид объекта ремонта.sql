@@ -1,5 +1,0 @@
-/**
- * @name 128049558485943
- * @public
-*/
-SELECT * FROM ASSET_KINDS T_ASSET_KINDS_1

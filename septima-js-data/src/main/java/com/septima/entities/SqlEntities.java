@@ -53,6 +53,7 @@ public class SqlEntities {
     private static final String ENTITY_NAME_MISSING_MSG = "Entity name missing.";
     private static final String LOADING_QUERY_MSG = "Loading entity '%s'.";
     private static final String LOADED_QUERY_MSG = "Entity '%s' loaded.";
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     private final Path applicationPath;
     private final String defaultDataSource;
@@ -189,8 +190,7 @@ public class SqlEntities {
     private static JsonNode parseEntitySettings(File jsonFile) throws IOException {
         if (jsonFile.exists() && !jsonFile.isDirectory()) {
             String json = new String(Files.readAllBytes(jsonFile.toPath()), StandardCharsets.UTF_8);
-            ObjectMapper jsonMapper = new ObjectMapper();
-            return jsonMapper.readTree(json);
+            return JSON.readTree(json);
         } else {
             return null;
         }

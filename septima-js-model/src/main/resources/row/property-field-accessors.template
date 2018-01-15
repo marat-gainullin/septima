@@ -1,0 +1,9 @@
+    public ${propertyType} ${propertyGetter}() {
+        return ${property};
+    }
+
+    public void ${propertyMutator}(${propertyType} aValue) {
+        ${propertyType} old = ${property};
+        ${property} = aValue;
+        changeSupport.firePropertyChange("${fieldName}", old, ${property});
+    }
