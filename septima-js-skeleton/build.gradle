@@ -153,7 +153,6 @@ class Jndi implements InitialContextFactory {
 
 System.setProperty(Context.INITIAL_CONTEXT_FACTORY, Jndi.class.getName())
 
-
 buildscript {
     repositories {
         jcenter()
@@ -173,7 +172,7 @@ apply plugin: 'war'
 sourceSets {
     main {
         java {
-            srcDirs = ['src/server/main/java']
+            srcDirs = ['src/server/main/java', 'src/server/generated/entities', 'src/server/generated/models']
         }
         resources {
             srcDirs = ['src/server/main/resources']
@@ -557,7 +556,9 @@ generateEntities.dependsOn bindDataSources
 
 task generateModels(type: GenerateModels) {
     sqlEntities = sqlEntitiesSource
-    modelsDir = file('src/server/main/resources/models')
+    modelsDir = file('src/server/main/models')
     generatedSourcesDir = file('src/server/generated/models')
 }
 generateModels.dependsOn generateEntities
+
+compileJava.dependsOn generateModels
