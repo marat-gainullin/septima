@@ -1,0 +1,9 @@
+# npm libraries
+node_modules
+
+# build directory
+build
+
+# misc
+yarn.lock
+*.log
