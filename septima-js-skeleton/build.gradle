@@ -172,7 +172,7 @@ apply plugin: 'war'
 sourceSets {
     main {
         java {
-            srcDirs = ['src/server/main/java', 'src/server/generated/entities', 'src/server/generated/models']
+            srcDirs = ['src/server/main/java', "${buildDir}/generated-src/entities", "${buildDir}/generated-src/models"]
         }
         resources {
             srcDirs = ['src/server/main/resources']
@@ -546,7 +546,7 @@ def sqlEntitiesSource = new SqlEntities(file('src/server/main/resources/entities
 task generateEntities(type: GenerateEntities) {
     sqlEntities = sqlEntitiesSource
     sqlEntitiesDir = sqlEntitiesSource.getEntitiesRoot().toFile()
-    generatedSourcesDir = file('src/server/generated/entities')
+    generatedSourcesDir = file("${buildDir}/generated-src/entities")
     doLast {
         delete generateModels.outputs
         println 'Generated models cleared'
@@ -557,7 +557,7 @@ generateEntities.dependsOn bindDataSources
 task generateModels(type: GenerateModels) {
     sqlEntities = sqlEntitiesSource
     modelsDir = file('src/server/main/models')
-    generatedSourcesDir = file('src/server/generated/models')
+    generatedSourcesDir = file("${buildDir}/generated-src/models")
 }
 generateModels.dependsOn generateEntities
 
