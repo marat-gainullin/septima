@@ -106,8 +106,8 @@
                 <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs"
                        prefix="localhost_access_log" suffix=".txt"
                        pattern="%h %l %u %t &quot;%r&quot; %s %b"/>
-                <Context path="${application.context}"
-                         docBase="${application.base}"
+                <Context path="${entities.context}"
+                         docBase="${entities.base}"
                          reloadable="true">
                     <!--
                     <Realm className="org.apache.catalina.realm.DataSourceRealm" dataSourceName="${application.data-source}" localDataSource="true" roleNameCol="GROUP_NAME" userCredCol="USR_PASSWD" userNameCol="USR_NAME" userRoleTable="APP_USERS_GROUPS" userTable="APP_USERS">

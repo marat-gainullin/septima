@@ -46,7 +46,7 @@ public class InlineEntities extends SyntaxTreeVisitor {
                 String inlinedEntityName;
                 if (inlinedEntityRef.startsWith("../") || inlinedEntityRef.startsWith("./")) {
                     Path absoluteRef = startOfReferences.resolve(inlinedEntityRef);
-                    Path entityRef = entities.getApplicationPath().relativize(absoluteRef);
+                    Path entityRef = entities.getEntitiesRoot().relativize(absoluteRef);
                     inlinedEntityName = entityRef.normalize().toString().replace('\\', '/');
                 } else {
                     inlinedEntityName = inlinedEntityRef;

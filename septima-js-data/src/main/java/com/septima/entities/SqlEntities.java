@@ -79,7 +79,7 @@ public class SqlEntities {
         futuresExecutor = aFuturesExecutor;
     }
 
-    public Path getApplicationPath() {
+    public Path getEntitiesRoot() {
         return applicationPath;
     }
 

@@ -1,0 +1,100 @@
+/*
+ * This source file is generated automatically.
+ * Please, don't edit it manually.
+ */
+
+import com.septima.entities.SqlEntities;
+import com.septima.model.Model;
+
+import java.util.*;
+
+public class Goods extends Model {
+
+    public class Hierarchy extends GoodsHierarchyRow {
+
+        @Override
+        public void setId(long aValue) {
+            long old = getId();
+            if (hierarchy.getByKey().containsKey(old)) {
+                hierarchy.getByKey().remove(old);
+                super.setId(aValue);
+                hierarchy.getByKey().put(aValue, this);
+            } else {
+                super.setId(aValue);
+            }
+        }
+
+        public Hierarchy getParent() {
+            if (getParentId() != null) {
+                return Optional.ofNullable(hierarchy.getByKey().get(getParentId()))
+                        .orElseThrow(() -> new IllegalStateException("Unresolved reference '" + hierarchy.getName() + " (" + getParentId() + ")' in entity '" + hierarchy.getName() + " (" + getId() + ")'"));
+            } else {
+                return null;
+            }
+        }
+
+        public void setParent(Hierarchy aHierarchy) {
+            setParentId(aHierarchy != null ? aHierarchy.getId() : null);
+        }
+
+        @Override
+        public void setParentId(Long aValue) {
+            Long old = getParentId();
+            if (old != null ? !old.equals(aValue) : aValue != null) {
+                if (old != null) {
+                    fromGroups(this, hierarchyByParentId, old);
+                }
+                super.setParentId(aValue);
+                if (aValue != null) {
+                    toGroups(this, hierarchyByParentId, aValue);
+                }
+            }
+        }
+
+        public Collection<Hierarchy> getHierarchy() {
+            return hierarchyByParentId.computeIfAbsent(getId(), key -> new HashSet<>());
+        }
+
+    }
+
+    private Map<Long, Collection<Hierarchy>> hierarchyByParentId = new HashMap<>();
+
+    private final Entity<Long, Hierarchy> hierarchy = new Entity<>(
+            "goods-hierarchy",
+            "id",
+            Hierarchy::getId,
+            datum -> {
+                Hierarchy instance = new Hierarchy();
+
+                instance.setId((long) datum.get("id"));
+                instance.setName((String) datum.get("name"));
+                instance.setParentId((Long) datum.get("parent_id"));
+
+                return instance;
+            },
+            instance -> map(
+                    entry("id", instance.getId()),
+                    entry("name", instance.getName()),
+                    entry("parent_id", instance.getParentId())
+            ),
+            instance -> {
+                toGroups(instance, hierarchyByParentId, instance.getParentId());
+            },
+            instance -> {
+                fromGroups(instance, hierarchyByParentId, instance.getParentId());
+            }
+    );
+
+    public Goods(SqlEntities aEntities) {
+        super(aEntities);
+    }
+
+    public Entity<Long, Hierarchy> getHierarchy() {
+        return hierarchy;
+    }
+
+    public Hierarchy newHierarchy() {
+        return new Hierarchy();
+    }
+
+}

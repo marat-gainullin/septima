@@ -1,5 +1,6 @@
 include 'septima-js-skeleton'
 include 'septima-js-application'
+include 'septima-js-generator'
 include 'septima-js-model'
 include 'septima-js-data'
 include 'septima-js-sql-parser'

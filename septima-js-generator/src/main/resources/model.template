@@ -1,0 +1,19 @@
+/*
+ * This source file is generated automatically.
+ * Please, don't edit it manually.
+ */
+${package}
+${entitiesRowsImports}import com.septima.entities.SqlEntities;
+import com.septima.model.Model;
+
+import java.util.*;
+
+public class ${modelClass} extends Model {
+
+${modelEntities}    public ${modelClass}(SqlEntities aEntities) {
+        super(aEntities);
+    }
+
+${modelEntitiesGetters}
+${modelInstancesFactories}
+}

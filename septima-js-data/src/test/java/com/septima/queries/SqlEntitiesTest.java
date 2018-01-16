@@ -145,7 +145,6 @@ public class SqlEntitiesTest {
         assertNotNull(entity);
         assertEquals("entities/ethalon", entity.getName());
         assertEquals("Custom orders", entity.getTitle());
-        assertEquals("CustomOrder", entity.getClassName());
         assertEquals("select o.*, co.body::json from orders o inner join customOrders co on(o.id = co.order_id)", entity.getCustomSqlText());
         assertEquals("Select o.order_id id, o.amount amt, o.good goodik\n" +
                 ", o.customer orderer, o.field1 other \n" +

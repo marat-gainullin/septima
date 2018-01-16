@@ -18,8 +18,6 @@ dependencies {
 }
 
 def appDirName = "${projectDir}/src/test/resources/applications"
-def generatedDirName = "${buildDir}/generated"
-def ethalonsDirName = "${projectDir}/src/test/resources/ethalons"
 def h2Dir = "${buildDir}/h2"
 def testBasesDirectory = "${buildDir}/test-databases"
 def dataSourceName = 'septima'
@@ -64,8 +62,6 @@ test {
     systemProperties["datasource.password"] = dataSourcePassword
     systemProperties["datasource.schema"] = dataSourceSchema
     systemProperties["testsource.path"] = appDirName
-    systemProperties["generated.path"] = generatedDirName
-    systemProperties["ethalons.path"] = ethalonsDirName
 }
 
 task coverage() {
