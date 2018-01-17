@@ -1,9 +1,9 @@
 {
-  "name": "kenga-grid",
+  "name": "septima-client-skeleton",
   "version": "0.0.11",
-  "description": "Kenga interactive virtual grid. Frozen rows and columns, treegrid, hierarchical header, etc.",
+  "description": "Skeleton project for septima application client.",
   "main": "index.js",
-  "repository": "https://github.com/marat-gainullin/kenga-grid.git",
+  "repository": "https://github.com/marat-gainullin/septima.git",
   "author": "marat-gainullin <mg@altsoft.biz>",
   "license": "BSD-3-Clause",
   "private": false,
@@ -16,15 +16,18 @@
     "babelify": "^7.3.0",
     "browserify": "^14.4.0",
     "browserify-babel-istanbul": "^0.4.0",
-    "browserify-css": "^0.12.0",
+    "browserify-css": "^0.12.1",
     "capitalize": "^1.0.0",
+    "datauri": "^1.0.5",
     "eslint": "^4.8.0",
     "gulp": "^3.9.1",
     "gulp-babel": "^7.0.0",
+    "gulp-debug": "^3.2.0",
     "gulp-clean": "^0.3.2",
     "gulp-concat": "^2.6.1",
     "gulp-if": "^2.0.2",
     "gulp-jshint": "^2.0.4",
+    "gulp-open": "^2.0.0",
     "gulp-sourcemaps": "^2.6.1",
     "gulp-uglify": "^3.0.0",
     "jasmine-core": "^2.8.0",
@@ -42,8 +45,8 @@
   },
   "dependencies": {
     "kenga": "^0.0.24",
+    "kenga-containers": "^0.0.12",
     "kenga-fields": "^0.0.12",
-    "kenga-menu": "^0.0.12",
     "septima-utils": "^0.0.4"
   }
 }

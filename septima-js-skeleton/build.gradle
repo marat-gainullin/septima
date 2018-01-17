@@ -171,7 +171,6 @@ buildscript {
 }
 
 apply plugin: 'war'
-apply plugin: 'war'
 apply plugin: 'com.moowork.gulp'
 
 sourceSets {
@@ -211,6 +210,7 @@ dependencies {
             project(':septima-js-application'),
             'com.fasterxml.jackson.core:jackson-core:2.9.2',
             'com.fasterxml.jackson.core:jackson-databind:2.9.2'
+    runtime project(':septima-js-sql-driver-h2')
     tomcat "org.apache.tomcat:tomcat-catalina:$tomcatVersion",
             "org.apache.tomcat:tomcat-jasper:$tomcatVersion",
             "org.apache.tomcat:tomcat-dbcp:$tomcatVersion",
@@ -597,4 +597,13 @@ gulp {
 }
 
 gulp_clean.dependsOn 'installGulp', 'npmInstall'
-gulp_build.dependsOn 'installGulp', 'npmInstall'
+gulp_bundle.dependsOn 'installGulp', 'npmInstall'
+gulp_bundle.inputs.dir 'src/client/src'
+gulp_bundle.outputs.dir 'src/client/build/bundle'
+
+war {
+    from 'src/client/build/bundle'
+}
+
+warExplode.dependsOn gulp_bundle
+war.dependsOn gulp_bundle
