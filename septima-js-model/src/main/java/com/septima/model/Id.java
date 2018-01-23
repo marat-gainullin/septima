@@ -31,7 +31,7 @@ public class Id {
                 long oldCounter = id - idMillis * aCounterDigits;
                 long newCounter = oldCounter + 1;
                 if (newCounter == aCounterDigits) {
-                    // Spin lock with maximum duration of one millisecond ...
+                    // Spin with maximum duration of one millisecond ...
                     long newMillis;
                     do {
                         newMillis = System.currentTimeMillis();

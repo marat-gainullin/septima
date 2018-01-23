@@ -1,0 +1,1 @@
+insert into pets (pets_id, owner_id, type_id, name, birthdate) values (:pets_id, :owner_id, :type_id, :name, :birthdate)

@@ -1,6 +1,6 @@
 package com.septima.application;
 
-import com.septima.Config;
+import com.septima.application.endpoint.Answer;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -20,6 +20,17 @@ import java.util.logging.Logger;
 public class Scope {
 
     private static volatile Scope instance;
+    private final ThreadLocal<Context> context = new ThreadLocal<>();
+    private final int maximumLpcQueueSize;
+    private final Context globalContext;
+
+    private Scope(Config aConfig) {
+        maximumLpcQueueSize = aConfig.getMaximumLpcQueueSize();
+        ExecutorService executor = Config.lookupExecutor();
+        SubmissionPublisher<Runnable> globalPublisher = new SubmissionPublisher<>(executor, maximumLpcQueueSize);
+        globalPublisher.subscribe(new Subscriber("Global"));
+        globalContext = new Context(globalPublisher);
+    }
 
     private static void init(Config aConfig) {
         if (instance != null) {
@@ -29,29 +40,57 @@ public class Scope {
     }
 
     private static void done() {
+        if (instance == null) {
+            throw new IllegalStateException("Extra scope shutdown attempt detected.");
+        }
         instance = null;
     }
 
-    private final ThreadLocal<Context> context = new ThreadLocal<>();
+    private static Scope getInstance() {
+        return instance;
+    }
+
+    public static <R> CompletableFuture<R> bind(CompletableFuture<R> foreign) {
+        Context presentContext = instance.present();
+        Objects.requireNonNull(presentContext, "Scope context must present while future's bind");
+        return presentContext.bind(foreign);
+    }
+
+    public static <A, R> CompletableFuture<R> global(Supplier<A> factory, String key, Function<A, R> action) {
+        return Scope.getInstance().globalContext.apply(action, key, factory, false);
+    }
+
+    public static <A, R> CompletableFuture<R> session(Supplier<A> factory, String key, Function<A, R> action, Answer answer) {
+        return Context.of(answer.getRequest().getSession()).apply(action, key, factory, false);
+    }
+
+    private Context present() {
+        return context.get();
+    }
+
+    private Context createContext() {
+        ExecutorService executor = Config.lookupExecutor();
+        SubmissionPublisher<Runnable> publisher = new SubmissionPublisher<>(executor, maximumLpcQueueSize);
+        publisher.subscribe(new Subscriber("Septima scope"));
+        return new Context(publisher);
+    }
 
     public static class Context implements Serializable {
 
         private static final long serialVersionUID = 1L;
 
         private static final String ATTRIBUTE = "septima.lpc.context";
-
-        public static Context of(HttpSession aSession) {
-            Context ctx = (Context) aSession.getAttribute(ATTRIBUTE);
-            Objects.requireNonNull(ctx, "Scope context sould be associated with http session");
-            return ctx;
-        }
-
-
         private transient SubmissionPublisher<Runnable> publisher;
         private Map<String, Object> instances = new ConcurrentHashMap<>();
 
         Context(SubmissionPublisher<Runnable> aPublisher) {
             publisher = aPublisher;
+        }
+
+        public static Context of(HttpSession aSession) {
+            Context ctx = (Context) aSession.getAttribute(ATTRIBUTE);
+            Objects.requireNonNull(ctx, "Scope context sould be associated with http session");
+            return ctx;
         }
 
         private void writeObject(java.io.ObjectOutputStream out)
@@ -117,46 +156,6 @@ public class Scope {
         }
     }
 
-    private final int maximumLpcQueueSize;
-    private final Context globalContext;
-
-    private Scope(Config aConfig) {
-        maximumLpcQueueSize = aConfig.getMaximumLpcQueueSize();
-        ExecutorService executor = Config.lookupExecutor();
-        SubmissionPublisher<Runnable> globalPublisher = new SubmissionPublisher<>(executor, maximumLpcQueueSize);
-        globalPublisher.subscribe(new Subscriber("Global"));
-        globalContext = new Context(globalPublisher);
-    }
-
-    private Context present() {
-        return context.get();
-    }
-
-    private Context createContext() {
-        ExecutorService executor = Config.lookupExecutor();
-        SubmissionPublisher<Runnable> publisher = new SubmissionPublisher<>(executor, maximumLpcQueueSize);
-        publisher.subscribe(new Subscriber("Septima scope"));
-        return new Context(publisher);
-    }
-
-    private static Scope getInstance() {
-        return instance;
-    }
-
-    public static <R> CompletableFuture<R> bind(CompletableFuture<R> foreign) {
-        Context presentContext = instance.present();
-        Objects.requireNonNull(presentContext, "Scope context must present while future's bind");
-        return presentContext.bind(foreign);
-    }
-
-    public static <A, R> CompletableFuture<R> global(Supplier<A> factory, String key, Function<A, R> action) {
-        return Scope.getInstance().globalContext.apply(action, key, factory, false);
-    }
-
-    public static <A, R> CompletableFuture<R> session(Supplier<A> factory, String key, Function<A, R> action, HttpSession session) {
-        return Context.of(session).apply(action, key, factory, false);
-    }
-
     public static class Init implements ServletContextListener {
 
         @Override
@@ -207,12 +206,12 @@ public class Scope {
 
         @Override
         public void onComplete() {
-            Logger.getLogger(ApplicationEndPoint.class.getName()).log(Level.INFO, "'" + name + "' requests processing is terminated.");
+            Logger.getLogger(Scope.class.getName()).log(Level.INFO, "'" + name + "' requests processing is terminated.");
         }
 
         @Override
         public void onError(Throwable throwable) {
-            Logger.getLogger(ApplicationEndPoint.class.getName()).log(Level.SEVERE, null, throwable);
+            Logger.getLogger(Scope.class.getName()).log(Level.SEVERE, throwable.getMessage(), throwable);
         }
     }
 }

@@ -5,12 +5,12 @@ import java.util.Map;
 /**
  * @author mg
  */
-public class EntityChange extends EntityAction {
+public class InstanceChange extends EntityAction {
 
     private final Map<String, Object> keys;
     private final Map<String, Object> data;
 
-    public EntityChange(String aEntityName, Map<String, Object> aKeys, Map<String, Object> aData) {
+    public InstanceChange(String aEntityName, Map<String, Object> aKeys, Map<String, Object> aData) {
         super(aEntityName);
         keys = aKeys;
         data = aData;

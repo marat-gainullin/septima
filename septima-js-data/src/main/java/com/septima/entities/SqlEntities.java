@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.septima.Database;
 import com.septima.GenericType;
 import com.septima.Metadata;
-import com.septima.metadata.Parameter;
 import com.septima.changes.EntityAction;
 import com.septima.dataflow.DataProvider;
 import com.septima.dataflow.EntityActionsBinder;
@@ -13,10 +12,8 @@ import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.EntityField;
 import com.septima.metadata.ForeignKey;
 import com.septima.metadata.JdbcColumn;
-import com.septima.queries.CaseInsensitiveMap;
-import com.septima.queries.CaseInsensitiveSet;
-import com.septima.queries.ExtractParameters;
-import com.septima.queries.InlineEntities;
+import com.septima.metadata.Parameter;
+import com.septima.queries.*;
 import com.septima.sqldrivers.resolvers.TypesResolver;
 import net.sf.jsqlparser.JSqlParser;
 import net.sf.jsqlparser.JSqlParserException;
@@ -33,6 +30,7 @@ import net.sf.jsqlparser.util.deparser.StatementDeParser;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 import java.io.*;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,6 +41,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
@@ -55,101 +54,38 @@ public class SqlEntities {
     private static final String LOADED_QUERY_MSG = "Entity '%s' loaded.";
     private static final ObjectMapper JSON = new ObjectMapper();
 
-    private final Path applicationPath;
+    private final Path entitiesRoot;
+    private final Path resourcesEntitiesRoot;
     private final String defaultDataSource;
     private final Map<String, SqlEntity> entities = new ConcurrentHashMap<>();
+    private final Map<String, SqlQuery> queries = new ConcurrentHashMap<>();
     private final Executor jdbcPerformer;
     private final Executor futuresExecutor;
 
     private final Map<String, Database> databases = new ConcurrentHashMap<>();
 
-    public SqlEntities(Path anApplicationPath, String aDefaultDataSource) {
-        this(anApplicationPath, aDefaultDataSource, Database.jdbcTasksPerformer(32), ForkJoinPool.commonPool());
+    public SqlEntities(Path anEntitiesRoot, String aDefaultDataSource) {
+        this(anEntitiesRoot, aDefaultDataSource, Database.jdbcTasksPerformer(32), ForkJoinPool.commonPool());
     }
 
-    public SqlEntities(Path anApplicationPath, String aDefaultDataSource, Executor aJdbcPerformer, Executor aFuturesExecutor) {
+    public SqlEntities(Path anEntitiesRoot, String aDefaultDataSource, Executor aJdbcPerformer, Executor aFuturesExecutor) {
+        this(null, anEntitiesRoot, aDefaultDataSource, aJdbcPerformer, aFuturesExecutor);
+    }
+
+    public SqlEntities(Path aResourcesEntitiesRoot, Path anEntitiesRoot, String aDefaultDataSource, Executor aJdbcPerformer, Executor aFuturesExecutor) {
         super();
-        Objects.requireNonNull(anApplicationPath, "aApplicationPath is required argument");
+        Objects.requireNonNull(
+                Objects.requireNonNullElse(aResourcesEntitiesRoot, anEntitiesRoot),
+                "One of ['aResourcesEntitiesRoot', 'anEntitiesRoot'] is required argument"
+        );
         Objects.requireNonNull(aDefaultDataSource, "aDefaultDataSource is required argument");
         Objects.requireNonNull(aJdbcPerformer, "aJdbcPerformer is required argument");
         Objects.requireNonNull(aFuturesExecutor, "aFuturesExecutor is required argument");
-        applicationPath = anApplicationPath.normalize();
+        entitiesRoot = anEntitiesRoot != null ? anEntitiesRoot.normalize() : null;
+        resourcesEntitiesRoot = aResourcesEntitiesRoot != null ? aResourcesEntitiesRoot.normalize() : null;
         defaultDataSource = aDefaultDataSource;
         jdbcPerformer = aJdbcPerformer;
         futuresExecutor = aFuturesExecutor;
-    }
-
-    public Path getEntitiesRoot() {
-        return applicationPath;
-    }
-
-    public String getDefaultDataSource() {
-        return defaultDataSource;
-    }
-
-    public SqlEntity loadEntity(String anEntityName) {
-        return loadEntity(anEntityName, new HashSet<>());
-    }
-
-    /**
-     * Ignores possible races while caching, because only {@code entities.put()} operation is present and
-     * random extra put operations are not harmful.
-     * Warning! Don't use {@code entities.computeIfAbsent()} or {@code entities.putIfAbsent()} while caching here because of recursive nature of loadEntity()
-     *
-     * @param anEntityName       Entity name as {@code #full/path} followed by hash sign, relative to application root path.
-     * @param aIllegalReferences A {@link Set} with already processed entities names. Used to avoid cyclic references.
-     * @return {@link SqlEntity} instance with inlined sub entities' sql text and substituted parameters names.
-     * @throws SqlEntityCyclicReferenceException If entity body has a cyclic reference.
-     * @see ConcurrentHashMap
-     */
-    public SqlEntity loadEntity(String anEntityName, Set<String> aIllegalReferences) throws SqlEntityCyclicReferenceException {
-        Objects.requireNonNull(anEntityName, ENTITY_NAME_MISSING_MSG);
-        if (aIllegalReferences.contains(anEntityName)) {
-            throw new SqlEntityCyclicReferenceException(anEntityName);
-        } else {
-            aIllegalReferences.add(anEntityName);
-        }
-        try {
-            if (entities.containsKey(anEntityName)) {
-                return entities.get(anEntityName);
-            } else {
-                try {
-                    Logger.getLogger(SqlEntities.class.getName()).finer(String.format(LOADING_QUERY_MSG, anEntityName));
-                    String entityJsonFileName = anEntityName + ".sql.json";
-                    File entityJsonFile = applicationPath.resolve(entityJsonFileName).toFile();
-                    SqlEntity entity = constructEntity(anEntityName, readEntitySql(anEntityName), entityJsonFile, aIllegalReferences);
-                    Logger.getLogger(SqlEntities.class.getName()).finer(String.format(LOADED_QUERY_MSG, anEntityName));
-                    entities.put(anEntityName, entity);
-                    return entity;
-                } catch (IOException ex) {
-                    throw new UncheckedIOException(ex);
-                } catch (JSqlParserException ex) {
-                    throw new UncheckedJSqlParserException(ex);
-                } catch (SQLException ex) {
-                    throw new UncheckedSQLException(ex);
-                }
-            }
-        } finally {
-            aIllegalReferences.remove(anEntityName);
-        }
-    }
-
-    public Map<Database, List<EntityActionsBinder.BoundStatement>> bindChanges(List<EntityAction> aChangeLog) {
-        Map<Database, List<EntityActionsBinder.BoundStatement>> bound = new HashMap<>();
-        for (EntityAction change : aChangeLog) {
-            SqlEntity entity = loadEntity(change.getEntityName());
-            EntityActionsBinder binder = new EntityActionsBinder(entity);
-            change.accept(binder);
-            List<EntityActionsBinder.BoundStatement> boundToDatabase = bound.computeIfAbsent(entity.getDatabase(), d -> new ArrayList<>());
-            boundToDatabase.addAll(binder.getLogEntries());
-        }
-        return Collections.unmodifiableMap(bound);
-    }
-
-    private Map<String, JdbcColumn> resolveTableColumns(Database database, Table aTable) throws SQLException {
-        return database.getMetadata()
-                .getTableColumns(aTable.getWholeTableName())
-                .orElse(Map.of());
     }
 
     private static Map<String, EntityField> columnsToApplicationFields(Map<String, JdbcColumn> tableColumns, TypesResolver typesResolver) {
@@ -170,30 +106,6 @@ public class SqlEntities {
                         (r, field) -> r.put(field.getName(), field),
                         Map::putAll
                 );
-    }
-
-    private String readEntitySql(String aEntityName) throws IOException {
-        Objects.requireNonNull(aEntityName, ENTITY_NAME_MISSING_MSG);
-        String entitySqlFileName = aEntityName + ".sql";
-        File mainQueryFile = applicationPath.resolve(entitySqlFileName).toFile();
-        if (mainQueryFile.exists()) {
-            if (!mainQueryFile.isDirectory()) {
-                return new String(Files.readAllBytes(mainQueryFile.toPath()), StandardCharsets.UTF_8);
-            } else {
-                throw new FileNotFoundException(entitySqlFileName + "' at path: " + applicationPath + " is a directory.");
-            }
-        } else {
-            throw new FileNotFoundException("Can't find '" + entitySqlFileName + "' from path: " + applicationPath);
-        }
-    }
-
-    private static JsonNode parseEntitySettings(File jsonFile) throws IOException {
-        if (jsonFile.exists() && !jsonFile.isDirectory()) {
-            String json = new String(Files.readAllBytes(jsonFile.toPath()), StandardCharsets.UTF_8);
-            return JSON.readTree(json);
-        } else {
-            return null;
-        }
     }
 
     private static Consumer<? super Map.Entry<String, JsonNode>> parameterReader(Map<String, Parameter> params, Map<String, Map<String, String>> paramsBinds) {
@@ -312,13 +224,179 @@ public class SqlEntities {
         return read;
     }
 
-    private SqlEntity constructEntity(String anEntityName, String anEntitySql, File anEntityJsonFile, Set<String> aIllegalRefrences) throws IOException, JSqlParserException, SQLException {
+    private static JdbcColumn asAliasedColumn(JdbcColumn resolved, Column column, String alias) {
+        return new JdbcColumn(
+                alias != null && !alias.isEmpty() ? alias : column.getColumnName(),
+                resolved.getDescription(),
+                resolved.getOriginalName(),
+                resolved.getTableName(),
+                resolved.getRdbmsType(),
+                resolved.isNullable(),
+                resolved.isPk(),
+                resolved.getFk(),
+                resolved.getSize(),
+                resolved.getScale(),
+                resolved.getPrecision(),
+                resolved.isSigned(),
+                resolved.getSchema(),
+                resolved.getJdbcType()
+        );
+    }
+
+    public Path getEntitiesRoot() {
+        return entitiesRoot;
+    }
+
+    public Path getResourcesEntitiesRoot() {
+        return resourcesEntitiesRoot;
+    }
+
+    public String getDefaultDataSource() {
+        return defaultDataSource;
+    }
+
+    public SqlEntity loadEntity(String anEntityName) {
+        return loadEntity(anEntityName, new HashSet<>());
+    }
+
+    /**
+     * Ignores possible races while caching, because only {@code entities.put()} operation is present and
+     * random extra put operations are not harmful.
+     * Warning! Don't use {@code entities.computeIfAbsent()} or {@code entities.putIfAbsent()} while caching here because of recursive nature of loadEntity()
+     *
+     * @param anEntityName       Entity name as {@code #full/path} followed by hash sign, relative to application root path.
+     * @param aIllegalReferences A {@link Set} with already processed entities names. Used to avoid cyclic references.
+     * @return {@link SqlEntity} instance with inlined sub entities' sql text and substituted parameters names.
+     * @throws SqlEntityCyclicReferenceException If entity body has a cyclic reference.
+     * @see ConcurrentHashMap
+     */
+    public SqlEntity loadEntity(String anEntityName, Set<String> aIllegalReferences) throws SqlEntityCyclicReferenceException {
+        Objects.requireNonNull(anEntityName, ENTITY_NAME_MISSING_MSG);
+        if (aIllegalReferences.contains(anEntityName)) {
+            throw new SqlEntityCyclicReferenceException(anEntityName);
+        } else {
+            aIllegalReferences.add(anEntityName);
+        }
+        try {
+            if (entities.containsKey(anEntityName)) {
+                return entities.get(anEntityName);
+            } else {
+                try {
+                    Logger.getLogger(SqlEntities.class.getName()).finer(String.format(LOADING_QUERY_MSG, anEntityName));
+                    Path startOfReferences = entitiesRoot != null ? entitiesRoot.resolve(anEntityName).getParent() : resourcesEntitiesRoot.resolve(anEntityName).getParent();
+                    SqlEntity entity = constructEntity(anEntityName, readEntitySql(anEntityName), readEntityJson(anEntityName), startOfReferences, aIllegalReferences);
+                    Logger.getLogger(SqlEntities.class.getName()).finer(String.format(LOADED_QUERY_MSG, anEntityName));
+                    entities.put(anEntityName, entity);
+                    return entity;
+                } catch (IOException ex) {
+                    throw new UncheckedIOException(ex);
+                } catch (JSqlParserException ex) {
+                    throw new UncheckedJSqlParserException(ex);
+                } catch (SQLException ex) {
+                    throw new UncheckedSQLException(ex);
+                }
+            }
+        } finally {
+            aIllegalReferences.remove(anEntityName);
+        }
+    }
+
+    public SqlQuery loadQuery(String anEntityName) {
+        return queries.computeIfAbsent(anEntityName, entityName -> loadEntity(entityName).toQuery());
+    }
+
+    public Map<Database, List<EntityActionsBinder.BoundStatement>> bindChanges(List<EntityAction> aChangeLog) {
+        Map<Database, List<EntityActionsBinder.BoundStatement>> bound = new HashMap<>();
+        for (EntityAction change : aChangeLog) {
+            SqlEntity entity = loadEntity(change.getEntityName());
+            EntityActionsBinder binder = new EntityActionsBinder(entity);
+            change.accept(binder);
+            List<EntityActionsBinder.BoundStatement> boundToDatabase = bound.computeIfAbsent(entity.getDatabase(), d -> new ArrayList<>());
+            boundToDatabase.addAll(binder.getLogEntries());
+        }
+        return Collections.unmodifiableMap(bound);
+    }
+
+    private Map<String, JdbcColumn> resolveTableColumns(Database database, Table aTable) throws SQLException {
+        return database.getMetadata()
+                .getTableColumns(aTable.getWholeTableName())
+                .orElse(Map.of());
+    }
+
+    private String resolveResourceName(String relative) {
+        return resourcesEntitiesRoot.resolve(relative).toString().replace(File.separatorChar, '/');
+    }
+
+    public boolean exists(String aEntityName) {
+        Objects.requireNonNull(aEntityName, ENTITY_NAME_MISSING_MSG);
+        String entitySqlFileName = aEntityName + ".sql";
+        if (entitiesRoot != null) {
+            File mainQueryFile = entitiesRoot.resolve(entitySqlFileName).toFile();
+            return mainQueryFile.exists();
+        } else {
+            URL resourceUrl = SqlEntities.class.getResource(resolveResourceName(entitySqlFileName));
+            return resourceUrl != null;
+        }
+    }
+
+    private String readEntitySql(String aEntityName) throws IOException {
+        Objects.requireNonNull(aEntityName, ENTITY_NAME_MISSING_MSG);
+        String entitySqlFileName = aEntityName + ".sql";
+        if (entitiesRoot != null) {
+            File mainQueryFile = entitiesRoot.resolve(entitySqlFileName).toFile();
+            if (mainQueryFile.exists()) {
+                if (!mainQueryFile.isDirectory()) {
+                    return new String(Files.readAllBytes(mainQueryFile.toPath()), StandardCharsets.UTF_8);
+                } else {
+                    throw new FileNotFoundException(entitySqlFileName + "' at path: " + entitiesRoot + " is a directory.");
+                }
+            } else {
+                throw new FileNotFoundException("Can't find '" + entitySqlFileName + "' from path: " + entitiesRoot);
+            }
+        } else {
+            URL resourceUrl = SqlEntities.class.getResource(resolveResourceName(entitySqlFileName));
+            if (resourceUrl != null) {
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(SqlEntities.class.getResourceAsStream(resolveResourceName(entitySqlFileName)), StandardCharsets.UTF_8))) {
+                    return in.lines().collect(Collectors.joining("\n", "", "\n"));
+                }
+            } else {
+                throw new FileNotFoundException("Can't find '" + entitySqlFileName + "' resource from resource path: " + resourcesEntitiesRoot);
+            }
+        }
+    }
+
+    private String readEntityJson(String anEntityName) throws IOException {
+        Objects.requireNonNull(anEntityName, ENTITY_NAME_MISSING_MSG);
+        String entityJsonFileName = anEntityName + ".sql.json";
+        if (entitiesRoot != null) {
+            File jsonFile = entitiesRoot.resolve(entityJsonFileName).toFile();
+            if (jsonFile.exists()) {
+                if (!jsonFile.isDirectory()) {
+                    return new String(Files.readAllBytes(jsonFile.toPath()), StandardCharsets.UTF_8);
+                } else {
+                    throw new FileNotFoundException(entityJsonFileName + "' at path: " + entitiesRoot + " is a directory.");
+                }
+            } else {
+                return null;
+            }
+        } else {
+            URL resourceUrl = SqlEntities.class.getResource(resolveResourceName(entityJsonFileName));
+            if (resourceUrl != null) {
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(SqlEntities.class.getResourceAsStream(resolveResourceName(entityJsonFileName)), StandardCharsets.UTF_8))) {
+                    return in.lines().collect(Collectors.joining("\n", "", "\n"));
+                }
+            } else {
+                return null;
+            }
+        }
+    }
+
+    private SqlEntity constructEntity(String anEntityName, String anEntitySql, String anEntityJson, Path aStartOfReferences, Set<String> aIllegalRefrences) throws IOException, JSqlParserException, SQLException {
         Objects.requireNonNull(anEntityName, ENTITY_NAME_MISSING_MSG);
         Objects.requireNonNull(anEntitySql, "anEntitySql is required argument");
-        Objects.requireNonNull(anEntityJsonFile, "anEntityJsonFile is required argument");
 
         if (!anEntitySql.isEmpty()) {
-            JsonNode entityDocument = parseEntitySettings(anEntityJsonFile);
+            JsonNode entityDocument = anEntityJson != null ? JSON.readTree(anEntityJson) : null;
 
             JsonNode dataSourceNode = entityDocument != null ? entityDocument.get("source") : null;
             String dataSource = dataSourceNode != null && dataSourceNode.isTextual() ? dataSourceNode.asText() : defaultDataSource;
@@ -352,7 +430,7 @@ public class SqlEntities {
                 paramsNode.fields().forEachRemaining(parameterReader(params, paramsBinds));
             }
 
-            InlineEntities.to(querySyntax, this, paramsBinds, anEntityJsonFile.getParentFile().toPath(), aIllegalRefrences);
+            InlineEntities.to(querySyntax, this, paramsBinds, aStartOfReferences, aIllegalRefrences);
             String sqlWithSubQueries = StatementDeParser.assemble(querySyntax);
             Map<String, EntityField> fields = columnsToApplicationFields(
                     resolveColumnsBySyntax(database, querySyntax), database.getSqlDriver().getTypesResolver()
@@ -454,25 +532,6 @@ public class SqlEntities {
             }
         }
         return fields;
-    }
-
-    private static JdbcColumn asAliasedColumn(JdbcColumn resolved, Column column, String alias) {
-        return new JdbcColumn(
-                alias != null && !alias.isEmpty() ? alias : column.getColumnName(),
-                resolved.getDescription(),
-                resolved.getOriginalName(),
-                resolved.getTableName(),
-                resolved.getRdbmsType(),
-                resolved.isNullable(),
-                resolved.isPk(),
-                resolved.getFk(),
-                resolved.getSize(),
-                resolved.getScale(),
-                resolved.getPrecision(),
-                resolved.isSigned(),
-                resolved.getSchema(),
-                resolved.getJdbcType()
-        );
     }
 
     private JdbcColumn resolveColumnBySource(Database database, Column column, String alias, FromItem source) throws SQLException {

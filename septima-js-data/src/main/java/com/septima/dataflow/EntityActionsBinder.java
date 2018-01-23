@@ -87,7 +87,7 @@ public class EntityActionsBinder implements EntityActionsVisitor {
     }
 
     @Override
-    public void visit(EntityAdd aAdd) {
+    public void visit(InstanceAdd aAdd) {
         JdbcReaderAssigner jdbcReaderAssigner = entity.getDatabase().jdbcReaderAssigner(entity.isProcedure());
         aAdd.getData().entrySet().stream()
                 .map(asTableDatumEntry(entity))
@@ -111,7 +111,7 @@ public class EntityActionsBinder implements EntityActionsVisitor {
     }
 
     @Override
-    public void visit(EntityChange aUpdate) {
+    public void visit(InstanceChange aUpdate) {
         JdbcReaderAssigner jdbcReaderAssigner = entity.getDatabase().jdbcReaderAssigner(entity.isProcedure());
         Map<String, List<Parameter>> updatesKeys = aUpdate.getKeys().entrySet().stream()
                 .map(asTableDatumEntry(entity))
@@ -147,7 +147,7 @@ public class EntityActionsBinder implements EntityActionsVisitor {
      * @param aRemove Deletion command transform delete from all underlying tables indices an entity
      */
     @Override
-    public void visit(EntityRemove aRemove) {
+    public void visit(InstanceRemove aRemove) {
         JdbcReaderAssigner jdbcReaderAssigner = entity.getDatabase().jdbcReaderAssigner(entity.isProcedure());
         aRemove.getKeys().entrySet().stream()
                 .map(asTableDatumEntry(entity))

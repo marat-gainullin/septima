@@ -1,0 +1,14 @@
+{
+  "public": true,
+  "parameters": {
+    "birthFrom": {
+      "type": "Date"
+    },
+    "owner_id": {
+      "type": "Number"
+    },
+    "flag": {
+      "type": "Boolean"
+    }
+  }
+}

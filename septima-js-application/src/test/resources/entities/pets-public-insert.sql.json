@@ -1,0 +1,17 @@
+{
+  "public": true,
+  "parameters": {
+    "pets_id": {
+      "type": "Long"
+    },
+    "owner_id": {
+      "type": "Double"
+    },
+    "type_id": {
+      "type": "Number"
+    },
+    "birthdate": {
+      "type": "Date"
+    }
+  }
+}

@@ -1,7 +1,7 @@
 package com.septima.dataflow;
 
 import com.septima.TestDataSource;
-import com.septima.changes.EntityAdd;
+import com.septima.changes.InstanceAdd;
 import com.septima.entities.SqlEntities;
 import com.septima.entities.SqlEntity;
 import org.junit.BeforeClass;
@@ -38,7 +38,7 @@ public class VariousTypes {
                 .thenApply(data -> {
                     assertFalse(data.isEmpty());
                     return entity.getDatabase().commit(entities.bindChanges(List.of(
-                            new EntityAdd(entity.getName(), values.get())
+                            new InstanceAdd(entity.getName(), values.get())
                     )).values().iterator().next());
                 }).thenCompose(Function.identity())
                 .thenAccept(inserted -> assertEquals(1L, (long) inserted))

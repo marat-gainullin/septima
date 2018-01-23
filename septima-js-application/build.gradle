@@ -1,9 +1,27 @@
+apply plugin: 'jacoco'
+
+def servletVersion = '3.1.0'
+def mailVersion = '1.4.7'
+def webSocketVersion = '1.1'
+
 dependencies {
-    compileOnly 'javax.servlet:javax.servlet-api:3.1.0',
-            'javax.websocket:javax.websocket-api:1.1',
-            'javax.mail:mail:1.4.7'
-    compile project(':septima-js-model'),
-            project(':septima-js-data'),
-            'com.fasterxml.jackson.core:jackson-core:2.9.2',
-            'com.fasterxml.jackson.core:jackson-databind:2.9.2'
+    compileOnly "javax.servlet:javax.servlet-api:$servletVersion",
+            "javax.websocket:javax.websocket-api:$webSocketVersion",
+            "javax.mail:mail:$mailVersion"
+    testCompile "javax.servlet:javax.servlet-api:$servletVersion",
+            "javax.websocket:javax.websocket-api:$webSocketVersion",
+            "javax.mail:mail:$mailVersion",
+            'com.h2database:h2:1.4.193',
+            'org.mockito:mockito-core:2.13.0'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.9.2',
+            'com.fasterxml.jackson.core:jackson-databind:2.9.2',
+            project(':septima-js-model'),
+            project(':septima-js-data')
 }
+
+task coverage() {
+    doLast {
+        java.awt.Desktop.desktop.browse jacocoTestReport.reports.html.entryPoint.toURI()
+    }
+}
+coverage.dependsOn jacocoTestReport

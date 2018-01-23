@@ -1,16 +1,15 @@
 package com.septima.dataflow;
 
-import com.septima.metadata.Parameter;
 import com.septima.jdbc.JdbcDataProvider;
 import com.septima.jdbc.JdbcReaderAssigner;
 import com.septima.jdbc.ResultSetReader;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.EntityField;
+import com.septima.metadata.Parameter;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -36,7 +35,7 @@ public class DynamicTypingDataProvider extends JdbcDataProvider {
      * {@inheritDoc}
      */
     @Override
-    public CompletableFuture<Collection<Map<String, Object>>> pull(List<Parameter> aParams) {
+    public CompletableFuture<List<Map<String, Object>>> pull(List<Parameter> aParams) {
         return select(aParams, (ResultSet rs) -> {
             if (rs != null) {
                 ResultSetReader reader = new ResultSetReader(
@@ -54,18 +53,18 @@ public class DynamicTypingDataProvider extends JdbcDataProvider {
      * {@inheritDoc}
      */
     @Override
-    public CompletableFuture<Collection<Map<String, Object>>> nextPage() throws NotPagedException {
+    public CompletableFuture<List<Map<String, Object>>> nextPage() throws NotPagedException {
         if (!isPaged() || lowLevelResults == null) {
             throw new NotPagedException(BAD_PULL_NEXT_PAGE_CHAIN_MSG);
         } else {
-            CompletableFuture<Collection<Map<String, Object>>> fetching = new CompletableFuture<>();
+            CompletableFuture<List<Map<String, Object>>> fetching = new CompletableFuture<>();
             asyncDataPuller.execute(() -> {
                 try {
                     ResultSetReader reader = new ResultSetReader(
                             expectedFields,
                             jdbcReaderAssigner
                     );
-                    Collection<Map<String, Object>> processed = reader.readRowSet(lowLevelResults, pageSize);
+                    List<Map<String, Object>> processed = reader.readRowSet(lowLevelResults, pageSize);
                     fetching.completeAsync(() -> processed, futureExecutor);
                 } catch (Throwable ex) {
                     futureExecutor.execute(() -> fetching.completeExceptionally(ex));

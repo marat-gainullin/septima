@@ -1,5 +1,9 @@
 package com.septima;
 
+import com.fasterxml.jackson.databind.util.StdDateFormat;
+
+import java.text.ParseException;
+
 /**
  * Data types generic because there are many other types in programming languages and in
  * databases. All of them may be grouped into few number og generic groups.
@@ -41,6 +45,30 @@ public enum GenericType {
         }
     }
 
+    public static Object parseValue(String aValue, GenericType aType) {
+        if (aValue != null) {
+            switch (aType) {
+                case DATE:
+                    StdDateFormat format = new StdDateFormat();
+                    try {
+                        return format.parse(aValue);
+                    } catch (ParseException ex) {
+                        throw new IllegalStateException(ex);
+                    }
+                case BOOLEAN:
+                    return Boolean.parseBoolean(aValue);
+                case DOUBLE:
+                    return Double.parseDouble(aValue);
+                case LONG:
+                    return Long.parseLong(aValue);
+                default:
+                    return aValue;
+            }
+        } else {
+            return null;
+        }
+    }
+
     public Object narrow(Object aValue) {
         if (aValue != null) {
             switch (this) {
@@ -55,4 +83,5 @@ public enum GenericType {
             return aValue;
         }
     }
+
 }

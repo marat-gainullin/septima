@@ -21,16 +21,16 @@
         <param-value>1024</param-value>
     </context-param>
     <context-param>
-        <param-name>entities.path</param-name>
+        <param-name>resources.entities.path</param-name>
         <param-value>entities</param-value>
     </context-param>
     <listener>
-        <listener-class>com.septima.entities.Data$Init</listener-class>
+        <listener-class>com.septima.application.Data$Init</listener-class>
     </listener>
     <listener>
-        <listener-class>com.septima.entities.Scope$Init</listener-class>
+        <listener-class>com.septima.application.Scope$Init</listener-class>
     </listener>
     <listener>
-        <listener-class>com.septima.entities.Scope$SessionInit</listener-class>
+        <listener-class>com.septima.application.Scope$SessionInit</listener-class>
     </listener>
 </web-app>

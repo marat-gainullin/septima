@@ -2,10 +2,10 @@ package com.septima.dataflow;
 
 import com.septima.Database;
 import com.septima.TestDataSource;
-import com.septima.changes.EntityChange;
+import com.septima.changes.InstanceChange;
 import com.septima.changes.EntityCommand;
-import com.septima.changes.EntityRemove;
-import com.septima.changes.EntityAdd;
+import com.septima.changes.InstanceRemove;
+import com.septima.changes.InstanceAdd;
 import com.septima.entities.SqlEntities;
 import com.septima.entities.SqlEntity;
 import org.junit.BeforeClass;
@@ -46,7 +46,7 @@ public class EntitiesChangesTest {
                     assertTrue(data.size() > 1);
                     return compoundEntity.getDatabase().commit(
                             entities.bindChanges(List.of(
-                                    new EntityAdd(compoundEntity.getName(), Map.of(
+                                    new InstanceAdd(compoundEntity.getName(), Map.of(
                                             "k_id", k_id,
                                             "k_name", k_name,
                                             "t_id", t_id,
@@ -60,7 +60,7 @@ public class EntitiesChangesTest {
                 .thenApply(inserted -> {
                     assertEquals(3L, (long) inserted);
                     return compoundEntity.getDatabase().commit(entities.bindChanges(List.of(
-                            new EntityChange(compoundEntity.getName(),
+                            new InstanceChange(compoundEntity.getName(),
                                     Map.of(
                                             "k_id", k_id,
                                             "t_id", t_id,
@@ -72,7 +72,7 @@ public class EntitiesChangesTest {
                                             "g_name", g_name + " updated"
                                     )
                             ),
-                            new EntityRemove(compoundEntity.getName(), Map.of(
+                            new InstanceRemove(compoundEntity.getName(), Map.of(
                                     "k_id", k_id,
                                     "t_id", t_id,
                                     "g_id", g_id
@@ -101,7 +101,7 @@ public class EntitiesChangesTest {
                 .thenApply(data -> {
                     assertTrue(data.size() > 1);
                     return compoundEntity.getDatabase().commit(entities.bindChanges(List.of(
-                            new EntityAdd(compoundEntity.getName(), Map.of(
+                            new InstanceAdd(compoundEntity.getName(), Map.of(
                                     "k_id", k_id,
                                     "k_name", k_name,
                                     "t_id", t_id,
@@ -114,7 +114,7 @@ public class EntitiesChangesTest {
                 .thenApply(inserted -> {
                     assertEquals(1L, (long) inserted);
                     return compoundEntity.getDatabase().commit(entities.bindChanges(List.of(
-                            new EntityChange(compoundEntity.getName(),
+                            new InstanceChange(compoundEntity.getName(),
                                     Map.of(
                                             "k_id", k_id,
                                             "t_id", t_id,
@@ -126,7 +126,7 @@ public class EntitiesChangesTest {
                                             "g_name", g_name + " updated"
                                     )
                             ),
-                            new EntityRemove(compoundEntity.getName(), Map.of(
+                            new InstanceRemove(compoundEntity.getName(), Map.of(
                                     "k_id", k_id,
                                     "t_id", t_id,
                                     "g_id", g_id

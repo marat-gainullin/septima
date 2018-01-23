@@ -5,13 +5,13 @@ import java.util.Map;
 /**
  * @author mg
  */
-public class EntityRemove extends EntityAction {
+public class InstanceAdd extends EntityAction {
 
-    private final Map<String, Object> keys;
+    private final Map<String, Object> data;
 
-    public EntityRemove(String aEntityName, Map<String, Object> aKeys) {
+    public InstanceAdd(String aEntityName, Map<String, Object> aData) {
         super(aEntityName);
-        keys = aKeys;
+        data = aData;
     }
 
     @Override
@@ -19,8 +19,8 @@ public class EntityRemove extends EntityAction {
         aChangeVisitor.visit(this);
     }
 
-    public Map<String, Object> getKeys() {
-        return keys;
+    public Map<String, Object> getData() {
+        return data;
     }
 
 }

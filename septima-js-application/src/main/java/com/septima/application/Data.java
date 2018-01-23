@@ -1,6 +1,5 @@
 package com.septima.application;
 
-import com.septima.Config;
 import com.septima.Database;
 import com.septima.entities.SqlEntities;
 
@@ -9,28 +8,33 @@ import javax.servlet.ServletContextListener;
 
 public class Data {
 
+    private static volatile Data instance;
     private final SqlEntities entities;
 
     private Data(SqlEntities aEntities) {
         entities = aEntities;
     }
 
-    public SqlEntities getEntities() {
-        return entities;
-    }
-
-    private static volatile Data instance;
-
     private static void init(Config aConfig) {
-        instance = new Data(new SqlEntities(aConfig.getEntitiesPath(), aConfig.getDefaultDataSourceName(), Database.jdbcTasksPerformer(aConfig.getMaximumJdbcThreads()), Config.lookupExecutor()));
+        if (instance != null) {
+            throw new IllegalStateException("Data can be initialized only once.");
+        }
+        instance = new Data(new SqlEntities(aConfig.getResourcesEntitiesPath(), aConfig.getEntitiesPath(), aConfig.getDefaultDataSourceName(), Database.jdbcTasksPerformer(aConfig.getMaximumJdbcThreads()), Config.lookupExecutor()));
     }
 
     private static void done() {
+        if (instance == null) {
+            throw new IllegalStateException("Extra data shutdown attempt detected.");
+        }
         instance = null;
     }
 
     public static Data getInstance() {
         return instance;
+    }
+
+    public SqlEntities getEntities() {
+        return entities;
     }
 
     public static class Init implements ServletContextListener {

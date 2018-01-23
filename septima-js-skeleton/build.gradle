@@ -43,9 +43,9 @@ class GenerateEntities extends DefaultTask {
             if (change.file.name.endsWith(".sql")) {
                 transform change.file
             } else if (change.file.name.endsWith(".sql.json")) {
-                Path origin = change.file.toPath().resolveSibling(change.file.name.substring(0, change.file.name.length() - 5))
-                if (origin.toFile().exists()) {
-                    transform origin.toFile()
+                def origin = change.file.toPath().resolveSibling(change.file.name.substring(0, change.file.name.length() - 5)).toFile()
+                if (origin.exists()) {
+                    transform origin
                 }
             }
         }
@@ -62,7 +62,7 @@ class GenerateEntities extends DefaultTask {
             if (change.file.name.endsWith(".sql")) {
                 removeGeneratedClassBySqlFile(change.file)
             } else if (change.file.name.endsWith(".sql.json")) {
-                File origin = change.file.toPath().resolveSibling(change.file.name.substring(0, change.file.name.length() - 5)).toFile()
+                def origin = change.file.toPath().resolveSibling(change.file.name.substring(0, change.file.name.length() - 5)).toFile()
                 if (origin.exists()) {
                     removeGeneratedClassBySqlFile(origin)
                 }
@@ -199,7 +199,7 @@ configurations {
     h2
 }
 
-def tomcatVersion = '8.5.8'
+def tomcatVersion = '9.0.2'
 
 dependencies {
     compileOnly 'javax.servlet:javax.servlet-api:3.1.0',
@@ -402,7 +402,7 @@ task tomcatCommand(type: JavaExec) {
     classpath fileTree(tomcatBinDir)
     main 'org.apache.catalina.startup.Bootstrap'
     jvmArgs '-Xdebug',
-            "-Xrunjdwp:server=y,transport=dt_socket,address=${privateProps['tomcat.debug.port']},suspend=n",
+            "-Xrunjdwp:server=y,transport=dt_socket,address=${privateProps['tomcat.debug.port']},suspend=y",
             "-Djava.util.logging.config.file=${file(tomcatDir)}/conf/logging.properties"
 }
 
@@ -413,12 +413,12 @@ def launchTomcat = {
     def stdOut = new InputStreamReader(instance.getInputStream())
     try {
         def tomcatNextLine = stdOut.readLine()
-        while (!tomcatNextLine.contains('Server startup in')) {
+        while (tomcatNextLine != null && !tomcatNextLine.contains('Server startup in')) {
             if (!tomcatNextLine.isEmpty())
                 println(tomcatNextLine)
             tomcatNextLine = stdOut.readLine()
         }
-        if (!tomcatNextLine.isEmpty())
+        if (tomcatNextLine != null && !tomcatNextLine.isEmpty())
             println(tomcatNextLine)
         println()
         println 'Tomcat started.'
@@ -603,6 +603,7 @@ gulp_bundle.outputs.dir 'src/client/build/bundle'
 
 war {
     from 'src/client/build/bundle'
+    webXml = file('src/server/web.xml')
 }
 
 warExplode.dependsOn gulp_bundle

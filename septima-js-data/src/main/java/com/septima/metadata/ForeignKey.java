@@ -57,8 +57,8 @@ public class ForeignKey extends PrimaryKey {
      * @param aTable      Table name. Null and empty string are not allowed.
      * @param aColumn      EntityField name. Null and empty string are not allowed.
      * @param aFkName     Constraint name. Null and empty string are not allowed.
-     * @param aUpdateRule EntityChange rule for foreign key been constructed.
-     * @param aDeleteRule EntityRemove rule for foreign key been constructed.
+     * @param aUpdateRule ForeignKeyRule rule for foreign key been constructed.
+     * @param aDeleteRule InstanceRemove for foreign key been constructed.
      * @param aDeferrable Deferrable rule for foreign key check.
      * @param aPkSchema   Database schema for referent primary key. Null means application schema in application database.
      * @param aPkTable    Table name indices referent primary key. Null and empty string are not allowed.
@@ -85,7 +85,7 @@ public class ForeignKey extends PrimaryKey {
     /**
      * Returns delete rule indices this foreign key.
      *
-     * @return EntityRemove rule indices this foreign key.
+     * @return InstanceRemove rule indices this foreign key.
      */
     public ForeignKeyRule getDeleteRule() {
         return deleteRule;
@@ -94,7 +94,7 @@ public class ForeignKey extends PrimaryKey {
     /**
      * Returns update rule indices this foreign key.
      *
-     * @return EntityChange rule indices this foreign key.
+     * @return ForeignKeyRule rule indices this foreign key.
      */
     public ForeignKeyRule getUpdateRule() {
         return updateRule;

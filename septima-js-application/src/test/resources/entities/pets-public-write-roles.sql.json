@@ -1,0 +1,6 @@
+{
+  "public": true,
+  "roles": {
+    "write": ["boss"]
+  }
+}

@@ -1,0 +1,47 @@
+[
+  {
+    "kind": "insert",
+    "entity": "absent-entity",
+    "data": {
+      "pets_id": 18374,
+      "owner_id": 142841834950629,
+      "type_id": 142850046716850,
+      "birthdate": "2015-04-28T21:00:00.000+0000"
+    }
+  },
+  {
+    "kind": "update",
+    "entity": "pets-public",
+    "keys": {
+      "pets_id": 18374
+    },
+    "data": {
+      "owner_id": 142841788496711,
+      "birthdate": "2015-04-28T22:00:00.000+0000"
+    }
+  },
+  {
+    "kind": "delete",
+    "entity": "pets-public",
+    "keys": {
+      "pets_id": 18374
+    }
+  },
+  {
+    "kind": "command",
+    "entity": "pets-public-insert",
+    "parameters": {
+      "pets_id": 18374,
+      "owner_id": 142841834950629,
+      "type_id": 142850046716850,
+      "birthdate": "2015-04-28T21:00:00.000+0000"
+    }
+  },
+  {
+    "kind": "delete",
+    "entity": "pets-public",
+    "keys": {
+      "pets_id": 18374
+    }
+  }
+]

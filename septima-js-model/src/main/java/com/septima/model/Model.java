@@ -1,9 +1,9 @@
 package com.septima.model;
 
 import com.septima.changes.EntityAction;
-import com.septima.changes.EntityAdd;
-import com.septima.changes.EntityChange;
-import com.septima.changes.EntityRemove;
+import com.septima.changes.InstanceAdd;
+import com.septima.changes.InstanceChange;
+import com.septima.changes.InstanceRemove;
 import com.septima.entities.SqlEntities;
 import com.septima.queries.SqlQuery;
 import javafx.collections.FXCollections;
@@ -107,15 +107,15 @@ public class Model {
                         if (change.wasRemoved() && change.wasAdded()) {
                             onRemoved.apply(change.getValueRemoved());
                             D added = onAdded.apply(change.getValueAdded());
-                            changes.add(new EntityChange(query.getEntityName(), Map.of(keyName, keyOf.apply(added)), reverseMapper.apply(added)));
+                            changes.add(new InstanceChange(query.getEntityName(), Map.of(keyName, keyOf.apply(added)), reverseMapper.apply(added)));
                         } else {
                             if (change.wasRemoved()) {
                                 D removed = onRemoved.apply(change.getValueRemoved());
-                                changes.add(new EntityRemove(query.getEntityName(), Map.of(keyName, keyOf.apply(removed))));
+                                changes.add(new InstanceRemove(query.getEntityName(), Map.of(keyName, keyOf.apply(removed))));
                             }
                             if (change.wasAdded()) {
                                 D added = onAdded.apply(change.getValueAdded());
-                                changes.add(new EntityAdd(query.getEntityName(), reverseMapper.apply(added)));
+                                changes.add(new InstanceAdd(query.getEntityName(), reverseMapper.apply(added)));
                             }
                         }
                     }
@@ -134,7 +134,7 @@ public class Model {
 
     private <D, K> PropertyChangeListener listener(SqlQuery query, String keyName, Function<D, K> keyMapper) {
         return e ->
-                changes.add(new EntityChange(
+                changes.add(new InstanceChange(
                         query.getEntityName(),
                         Map.of(keyName, keyName.equals(e.getPropertyName()) ? e.getOldValue() : keyMapper.apply((D) e.getSource())),
                         Map.of(e.getPropertyName(), e.getNewValue())));

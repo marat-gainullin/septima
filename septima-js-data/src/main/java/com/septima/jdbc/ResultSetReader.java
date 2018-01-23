@@ -28,7 +28,7 @@ public class ResultSetReader {
         expectedFields = aExpectedFields;
     }
 
-    public Collection<Map<String, Object>> readRowSet(ResultSet aResultSet, int aPageSize) throws SQLException {
+    public List<Map<String, Object>> readRowSet(ResultSet aResultSet, int aPageSize) throws SQLException {
         Objects.requireNonNull(aResultSet, "aResultSet is required argument");
         ResultSetMetaData lowLevelJdbcFields = aResultSet.getMetaData();
         List<EntityField> readEntityFields = readFields(lowLevelJdbcFields);
@@ -56,8 +56,8 @@ public class ResultSetReader {
         return appEntityFields;
     }
 
-    private Collection<Map<String, Object>> readRows(Map<String, EntityField> aExpectedFields, List<EntityField> aReadEntityFields, ResultSet aResultSet, int aPageSize, Connection aConnection) throws SQLException {
-        Collection<Map<String, Object>> oRows = new ArrayList<>();
+    private List<Map<String, Object>> readRows(Map<String, EntityField> aExpectedFields, List<EntityField> aReadEntityFields, ResultSet aResultSet, int aPageSize, Connection aConnection) throws SQLException {
+        List<Map<String, Object>> oRows = new ArrayList<>();
         while ((aPageSize <= 0 || oRows.size() < aPageSize) && aResultSet.next()) {
             Map<String, Object> jsRow = readRow(aExpectedFields, aReadEntityFields, aResultSet, aConnection);
             oRows.add(jsRow);

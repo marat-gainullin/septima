@@ -2,7 +2,6 @@ package com.septima.dataflow;
 
 import com.septima.metadata.Parameter;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -37,7 +36,7 @@ public interface DataProvider extends AutoCloseable {
      * @return Future with data collection, retrieved from the source.
      * @see Parameter
      */
-    CompletableFuture<Collection<Map<String, Object>>> pull(List<Parameter> aParams);
+    CompletableFuture<List<Map<String, Object>>> pull(List<Parameter> aParams);
 
     /**
      * Fetches a next page of data from an abstract data source.
@@ -45,7 +44,7 @@ public interface DataProvider extends AutoCloseable {
      * @return Data collection instance, containing data, retrieved from the source while
      * fetching a page.
      */
-    CompletableFuture<Collection<Map<String, Object>>> nextPage() throws NotPagedException;
+    CompletableFuture<List<Map<String, Object>>> nextPage() throws NotPagedException;
 
     /**
      * Returns page size for paged flow providers.

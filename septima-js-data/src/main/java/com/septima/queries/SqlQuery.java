@@ -1,17 +1,18 @@
 package com.septima.queries;
 
 import com.septima.Database;
+import com.septima.GenericType;
 import com.septima.dataflow.DynamicTypingDataProvider;
-import com.septima.metadata.Parameter;
 import com.septima.jdbc.JdbcReaderAssigner;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.EntityField;
+import com.septima.metadata.Parameter;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -47,12 +48,20 @@ public class SqlQuery {
         expectedFields = aExpectedFields;
     }
 
+    public Database getDatabase() {
+        return database;
+    }
+
     public boolean isProcedure() {
         return procedure;
     }
 
     public int getPageSize() {
         return pageSize;
+    }
+
+    public Map<String, EntityField> getExpectedFields() {
+        return expectedFields;
     }
 
     private List<Parameter> mergeParametersValues(Map<String, Object> aParametersValues) {
@@ -73,7 +82,7 @@ public class SqlQuery {
      *
      * @return {@link CompletableFuture} The future of requested data.
      */
-    public CompletableFuture<Collection<Map<String, Object>>> requestData() {
+    public CompletableFuture<List<Map<String, Object>>> requestData() {
         return requestData(Map.of());
     }
 
@@ -85,11 +94,22 @@ public class SqlQuery {
      *                          value of own parameter is used as the default.
      * @return {@link CompletableFuture} The future of requested data.
      */
-    public CompletableFuture<Collection<Map<String, Object>>> requestData(Map<String, Object> aParametersValues) {
+    public CompletableFuture<List<Map<String, Object>>> requestData(Map<String, Object> aParametersValues) {
         Objects.requireNonNull(aParametersValues, "aParametersValues is required argument");
         Objects.requireNonNull(database);
         DynamicTypingDataProvider dataProvider = database.createDataProvider(entityName, sqlClause, procedure, pageSize, expectedFields);
         return dataProvider.pull(mergeParametersValues(aParametersValues));
+    }
+
+    public Map<String, Object> parseParameters(Map<String, String> aParametersValues) {
+        Objects.requireNonNull(aParametersValues, "aParametersValues is required argument");
+        Map<String, GenericType> types = parameters.stream()
+                .collect(Collectors.toMap(Parameter::getName, p -> p.getType() != null ? p.getType() : GenericType.STRING));
+        Map<String, Object> values = new HashMap<>();
+        for (Map.Entry<String, GenericType> e : types.entrySet()) {
+            values.put(e.getKey(), GenericType.parseValue(aParametersValues.get(e.getKey()), e.getValue()));
+        }
+        return values;
     }
 
     /**

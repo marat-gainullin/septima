@@ -6,11 +6,11 @@ package com.septima.changes;
  */
 public interface EntityActionsVisitor {
 
-    void visit(EntityAdd aAdd);
+    void visit(InstanceAdd aAdd);
 
-    void visit(EntityChange aChange);
+    void visit(InstanceChange aChange);
 
-    void visit(EntityRemove aRemove);
+    void visit(InstanceRemove aRemove);
 
     void visit(EntityCommand aCommand);
 }
