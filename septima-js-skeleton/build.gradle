@@ -483,7 +483,7 @@ task fillH2(type: Copy) {
                     '-url', props["data-source.${props['application.data-source']}.dburl"],
                     '-user', props["data-source.${props['application.data-source']}.dbuser"],
                     '-password', props["data-source.${props['application.data-source']}.dbpassword"],
-                    '-script', 'base.sql'
+                    '-script', "${projectDir}/base.sql"
             )
             println 'Application database filled'
         }

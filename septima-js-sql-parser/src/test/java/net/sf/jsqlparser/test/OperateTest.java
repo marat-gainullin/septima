@@ -5,16 +5,17 @@
 
 package net.sf.jsqlparser.test;
 
-import java.io.StringReader;
-import java.util.Map;
-
 import net.sf.jsqlparser.JSqlParserException;
-import net.sf.jsqlparser.syntax.FromItems;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.syntax.FromItems;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import java.io.StringReader;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -100,7 +101,7 @@ public class OperateTest extends GeneralTest{
 */
     @Test
     public void deleteTest() throws JSqlParserException {
-        String statement = "delete from MTD_ENTITIES where MDENT_ID = :id";
+        String statement = "delete from MTD_ENTITIES  where MDENT_ID = :id";
         checkParseAndDeparse(statement);
     }
 
