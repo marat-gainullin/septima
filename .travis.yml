@@ -3,8 +3,8 @@
 # travis lint [path to your .travis.yml]
 
 # we'll try to use container based infrastructure
-sudo: false
-# sudo: required
+# sudo: false
+sudo: required
 
 language: java
 
