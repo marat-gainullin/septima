@@ -3,8 +3,8 @@
 # travis lint [path to your .travis.yml]
 
 # we'll try to use container based infrastructure
-# sudo: false
-sudo: required
+sudo: false
+# sudo: required
 
 language: java
 
@@ -13,6 +13,9 @@ jdk:
     
 git:
   depth: 1
+
+before_install:
+ - chmod +x gradlew
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
