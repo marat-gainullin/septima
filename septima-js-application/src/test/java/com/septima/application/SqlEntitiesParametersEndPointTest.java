@@ -1,6 +1,6 @@
 package com.septima.application;
 
-import com.septima.application.endpoint.SqlEntitiesSchemaEndPoint;
+import com.septima.application.endpoint.SqlEntitiesParametersEndPoint;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutionException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-public class SqlEntitiesSchemaEndPointTest extends SqlEntitiesEndPointTest {
+public class SqlEntitiesParametersEndPointTest extends SqlEntitiesEndPointTest {
 
     @BeforeClass
     public static void setup() throws SQLException, NamingException {
@@ -39,7 +39,7 @@ public class SqlEntitiesSchemaEndPointTest extends SqlEntitiesEndPointTest {
 
     @Test
     public void getPets() throws ServletException, IOException, InterruptedException, ExecutionException {
-        CompletableFuture<RequestResult> response = mockOut("/pets", SqlEntitiesSchemaEndPoint::new);
+        CompletableFuture<RequestResult> response = mockOut("/pets", SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_FORBIDDEN, requestResult.getStatus());
         assertEquals("{\"description\":\"Public access to 'pets' is not allowed\"}", requestResult.getBody());
@@ -47,7 +47,7 @@ public class SqlEntitiesSchemaEndPointTest extends SqlEntitiesEndPointTest {
 
     @Test
     public void getPetsReadRoles() throws ServletException, IOException, InterruptedException, ExecutionException {
-        CompletableFuture<RequestResult> response = mockOut("/pets-public-read-roles", SqlEntitiesSchemaEndPoint::new);
+        CompletableFuture<RequestResult> response = mockOut("/pets-public-read-roles", SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_FORBIDDEN, requestResult.getStatus());
         assertEquals("{\"description\":\"Read access to collection 'pets-public-read-roles' data requires one of the following roles: ['boss']\"}", requestResult.getBody());
@@ -55,32 +55,28 @@ public class SqlEntitiesSchemaEndPointTest extends SqlEntitiesEndPointTest {
 
     @Test
     public void getPetsPublic() throws ServletException, IOException, InterruptedException, ExecutionException {
-        CompletableFuture<RequestResult> response = mockOut("/pets-public", SqlEntitiesSchemaEndPoint::new);
+        CompletableFuture<RequestResult> response = mockOut("/pets-public", SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_OK, requestResult.getStatus());
         assertEquals("{" +
-                        "\"birthdate\":{\"type\":\"DATE\",\"nullable\":true,\"description\":\"\",\"pk\":false}," +
-                        "\"owner_id\":{\"type\":\"DOUBLE\",\"nullable\":false,\"description\":\"\",\"pk\":false}," +
-                        "\"type_id\":{\"type\":\"DOUBLE\",\"nullable\":false,\"description\":\"\",\"pk\":false}," +
-                        "\"name\":{\"type\":\"STRING\",\"nullable\":true,\"description\":\"\",\"pk\":false}," +
-                        "\"pets_id\":{\"type\":\"DOUBLE\",\"nullable\":false,\"description\":\"\",\"pk\":true}" +
+                        "\"p1\":{\"type\":\"LONG\",\"description\":null,\"mode\":\"In\"},\"p2\":{\"type\":\"BOOLEAN\",\"description\":null,\"mode\":\"In\"}" +
                         "}",
                 requestResult.getBody());
     }
 
     @Test
-    public void getFieldBirthDate() throws ServletException, IOException, InterruptedException, ExecutionException {
-        CompletableFuture<RequestResult> response = mockOut("/pets-public/birthdate", SqlEntitiesSchemaEndPoint::new);
+    public void getParameterP2() throws ServletException, IOException, InterruptedException, ExecutionException {
+        CompletableFuture<RequestResult> response = mockOut("/pets-public/p2", SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_OK, requestResult.getStatus());
         assertEquals(
-                "{\"type\":\"DATE\",\"nullable\":true,\"description\":\"\",\"pk\":false}",
+                "{\"type\":\"BOOLEAN\",\"description\":null,\"mode\":\"In\"}",
                 requestResult.getBody());
     }
 
     @Test
     public void getAbsentCollection() throws ServletException, IOException, InterruptedException, ExecutionException {
-        CompletableFuture<RequestResult> response = mockOut("/absent-collection/87686", SqlEntitiesSchemaEndPoint::new);
+        CompletableFuture<RequestResult> response = mockOut("/absent-collection/87686", SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
         assertEquals(
@@ -91,7 +87,7 @@ public class SqlEntitiesSchemaEndPointTest extends SqlEntitiesEndPointTest {
 
     @Test
     public void getAbsentRootCollection() throws ServletException, IOException, InterruptedException, ExecutionException {
-        CompletableFuture<RequestResult> response = mockOut("/absent-collection", SqlEntitiesSchemaEndPoint::new);
+        CompletableFuture<RequestResult> response = mockOut("/absent-collection", SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
         assertEquals(
@@ -102,18 +98,18 @@ public class SqlEntitiesSchemaEndPointTest extends SqlEntitiesEndPointTest {
 
     @Test
     public void getFieldAbsent() throws ServletException, IOException, InterruptedException, ExecutionException {
-        CompletableFuture<RequestResult> response = mockOut("/pets-public/87686", SqlEntitiesSchemaEndPoint::new);
+        CompletableFuture<RequestResult> response = mockOut("/pets-public/87686", SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
         assertEquals(
-                "{\"description\":\"Collection 'pets-public' doesn't contain an instance with a key: field.name = 87686\"}",
+                "{\"description\":\"Collection 'pets-public' doesn't contain an instance with a key: parameter.name = 87686\"}",
                 requestResult.getBody()
         );
     }
 
     @Test
     public void post() throws ServletException, IOException, InterruptedException, ExecutionException {
-        CompletableFuture<RequestResult> response = mockInOut("/pets-public", "", METHOD_POST, SqlEntitiesSchemaEndPoint::new);
+        CompletableFuture<RequestResult> response = mockInOut("/pets-public", "", METHOD_POST, SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_METHOD_NOT_ALLOWED, requestResult.getStatus());
         assertEquals("{\"description\":\"Not implemented\"}", requestResult.getBody());
@@ -122,7 +118,7 @@ public class SqlEntitiesSchemaEndPointTest extends SqlEntitiesEndPointTest {
 
     @Test
     public void put() throws ServletException, IOException, InterruptedException, ExecutionException {
-        CompletableFuture<RequestResult> response = mockInOut("/pets-public", "", METHOD_PUT, SqlEntitiesSchemaEndPoint::new);
+        CompletableFuture<RequestResult> response = mockInOut("/pets-public", "", METHOD_PUT, SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_METHOD_NOT_ALLOWED, requestResult.getStatus());
         assertEquals("{\"description\":\"Not implemented\"}", requestResult.getBody());
@@ -131,7 +127,7 @@ public class SqlEntitiesSchemaEndPointTest extends SqlEntitiesEndPointTest {
 
     @Test
     public void delete() throws ServletException, IOException, InterruptedException, ExecutionException {
-        CompletableFuture<RequestResult> response = mockInOut("/pets-public", "", METHOD_DELETE, SqlEntitiesSchemaEndPoint::new);
+        CompletableFuture<RequestResult> response = mockInOut("/pets-public", "", METHOD_DELETE, SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_METHOD_NOT_ALLOWED, requestResult.getStatus());
         assertEquals("{\"description\":\"Not implemented\"}", requestResult.getBody());

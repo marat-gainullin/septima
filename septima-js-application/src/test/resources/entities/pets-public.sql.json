@@ -1,3 +1,11 @@
 {
-  "public": true
+  "public": true,
+  "parameters": {
+    "p1": {
+      "type": "Long"
+    },
+    "p2": {
+      "type": "Boolean"
+    }
+  }
 }

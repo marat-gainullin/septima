@@ -32,6 +32,9 @@ public class SqlEntitiesDataEndPoint extends SqlEntitiesEndPoint {
             AtomicInteger aliasSequence = new AtomicInteger();
             if (entities.exists(collectionRef)) {
                 onPublic(publicEntity -> onReadsAllowed(entity -> {
+                    if (entity.isCommand()) {
+                        throw new EndPointException("Entity '" + entity.getName() + "' is command entity. It can't be used as a collection");
+                    }
                     SqlQuery query = entities.loadQuery(entity.getName());
                     query.requestData(query.parseParameters(Answer.scalars(answer.getRequest().getParameterMap())))
                             .thenAccept(answer::withJsonArray)
@@ -44,6 +47,9 @@ public class SqlEntitiesDataEndPoint extends SqlEntitiesEndPoint {
                     String instanceKey = collectionRef.substring(lastSlashAt + 1);
                     try {
                         onPublic(publicEntity -> onReadsAllowed(entity -> {
+                            if (entity.isCommand()) {
+                                throw new EndPointException("Entity '" + entity.getName() + "' is command entity. It can't be used as a collection");
+                            }
                             SqlQuery query = entities.loadQuery(entity.getName());
                             EntityField pkField = query.getExpectedFields().values().stream()
                                     .filter(EntityField::isPk)
@@ -98,49 +104,45 @@ public class SqlEntitiesDataEndPoint extends SqlEntitiesEndPoint {
     @Override
     public void post(Answer answer) {
         onCollectionRef(collectionRef -> {
-            if (answer.getRequest().getContentType() != null && answer.getRequest().getContentType().toLowerCase().contains("json")) {
-                try {
-                    onPublic(publicEntity -> onWritesAllowed(entity -> {
-                        EntityActionsBinder binder = new EntityActionsBinder(entity);
-                        answer.onJsonObject()
-                                .thenApply(arrived -> {
-                                    EntityField pkField = entity.getFields().values().stream()
-                                            .filter(EntityField::isPk)
-                                            .findAny()
-                                            .orElseThrow(() -> new IllegalStateException("Entity '" + entity.getName() + "' has no a key field"));
-                                    Object key = arrived.get(pkField.getName());
-                                    if (key == null) {
-                                        if (GenericType.LONG == pkField.getType()) {
-                                            arrived.put(pkField.getName(), Id.nextExtended());
-                                        } else if (GenericType.DOUBLE == pkField.getType()) {
-                                            arrived.put(pkField.getName(), Id.next());
-                                        } else if (GenericType.STRING == pkField.getType()) {
-                                            arrived.put(pkField.getName(), "" + Id.nextExtended());
-                                        } else if (GenericType.DATE == pkField.getType()) {
-                                            arrived.put(pkField.getName(), Id.nextExtended());
-                                        } else {
-                                            throw new EndPointException("Can't generate a key automatically for the type '" + pkField.getType().toString() + "' for instance of collection '" + entity.getName() + "'");
-                                        }
+            try {
+                onPublic(publicEntity -> onWritesAllowed(entity -> {
+                    EntityActionsBinder binder = new EntityActionsBinder(entity);
+                    answer.onJsonObject()
+                            .thenApply(arrived -> {
+                                EntityField pkField = entity.getFields().values().stream()
+                                        .filter(EntityField::isPk)
+                                        .findAny()
+                                        .orElseThrow(() -> new IllegalStateException("Entity '" + entity.getName() + "' has no a key field"));
+                                Object key = arrived.get(pkField.getName());
+                                if (key == null) {
+                                    if (GenericType.LONG == pkField.getType()) {
+                                        arrived.put(pkField.getName(), Id.nextExtended());
+                                    } else if (GenericType.DOUBLE == pkField.getType()) {
+                                        arrived.put(pkField.getName(), Id.next());
+                                    } else if (GenericType.STRING == pkField.getType()) {
+                                        arrived.put(pkField.getName(), "" + Id.nextExtended());
+                                    } else if (GenericType.DATE == pkField.getType()) {
+                                        arrived.put(pkField.getName(), Id.nextExtended());
+                                    } else {
+                                        throw new EndPointException("Can't generate a key automatically for the type '" + pkField.getType().toString() + "' for instance of collection '" + entity.getName() + "'");
                                     }
-                                    reviveDates(arrived, fieldsTypes(entity));
-                                    InstanceAdd action = new InstanceAdd(entity.getName(), arrived);
-                                    action.accept(binder);
-                                    return entity.getDatabase().commit(binder.getLogEntries())
-                                            .thenApply(affected -> arrived.get(pkField.getName()));
-                                })
-                                .thenCompose(Function.identity())
-                                .thenAccept(key -> answer.created("" + key))
-                                .exceptionally(answer::exceptionally);
-                    }, answer, publicEntity), answer, entities.loadEntity(collectionRef));
-                } catch (UncheckedIOException ex) {
-                    if (ex.getCause() instanceof FileNotFoundException) {
-                        throw new NoCollectionException(collectionRef);
-                    } else {
-                        throw ex;
-                    }
+                                }
+                                reviveDates(arrived, fieldsTypes(entity));
+                                InstanceAdd action = new InstanceAdd(entity.getName(), arrived);
+                                action.accept(binder);
+                                return entity.getDatabase().commit(binder.getLogEntries())
+                                        .thenApply(affected -> arrived.get(pkField.getName()));
+                            })
+                            .thenCompose(Function.identity())
+                            .thenAccept(key -> answer.created("" + key))
+                            .exceptionally(answer::exceptionally);
+                }, answer, publicEntity), answer, entities.loadEntity(collectionRef));
+            } catch (UncheckedIOException ex) {
+                if (ex.getCause() instanceof FileNotFoundException) {
+                    throw new NoCollectionException(collectionRef);
+                } else {
+                    throw ex;
                 }
-            } else {
-                answer.erroneous("Instance creation requires a json body.");
             }
         }, answer);
     }
@@ -148,58 +150,54 @@ public class SqlEntitiesDataEndPoint extends SqlEntitiesEndPoint {
     @Override
     public void put(Answer answer) {
         onCollectionRef(instanceRef -> {
-            if (answer.getRequest().getContentType().toLowerCase().contains("json")) {
-                int lastSlashAt = instanceRef.lastIndexOf('/');
-                if (lastSlashAt > 0 && lastSlashAt < instanceRef.length() - 1) {
-                    String collectionRef = instanceRef.substring(0, lastSlashAt);
-                    String instanceKey = instanceRef.substring(lastSlashAt + 1);
-                    try {
-                        onPublic(publicEntity -> onWritesAllowed(entity -> {
-                            EntityField pkField = entity.getFields().values().stream()
-                                    .filter(EntityField::isPk)
-                                    .findAny()
-                                    .orElseThrow(() -> new IllegalStateException("Entity '" + entity.getName() + "' has no a key field"));
-                            EntityActionsBinder binder = new EntityActionsBinder(entity);
-                            answer.onJsonObject()
-                                    .thenApply(arrived -> {
-                                        try {
-                                            Object parsedKey = GenericType.parseValue(instanceKey, pkField.getType());
-                                            reviveDates(arrived, fieldsTypes(entity));
-                                            InstanceChange action = new InstanceChange(entity.getName(), Map.of(pkField.getName(), parsedKey), arrived);
-                                            action.accept(binder);
-                                            return entity.getDatabase().commit(binder.getLogEntries());
-                                        } catch (IllegalStateException ex) {
-                                            if (ex.getCause() instanceof ParseException) {
-                                                throw new NoInstanceException(entity.getName(), pkField.getName(), instanceKey);
-                                            } else {
-                                                throw ex;
-                                            }
-                                        } catch (NumberFormatException ex) {
+            int lastSlashAt = instanceRef.lastIndexOf('/');
+            if (lastSlashAt > 0 && lastSlashAt < instanceRef.length() - 1) {
+                String collectionRef = instanceRef.substring(0, lastSlashAt);
+                String instanceKey = instanceRef.substring(lastSlashAt + 1);
+                try {
+                    onPublic(publicEntity -> onWritesAllowed(entity -> {
+                        EntityField pkField = entity.getFields().values().stream()
+                                .filter(EntityField::isPk)
+                                .findAny()
+                                .orElseThrow(() -> new IllegalStateException("Entity '" + entity.getName() + "' has no a key field"));
+                        EntityActionsBinder binder = new EntityActionsBinder(entity);
+                        answer.onJsonObject()
+                                .thenApply(arrived -> {
+                                    try {
+                                        Object parsedKey = GenericType.parseValue(instanceKey, pkField.getType());
+                                        reviveDates(arrived, fieldsTypes(entity));
+                                        InstanceChange action = new InstanceChange(entity.getName(), Map.of(pkField.getName(), parsedKey), arrived);
+                                        action.accept(binder);
+                                        return entity.getDatabase().commit(binder.getLogEntries());
+                                    } catch (IllegalStateException ex) {
+                                        if (ex.getCause() instanceof ParseException) {
                                             throw new NoInstanceException(entity.getName(), pkField.getName(), instanceKey);
-                                        }
-                                    })
-                                    .thenCompose(Function.identity())
-                                    .thenAccept(updated -> {
-                                        if (updated > 0) {
-                                            answer.ok();
                                         } else {
-                                            throw new NoInstanceException(entity.getName(), pkField.getName(), instanceKey);
+                                            throw ex;
                                         }
-                                    })
-                                    .exceptionally(answer::exceptionally);
-                        }, answer, publicEntity), answer, entities.loadEntity(collectionRef));
-                    } catch (UncheckedIOException aex) {
-                        if (aex.getCause() instanceof FileNotFoundException) {
-                            throw new NoCollectionException(collectionRef);
-                        } else {
-                            throw aex;
-                        }
+                                    } catch (NumberFormatException ex) {
+                                        throw new NoInstanceException(entity.getName(), pkField.getName(), instanceKey);
+                                    }
+                                })
+                                .thenCompose(Function.identity())
+                                .thenAccept(updated -> {
+                                    if (updated > 0) {
+                                        answer.ok();
+                                    } else {
+                                        throw new NoInstanceException(entity.getName(), pkField.getName(), instanceKey);
+                                    }
+                                })
+                                .exceptionally(answer::exceptionally);
+                    }, answer, publicEntity), answer, entities.loadEntity(collectionRef));
+                } catch (UncheckedIOException aex) {
+                    if (aex.getCause() instanceof FileNotFoundException) {
+                        throw new NoCollectionException(collectionRef);
+                    } else {
+                        throw aex;
                     }
-                } else {
-                    throw new InvalidRequestException("Can't update whole collection: '" + instanceRef + "'. Update of a whole collection is not supported");
                 }
             } else {
-                answer.erroneous("Instance creation requires a json body.");
+                throw new InvalidRequestException("Can't update whole collection: '" + instanceRef + "'. Update of a whole collection is not supported");
             }
         }, answer);
     }

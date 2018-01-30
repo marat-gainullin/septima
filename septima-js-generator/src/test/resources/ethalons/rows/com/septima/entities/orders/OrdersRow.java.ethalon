@@ -4,7 +4,6 @@
  */
 package com.septima.entities.orders;
 
-import java.io.Serializable;
 import com.septima.model.Observable;
 import java.util.Date;
 

@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 public class Answer {
 
     private static final String JSON_CONTENT_TYPE = "application/json;charset=utf-8";
+    private static final String JSON_CONTENT_TYPE_REQUIRED = "Request is expected to have a json body, i.e. content type should be '" + JSON_CONTENT_TYPE + "'";
     private static final ObjectWriter JSON_WRITER = new ObjectMapper()
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             .writer();
@@ -156,25 +157,33 @@ public class Answer {
     }
 
     public CompletableFuture<List<Map<String, Object>>> onJsonArray() {
-        return input()
-                .thenApply(data -> {
-                    try {
-                        return JSON_ARRAY_READER.readValue(data);
-                    } catch (IOException ex) {
-                        throw new UncheckedIOException(ex);
-                    }
-                });
+        if (request.getContentType() != null && JSON_CONTENT_TYPE.equalsIgnoreCase(request.getContentType())) {
+            return input()
+                    .thenApply(data -> {
+                        try {
+                            return JSON_ARRAY_READER.readValue(data);
+                        } catch (IOException ex) {
+                            throw new UncheckedIOException(ex);
+                        }
+                    });
+        } else {
+            throw new InvalidRequestException(JSON_CONTENT_TYPE_REQUIRED);
+        }
     }
 
     public CompletableFuture<Map<String, Object>> onJsonObject() {
-        return input()
-                .thenApply(data -> {
-                    try {
-                        return JSON_OBJECT_READER.readValue(data);
-                    } catch (IOException ex) {
-                        throw new UncheckedIOException(ex);
-                    }
-                });
+        if (request.getContentType() != null && JSON_CONTENT_TYPE.equalsIgnoreCase(request.getContentType())) {
+            return input()
+                    .thenApply(data -> {
+                        try {
+                            return JSON_OBJECT_READER.readValue(data);
+                        } catch (IOException ex) {
+                            throw new UncheckedIOException(ex);
+                        }
+                    });
+        } else {
+            throw new InvalidRequestException(JSON_CONTENT_TYPE_REQUIRED);
+        }
     }
 
     public CompletableFuture<byte[]> input() {

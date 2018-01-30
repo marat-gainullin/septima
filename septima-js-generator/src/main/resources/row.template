@@ -3,7 +3,6 @@
  * Please, don't edit it manually.
  */
 ${package}
-import java.io.Serializable;
 import com.septima.model.Observable;${dateImport}
 
 public class ${entityBaseClass} extends Observable {

@@ -1,11 +1,9 @@
 package com.septima.application.endpoint;
 
 import com.septima.GenericType;
-import com.septima.application.exceptions.EndPointException;
 import com.septima.application.exceptions.NoCollectionException;
 import com.septima.application.exceptions.NoInstanceException;
-import com.septima.metadata.EntityField;
-import com.septima.metadata.Field;
+import com.septima.metadata.Parameter;
 
 import java.io.FileNotFoundException;
 import java.io.UncheckedIOException;
@@ -14,14 +12,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class SqlEntitiesSchemaEndPoint extends SqlEntitiesEndPoint {
+public class SqlEntitiesParametersEndPoint extends SqlEntitiesEndPoint {
 
-    private Map<String, Object> fromField(EntityField aField) {
+    private Map<String, Object> fromParameter(Parameter aParameter) {
         Map<String, Object> properties = new LinkedHashMap<>();
-        properties.put("type", aField.getType() != null ? aField.getType() : GenericType.STRING);
-        properties.put("nullable", aField.isNullable());
-        properties.put("description", aField.getDescription());
-        properties.put("pk", aField.isPk());
+        properties.put("type", aParameter.getType() != null ? aParameter.getType() : GenericType.STRING);
+        properties.put("description", aParameter.getDescription());
+        properties.put("mode", aParameter.getMode());
         return properties;
     }
 
@@ -30,13 +27,10 @@ public class SqlEntitiesSchemaEndPoint extends SqlEntitiesEndPoint {
         onCollectionRef(entityRef -> {
             if (entities.exists(entityRef)) {
                 onPublic(publicEntity -> onReadsAllowed(entity -> {
-                    if(entity.isCommand()){
-                        throw new EndPointException("Entity '" + entity.getName() + "' is command entity. It can't be used as a collection");
-                    }
                     answer.withJsonObject(
-                            entity.getFields().values().stream()
-                                    .sorted(Comparator.comparing(Field::getName))
-                                    .collect(Collectors.toMap(EntityField::getName, this::fromField))
+                            entity.getParameters().values().stream()
+                                    .sorted(Comparator.comparing(Parameter::getName))
+                                    .collect(Collectors.toMap(Parameter::getName, this::fromParameter))
                     );
                 }, answer, publicEntity), answer, entities.loadEntity(entityRef));
             } else {
@@ -46,13 +40,10 @@ public class SqlEntitiesSchemaEndPoint extends SqlEntitiesEndPoint {
                     String fieldName = entityRef.substring(lastSlashAt + 1);
                     try {
                         onPublic(publicEntity -> onReadsAllowed(entity -> {
-                            if(entity.isCommand()){
-                                throw new EndPointException("Entity '" + entity.getName() + "' is command entity. It can't be used as a collection");
-                            }
-                            if (entity.getFields().containsKey(fieldName)) {
-                                answer.withJsonObject(fromField(entity.getFields().get(fieldName)));
+                            if (entity.getParameters().containsKey(fieldName)) {
+                                answer.withJsonObject(fromParameter(entity.getParameters().get(fieldName)));
                             } else {
-                                throw new NoInstanceException(anotherEntityRef, "field.name", fieldName);
+                                throw new NoInstanceException(anotherEntityRef, "parameter.name", fieldName);
                             }
                         }, answer, publicEntity), answer, entities.loadEntity(anotherEntityRef));
                     } catch (UncheckedIOException aex) {

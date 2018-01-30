@@ -4,7 +4,6 @@
  */
 package com.septima.entities.customers;
 
-import java.io.Serializable;
 import com.septima.model.Observable;
 
 public class CustomersRow extends Observable {
