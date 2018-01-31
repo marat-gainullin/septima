@@ -11,16 +11,16 @@ In general, two programming languages are used while developing Septima applicat
 * Sql for constructing of Sql entities.
 
 ## Features
-    * Septima is fully asynchronous.
-    * Servlet 3.1 is supported while request reading, processing and response writing.
-    * Java 9 `java.util.concurrent.Flow` execution scopes for session driven logic and for stateless logic.
-    * Role based security supported out of the box.
-    * True Sql queries reuse.
-    * Sql entities ORM-like data model.
-    * Automatic mapping without any configuration.
-    * No annotations on domain classes.
-    * No reflection at runtime as well as at design time.
-    * Automatic and secure REST endpoints for publishing of Sql entities' data.
+* Septima is fully asynchronous.
+* Servlet 3.1 is supported while request reading, processing and response writing.
+* Java 9 `java.util.concurrent.Flow` execution scopes for session driven logic and for stateless logic.
+* Role based security supported out of the box.
+* True Sql queries reuse.
+* Sql entities ORM-like data model.
+* Automatic mapping without any configuration.
+* No annotations on domain classes.
+* No reflection at runtime as well as at design time.
+* Automatic and secure REST endpoints for publishing of Sql entities' data.
 
 ## Sql queries reuse
 Imagine, you have a file `untyped-pets.sql` with sql query like this:
