@@ -26,7 +26,7 @@ alter table public.pets add constraint public.pets_pk primary key(pets_id);
 -- 3 +/- SELECT COUNT(*) FROM PUBLIC.PETS;
 insert into pets(pets_id, owner_id, type_id, name, birthDate) values
 (142841880961396, 142841788496711, 142841300122653, 'Druzhok', NULL),
-(142841883974964, 142841834950629, 142841300155478, 'Vasya', TIMESTAMP '2015-04-29 00:00:00.0'),
+(142841883974964, 142841834950629, 142841300155478, 'Vasya', parsedatetime('2015-04-29 00:00:00.0', 'yyyy-MM-dd HH:mm:ss.SSS', 'en', 'GMT+3')),
 (143059430815590, 142841788496711, 142850046716850, 'Tom', NULL),
 (143059430815594, 142841788496711, 142850046716850, 'Pik', NULL);
 CREATE TABLE petsSnapshot(
@@ -40,7 +40,7 @@ alter table petsSnapshot add constraint public.petsSnapshot_pk primary key(pets_
 -- 3 +/- select count(*) from public.pets;
 insert into petsSnapshot(pets_id, owner_id, type_id, name, birthdate) values
 (142841880961396, 142841788496711, 142841300122653, 'Druzhok', null),
-(142841883974964, 142841834950629, 142841300155478, 'Vasya', timestamp '2015-04-29 00:00:00.0'),
+(142841883974964, 142841834950629, 142841300155478, 'Vasya', parsedatetime('2015-04-29 00:00:00.0', 'yyyy-MM-dd HH:mm:ss.SSS', 'en', 'GMT+3')),
 (143059430815594, 142841788496711, 142850046716850, 'Pik', null);
 
 create table petTypes(

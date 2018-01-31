@@ -25,9 +25,3 @@ task coverage() {
     }
 }
 coverage.dependsOn jacocoTestReport
-
-test {
-    testLogging {
-        showStandardStreams = true
-    }
-}
