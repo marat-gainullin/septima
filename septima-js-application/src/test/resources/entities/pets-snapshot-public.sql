@@ -1,1 +1,1 @@
-select * from petsSnapshot
+select * from petsSnapshot order by pets_id
