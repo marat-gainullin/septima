@@ -1,4 +1,4 @@
-# Septima Java & Script
+# Septima Java & Sql
 
 [![Build Status](https://travis-ci.org/marat-gainullin/septima.svg?branch=master)](https://travis-ci.org/marat-gainullin/septima)
 
