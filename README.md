@@ -20,7 +20,7 @@ In general, two programming languages are used while developing Septima applicat
     * Automatic mapping without any configuration.
     * No annotations on domain classes.
     * No reflection at runtime as well as at design time.
-    * Automatic *secure* REST endpoints for publishing of Sql entities' data.
+    * Automatic **secure** REST endpoints for publishing of Sql entities' data.
 
 ## Sql queries reuse
 Imagine, you have a file `untyped-pets.sql` with sql query like this:
