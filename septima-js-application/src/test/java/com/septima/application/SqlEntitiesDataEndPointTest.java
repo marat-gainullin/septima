@@ -61,6 +61,7 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockOut("/pets-snapshot-public", SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_OK, requestResult.getStatus());
+        System.out.println("getPetsPublic: \n" + requestResult.getBody());
         assertEquals("[" +
                 "{\"birthdate\":null,\"owner_id\":1.42841788496711E14,\"type_id\":1.42841300122653E14,\"name\":\"Druzhok\",\"pets_id\":1.42841880961396E14}," +
                 "{\"birthdate\":\"2015-04-28T21:00:00.000+0000\",\"owner_id\":1.42841834950629E14,\"type_id\":1.42841300155478E14,\"name\":\"Vasya\",\"pets_id\":1.42841883974964E14}," +
@@ -78,6 +79,7 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         ));
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_OK, requestResult.getStatus());
+        System.out.println("getPetsPublicWithParameters: \n" + requestResult.getBody());
         assertEquals("[" +
                 "{\"birthdate\":\"2015-04-28T21:00:00.000+0000\",\"owner_id\":1.42841834950629E14,\"type_id\":1.42841300155478E14,\"name\":\"Vasya\",\"pets_id\":1.42841883974964E14}" +
                 "]", requestResult.getBody());
