@@ -41,12 +41,8 @@
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
     "watchify": "^3.9.0",
-    "yargs": "^9.0.1"
+    "yargs": "^9.0.1",
+    "winnie": "^0.1.4"
   },
-  "dependencies": {
-    "kenga": "^0.0.24",
-    "kenga-containers": "^0.0.12",
-    "kenga-fields": "^0.0.12",
-    "septima-utils": "^0.0.4"
-  }
+  "dependencies": {}
 }

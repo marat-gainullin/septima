@@ -265,7 +265,7 @@ task tomcatCommand(type: JavaExec) {
     classpath fileTree(tomcatBinDir)
     main 'org.apache.catalina.startup.Bootstrap'
     jvmArgs '-Xdebug',
-            "-Xrunjdwp:server=y,transport=dt_socket,address=${privateProps['tomcat.debug.port']},suspend=y",
+            "-Xrunjdwp:server=y,transport=dt_socket,address=${privateProps['tomcat.debug.port']},suspend=n",
             "-Djava.util.logging.config.file=${file(tomcatDir)}/conf/logging.properties"
 }
 
@@ -471,3 +471,5 @@ war {
 
 warExplode.dependsOn gulp_bundle
 war.dependsOn gulp_bundle
+
+clean.dependsOn gulp_clean

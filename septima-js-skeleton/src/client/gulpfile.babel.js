@@ -2,7 +2,6 @@ import gulp from 'gulp';
 
 import yargs from 'yargs';
 import gulpUtil from 'gulp-util';
-import gulpDebug from 'gulp-debug';
 import through from 'through2';
 import Path from 'path';
 import Capitalize from 'capitalize';
@@ -18,8 +17,9 @@ import vinylStream from 'vinyl-source-stream';
 import vinylBuffer from 'vinyl-buffer';
 import uglify from 'gulp-uglify';
 import sourcemaps from 'gulp-sourcemaps';
-import { sync as dataURI } from 'datauri';
+import {sync as dataURI} from 'datauri';
 import gulpOpen from 'gulp-open';
+import Id from 'septima-utils/id';
 
 const pkg = require('./package.json');
 
@@ -46,32 +46,32 @@ const masks = {
 
 // Delete the build directory
 gulp.task('clean', () => gulp.src(paths.build)
-            .pipe(clean()));
+    .pipe(clean()));
 
 // Lint JS
 gulp.task('jshint', () => {
     return gulp.src(masks.scripts, {cwd: paths.src})
-            .pipe(jshint())
-            .pipe(jshint.reporter('default'));
+        .pipe(jshint())
+        .pipe(jshint.reporter('default'));
 });
 
 // Process scripts
 gulp.task('babel', ['clean'], () => gulp.src(masks.scripts, {cwd: paths.src})
-            .pipe(babel({
-                presets: ['env']
-            }))
-            .pipe(gulp.dest(paths.lib)));
+    .pipe(babel({
+        presets: ['env']
+    }))
+    .pipe(gulp.dest(paths.lib)));
 
 gulp.task('code', ['jshint', 'babel'], () => {
 });
 gulp.task('assets', ['clean'], () => gulp.src([
-        masks.styles,
-        masks.eots,
-        masks.svgs,
-        masks.ttfs,
-        masks.woffs
-    ], {cwd: paths.src})
-            .pipe(gulp.dest(paths.lib)));
+    masks.styles,
+    masks.eots,
+    masks.svgs,
+    masks.ttfs,
+    masks.woffs
+], {cwd: paths.src})
+    .pipe(gulp.dest(paths.lib)));
 
 function indexFrom(base, moduleRefPrefix = '.') {
     const stream = through.obj((file, encoding, complete) => {
@@ -87,32 +87,36 @@ function indexFrom(base, moduleRefPrefix = '.') {
     return stream;
 }
 
-function importsToIndex(imports) {
-    const importStmts = imports.map((item) => {
-        return `import '${item}'`;
-    });
+function toIndex(extraContent) {
     const stream = through.obj((file, encoding, complete) => {
         if (file.isBuffer()) {
             const content = file.contents.toString(encoding);
-            file.contents = Buffer.from(importStmts.join(';\n') + ';\n' + content, encoding);
+            file.contents = Buffer.from(content + extraContent, encoding);
             stream.push(file);
             complete();
         } else {
-            stream.emit('error', new PluginError('imports-to-index', 'Only buffers are supported!'));
+            stream.emit('error', new PluginError('to-index', 'Only buffers are supported!'));
             return complete();
         }
     });
     return stream;
 }
 
+function importsToIndex(imports) {
+    const importStmts = imports.map((item) => {
+        return `import '${item}';\n`;
+    });
+    return toIndex('\n' + importStmts.join(''));
+}
+
 gulp.task('index', ['clean'], () => {
     return gulp.src([masks.scripts], {cwd: paths.src})
-            .pipe(indexFrom(process.cwd() + '/' + paths.src))
-            .pipe(gulpConcat(pkg.main))
-            .pipe(babel({
-                presets: ['env']
-            }))
-            .pipe(gulp.dest(paths.lib));
+        .pipe(indexFrom(process.cwd() + '/' + paths.src))
+        .pipe(gulpConcat(pkg.main))
+        .pipe(babel({
+            presets: ['env']
+        }))
+        .pipe(gulp.dest(paths.lib));
 });
 
 function filterPackageJson() {
@@ -131,9 +135,9 @@ function filterPackageJson() {
 
 // Copy all package related files to lib directory
 gulp.task('package', ['index'], () => gulp.src([
-        'LICENSE', 'package.json'], {cwd: paths.project})
-            .pipe(filterPackageJson(pkg))
-            .pipe(gulp.dest(paths.lib)));
+    'LICENSE', 'package.json'], {cwd: paths.project})
+    .pipe(filterPackageJson(pkg))
+    .pipe(gulp.dest(paths.lib)));
 gulp.task('lib', ['code', 'assets', 'package'], () => {
 });
 
@@ -145,15 +149,29 @@ gulp.task('bundle-icons', ['clean'], () => {
         '**/*.ttf',
         '**/*.eot'
     ], {cwd: `${paths.src}icons`})
-            .pipe(gulp.dest(`${paths.bundle}icons`));
+        .pipe(gulp.dest(`${paths.bundle}icons`));
+});
+
+gulp.task('bundle-winnie-icons', ['clean'], () => {
+    return gulp.src([
+        '**/*.svg',
+        '**/*.woff',
+        '**/*.woff2',
+        '**/*.ttf',
+        '**/*.eot'
+    ], {cwd: `${paths.project}node_modules/winnie/icons/font`})
+        .pipe(gulpif(argv.design, gulp.dest(`${paths.bundle}../node_modules/winnie/icons/font`)));
 });
 
 gulp.task('bundle-index', ['clean'], () => {
     return gulp.src([masks.scripts], {cwd: paths.src})
-            .pipe(indexFrom(process.cwd() + '/' + paths.src, '../src/'))
-            .pipe(gulpConcat(`bundle-${pkg.main}`))
-            .pipe(importsToIndex(['../src/layout.css', '../src/theme.css']))
-            .pipe(gulp.dest(paths.build));
+        .pipe(indexFrom(process.cwd() + '/' + paths.src, '../src/'))
+        .pipe(gulpConcat(`bundle-${pkg.main}`))
+        .pipe(importsToIndex(['../src/layout.css', '../src/theme.css']))
+        .pipe(gulpif(argv.design, importsToIndex(['../design/layout.css', '../design/theme.css'])))
+        .pipe(gulpif(argv.design, toIndex("import winnie from '../design/winnie.js';\n" +
+            "winnie(require);")))
+        .pipe(gulp.dest(paths.build));
 });
 
 function content(name, value) {
@@ -172,61 +190,74 @@ function content(name, value) {
     return stream;
 }
 
-gulp.task('bundle-html', ['clean'], () => {
-    content(`${pkg.name}.html`, `<!DOCTYPE html>
+function htmlContent(id, title = `${pkg.name.substring(0, 1).toUpperCase() + pkg.name.substring(1)} demo page`) {
+    return `<!DOCTYPE html>
 <html>
     <head>
-        <title>${pkg.name.substring(0, 1).toUpperCase() + pkg.name.substring(1)} demo page</title>
+        <title>${title}</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
-    <body style="position: absolute; left: 0px; right: 0px; top: 0px; bottom: 0px; margin: 0px;">
+    <body id= "${id}" class="spa-view" >
         <script type="text/javascript" src="${pkg.name}.js"></script>
     </body>
-</html>`).pipe(gulp.dest(paths.bundle));
+</html>`;
+}
+
+gulp.task('bundle-html', ['clean'], () => {
+    content('index.html', htmlContent('main')).pipe(gulp.dest(paths.bundle));
+    content('protected.html', htmlContent('main')).pipe(gulp.dest(paths.bundle));
+    content('login.html', htmlContent('login')).pipe(gulp.dest(paths.bundle));
+});
+
+gulp.task('design-html', [], () => {
+    return content(`design-${argv.module.replace(/[\/\\]+/g, '_')}.html`, htmlContent(`../src/${argv.module}`, argv.module)).pipe(gulp.dest(paths.bundle));
 });
 
 function watchifyIf(bundler) {
     return !!argv.watch ? watchify(bundler) : bundler;
 }
+
 const bundler = watchifyIf(browserify(`${paths.build}bundle-${pkg.main}`,
-        {
-            debug: !!argv.dev // source map generation
-        }))
-        .transform('babelify', {
-            presets: 'env'
-        })
-        .transform('browserify-css', {
-            rootDir: `${paths.src}`,
-            minify: true,
-            inlineImages: true
-                    /*
-                     ,
-                     processRelativeUrl: (url) => {
-                     const left = url.split('#')[0].split('?')[0];
-                     const right = url.substring(left.length, url.length);
-                     return `${dataURI(`${paths.src}${left}`)}${right}`;
-                     }
-                     */
-        });
+    {
+        debug: !!argv.dev // source map generation
+    }))
+    .transform('babelify', {
+        presets: 'env'
+    })
+    .transform('browserify-css', {
+        rootDir: `${paths.src}`,
+        minify: true,
+        inlineImages: true
+        /*
+         ,
+         processRelativeUrl: (url) => {
+         const left = url.split('#')[0].split('?')[0];
+         const right = url.substring(left.length, url.length);
+         return `${dataURI(`${paths.src}${left}`)}${right}`;
+         }
+         */
+    });
+
 function bundle() {
     return bundler.bundle()
-            .pipe(vinylStream(`${pkg.name}.js`))
-            .pipe(vinylBuffer())
-            .pipe(gulpif(!!argv.dev, sourcemaps.init({loadMaps: true})))
-            .pipe(gulpif(!!!argv.dev, uglify()))
-            .pipe(gulpif(!!argv.dev, sourcemaps.write('.')))
-            .pipe(gulp.dest(paths.bundle));
+        .pipe(vinylStream(`${pkg.name}.js`))
+        .pipe(vinylBuffer())
+        .pipe(gulpif(!!argv.dev, sourcemaps.init({loadMaps: true})))
+        .pipe(gulpif(!!!argv.dev, uglify()))
+        .pipe(gulpif(!!argv.dev, sourcemaps.write('.')))
+        .pipe(gulp.dest(paths.bundle));
 }
+
 bundler.on('update', bundle);
 bundler.on('log', gulpUtil.log);
 
-gulp.task('bundle', ['bundle-index', 'bundle-html', 'bundle-icons'], bundle);
+gulp.task('bundle', ['bundle-index', 'bundle-html', 'bundle-icons', 'bundle-winnie-icons'], bundle);
 
-gulp.task('launch', ['bundle'], () => {
-    return gulp.src(`${paths.bundle}${pkg.name}.html`, {cwd: paths.project})
-            .pipe(gulpOpen());
+gulp.task('design', ['design-html'], () => {
+    return gulp.src(`${paths.bundle}design-${argv.module.replace(/[\/\\]+/g, '_')}.html`, {cwd: paths.project})
+        .pipe(gulpOpen());
 });
 
 // Define the default task as a sequence of the above tasks
-gulp.task('default', ['lib']);
+gulp.task('default', ['bundle']);

@@ -31,6 +31,10 @@ public class Answer {
     private static final ObjectWriter JSON_WRITER = new ObjectMapper()
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             .writer();
+    private static final ObjectReader JSON_VALUE_READER = new ObjectMapper()
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .reader()
+            .forType(Object.class);
     private static final ObjectReader JSON_OBJECT_READER = new ObjectMapper()
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             .reader()
@@ -177,6 +181,21 @@ public class Answer {
                     .thenApply(data -> {
                         try {
                             return JSON_OBJECT_READER.readValue(data);
+                        } catch (IOException ex) {
+                            throw new UncheckedIOException(ex);
+                        }
+                    });
+        } else {
+            throw new InvalidRequestException(JSON_CONTENT_TYPE_REQUIRED);
+        }
+    }
+
+    public CompletableFuture<Object> onJsonValue() {
+        if (request.getContentType() != null && JSON_CONTENT_TYPE.equalsIgnoreCase(request.getContentType())) {
+            return input()
+                    .thenApply(data -> {
+                        try {
+                            return JSON_VALUE_READER.readValue(data);
                         } catch (IOException ex) {
                             throw new UncheckedIOException(ex);
                         }

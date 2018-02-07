@@ -1,3 +1,5 @@
+package com.tl.points;
+
 import com.septima.application.endpoint.SqlEntitiesDataEndPoint;
 
 import javax.servlet.annotation.WebServlet;
