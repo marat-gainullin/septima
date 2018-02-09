@@ -1,0 +1,38 @@
+<idea-plugin>
+  <id>com.kengajs.winnie.actions</id>
+  <name>Winnie actions</name>
+  <version>0.1</version>
+  <vendor email="marat.gainullin.iv@gmail.com" url="http://septimajs.com">Bear-Soft</vendor>
+
+  <description><![CDATA[
+      Winnie designer actions.<br>
+      <em></em>
+    ]]></description>
+
+  <change-notes><![CDATA[
+      Added 'Open as Winnie view' action<br>
+      <em></em>
+    ]]>
+  </change-notes>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
+  <idea-version since-build="173.0"/>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+       on how to target different products -->
+  <depends>com.intellij.modules.lang</depends>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <!-- Add your extensions here -->
+  </extensions>
+
+  <actions>
+    <!-- Add your actions here -->
+    <action id="open-as-winnie-view" class="com.kengajs.winnie.OpenAsWinnieViewAction" text="Open as Winnie view"
+            description="Opens a JavaScript file as an editable Winnie view">
+      <add-to-group group-id="EditMenu" relative-to-action="CutCopyPasteGroup" anchor="before"/>
+      <add-to-group group-id="ProjectViewPopupMenu" relative-to-action="CutCopyPasteGroup" anchor="before"/>
+    </action>
+  </actions>
+
+</idea-plugin>
