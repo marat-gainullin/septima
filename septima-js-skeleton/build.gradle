@@ -1,9 +1,9 @@
 import com.septima.entities.SqlEntities
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 
 import javax.naming.Context
 import javax.naming.InitialContext
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
 
 System.setProperty(Context.INITIAL_CONTEXT_FACTORY, Jndi.class.getName())
 
@@ -460,16 +460,52 @@ gulp {
 }
 
 gulp_clean.dependsOn 'installGulp', 'npmInstall'
+
+task gulp_bundle_dev(type: GulpTask) {
+    args = ['bundle', '--design', '--dev']
+}
+
+gulp_bundle_dev.dependsOn 'installGulp', 'npmInstall'
+gulp_bundle_dev.inputs.file 'src/client/package.json'
+gulp_bundle_dev.inputs.dir 'src/client/src'
+gulp_bundle_dev.inputs.dir 'src/client/design'
+gulp_bundle_dev.outputs.dir 'src/client/build/bundle'
+
 gulp_bundle.dependsOn 'installGulp', 'npmInstall'
 gulp_bundle.inputs.dir 'src/client/src'
 gulp_bundle.outputs.dir 'src/client/build/bundle'
+
+task gulp_design_pages(type: GulpTask) {
+    doFirst {
+        if (!project.hasProperty('view')) {
+            throw new GradleException("Project property 'view' is required for design task")
+        }
+    }
+    args = ['design-page', '--view', project.hasProperty('view') ? project['view'] : '-', '--dest', '../design/']
+}
+
+gulp_design_pages.dependsOn gulp_bundle_dev
+
+task design() {
+    doLast {
+        java.awt.Desktop.desktop.browse new java.net.URL("$webAppUrl/design-${project['view'].replaceAll('/', '-')}.html").toURI()
+    }
+}
+
+task designPages(type: Copy) {
+    from 'src/client/build/design'
+    into "$tomcatDir/web-apps/${props['application.context']}"
+}
+designPages.dependsOn gulp_design_pages
+
+design.dependsOn warExplode, designPages
 
 war {
     from 'src/client/build/bundle'
     webXml = file('src/server/web.xml')
 }
 
-warExplode.dependsOn gulp_bundle
+warExplode.dependsOn gulp_bundle_dev
 war.dependsOn gulp_bundle
 
 clean.dependsOn gulp_clean

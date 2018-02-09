@@ -160,7 +160,7 @@ gulp.task('bundle-winnie-icons', ['clean'], () => {
         '**/*.ttf',
         '**/*.eot'
     ], {cwd: `${paths.project}node_modules/winnie/icons/font`})
-        .pipe(gulpif(argv.design, gulp.dest(`${paths.bundle}../node_modules/winnie/icons/font`)));
+        .pipe(gulpif(argv.design, gulp.dest(`${paths.bundle}winnie/icons/font`)));
 });
 
 gulp.task('bundle-index', ['clean'], () => {
@@ -190,7 +190,7 @@ function content(name, value) {
     return stream;
 }
 
-function htmlContent(id, title = `${pkg.name.substring(0, 1).toUpperCase() + pkg.name.substring(1)} demo page`) {
+function htmlPage(id, title = `${pkg.name.substring(0, 1).toUpperCase() + pkg.name.substring(1)} demo page`, classes = 'spa-view') {
     return `<!DOCTYPE html>
 <html>
     <head>
@@ -198,20 +198,16 @@ function htmlContent(id, title = `${pkg.name.substring(0, 1).toUpperCase() + pkg
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
-    <body id= "${id}" class="spa-view" >
-        <script type="text/javascript" src="${pkg.name}.js"></script>
+    <body id= "${id}" class=${classes}>
+        <script type="text/javascript" src=${pkg.name}.js></script>
     </body>
 </html>`;
 }
 
 gulp.task('bundle-html', ['clean'], () => {
-    content('index.html', htmlContent('main')).pipe(gulp.dest(paths.bundle));
-    content('protected.html', htmlContent('main')).pipe(gulp.dest(paths.bundle));
-    content('login.html', htmlContent('login')).pipe(gulp.dest(paths.bundle));
-});
-
-gulp.task('design-html', [], () => {
-    return content(`design-${argv.module.replace(/[\/\\]+/g, '_')}.html`, htmlContent(`../src/${argv.module}`, argv.module)).pipe(gulp.dest(paths.bundle));
+    content('index.html', htmlPage('main')).pipe(gulp.dest(paths.bundle));
+    content('protected.html', htmlPage('main')).pipe(gulp.dest(paths.bundle));
+    content('login.html', htmlPage('login')).pipe(gulp.dest(paths.bundle));
 });
 
 function watchifyIf(bundler) {
@@ -226,17 +222,13 @@ const bundler = watchifyIf(browserify(`${paths.build}bundle-${pkg.main}`,
         presets: 'env'
     })
     .transform('browserify-css', {
-        rootDir: `${paths.src}`,
+        rootDir: paths.src,
         minify: true,
-        inlineImages: true
-        /*
-         ,
-         processRelativeUrl: (url) => {
-         const left = url.split('#')[0].split('?')[0];
-         const right = url.substring(left.length, url.length);
-         return `${dataURI(`${paths.src}${left}`)}${right}`;
-         }
-         */
+        inlineImages: true,
+        processRelativeUrl: url => {
+            const libPrefix = '../node_modules/';
+            return url.replace(/\\/g, '/').startsWith(`${libPrefix}winnie`) ? url.substring(libPrefix.length) : url;
+        }
     });
 
 function bundle() {
@@ -254,10 +246,21 @@ bundler.on('log', gulpUtil.log);
 
 gulp.task('bundle', ['bundle-index', 'bundle-html', 'bundle-icons', 'bundle-winnie-icons'], bundle);
 
-gulp.task('design', ['design-html'], () => {
-    return gulp.src(`${paths.bundle}design-${argv.module.replace(/[\/\\]+/g, '_')}.html`, {cwd: paths.project})
-        .pipe(gulpOpen());
-});
-
 // Define the default task as a sequence of the above tasks
 gulp.task('default', ['bundle']);
+
+let designPage;
+gulp.task('design-page', [], () => {
+    if (argv.view) {
+        designPage = `design-${argv.view.replace(/[\/\\]+/g, '-')}.html`;
+        return content(designPage, htmlPage(`design://../src/${argv.view}`, argv.view, 'design-view'))
+            .pipe(gulp.dest(paths.bundle + (argv.dest ? argv.dest : '')));
+    } else {
+        throw '--view key is missing.';
+    }
+});
+
+gulp.task('design', ['design-page'], () => {
+    gulp.src([designPage], {cwd: paths.bundle})
+        .pipe(gulpOpen());
+});

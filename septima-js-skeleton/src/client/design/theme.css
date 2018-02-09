@@ -1,1 +1,9 @@
 @import 'node_modules/winnie/theme.css';
+
+.design-view {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+}

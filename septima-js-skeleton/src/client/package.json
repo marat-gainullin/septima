@@ -41,8 +41,10 @@
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
     "watchify": "^3.9.0",
-    "yargs": "^9.0.1",
-    "winnie": "^0.1.4"
+    "winnie": "0.1.8",
+    "yargs": "^9.0.1"
   },
-  "dependencies": {}
+  "dependencies": {
+    "septima-remote": "^0.0.7"
+  }
 }

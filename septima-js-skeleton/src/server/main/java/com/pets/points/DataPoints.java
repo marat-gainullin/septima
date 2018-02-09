@@ -1,4 +1,4 @@
-package com.tl.points;
+package com.pets.points;
 
 import com.septima.application.endpoint.SqlEntitiesDataEndPoint;
 

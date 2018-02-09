@@ -1,6 +1,7 @@
 import Button from 'kenga-buttons/button';
 import AnchorsPane from 'kenga-containers/anchors-pane';
 import Label from 'kenga-labels/label';
+import ModelRadioButton from 'kenga-model-buttons/model-radio-button';
 
 class KengaWidgets {
     constructor () {
@@ -16,6 +17,8 @@ class KengaWidgets {
         this.alreadyRegistered = alreadyRegistered;
         const signIn = new Label();
         this.signIn = signIn;
+        const radioButton = new ModelRadioButton();
+        this.radioButton = radioButton;
         surface.add(logo);
         surface.add(continueWithFacebook);
         surface.add(registerByEmail);
@@ -55,9 +58,14 @@ class KengaWidgets {
         }
         {
             signIn.text = 'Sign in here';
+            signIn.classes = 'a-label-active';
+            signIn.element.className += ' ' + signIn.classes;
             signIn.element.style.left = '60px';
             signIn.element.style.top = '340px';
             signIn.element.style.height = '20px';
+        }
+        {
+            radioButton.text = 'radioButton';
         }
     }
 }

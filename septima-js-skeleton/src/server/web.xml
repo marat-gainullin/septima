@@ -39,7 +39,7 @@
     </security-role>
     <security-constraint>
         <web-resource-collection>
-            <url-pattern>/index.html</url-pattern>
+            <url-pattern>/protected.html</url-pattern>
         </web-resource-collection>
         <auth-constraint>
             <role-name>*</role-name>
@@ -48,8 +48,8 @@
     <login-config>
         <auth-method>FORM</auth-method>
         <form-login-config>
-            <form-login-page>/users/login-type.html</form-login-page>
-            <form-error-page>/users/login-failed.html</form-error-page>
+            <form-login-page>/login.html</form-login-page>
+            <form-error-page>/login.html</form-error-page>
         </form-login-config>
     </login-config>
 

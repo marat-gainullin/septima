@@ -29,9 +29,9 @@ class KengaWidgets {
         }
         {
             btnSignIn.text = 'Sign in';
-            btnSignIn.element.style.left = '336px';
+            btnSignIn.element.style.left = '337px';
             btnSignIn.element.style.width = '128px';
-            btnSignIn.element.style.top = '314px';
+            btnSignIn.element.style.top = '315px';
             btnSignIn.element.style.height = '40px';
         }
         {
@@ -48,14 +48,6 @@ class KengaWidgets {
             txtPassword.element.style.top = '250px';
             txtPassword.element.style.height = '40px';
         }
-
-
-
-
-
-
-
-
         {
             lblLogo.text = 'Logo';
             lblLogo.element.style.left = '120px';
