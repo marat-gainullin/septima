@@ -96,7 +96,7 @@ public class Answer {
 
     public Void exceptionally(Throwable aTh) {
         Objects.requireNonNull(aTh, "aTh is required argument");
-        Throwable th = unwrapException(aTh, t -> t instanceof EndPointException, 3);
+        Throwable th = unwrapException(aTh, t -> t instanceof EndPointException, 16);
         Logger.getLogger(Answer.class.getName()).log(Level.SEVERE, th.getMessage(), th);
         response.setStatus(
                 th instanceof NoInstanceException || th instanceof NoCollectionException ? HttpServletResponse.SC_NOT_FOUND :

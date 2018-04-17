@@ -183,7 +183,7 @@ public class SqlEntity {
         }
         List<Parameter> compiledParams = new ArrayList<>(params.size());
         String dialect = database.getSqlDriver().getDialect();
-        boolean postgreSQL = dialect.toLowerCase().contains("postgre"); // TODO: Think about how transform avoid this hack
+        boolean postgreSQL = dialect.toLowerCase().contains("postgre"); // TODO: Think about how to avoid this hack
         String jdbcSql = riddleParameters(
                 customSqlText != null && !customSqlText.isEmpty() ? customSqlText : sqlText,
                 paramName -> {

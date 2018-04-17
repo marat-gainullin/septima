@@ -14,7 +14,7 @@ import com.septima.metadata.ForeignKey;
 import com.septima.metadata.JdbcColumn;
 import com.septima.metadata.Parameter;
 import com.septima.queries.*;
-import com.septima.sqldrivers.resolvers.TypesResolver;
+import com.septima.sqldrivers.SqlDriver;
 import net.sf.jsqlparser.JSqlParser;
 import net.sf.jsqlparser.JSqlParserException;
 import net.sf.jsqlparser.SeptimaSqlParser;
@@ -88,14 +88,14 @@ public class SqlEntities {
         futuresExecutor = aFuturesExecutor;
     }
 
-    private static Map<String, EntityField> columnsToApplicationFields(Map<String, JdbcColumn> tableColumns, TypesResolver typesResolver) {
+    private static Map<String, EntityField> columnsToApplicationFields(Map<String, JdbcColumn> tableColumns, SqlDriver aDriver) {
         return tableColumns.values().stream()
                 .map(column -> new EntityField(
-                                column.getName(),
+                                aDriver.unescapeNameIfNeeded(column.getName()),
                                 column.getDescription(),
                                 column.getOriginalName(),
                                 column.getTableName(),
-                                typesResolver.toGenericType(column.getJdbcType(), column.getRdbmsType()),
+                                aDriver.getTypesResolver().toGenericType(column.getJdbcType(), column.getRdbmsType()),
                                 column.isNullable(),
                                 column.isPk(),
                                 column.getFk()
@@ -360,7 +360,7 @@ public class SqlEntities {
                     return in.lines().collect(Collectors.joining("\n", "", "\n"));
                 }
             } else {
-                throw new FileNotFoundException("Can't find '" + entitySqlFileName + "' resource from resource path: " + resourcesEntitiesRoot);
+                throw new FileNotFoundException("Can't find '" + entitySqlFileName + "' resource from resource path: " + resourcesEntitiesRoot.toString().replace(File.separatorChar, '/'));
             }
         }
     }
@@ -433,7 +433,7 @@ public class SqlEntities {
             InlineEntities.to(querySyntax, this, paramsBinds, aStartOfReferences, aIllegalRefrences);
             String sqlWithSubQueries = StatementDeParser.assemble(querySyntax);
             Map<String, EntityField> fields = columnsToApplicationFields(
-                    resolveColumnsBySyntax(database, querySyntax), database.getSqlDriver().getTypesResolver()
+                    resolveColumnsBySyntax(database, querySyntax), database.getSqlDriver()
             );
 
             Set<String> writable = new CaseInsensitiveSet(new HashSet<>());

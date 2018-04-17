@@ -1,4 +1,5 @@
 apply plugin: 'jacoco'
+version = '0.0.3'
 
 configurations {
     h2

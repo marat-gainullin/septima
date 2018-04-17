@@ -80,6 +80,7 @@ public class Utils {
 
     public static String toPascalCase(String name) {
         return Stream.of(name.replaceAll("[^0-9a-zA-Z_]", "_").split("_+"))
+                .filter(part -> !part.isEmpty())
                 .map(part -> new StringBuilder(part.substring(0, 1).toUpperCase() + part.substring(1)))
                 .reduce(StringBuilder::append)
                 .orElse(new StringBuilder())

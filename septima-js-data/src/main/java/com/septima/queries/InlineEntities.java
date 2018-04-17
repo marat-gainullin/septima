@@ -46,7 +46,7 @@ public class InlineEntities extends SyntaxTreeVisitor {
                 String inlinedEntityName;
                 if (inlinedEntityRef.startsWith("../") || inlinedEntityRef.startsWith("./")) {
                     Path absoluteRef = startOfReferences.resolve(inlinedEntityRef);
-                    Path entityRef = entities.getEntitiesRoot().relativize(absoluteRef);
+                    Path entityRef = (entities.getEntitiesRoot() != null  ? entities.getEntitiesRoot() : entities.getResourcesEntitiesRoot()).relativize(absoluteRef);
                     inlinedEntityName = entityRef.normalize().toString().replace('\\', '/');
                 } else {
                     inlinedEntityName = inlinedEntityRef;
@@ -68,7 +68,7 @@ public class InlineEntities extends SyntaxTreeVisitor {
                         subSelect.setCommentBeginBracket(table.getComment());
                         return subSelect;
                     } else {
-                        throw new IllegalStateException("Entity '" + inlinedEntityName + " can't be inlined, due transform its Sql is not a 'Select' query.");
+                        throw new IllegalStateException("Entity '" + inlinedEntityName + " can't be inlined, due to its Sql is not a 'Select' query.");
                     }
                 } catch (JSqlParserException ex) {
                     throw new UncheckedJSqlParserException(ex);

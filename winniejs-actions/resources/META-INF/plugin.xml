@@ -10,7 +10,7 @@
     ]]></description>
 
   <change-notes><![CDATA[
-      Added 'Open as Winnie view' action<br>
+      Added 'Edit with Winnie' action<br>
       <em></em>
     ]]>
   </change-notes>
@@ -28,8 +28,8 @@
 
   <actions>
     <!-- Add your actions here -->
-    <action id="open-as-winnie-view" class="com.kengajs.winnie.OpenAsWinnieViewAction" text="Open as Winnie view"
-            description="Opens a JavaScript file as an editable Winnie view">
+    <action id="open-as-winnie-view" class="com.kengajs.winnie.OpenAsWinnieViewAction" text="Edit with Winnie"
+            description="Opens a *.js file as an editable layout in Winnie GUI editor">
       <add-to-group group-id="EditMenu" relative-to-action="CutCopyPasteGroup" anchor="before"/>
       <add-to-group group-id="ProjectViewPopupMenu" relative-to-action="CutCopyPasteGroup" anchor="before"/>
     </action>

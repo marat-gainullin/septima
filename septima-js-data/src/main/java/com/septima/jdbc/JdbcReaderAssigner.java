@@ -560,6 +560,8 @@ public class JdbcReaderAssigner {
             jdbcType = Types.VARCHAR;
         } else if (aValue instanceof Integer) {
             jdbcType = Types.INTEGER;
+        } else if (aValue instanceof Long) {
+            jdbcType = Types.BIGINT;
         } else if (aValue instanceof Float) {
             jdbcType = Types.FLOAT;
         } else if (aValue instanceof Number) {
@@ -580,13 +582,15 @@ public class JdbcReaderAssigner {
         if (aType != null) {
             switch (aType) {
                 case STRING:
-                    return java.sql.Types.VARCHAR;
+                    return Types.VARCHAR;
+                case LONG:
+                    return Types.BIGINT;
                 case DOUBLE:
-                    return java.sql.Types.DOUBLE;
+                    return Types.DOUBLE;
                 case DATE:
-                    return java.sql.Types.TIMESTAMP;
+                    return Types.TIMESTAMP;
                 case BOOLEAN:
-                    return java.sql.Types.BOOLEAN;
+                    return Types.BOOLEAN;
                 default:
                     return jdbcTypeByValue(aValue);
             }

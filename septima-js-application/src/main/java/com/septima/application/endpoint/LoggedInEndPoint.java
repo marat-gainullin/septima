@@ -10,6 +10,6 @@ public class LoggedInEndPoint extends AsyncEndPoint {
     @Override
     public void get(Answer answer) {
         Principal principal = answer.getRequest().getUserPrincipal();
-        answer.withJsonObject(Map.of("userName", principal != null ? principal.getName() : null));
+        answer.withJsonObject(Map.of("userName", principal != null ? principal.getName() : ""));
     }
 }

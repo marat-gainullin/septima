@@ -25,7 +25,7 @@ public class Config {
 
     private final String defaultDataSourceName;
     private final int maximumJdbcThreads;
-    private final int maximumMailTreads;
+    private final int maximumMailThreads;
     private final int maximumLpcQueueSize;
     private final Path resourcesEntitiesPath;
     private final Path entitiesPath;
@@ -35,7 +35,7 @@ public class Config {
         resourcesEntitiesPath = anEntitiesResourcesPath;
         entitiesPath = anEntitiesPath;
         maximumJdbcThreads = aMaximumJdbcThreads;
-        maximumMailTreads = aMaximumMailTreads;
+        maximumMailThreads = aMaximumMailTreads;
         maximumLpcQueueSize = aMaximumLpcQueueSize;
     }
 
@@ -107,8 +107,8 @@ public class Config {
         return maximumJdbcThreads;
     }
 
-    public int getMaximumMailTreads() {
-        return maximumMailTreads;
+    public int getMaximumMailThreads() {
+        return maximumMailThreads;
     }
 
     public int getMaximumLpcQueueSize() {

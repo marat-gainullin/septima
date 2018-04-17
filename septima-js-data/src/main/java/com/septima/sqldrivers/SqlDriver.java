@@ -294,7 +294,7 @@ public class SqlDriver {
      * @param aName Name transform wrap
      * @return Wrapped text
      */
-    String escapeNameIfNeeded(String aName) {
+    public String escapeNameIfNeeded(String aName) {
         if (aName != null && !aName.isEmpty() &&
                 isEscapeNeeded(aName) && !isNameEscaped(aName)) {
             Character escape = getEscape();
@@ -304,7 +304,7 @@ public class SqlDriver {
         }
     }
 
-    String unescapeNameIfNeeded(String aName) {
+    public String unescapeNameIfNeeded(String aName) {
         if (aName != null && !aName.isEmpty() && isNameEscaped(aName)) {
             Character escape = getEscape();
             String body = aName.substring(1, aName.length() - 1);
