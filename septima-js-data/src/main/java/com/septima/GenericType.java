@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.util.StdDateFormat;
 import java.text.ParseException;
 
 /**
- * Data types generic because there are many other types in programming languages and in
- * databases. All of them may be grouped into few number og generic groups.
- * This generic types are not mandatory. If some parameter or field has no generic type,
+ * There are many types in programming languages and in
+ * databases. All of them may be grouped into few number of generic groups.
+ * These generic types are not mandatory. If some parameter or field has no generic type,
  * then actual type is resolved by value.
  *
  * @author mg
