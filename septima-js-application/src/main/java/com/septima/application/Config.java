@@ -89,10 +89,10 @@ public class Config {
 
     public static ExecutorService lookupExecutor() {
         try {
-            return (ExecutorService) InitialContext.doLookup("java:comp/DefaultManagedExecutorService");
+            return (ExecutorService) InitialContext.doLookup("java:comp/env/concurrent/ThreadPool");
         } catch (NamingException ex) {
             try {
-                return (ExecutorService) InitialContext.doLookup("java:comp/env/concurrent/ThreadPool");
+                return (ExecutorService) InitialContext.doLookup("java:comp/DefaultManagedExecutorService");
             } catch (NamingException ex1) {
                 return ForkJoinPool.commonPool();
             }

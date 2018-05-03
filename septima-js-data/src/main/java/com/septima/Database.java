@@ -8,7 +8,6 @@ import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.EntityField;
 import com.septima.sqldrivers.SqlDriver;
 
-import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
@@ -67,15 +66,14 @@ public class Database {
 
     public static DataSource obtainDataSource(String aDataSourceName) throws NamingException {
         Objects.requireNonNull(aDataSourceName, "aDataSourceName is required argument");
-        Context initContext = new InitialContext();
         try {
+            return (DataSource) InitialContext.doLookup("java:comp/env/" + aDataSourceName);
+        } catch (NamingException ex) {
             try {
-                return (DataSource) initContext.lookup("java:comp/env/" + aDataSourceName);
-            } catch (NamingException ex) {
-                return (DataSource) initContext.lookup(aDataSourceName);
+                return (DataSource) InitialContext.doLookup("java:comp/" + aDataSourceName);
+            } catch (NamingException ex1) {
+                return (DataSource) InitialContext.doLookup(aDataSourceName);
             }
-        } finally {
-            initContext.close();
         }
     }
 

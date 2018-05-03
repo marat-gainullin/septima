@@ -19,6 +19,79 @@ import java.util.stream.Collectors;
 
 public class Model {
 
+    private final SqlEntities sqlEntities;
+    private final List<EntityAction> changes = new ArrayList<>();
+
+    public Model(SqlEntities aEntities) {
+        sqlEntities = aEntities;
+    }
+
+    protected static <K, D> void toGroups(D instance, Map<K, Collection<D>> groups, K key) {
+        groups.computeIfAbsent(key, k -> new HashSet<>()).add(instance);
+    }
+
+    protected static <K, D> void fromGroups(D instance, Map<K, Collection<D>> groups, K key) {
+        groups.computeIfAbsent(key, k -> new HashSet<>()).remove(instance);
+    }
+
+    /**
+     * Returns a {@link Map.Entry} with specified key and value.
+     * Unlike {@link Map#entry(Object, Object)} retains {@code null} values to preserve datum structure.
+     *
+     * @param aKey   A key.
+     * @param aValue A value.
+     * @param <K>    Map's key type.
+     * @param <V>    Map's value type.
+     * @return A {@link Map.Entry} with specified key and value.
+     */
+    public static <K, V> Map.Entry<K, V> entry(K aKey, V aValue) {
+        return new AbstractMap.SimpleEntry<>(aKey, aValue);
+    }
+
+    /**
+     * Returns map with specified entries.
+     * Unlike {@link Map#ofEntries(Map.Entry[])} retains {@code null} values to preserve datum structure.
+     *
+     * @param aEntries An array of entries.
+     * @param <K>      Map's key type.
+     * @param <V>      Map's value type.
+     * @return A map with specified entries.
+     * Unlike {@link Map#ofEntries(Map.Entry[])} retains {@code null} values to preserve datum structure.
+     */
+    public static <K, V> Map<K, V> map(Map.Entry<K, V>... aEntries) {
+        Map<K, V> map = new HashMap<>();
+        for (Map.Entry<K, V> e : aEntries) {
+            Objects.requireNonNull(e.getKey());
+            map.put(e.getKey(), e.getValue());
+        }
+        return Collections.unmodifiableMap(map);
+    }
+
+    private <D, K> PropertyChangeListener listener(SqlQuery query, String keyName, Function<D, K> keyMapper) {
+        return e ->
+                changes.add(new InstanceChange(
+                        query.getEntityName(),
+                        Map.of(keyName, keyName.equals(e.getPropertyName()) ? e.getOldValue() : keyMapper.apply((D) e.getSource())),
+                        Map.of(e.getPropertyName(), e.getNewValue())));
+    }
+
+    public void dropChanges() {
+        changes.clear();
+    }
+
+    public CompletableFuture<Integer> save() {
+        List<CompletableFuture<Integer>> futures = sqlEntities.bindChanges(changes).entrySet().stream()
+                .map(entry -> entry.getKey().commit(entry.getValue()))
+                .collect(Collectors.toList());
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[]{}))
+                .thenApply(v -> {
+                    changes.clear();
+                    return futures.stream()
+                            .map(f -> f.getNow(0))
+                            .reduce(Integer::sum).orElse(0);
+                });
+    }
+
     public class Entity<K, D extends Observable> {
         private final SqlQuery query;
         private final String keyName;
@@ -51,6 +124,14 @@ public class Model {
             reverseMapper = aReverseMapper;
             classifier = aClassifier;
             unclassifier = aUnclassifier;
+        }
+
+        public Function<Map<String, Object>, D> getForwardMapper() {
+            return forwardMapper;
+        }
+
+        public Function<D, Map<String, Object>> getReverseMapper() {
+            return reverseMapper;
         }
 
         public String getName() {
@@ -122,79 +203,5 @@ public class Model {
             );
             return observable;
         }
-    }
-
-    private final SqlEntities sqlEntities;
-
-    public Model(SqlEntities aEntities) {
-        sqlEntities = aEntities;
-    }
-
-    private final List<EntityAction> changes = new ArrayList<>();
-
-    private <D, K> PropertyChangeListener listener(SqlQuery query, String keyName, Function<D, K> keyMapper) {
-        return e ->
-                changes.add(new InstanceChange(
-                        query.getEntityName(),
-                        Map.of(keyName, keyName.equals(e.getPropertyName()) ? e.getOldValue() : keyMapper.apply((D) e.getSource())),
-                        Map.of(e.getPropertyName(), e.getNewValue())));
-    }
-
-    public void dropChanges() {
-        changes.clear();
-    }
-
-    public CompletableFuture<Integer> save() {
-        List<CompletableFuture<Integer>> futures = sqlEntities.bindChanges(changes).entrySet().stream()
-                .map(entry -> entry.getKey().commit(entry.getValue()))
-                .collect(Collectors.toList());
-        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[]{}))
-                .thenApply(v -> {
-                    changes.clear();
-                    return futures.stream()
-                            .map(f -> f.getNow(0))
-                            .reduce(Integer::sum).orElse(0);
-                });
-    }
-
-    protected static <K, D> void toGroups(D instance, Map<K, Collection<D>> groups, K key) {
-        groups.computeIfAbsent(key, k -> new HashSet<>()).add(instance);
-    }
-
-    protected static <K, D> void fromGroups(D instance, Map<K, Collection<D>> groups, K key) {
-        groups.computeIfAbsent(key, k -> new HashSet<>()).remove(instance);
-    }
-
-    /**
-     * Returns a {@link Map.Entry} with specified key and value.
-     * Unlike {@link Map#entry(Object, Object)} retains {@code null} values to preserve datum structure.
-     *
-     * @param aKey   A key.
-     * @param aValue A value.
-     * @param <K>    Map's key type.
-     * @param <V>    Map's value type.
-     * @return A {@link Map.Entry} with specified key and value.
-     */
-    public static <K, V> Map.Entry<K, V> entry(K aKey, V aValue) {
-        return new AbstractMap.SimpleEntry<>(aKey, aValue);
-    }
-
-    /**
-     * Returns map with specified entries.
-     * Unlike {@link Map#ofEntries(Map.Entry[])} retains {@code null} values to preserve datum structure.
-     *
-     * @param aEntries An array of entries.
-     * @param <K>      Map's key type.
-     * @param <V>      Map's value type.
-     * @return A map with specified entries.
-     * Unlike {@link Map#ofEntries(Map.Entry[])} retains {@code null} values to preserve datum structure.
-     */
-    public static <K, V> Map<K, V> map(Map.Entry<K, V> ...aEntries) {
-        Map<K, V> map = new HashMap<>();
-        for (Map.Entry<K, V> e : aEntries) {
-            Objects.requireNonNull(e.getKey());
-            map.put(e.getKey(), e.getValue());
-        }
-        return Collections.unmodifiableMap(map);
     }
 }
