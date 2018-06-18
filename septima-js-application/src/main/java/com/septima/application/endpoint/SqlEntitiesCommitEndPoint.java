@@ -17,9 +17,29 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class SqlEntitiesCommitEndPoint extends SqlEntitiesEndPoint {
+public class SqlEntitiesCommitEndPoint extends SqlEntitiesDataFlowEndPoint {
 
-    private List<EntityAction> toActions(List<Map<String, Object>> aJsonActions) {
+    protected Map<String, Object> handleInsertData(Answer answer, SqlEntity aEntity, Map<String, Object> aData) {
+        return aData;
+    }
+
+    protected Map<String, Object> handleUpdateKeys(Answer answer, SqlEntity aEntity, Map<String, Object> aKeys) {
+        return aKeys;
+    }
+
+    protected Map<String, Object> handleUpdateData(Answer answer, SqlEntity aEntity, Map<String, Object> aData) {
+        return aData;
+    }
+
+    protected Map<String, Object> handleDeleteKeys(Answer answer, SqlEntity aEntity, Map<String, Object> aKeys) {
+        return aKeys;
+    }
+
+    protected Map<String, Object> handleParameters(Answer answer, SqlEntity aEntity, Map<String, Object> aParameters) {
+        return aParameters;
+    }
+
+    private List<EntityAction> toActions(Answer  answer, List<Map<String, Object>> aJsonActions) {
         return aJsonActions.stream()
                 .map(entry -> {
                     if (entry.containsKey("kind")) {
@@ -30,25 +50,25 @@ public class SqlEntitiesCommitEndPoint extends SqlEntitiesEndPoint {
                                 String kind = (String) entry.get("kind");
                                 if ("command".equalsIgnoreCase(kind)) {
                                     Map<String, Object> parameters = (Map<String, Object>) entry.getOrDefault("parameters", Map.of());
-                                    reviveDates(parameters, parametersTypes(entity));
+                                    reviveDates(handleParameters(answer, entity, parameters), parametersTypes(entity));
                                     return new EntityCommand(entityName, parameters);
                                 } else if ("insert".equalsIgnoreCase(kind)) {
                                     Map<String, Object> data = (Map<String, Object>) entry.getOrDefault("data", Map.of());
                                     reviveDates(data, fieldsTypes(entity));
-                                    return new InstanceAdd(entityName, data);
+                                    return new InstanceAdd(entityName, handleInsertData(answer, entity, data));
                                 } else if ("update".equalsIgnoreCase(kind)) {
                                     Map<String, Object> keys = (Map<String, Object>) entry.getOrDefault("keys", Map.of());
                                     Map<String, Object> data = (Map<String, Object>) entry.getOrDefault("data", Map.of());
                                     Map<String, GenericType> types = fieldsTypes(entity);
                                     reviveDates(keys, types);
                                     reviveDates(data, types);
-                                    return new InstanceChange(entityName, keys, data);
+                                    return new InstanceChange(entityName, handleUpdateKeys(answer, entity, keys), handleUpdateData(answer, entity, data));
                                 } else if ("delete".equalsIgnoreCase(kind)) {
                                     Map<String, Object> keys = (Map<String, Object>) entry.getOrDefault("keys", Map.of());
                                     reviveDates(keys, fieldsTypes(entity));
-                                    return new InstanceRemove(entityName, keys);
+                                    return new InstanceRemove(entityName, handleDeleteKeys(answer, entity, keys));
                                 } else {
-                                    throw new EndPointException("Unknown commit log entry kind: '" + kind+"'");
+                                    throw new EndPointException("Unknown commit log entry kind: '" + kind + "'");
                                 }
                             } catch (UncheckedIOException ex) {
                                 if (ex.getCause() instanceof FileNotFoundException) {
@@ -92,9 +112,9 @@ public class SqlEntitiesCommitEndPoint extends SqlEntitiesEndPoint {
     @Override
     public void post(Answer answer) {
         answer.onJsonArray()
-                .thenApply(entries -> toActions(entries))
+                .thenApply(arrived -> toActions(answer, arrived))
                 .thenApply(actions -> checkAccess(actions, answer.getRequest()))
-                .thenApply(actions -> apply(actions))
+                .thenApply(this::apply)
                 .thenCompose(Function.identity())
                 .thenAccept(affected -> answer.withJsonObject(Map.of("affected", affected)))
                 .exceptionally(answer::exceptionally);

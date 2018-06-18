@@ -115,7 +115,7 @@ public class Answer {
      * It is not recommended to use this method with complex data structures as lists or maps.
      * They will be written, but client code will not get type checking.
      *
-     * @param aValue
+     * @param aValue Value to be converted to JSON representation.
      */
     public void withJsonValue(Object aValue) {
         try {

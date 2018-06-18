@@ -1,6 +1,7 @@
 package com.septima.application.endpoint;
 
 public interface HttpEndPoint {
+
     void get(Answer answer);
 
     void post(Answer answer);

@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 public class SqlEntitiesEndPoint extends AsyncEndPoint {
 
-    protected static void onPublic(Consumer<SqlEntity> action, Answer answer, SqlEntity entity) {
+    static void onPublic(Consumer<SqlEntity> action, Answer answer, SqlEntity entity) {
         if (entity.isPublicAccess()) {
             action.accept(entity);
         } else {
@@ -26,7 +26,7 @@ public class SqlEntitiesEndPoint extends AsyncEndPoint {
         }
     }
 
-    protected static void onReadsAllowed(Consumer<SqlEntity> action, Answer answer, SqlEntity entity) {
+    static void onReadsAllowed(Consumer<SqlEntity> action, Answer answer, SqlEntity entity) {
         if (entity.getReadRoles().isEmpty() || entity.getReadRoles().stream().anyMatch(answer.getRequest()::isUserInRole)) {
             action.accept(entity);
         } else {
@@ -34,7 +34,7 @@ public class SqlEntitiesEndPoint extends AsyncEndPoint {
         }
     }
 
-    protected static void onWritesAllowed(Consumer<SqlEntity> action, Answer answer, SqlEntity entity) {
+    static void onWritesAllowed(Consumer<SqlEntity> action, Answer answer, SqlEntity entity) {
         if (entity.getWriteRoles().isEmpty() || entity.getWriteRoles().stream().anyMatch(answer.getRequest()::isUserInRole)) {
             action.accept(entity);
         } else {
@@ -42,7 +42,7 @@ public class SqlEntitiesEndPoint extends AsyncEndPoint {
         }
     }
 
-    public static void onCollectionRef(Consumer<String> action, Answer answer) {
+    static void onCollectionRef(Consumer<String> action, Answer answer) {
         String pathInfo = answer.getRequest().getPathInfo();
         if (pathInfo != null && pathInfo.length() > 1) {
             try {

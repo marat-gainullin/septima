@@ -3,6 +3,7 @@ package com.septima.application.endpoint;
 import com.septima.GenericType;
 import com.septima.application.exceptions.NoCollectionException;
 import com.septima.application.exceptions.NoInstanceException;
+import com.septima.entities.SqlEntity;
 import com.septima.metadata.Parameter;
 
 import java.io.FileNotFoundException;
@@ -13,6 +14,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class SqlEntitiesParametersEndPoint extends SqlEntitiesEndPoint {
+
+    protected boolean isParameterPublic(Answer answer, SqlEntity aEntity, Parameter p) {
+        return true;
+    }
 
     private Map<String, Object> fromParameter(Parameter aParameter) {
         Map<String, Object> properties = new LinkedHashMap<>();
@@ -26,13 +31,13 @@ public class SqlEntitiesParametersEndPoint extends SqlEntitiesEndPoint {
     public void get(Answer answer) {
         onCollectionRef(entityRef -> {
             if (entities.exists(entityRef)) {
-                onPublic(publicEntity -> onReadsAllowed(entity -> {
-                    answer.withJsonObject(
-                            entity.getParameters().values().stream()
-                                    .sorted(Comparator.comparing(Parameter::getName))
-                                    .collect(Collectors.toMap(Parameter::getName, this::fromParameter))
-                    );
-                }, answer, publicEntity), answer, entities.loadEntity(entityRef));
+                onPublic(publicEntity -> onReadsAllowed(entity ->
+                        answer.withJsonObject(
+                                entity.getParameters().values().stream()
+                                        .sorted(Comparator.comparing(Parameter::getName))
+                                        .filter(p -> isParameterPublic(answer, entity, p))
+                                        .collect(Collectors.toMap(Parameter::getName, this::fromParameter))
+                        ), answer, publicEntity), answer, entities.loadEntity(entityRef));
             } else {
                 int lastSlashAt = entityRef.lastIndexOf('/');
                 if (lastSlashAt > 0 && lastSlashAt < entityRef.length() - 1) {
@@ -40,7 +45,7 @@ public class SqlEntitiesParametersEndPoint extends SqlEntitiesEndPoint {
                     String fieldName = entityRef.substring(lastSlashAt + 1);
                     try {
                         onPublic(publicEntity -> onReadsAllowed(entity -> {
-                            if (entity.getParameters().containsKey(fieldName)) {
+                            if (entity.getParameters().containsKey(fieldName) && isParameterPublic(answer, entity, entity.getParameters().get(fieldName))) {
                                 answer.withJsonObject(fromParameter(entity.getParameters().get(fieldName)));
                             } else {
                                 throw new NoInstanceException(anotherEntityRef, "parameter.name", fieldName);

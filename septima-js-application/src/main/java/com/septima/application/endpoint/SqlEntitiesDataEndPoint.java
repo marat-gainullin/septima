@@ -9,6 +9,7 @@ import com.septima.changes.InstanceAdd;
 import com.septima.changes.InstanceChange;
 import com.septima.changes.InstanceRemove;
 import com.septima.dataflow.EntityActionsBinder;
+import com.septima.entities.SqlEntity;
 import com.septima.metadata.EntityField;
 import com.septima.metadata.Parameter;
 import com.septima.model.Id;
@@ -23,7 +24,27 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
-public class SqlEntitiesDataEndPoint extends SqlEntitiesEndPoint {
+public class SqlEntitiesDataEndPoint extends SqlEntitiesDataFlowEndPoint {
+
+    protected Map<String, Object> handleInsertData(Answer answer, SqlEntity entity, Map<String, Object> aData){
+        return aData;
+    }
+
+    protected Map<String, Object> handleUpdateKeys(Answer answer, SqlEntity entity, Map<String, Object> aKeys){
+        return aKeys;
+    }
+
+    protected Map<String, Object> handleUpdateData(Answer answer, SqlEntity entity, Map<String, Object> aData){
+        return aData;
+    }
+
+    protected Map<String, Object> handleDeleteKeys(Answer answer, SqlEntity entity, Map<String, Object> aKeys){
+        return aKeys;
+    }
+
+    protected Map<String, Object> handleParameters(Answer answer, SqlEntity aEntity, Map<String, Object> aParameters) {
+        return aParameters;
+    }
 
     @Override
     public void get(Answer answer) {
@@ -36,7 +57,7 @@ public class SqlEntitiesDataEndPoint extends SqlEntitiesEndPoint {
                         throw new EndPointException("Entity '" + entity.getName() + "' is command entity. It can't be used as a collection");
                     }
                     SqlQuery query = entities.loadQuery(entity.getName());
-                    query.requestData(query.parseParameters(Answer.scalars(answer.getRequest().getParameterMap())))
+                    query.requestData(handleParameters(answer, entity, query.parseParameters(Answer.scalars(answer.getRequest().getParameterMap()))))
                             .thenAccept(answer::withJsonArray)
                             .exceptionally(answer::exceptionally);
                 }, answer, publicEntity), answer, entities.loadEntity(collectionRef));
@@ -75,7 +96,7 @@ public class SqlEntitiesDataEndPoint extends SqlEntitiesEndPoint {
                             Map<String, Object> anotherParametersValues = anotherQuery.parseParameters(Answer.scalars(answer.getRequest().getParameterMap()));
                             Object keyParamValue = GenericType.parseValue(instanceKey, pkField.getType());
                             anotherParametersValues.put(keyParamName, keyParamValue);
-                            anotherQuery.requestData(anotherParametersValues)
+                            anotherQuery.requestData(handleParameters(answer, entity, anotherParametersValues))
                                     .thenApply(data -> {
                                         if (data.size() == 1)
                                             return data.get(0);
@@ -128,7 +149,7 @@ public class SqlEntitiesDataEndPoint extends SqlEntitiesEndPoint {
                                     }
                                 }
                                 reviveDates(arrived, fieldsTypes(entity));
-                                InstanceAdd action = new InstanceAdd(entity.getName(), arrived);
+                                InstanceAdd action = new InstanceAdd(entity.getName(), handleInsertData(answer, entity, arrived));
                                 action.accept(binder);
                                 return entity.getDatabase().commit(binder.getLogEntries())
                                         .thenApply(affected -> arrived.get(pkField.getName()));
@@ -166,7 +187,7 @@ public class SqlEntitiesDataEndPoint extends SqlEntitiesEndPoint {
                                     try {
                                         Object parsedKey = GenericType.parseValue(instanceKey, pkField.getType());
                                         reviveDates(arrived, fieldsTypes(entity));
-                                        InstanceChange action = new InstanceChange(entity.getName(), Map.of(pkField.getName(), parsedKey), arrived);
+                                        InstanceChange action = new InstanceChange(entity.getName(), handleUpdateKeys(answer, entity, Map.of(pkField.getName(), parsedKey)), handleUpdateData(answer, entity, arrived));
                                         action.accept(binder);
                                         return entity.getDatabase().commit(binder.getLogEntries());
                                     } catch (IllegalStateException ex) {
@@ -218,7 +239,7 @@ public class SqlEntitiesDataEndPoint extends SqlEntitiesEndPoint {
                                 .orElseThrow(() -> new IllegalStateException("Entity '" + entity.getName() + "' has no a key field"));
                         try {
                             Object parsedKey = GenericType.parseValue(instanceKey, pkField.getType());
-                            InstanceRemove action = new InstanceRemove(entity.getName(), Map.of(pkField.getName(), parsedKey));
+                            InstanceRemove action = new InstanceRemove(entity.getName(), handleDeleteKeys(answer, entity, Map.of(pkField.getName(), parsedKey)));
                             action.accept(binder);
                             entity.getDatabase().commit(binder.getLogEntries())
                                     .thenAccept(updated -> {
