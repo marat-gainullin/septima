@@ -25,7 +25,7 @@ public enum GenericType {
         return of(aValue, null);
     }
 
-    public static GenericType of(String aValue, GenericType defaultValue) {
+    public static GenericType of(String aValue, GenericType defaultType) {
         if ("Geometry".equalsIgnoreCase(aValue)) {
             return GEOMETRY;
         } else if ("String".equalsIgnoreCase(aValue)) {
@@ -41,12 +41,12 @@ public enum GenericType {
         } else if ("Boolean".equalsIgnoreCase(aValue)) {
             return BOOLEAN;
         } else {
-            return defaultValue;
+            return defaultType;
         }
     }
 
     public static Object parseValue(String aValue, GenericType aType) {
-        if (aValue != null) {
+        if (aValue != null && !"null".equals(aValue)) {
             switch (aType) {
                 case DATE:
                     StdDateFormat format = new StdDateFormat();

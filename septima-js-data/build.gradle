@@ -1,5 +1,3 @@
-version = '0.0.4'
-
 apply plugin: 'jacoco'
 
 configurations {
