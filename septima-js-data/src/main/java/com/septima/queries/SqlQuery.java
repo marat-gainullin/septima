@@ -104,7 +104,8 @@ public class SqlQuery {
     public Map<String, Object> parseParameters(Map<String, String> aParametersValues) {
         Objects.requireNonNull(aParametersValues, "aParametersValues is required argument");
         Map<String, GenericType> types = parameters.stream()
-                .collect(Collectors.toMap(Parameter::getName, p -> p.getType() != null ? p.getType() : GenericType.STRING));
+                .collect(Collectors.toMap(Parameter::getName, p -> p.getType() != null ? p.getType() : GenericType.STRING, (v1, v2) -> v1));
+        // Warning. Don't refactor to another .collect(Collectors.toMap( because of null values of parameters !
         Map<String, Object> values = new HashMap<>();
         for (Map.Entry<String, GenericType> e : types.entrySet()) {
             values.put(e.getKey(), GenericType.parseValue(aParametersValues.get(e.getKey()), e.getValue()));
