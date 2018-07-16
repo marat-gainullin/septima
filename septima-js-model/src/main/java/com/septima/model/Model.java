@@ -4,11 +4,9 @@ import com.septima.changes.EntityAction;
 import com.septima.changes.InstanceAdd;
 import com.septima.changes.InstanceChange;
 import com.septima.changes.InstanceRemove;
+import com.septima.collections.ObservableMap;
 import com.septima.entities.SqlEntities;
 import com.septima.queries.SqlQuery;
-import javafx.collections.FXCollections;
-import javafx.collections.MapChangeListener;
-import javafx.collections.ObservableMap;
 
 import java.beans.PropertyChangeListener;
 import java.util.*;
@@ -183,25 +181,21 @@ public class Model {
                     })
                     .collect(Collectors.toMap(keyOf, Function.identity()));
             domainData.values().forEach(classifier);
-            ObservableMap<K, D> observable = FXCollections.observableMap(domainData);
-            observable.addListener((MapChangeListener.Change<? extends K, ? extends D> change) -> {
-                        if (change.wasRemoved() && change.wasAdded()) {
-                            onRemoved.apply(change.getValueRemoved());
-                            D added = onAdded.apply(change.getValueAdded());
-                            changes.add(new InstanceChange(query.getEntityName(), Map.of(keyName, keyOf.apply(added)), reverseMapper.apply(added)));
-                        } else {
-                            if (change.wasRemoved()) {
-                                D removed = onRemoved.apply(change.getValueRemoved());
-                                changes.add(new InstanceRemove(query.getEntityName(), Map.of(keyName, keyOf.apply(removed))));
-                            }
-                            if (change.wasAdded()) {
-                                D added = onAdded.apply(change.getValueAdded());
-                                changes.add(new InstanceAdd(query.getEntityName(), reverseMapper.apply(added)));
-                            }
-                        }
+            return new ObservableMap<>(domainData,
+                    (key, removedValue, addedValue) -> {
+                        onRemoved.apply(removedValue);
+                        D added = onAdded.apply(addedValue);
+                        changes.add(new InstanceChange(query.getEntityName(), Map.of(keyName, keyOf.apply(added)), reverseMapper.apply(added)));
+                    },
+                    (aKey, removedValue, addedValue) -> {
+                        D removed = onRemoved.apply(removedValue);
+                        changes.add(new InstanceRemove(query.getEntityName(), Map.of(keyName, keyOf.apply(removed))));
+                    },
+                    (aKey, removedValue, addedValue) -> {
+                        D added = onAdded.apply(addedValue);
+                        changes.add(new InstanceAdd(query.getEntityName(), reverseMapper.apply(added)));
                     }
             );
-            return observable;
         }
     }
 }

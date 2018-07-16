@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public abstract class AsyncEndPoint extends HttpServlet implements HttpEndPoint {
 
@@ -21,10 +23,34 @@ public abstract class AsyncEndPoint extends HttpServlet implements HttpEndPoint 
         aHandler.accept(new Answer(aContext, futuresExecutor));
     }
 
+    /**
+     * This method is final because of security risks.
+     * Servlet container may expose security-sensitive information to a client through
+     * an exception if it will throw during the servlet initialization. To avoid using of
+     * complex techniques of #sendError suppressing, override the {@link #prepare()} method.
+     * It is wrapped in safe try/catch with secure error handling and without swallowing of the exception.
+     */
     @Override
-    public void init() {
-        futuresExecutor = Config.lookupExecutor();
-        entities = Data.getInstance().getEntities();
+    public final void init() {
+        try {
+            futuresExecutor = Config.lookupExecutor();
+            entities = Data.getInstance().getEntities();
+            prepare();
+        } catch (Throwable th) {
+            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Problem while endpoint init", th);
+            throw new IllegalStateException("Internal problems. Look for a support, please");
+        }
+    }
+
+    /**
+     * Override this method from descendants code instead of {@link #init()}, due to security risks.
+     * Servlet container may expose security-sensitive information to a client through
+     * an exception if it will throw during the servlet initialization. To avoid using of
+     * complex techniques of #sendError suppressing, override this method.
+     * It is wrapped in safe try/catch with secure error handling and without swallowing of the exception.
+     * @throws Exception This method is wrapped into try/catch block of general purpose.
+     */
+    protected void prepare() throws Exception {
     }
 
     @Override
