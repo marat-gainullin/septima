@@ -17,39 +17,51 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class EntitiesRows {
+public class EntitiesRaws {
 
     private final String rowTemplate;
-    private final String rowPropertyFieldAccessorsTemplate;
     private final String rowPropertyFieldTemplate;
+    private final String rowPropertyFieldAccessorsTemplate;
+    private final String forwardMappingTemplate;
+    private final String narrowedForwardMappingTemplate;
+    private final String reverseMappingTemplate;
 
     private final SqlEntities entities;
     private final Path destination;
     private final String lf;
     private final Charset charset;
 
-    public static EntitiesRows fromResources(SqlEntities anEntities, Path aDestination) throws IOException {
+    public static EntitiesRaws fromResources(SqlEntities anEntities, Path aDestination) throws IOException {
         return fromResources(anEntities, aDestination, StandardCharsets.UTF_8, System.lineSeparator());
     }
 
-    public static EntitiesRows fromResources(SqlEntities anEntities, Path aDestination, Charset aCharset, String aLf) throws IOException {
-        return new EntitiesRows(anEntities, aDestination,
-                Utils.loadResource("/row.template", aCharset, aLf),
-                Utils.loadResource("/row/property-field.template", aCharset, aLf),
-                Utils.loadResource("/row/property-field-accessors.template", aCharset, aLf),
+    public static EntitiesRaws fromResources(SqlEntities anEntities, Path aDestination, Charset aCharset, String aLf) throws IOException {
+        return new EntitiesRaws(anEntities, aDestination,
+                Utils.loadResource("/raw.template", aCharset, aLf),
+                Utils.loadResource("/raw/property-field.template", aCharset, aLf),
+                Utils.loadResource("/raw/property-field-accessors.template", aCharset, aLf),
+                Utils.loadResource("/raw/forward-mapping.template", aCharset, aLf),
+                Utils.loadResource("/raw/narrowed-forward-mapping.template", aCharset, aLf),
+                Utils.loadResource("/raw/reverse-mapping.template", aCharset, aLf),
                 aLf, aCharset);
     }
 
-    private EntitiesRows(SqlEntities anEntities, Path aDestination,
+    private EntitiesRaws(SqlEntities anEntities, Path aDestination,
                          String aRowTemplate,
                          String aRowPropertyFieldTemplate,
                          String aRowPropertyFieldAccessorsTemplate,
+                         String aForwardMappingTemplate,
+                         String aNarrowedForwardMappingTemplate,
+                         String aReverseMappingTemplate,
                          String aLf, Charset aCharset) {
         entities = anEntities;
         destination = aDestination;
         rowTemplate = aRowTemplate;
         rowPropertyFieldTemplate = aRowPropertyFieldTemplate;
         rowPropertyFieldAccessorsTemplate = aRowPropertyFieldAccessorsTemplate;
+        forwardMappingTemplate = aForwardMappingTemplate.replace(aLf, "");
+        narrowedForwardMappingTemplate = aNarrowedForwardMappingTemplate.replace(aLf, "");
+        reverseMappingTemplate = aReverseMappingTemplate.replace(aLf, "");
         lf = aLf;
         charset = aCharset;
     }
@@ -58,7 +70,7 @@ public class EntitiesRows {
         Path entityRelativePath = entities.getEntitiesRoot().relativize(sqlEntityFile);
         String entityRelativePathName = entityRelativePath.toString().replace('\\', '/');
         String entityRef = entityRelativePathName.substring(0, entityRelativePathName.length() - 4);
-        String entityBaseClassName = Utils.entityRowClass(entityRef.substring(entityRef.lastIndexOf('/') + 1));
+        String entityBaseClassName = Utils.rawClass(entityRef.substring(entityRef.lastIndexOf('/') + 1));
         return destination.resolve(entityRelativePath.resolveSibling(entityBaseClassName + ".java"));
     }
 
@@ -68,7 +80,7 @@ public class EntitiesRows {
         String entityRelativePathName = entityRelativePath.toString().replace('\\', '/');
         String entityRef = entityRelativePathName.substring(0, entityRelativePathName.length() - 4);
         SqlEntity entity = entities.loadEntity(entityRef);
-        String entityBaseClassName = Utils.entityRowClass(entityRef.substring(entityRef.lastIndexOf('/') + 1));
+        String entityBaseClassName = Utils.rawClass(entityRef.substring(entityRef.lastIndexOf('/') + 1));
         Path entityClassFile = destination.resolve(entityRelativePath.resolveSibling(entityBaseClassName + ".java"));
 
         StringBuilder propertiesFields = entity.getFields().values().stream()
@@ -92,20 +104,24 @@ public class EntitiesRows {
                 ), lf))
                 .reduce((s1, s2) -> s1.append(lf).append(s2))
                 .orElse(new StringBuilder());
+        StringBuilder forwardMappings = generateForwardMappings(entity);
+        StringBuilder reverseMappings = generateReverseMappings(entity);
         String entityRow = Utils.replaceVariables(rowTemplate, Map.of(
                 "package", entityRelativeDirPath != null ?
                         ("package " + entityRelativeDirPath.toString().replace('\\', '/').replace('/', '.') + ";" + lf) :
                         "",
-                "dateImport", entity.getFields().values().stream().anyMatch(f -> GenericType.DATE == f.getType()) ? lf + "import java.util.Date;" : "",
+                "dateImport", entity.getFields().values().stream().anyMatch(f -> GenericType.DATE == f.getType()) ? "import java.util.Date;" + lf : "",
                 "entityBaseClass", entityBaseClassName,
                 "propertiesFields", propertiesFields.toString(),
-                "propertiesAccessors", propertiesAccessors.toString()
+                "propertiesAccessors", propertiesAccessors.toString(),
+                "forwardMappings", forwardMappings.toString(),
+                "reverseMappings", reverseMappings.toString()
         ), lf).toString();
         if (!entityClassFile.getParent().toFile().exists()) {
             entityClassFile.getParent().toFile().mkdirs();
         }
         Files.write(entityClassFile, entityRow.getBytes(charset));
-        Logger.getLogger(EntitiesRows.class.getName()).log(Level.INFO, "Sql entity definition '" + path + "' transformed and written to: " + entityClassFile);
+        Logger.getLogger(EntitiesRaws.class.getName()).log(Level.INFO, "Sql entity definition '" + path + "' transformed and written to: " + entityClassFile);
         return entityClassFile;
     }
 
@@ -117,12 +133,36 @@ public class EntitiesRows {
                         toJavaSource(path);
                         return 1;
                     } catch (UncheckedSQLException | UncheckedJSqlParserException | IOException ex) {
-                        Logger.getLogger(EntitiesRows.class.getName()).log(Level.SEVERE, "Sql entity definition '" + path + "' skipped due to an exception", ex);
+                        Logger.getLogger(EntitiesRaws.class.getName()).log(Level.SEVERE, "Sql entity definition '" + path + "' skipped due to an exception", ex);
                         return 0;
                     }
                 })
                 .reduce(Integer::sum)
                 .orElse(0);
+    }
+
+    private StringBuilder generateForwardMappings(SqlEntity anEntity) {
+        return anEntity.getFields().values().stream()
+                .map(Utils.ModelField::new)
+                .map(modelField -> Utils.replaceVariables(modelField.getGenericType() == GenericType.DOUBLE || modelField.getGenericType() == GenericType.LONG ? narrowedForwardMappingTemplate : forwardMappingTemplate, Map.of(
+                        "propertyMutator", modelField.getPropertyMutator(),
+                        "propertyType", modelField.getPropertyType(),
+                        "fieldName", modelField.getFieldName(),
+                        "genericType", (modelField.getGenericType() != null ? modelField.getGenericType() : GenericType.STRING).name()
+                ), lf))
+                .reduce((m1, m2) -> m1.append(lf).append(m2))
+                .orElse(new StringBuilder());
+    }
+
+    private StringBuilder generateReverseMappings(SqlEntity anEntity) {
+        return anEntity.getFields().values().stream()
+                .map(Utils.ModelField::new)
+                .map(modelField -> Utils.replaceVariables(reverseMappingTemplate, Map.of(
+                        "propertyGetter", modelField.getPropertyGetter(),
+                        "fieldName", modelField.getFieldName()
+                ), lf))
+                .reduce((m1, m2) -> m1.append(",").append(lf).append(m2))
+                .orElse(new StringBuilder());
     }
 
 }

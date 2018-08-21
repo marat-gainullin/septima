@@ -1,0 +1,35 @@
+/*
+ * This source file is generated automatically.
+ * Please, don't edit it manually.
+ */
+${package}
+import com.septima.model.Observable;
+
+${dateImport}import java.util.Map;
+import java.util.function.Supplier;
+
+import static com.septima.model.Model.entry;
+import static com.septima.model.Model.map;
+
+public class ${entityBaseClass} extends Observable {
+
+    private static final long serialVersionUID = 1L;
+
+${propertiesFields}
+${propertiesAccessors}
+    public static <T extends ${entityBaseClass}> T of(Map<String, Object> aDatum, Supplier<T> aSupplier) {
+        T instance = aSupplier.get();
+${forwardMappings}
+        return instance;
+    }
+
+    public static ${entityBaseClass} of(Map<String, Object> aDatum) {
+        return of(aDatum, ${entityBaseClass}::new);
+    }
+
+    public static Map<String, Object> asMap(${entityBaseClass} anInstance) {
+        return map(
+${reverseMappings}
+        );
+    }
+}

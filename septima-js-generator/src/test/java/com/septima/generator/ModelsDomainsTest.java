@@ -16,7 +16,7 @@ import java.nio.file.Path;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class ModelsTest {
+public class ModelsDomainsTest {
 
     private static String rn2n(String withRn) {
         return withRn.replace("\r\n", "\n").replace("\n\r", "\n").replace("\r", "\n");
@@ -34,10 +34,10 @@ public class ModelsTest {
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
         );
         Path destination = new File(System.getProperty("generated.path")).toPath().resolve(testAppSuffix);
-        EntitiesRows javaEntities = EntitiesRows.fromResources(sqlEntities, destination);
+        EntitiesRaws javaEntities = EntitiesRaws.fromResources(sqlEntities, destination);
         javaEntities.deepToJavaSources(testAppPath);
-        Models javaModels = Models.fromResources(sqlEntities, testAppPath, destination);
-        assertTrue(javaModels.deepToJavaSources(testAppPath) > 0);
+        ModelsDomains javaModelsDomains = ModelsDomains.fromResources(sqlEntities, testAppPath, destination);
+        assertTrue(javaModelsDomains.deepToJavaSources(testAppPath) > 0);
     }
 
     private void checkModel(String testAppSuffix, String modelRelativePathName) throws IOException {
@@ -64,7 +64,7 @@ public class ModelsTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void generateModelWithAmbiguousPrimaryKey() throws IOException, URISyntaxException {
+    public void generateModelWithAmbiguousPrimaryKey() throws IOException {
         generateModel("ambiguous/key");
     }
 

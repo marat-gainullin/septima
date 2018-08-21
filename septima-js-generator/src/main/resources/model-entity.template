@@ -18,15 +18,8 @@ ${groupsDeclarations}
             "${entityRef}",
             "${entityKey}",
             ${entityClass}::${entityKeyGetter},
-            datum -> {
-                ${entityClass} instance = new ${entityClass}();
-
-${forwardMappings}
-                return instance;
-            },
-            instance -> map(
-${reverseMappings}
-            ),
+            datum -> ${entityBaseClass}.of(datum, ${entityClass}::new),
+            ${entityBaseClass}::asMap,
             instance -> {${groupsFulfills}
             },
             instance -> {${groupsEvicts}

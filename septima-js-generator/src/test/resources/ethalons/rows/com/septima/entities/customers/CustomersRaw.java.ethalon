@@ -1,0 +1,59 @@
+/*
+ * This source file is generated automatically.
+ * Please, don't edit it manually.
+ */
+package com.septima.entities.customers;
+
+import com.septima.model.Observable;
+
+import java.util.Map;
+import java.util.function.Supplier;
+
+import static com.septima.model.Model.entry;
+import static com.septima.model.Model.map;
+
+public class CustomersRaw extends Observable {
+
+    private static final long serialVersionUID = 1L;
+
+    private long id;
+    private String name;
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long aValue) {
+        long old = id;
+        id = aValue;
+        changeSupport.firePropertyChange("id", old, id);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String aValue) {
+        String old = name;
+        name = aValue;
+        changeSupport.firePropertyChange("name", old, name);
+    }
+
+    public static <T extends CustomersRaw> T of(Map<String, Object> aDatum, Supplier<T> aSupplier) {
+        T instance = aSupplier.get();
+        instance.setId((long) com.septima.GenericType.LONG.narrow(aDatum.get("id")));
+        instance.setName((String) aDatum.get("name"));
+        return instance;
+    }
+
+    public static CustomersRaw of(Map<String, Object> aDatum) {
+        return of(aDatum, CustomersRaw::new);
+    }
+
+    public static Map<String, Object> asMap(CustomersRaw anInstance) {
+        return map(
+                entry("id", anInstance.getId()),
+                entry("name", anInstance.getName())
+        );
+    }
+}

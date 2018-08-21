@@ -15,7 +15,7 @@ import java.nio.file.Path;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class EntitiesRowsTest {
+public class EntitiesRawsTest {
 
     private static String rn2n(String withRn) {
         return withRn.replace("\r\n", "\n").replace("\n\r", "\n").replace("\r", "\n");
@@ -27,7 +27,7 @@ public class EntitiesRowsTest {
     }
 
     @Test
-    public void generateRows() throws IOException {
+    public void generateRaws() throws IOException {
         Path testAppPath = new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath().resolve("rows");
         SqlEntities entities = new SqlEntities(
                 testAppPath,
@@ -35,11 +35,11 @@ public class EntitiesRowsTest {
         );
         Path destination = new File(System.getProperty("generated.path")).toPath().resolve("rows");
         Path ethalons = new File(System.getProperty("ethalons.path")).toPath().resolve("rows");
-        EntitiesRows generator = EntitiesRows.fromResources(entities, destination);
+        EntitiesRaws generator = EntitiesRaws.fromResources(entities, destination);
         assertTrue(generator.deepToJavaSources(testAppPath) > 0);
-        String customersEntityPathName = "com/septima/entities/customers/CustomersRow.java";
-        String goodsEntityPathName = "com/septima/entities/goods/GoodsRow.java";
-        String ordersEntityPathName = "com/septima/entities/orders/OrdersRow.java";
+        String customersEntityPathName = "com/septima/entities/customers/CustomersRaw.java";
+        String goodsEntityPathName = "com/septima/entities/goods/GoodsRaw.java";
+        String ordersEntityPathName = "com/septima/entities/orders/OrdersRaw.java";
         String ethalonCustomers = new String(Files.readAllBytes(ethalons.resolve(customersEntityPathName + ".ethalon")), StandardCharsets.UTF_8);
         String generatedCustomers = new String(Files.readAllBytes(destination.resolve(customersEntityPathName)), StandardCharsets.UTF_8);
         assertEquals(rn2n(ethalonCustomers), rn2n(generatedCustomers));

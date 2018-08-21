@@ -3,9 +3,9 @@
  * Please, don't edit it manually.
  */
 
-import goods.GoodsRow;
-import orders.OrdersRow;
-import customers.CustomersRow;
+import goods.GoodsRaw;
+import orders.OrdersRaw;
+import customers.CustomersRaw;
 import com.septima.entities.SqlEntities;
 import com.septima.model.Model;
 
@@ -13,7 +13,7 @@ import java.util.*;
 
 public class GoodOrders extends Model {
 
-    public class Good extends GoodsRow {
+    public class Good extends GoodsRaw {
 
         @Override
         public void setId(long aValue) {
@@ -33,25 +33,15 @@ public class GoodOrders extends Model {
             "goods/goods",
             "id",
             Good::getId,
-            datum -> {
-                Good instance = new Good();
-
-                instance.setId((long) datum.get("id"));
-                instance.setName((String) datum.get("name"));
-
-                return instance;
-            },
-            instance -> map(
-                    entry("id", instance.getId()),
-                    entry("name", instance.getName())
-            ),
+            datum -> GoodsRaw.of(datum, Good::new),
+            GoodsRaw::asMap,
             instance -> {
             },
             instance -> {
             }
     );
 
-    public class Order extends OrdersRow {
+    public class Order extends OrdersRaw {
 
         @Override
         public void setId(long aValue) {
@@ -121,34 +111,8 @@ public class GoodOrders extends Model {
             "orders/orders",
             "id",
             Order::getId,
-            datum -> {
-                Order instance = new Order();
-
-                instance.setId((long) datum.get("id"));
-                instance.setCustomerId((long) datum.get("customer_id"));
-                instance.setSellerId((Long) datum.get("seller_id"));
-                instance.setGoodId((long) datum.get("good_id"));
-                instance.setComment((String) datum.get("comment"));
-                instance.setMoment((Date) datum.get("moment"));
-                instance.setPaid((Boolean) datum.get("paid"));
-                instance.setSumm((Double) datum.get("summ"));
-                instance.setDestination((String) datum.get("destination"));
-                instance.setBadData((String) datum.get("bad_data"));
-
-                return instance;
-            },
-            instance -> map(
-                    entry("id", instance.getId()),
-                    entry("customer_id", instance.getCustomerId()),
-                    entry("seller_id", instance.getSellerId()),
-                    entry("good_id", instance.getGoodId()),
-                    entry("comment", instance.getComment()),
-                    entry("moment", instance.getMoment()),
-                    entry("paid", instance.getPaid()),
-                    entry("summ", instance.getSumm()),
-                    entry("destination", instance.getDestination()),
-                    entry("bad_data", instance.getBadData())
-            ),
+            datum -> OrdersRaw.of(datum, Order::new),
+            OrdersRaw::asMap,
             instance -> {
                 toGroups(instance, ordersBySellerId, instance.getSellerId());
                 toGroups(instance, ordersByCustomerId, instance.getCustomerId());
@@ -161,7 +125,7 @@ public class GoodOrders extends Model {
             }
     );
 
-    public class Customer extends CustomersRow {
+    public class Customer extends CustomersRaw {
 
         @Override
         public void setId(long aValue) {
@@ -185,25 +149,15 @@ public class GoodOrders extends Model {
             "customers/customers",
             "id",
             Customer::getId,
-            datum -> {
-                Customer instance = new Customer();
-
-                instance.setId((long) datum.get("id"));
-                instance.setName((String) datum.get("name"));
-
-                return instance;
-            },
-            instance -> map(
-                    entry("id", instance.getId()),
-                    entry("name", instance.getName())
-            ),
+            datum -> CustomersRaw.of(datum, Customer::new),
+            CustomersRaw::asMap,
             instance -> {
             },
             instance -> {
             }
     );
 
-    public class Seller extends CustomersRow {
+    public class Seller extends CustomersRaw {
 
         @Override
         public void setId(long aValue) {
@@ -227,18 +181,8 @@ public class GoodOrders extends Model {
             "customers/customers",
             "id",
             Seller::getId,
-            datum -> {
-                Seller instance = new Seller();
-
-                instance.setId((long) datum.get("id"));
-                instance.setName((String) datum.get("name"));
-
-                return instance;
-            },
-            instance -> map(
-                    entry("id", instance.getId()),
-                    entry("name", instance.getName())
-            ),
+            datum -> CustomersRaw.of(datum, Seller::new),
+            CustomersRaw::asMap,
             instance -> {
             },
             instance -> {

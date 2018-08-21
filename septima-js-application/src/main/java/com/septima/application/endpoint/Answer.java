@@ -4,7 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.septima.application.exceptions.*;
+import com.septima.application.exceptions.EndPointException;
+import com.septima.application.exceptions.InvalidRequestException;
+import com.septima.application.exceptions.NoAccessException;
+import com.septima.application.exceptions.NoCollectionException;
+import com.septima.application.exceptions.NoImplementationException;
+import com.septima.application.exceptions.NoInstanceException;
 import com.septima.application.io.RequestBodyReceiver;
 import com.septima.application.io.ResponseBodySender;
 
@@ -14,6 +19,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -102,7 +109,8 @@ public class Answer {
                 th instanceof NoInstanceException || th instanceof NoCollectionException ? HttpServletResponse.SC_NOT_FOUND :
                         th instanceof NoAccessException ? HttpServletResponse.SC_FORBIDDEN :
                                 th instanceof InvalidRequestException || th instanceof NoImplementationException ? HttpServletResponse.SC_METHOD_NOT_ALLOWED :
-                                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                                        th instanceof SQLException ? HttpServletResponse.SC_CONFLICT :
+                                                HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         if (th instanceof EndPointException && th.getMessage() != null && !th.getMessage().isEmpty()) {
             withJsonObject(Map.of("description", th.getMessage()));
         } else {
@@ -133,7 +141,7 @@ public class Answer {
         }
     }
 
-    public void withJsonArray(List<Map<String, Object>> aData) {
+    public void withJsonArray(Collection<Map<String, Object>> aData) {
         try {
             withContent(JSON_CONTENT_TYPE, JSON_WRITER.writeValueAsBytes(aData));
         } catch (IOException ex) {

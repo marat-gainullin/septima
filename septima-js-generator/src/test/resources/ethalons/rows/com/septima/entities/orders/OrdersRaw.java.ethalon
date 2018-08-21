@@ -5,9 +5,15 @@
 package com.septima.entities.orders;
 
 import com.septima.model.Observable;
-import java.util.Date;
 
-public class OrdersRow extends Observable {
+import java.util.Date;
+import java.util.Map;
+import java.util.function.Supplier;
+
+import static com.septima.model.Model.entry;
+import static com.septima.model.Model.map;
+
+public class OrdersRaw extends Observable {
 
     private static final long serialVersionUID = 1L;
 
@@ -122,4 +128,37 @@ public class OrdersRow extends Observable {
         changeSupport.firePropertyChange("summ", old, summ);
     }
 
+    public static <T extends OrdersRaw> T of(Map<String, Object> aDatum, Supplier<T> aSupplier) {
+        T instance = aSupplier.get();
+        instance.setId((long) com.septima.GenericType.LONG.narrow(aDatum.get("id")));
+        instance.setCustomerId((long) com.septima.GenericType.LONG.narrow(aDatum.get("customer_id")));
+        instance.setSellerId((Long) com.septima.GenericType.LONG.narrow(aDatum.get("seller_id")));
+        instance.setGoodId((long) com.septima.GenericType.LONG.narrow(aDatum.get("good_id")));
+        instance.setComment((String) aDatum.get("comment"));
+        instance.setMoment((Date) aDatum.get("moment"));
+        instance.setPaid((Boolean) aDatum.get("paid"));
+        instance.setSumm((Double) com.septima.GenericType.DOUBLE.narrow(aDatum.get("summ")));
+        instance.setDestination((String) aDatum.get("destination"));
+        instance.setBadData((String) aDatum.get("bad_data"));
+        return instance;
+    }
+
+    public static OrdersRaw of(Map<String, Object> aDatum) {
+        return of(aDatum, OrdersRaw::new);
+    }
+
+    public static Map<String, Object> asMap(OrdersRaw anInstance) {
+        return map(
+                entry("id", anInstance.getId()),
+                entry("customer_id", anInstance.getCustomerId()),
+                entry("seller_id", anInstance.getSellerId()),
+                entry("good_id", anInstance.getGoodId()),
+                entry("comment", anInstance.getComment()),
+                entry("moment", anInstance.getMoment()),
+                entry("paid", anInstance.getPaid()),
+                entry("summ", anInstance.getSumm()),
+                entry("destination", anInstance.getDestination()),
+                entry("bad_data", anInstance.getBadData())
+        );
+    }
 }

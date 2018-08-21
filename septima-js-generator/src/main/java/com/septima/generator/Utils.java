@@ -1,5 +1,6 @@
 package com.septima.generator;
 
+import com.septima.GenericType;
 import com.septima.metadata.EntityField;
 
 import java.io.BufferedReader;
@@ -20,6 +21,7 @@ public class Utils {
         private final String propertyGetter;
         private final String propertyMutator;
         private final String fieldName;
+        private final GenericType genericType;
 
         public ModelField(EntityField field) {
             propertyType = Utils.javaType(field);
@@ -28,6 +30,7 @@ public class Utils {
             propertyMutator = "set" + accessor;
             property = accessor.substring(0, 1).toLowerCase() + accessor.substring(1);
             fieldName = field.getName();
+            genericType = field.getType();
         }
 
         public String getPropertyType() {
@@ -48,6 +51,10 @@ public class Utils {
 
         public String getFieldName() {
             return fieldName;
+        }
+
+        public GenericType getGenericType() {
+            return genericType;
         }
     }
 
@@ -87,12 +94,12 @@ public class Utils {
                 .toString();
     }
 
-    public static String entityRowClass(String name) {
-        return toPascalCase(name) + "Row";
+    public static String rawClass(String name) {
+        return toPascalCase(name) + "Raw";
     }
 
     public static String loadResource(String resourceName, Charset aCharset, String lf) throws IOException {
-        try (BufferedReader buffered = new BufferedReader(new InputStreamReader(EntitiesRows.class.getResourceAsStream(resourceName), aCharset))) {
+        try (BufferedReader buffered = new BufferedReader(new InputStreamReader(EntitiesRaws.class.getResourceAsStream(resourceName), aCharset))) {
             return buffered.lines().collect(Collectors.joining(lf, "", lf));
         }
     }

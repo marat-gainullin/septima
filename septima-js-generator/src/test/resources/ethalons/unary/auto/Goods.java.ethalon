@@ -10,7 +10,7 @@ import java.util.*;
 
 public class Goods extends Model {
 
-    public class Hierarchy extends GoodsHierarchyRow {
+    public class Hierarchy extends GoodsHierarchyRaw {
 
         @Override
         public void setId(long aValue) {
@@ -63,20 +63,8 @@ public class Goods extends Model {
             "goods-hierarchy",
             "id",
             Hierarchy::getId,
-            datum -> {
-                Hierarchy instance = new Hierarchy();
-
-                instance.setId((long) datum.get("id"));
-                instance.setName((String) datum.get("name"));
-                instance.setParentId((Long) datum.get("parent_id"));
-
-                return instance;
-            },
-            instance -> map(
-                    entry("id", instance.getId()),
-                    entry("name", instance.getName()),
-                    entry("parent_id", instance.getParentId())
-            ),
+            datum -> GoodsHierarchyRaw.of(datum, Hierarchy::new),
+            GoodsHierarchyRaw::asMap,
             instance -> {
                 toGroups(instance, hierarchyByParentId, instance.getParentId());
             },

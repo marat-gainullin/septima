@@ -1,0 +1,1 @@
+        instance.${propertyMutator}((${propertyType}) aDatum.get("${fieldName}"));

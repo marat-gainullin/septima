@@ -1,0 +1,1 @@
+        instance.${propertyMutator}((${propertyType}) com.septima.GenericType.${genericType}.narrow(aDatum.get("${fieldName}")));

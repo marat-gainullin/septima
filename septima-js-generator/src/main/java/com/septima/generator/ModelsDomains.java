@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class Models {
+public class ModelsDomains {
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -27,8 +27,6 @@ public class Models {
     private final String modelEntityGetterTemplate;
     private final String modelInstanceFactoryTemplate;
     private final String modelEntityTemplate;
-    private final String forwardMappingTemplate;
-    private final String reverseMappingTemplate;
     private final String groupDeclarationTemplate;
     private final String groupFulfillTemplate;
     private final String groupEvictTemplate;
@@ -42,18 +40,16 @@ public class Models {
     private final String lf;
     private final Charset charset;
 
-    public static Models fromResources(SqlEntities anEntities, Path aModelsRoot, Path aDestination) throws IOException {
+    public static ModelsDomains fromResources(SqlEntities anEntities, Path aModelsRoot, Path aDestination) throws IOException {
         return fromResources(anEntities, aModelsRoot, aDestination, StandardCharsets.UTF_8, System.lineSeparator());
     }
 
-    public static Models fromResources(SqlEntities anEntities, Path aModelsRoot, Path aDestination, Charset aCharset, String aLf) throws IOException {
-        return new Models(anEntities, aModelsRoot, aDestination,
+    public static ModelsDomains fromResources(SqlEntities anEntities, Path aModelsRoot, Path aDestination, Charset aCharset, String aLf) throws IOException {
+        return new ModelsDomains(anEntities, aModelsRoot, aDestination,
                 Utils.loadResource("/model.template", aCharset, aLf),
                 Utils.loadResource("/model-entity.template", aCharset, aLf),
                 Utils.loadResource("/model-entity-getter.template", aCharset, aLf),
                 Utils.loadResource("/model-instance-factory.template", aCharset, aLf),
-                Utils.loadResource("/model-entity/forward-mapping.template", aCharset, aLf),
-                Utils.loadResource("/model-entity/reverse-mapping.template", aCharset, aLf),
                 Utils.loadResource("/model-entity/group-declaration.template", aCharset, aLf),
                 Utils.loadResource("/model-entity/group-fulfill.template", aCharset, aLf),
                 Utils.loadResource("/model-entity/group-evict.template", aCharset, aLf),
@@ -63,20 +59,18 @@ public class Models {
                 aLf, aCharset);
     }
 
-    private Models(SqlEntities anEntities, Path aModelsRoot, Path aDestination,
-                  String aModelTemplate,
-                  String aModelEntityTemplate,
-                  String aModelEntityGetterTemplate,
-                  String aModelInstanceFactoryTemplate,
-                  String aForwardMappingTemplate,
-                  String aReverseMappingTemplate,
-                  String aGroupDeclarationTemplate,
-                  String aGroupFulfillTemplate,
-                  String aGroupEvictTemplate,
-                  String aRequiredScalarPropertyTemplate,
-                  String aNullableScalarPropertyTemplate,
-                  String aCollectionPropertyTemplate,
-                  String aLf, Charset aCharset) {
+    private ModelsDomains(SqlEntities anEntities, Path aModelsRoot, Path aDestination,
+                          String aModelTemplate,
+                          String aModelEntityTemplate,
+                          String aModelEntityGetterTemplate,
+                          String aModelInstanceFactoryTemplate,
+                          String aGroupDeclarationTemplate,
+                          String aGroupFulfillTemplate,
+                          String aGroupEvictTemplate,
+                          String aRequiredScalarPropertyTemplate,
+                          String aNullableScalarPropertyTemplate,
+                          String aCollectionPropertyTemplate,
+                          String aLf, Charset aCharset) {
         entities = anEntities;
         modelsRoot = aModelsRoot;
         destination = aDestination;
@@ -84,8 +78,6 @@ public class Models {
         modelEntityTemplate = aModelEntityTemplate;
         modelEntityGetterTemplate = aModelEntityGetterTemplate;
         modelInstanceFactoryTemplate = aModelInstanceFactoryTemplate;
-        forwardMappingTemplate = aForwardMappingTemplate;
-        reverseMappingTemplate = aReverseMappingTemplate.replace(aLf, "");
         groupDeclarationTemplate = aGroupDeclarationTemplate;
         groupFulfillTemplate = aGroupFulfillTemplate.replace(aLf, "");
         groupEvictTemplate = aGroupEvictTemplate.replace(aLf, "");
@@ -107,19 +99,19 @@ public class Models {
         Path modelRelativePath = modelsRoot.relativize(modelPath).normalize();
         Path modelRelativeDirPath = modelRelativePath.getParent();
         String modelName = modelRelativePath.getFileName().toString();
-        String modelClassName = Utils.toPascalCase(modelName.substring(0, modelName.length() - 11));
+        String domainClassName = Utils.toPascalCase(modelName.substring(0, modelName.length() - 11));
         JsonNode modelDocument = JSON.readTree(modelPath.toFile());
         if (modelDocument != null && modelDocument.isObject()) {
             Map<String, ModelEntity> modelEntities = readModelEntities(modelDocument, modelPath);
             complementReferences(modelEntities);
             resolveInReferences(modelEntities);
-            String modelBody = generateModelBody(modelEntities, modelClassName, modelRelativeDirPath != null ? ("package " + modelRelativeDirPath.toString().replace('\\', '/').replace('/', '.') + ";" + lf + lf) : "");
-            Path modelClassFile = destination.resolve(modelRelativePath.resolveSibling(modelClassName + ".java"));
+            String modelBody = generateModelBody(modelEntities, domainClassName, modelRelativeDirPath != null ? ("package " + modelRelativeDirPath.toString().replace('\\', '/').replace('/', '.') + ";" + lf + lf) : "");
+            Path modelClassFile = destination.resolve(modelRelativePath.resolveSibling(domainClassName + ".java"));
             if (!modelClassFile.getParent().toFile().exists()) {
                 modelClassFile.getParent().toFile().mkdirs();
             }
             Files.write(modelClassFile, modelBody.getBytes(charset));
-            Logger.getLogger(Models.class.getName()).log(Level.INFO, "Model definition '" + modelPath + "' transformed and written to: " + modelClassFile);
+            Logger.getLogger(ModelsDomains.class.getName()).log(Level.INFO, "Model definition '" + modelPath + "' transformed and written to: " + modelClassFile);
             return modelClassFile;
         } else {
             throw new IllegalArgumentException("Bad '*.model.json' format detected in '" + modelPath + "'. 'sqlEntities' is required object in model definition");
@@ -134,7 +126,7 @@ public class Models {
                         toJavaSource(modelPath);
                         return 1;
                     } catch (IOException | IllegalArgumentException ex) {
-                        Logger.getLogger(Models.class.getName()).log(Level.SEVERE, "Model definition '" + modelPath + "' skipped due to an exception", ex);
+                        Logger.getLogger(ModelsDomains.class.getName()).log(Level.SEVERE, "Model definition '" + modelPath + "' skipped due to an exception", ex);
                         return 0;
                     }
                 })
@@ -220,7 +212,7 @@ public class Models {
             }
             String entityRef = entity.getName();
             int lastSlashAt = entityRef.lastIndexOf('/');
-            baseClassName = Utils.entityRowClass(entityRef.substring(lastSlashAt + 1));
+            baseClassName = Utils.rawClass(entityRef.substring(lastSlashAt + 1));
             baseClassPackage = lastSlashAt > -1 ? entityRef.substring(0, lastSlashAt).replace('/', '.') : null;
         }
     }
@@ -265,43 +257,17 @@ public class Models {
                 .toString();
     }
 
-    private String generateForwardMappings(ModelEntity aEntity) {
-        return aEntity.entity.getFields().values().stream()
-                .map(Utils.ModelField::new)
-                .map(modelField -> Utils.replaceVariables(forwardMappingTemplate, Map.of(
-                        "propertyMutator", modelField.getPropertyMutator(),
-                        "propertyType", modelField.getPropertyType(),
-                        "fieldName", modelField.getFieldName()
-                ), lf))
-                .reduce(StringBuilder::append)
-                .orElse(new StringBuilder())
-                .toString();
-
-    }
-
-    private String generateReverseMappings(ModelEntity aEntity) {
-        return aEntity.entity.getFields().values().stream()
-                .map(Utils.ModelField::new)
-                .map(modelField -> Utils.replaceVariables(reverseMappingTemplate, Map.of(
-                        "propertyGetter", modelField.getPropertyGetter(),
-                        "fieldName", modelField.getFieldName()
-                ), lf))
-                .reduce((m1, m2) -> m1.append(",").append(lf).append(m2))
-                .orElse(new StringBuilder())
-                .toString();
-    }
-
     private String generateScalarProperties(ModelEntity aEntity, Map<String, ModelEntity> modelEntities) {
         return aEntity.outReferences.values().stream()
                 .filter(reference -> {
                     if (!modelEntities.containsKey(reference.destination)) {
-                        Logger.getLogger(Models.class.getName()).log(Level.WARNING, "Target model entity '" + reference.destination + "' is not found in model while scalar property '" + aEntity.modelName + "." + reference.scalar + "' generation");
+                        Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "Target model entity '" + reference.destination + "' is not found in model while scalar property '" + aEntity.modelName + "." + reference.scalar + "' generation");
                     }
                     return modelEntities.containsKey(reference.destination);
                 })
                 .filter(reference -> {
                     if (!aEntity.fieldsByProperty.containsKey(reference.property)) {
-                        Logger.getLogger(Models.class.getName()).log(Level.WARNING, "No reference property '" + reference.property + "' found in model entity '" + aEntity.modelName + "' while scalar property '" + aEntity.modelName + "." + reference.scalar + "' generation");
+                        Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "No reference property '" + reference.property + "' found in model entity '" + aEntity.modelName + "' while scalar property '" + aEntity.modelName + "." + reference.scalar + "' generation");
                     }
                     return aEntity.fieldsByProperty.containsKey(reference.property);
                 })
@@ -348,29 +314,27 @@ public class Models {
                 .toString();
     }
 
-    private String generateModelEntityBody(ModelEntity aEntity, Map<String, ModelEntity> modelEntities) {
+    private String generateModelEntityBody(ModelEntity anEntity, Map<String, ModelEntity> modelEntities) {
         return Utils.replaceVariables(modelEntityTemplate, Map.ofEntries(
-                Map.entry("entityClass", aEntity.className),
-                Map.entry("entityBaseClass", aEntity.baseClassName),
-                Map.entry("scalarProperties", generateScalarProperties(aEntity, modelEntities)),
-                Map.entry("collectionProperties", generateCollectionProperties(aEntity, modelEntities)),
-                Map.entry("groupsDeclarations", generateGroupsDeclarations(aEntity)),
-                Map.entry("forwardMappings", generateForwardMappings(aEntity)),
-                Map.entry("reverseMappings", generateReverseMappings(aEntity)),
-                Map.entry("groupsFulfills", generateGroupsFulfills(aEntity)),
-                Map.entry("groupsEvicts", generateGroupsEvicts(aEntity)),
-                Map.entry("entityKeyType", aEntity.keyType),
-                Map.entry("entityKeyBoxedType", aEntity.boxedKeyType),
-                Map.entry("modelEntity", aEntity.modelName),
-                Map.entry("entityRef", aEntity.entity.getName()),
-                Map.entry("entityKey", aEntity.key),
-                Map.entry("entityKeyGetter", aEntity.keyGetter),
-                Map.entry("entityKeyMutator", aEntity.keyMutator)
+                Map.entry("entityClass", anEntity.className),
+                Map.entry("entityBaseClass", anEntity.baseClassName),
+                Map.entry("scalarProperties", generateScalarProperties(anEntity, modelEntities)),
+                Map.entry("collectionProperties", generateCollectionProperties(anEntity, modelEntities)),
+                Map.entry("groupsDeclarations", generateGroupsDeclarations(anEntity)),
+                Map.entry("groupsFulfills", generateGroupsFulfills(anEntity)),
+                Map.entry("groupsEvicts", generateGroupsEvicts(anEntity)),
+                Map.entry("entityKeyType", anEntity.keyType),
+                Map.entry("entityKeyBoxedType", anEntity.boxedKeyType),
+                Map.entry("modelEntity", anEntity.modelName),
+                Map.entry("entityRef", anEntity.entity.getName()),
+                Map.entry("entityKey", anEntity.key),
+                Map.entry("entityKeyGetter", anEntity.keyGetter),
+                Map.entry("entityKeyMutator", anEntity.keyMutator)
         ), lf).toString();
     }
 
     private String generateModelBody(Map<String, ModelEntity> modelEntities, String modelClassName, String packageName) {
-        StringBuilder entitiesRowsImports = modelEntities.values().stream()
+        StringBuilder rawsImports = modelEntities.values().stream()
                 .filter(modelEntity -> modelEntity.baseClassPackage != null && !modelEntity.baseClassPackage.isEmpty())
                 .map(modelEntity -> "import " + modelEntity.baseClassPackage + "." + modelEntity.baseClassName + ";" + lf)
                 .distinct()
@@ -400,7 +364,7 @@ public class Models {
         return Utils.replaceVariables(modelTemplate, Map.of(
                 "package", packageName,
                 "modelClass", modelClassName,
-                "entitiesRowsImports", entitiesRowsImports.toString(),
+                "entitiesRowsImports", rawsImports.toString(),
                 "modelEntities", modelEntitiesBodies.toString(),
                 "modelEntitiesGetters", modelEntitiesGetters.toString(),
                 "modelInstancesFactories", modelInstancesFactories.toString()
@@ -428,12 +392,12 @@ public class Models {
                                     if (!targetEntity.fieldsByProperty.containsKey(sourceEntity.modelName)) {
                                         sourceEntity.outReferences.put(propertyName, new Reference(propertyName, Utils.javaType(propertyField), sourceEntity.modelName, targetEntity.modelName, scalarName, sourceEntity.modelName));
                                     } else {
-                                        Logger.getLogger(Models.class.getName()).log(Level.WARNING, "Generated collection property name clashes with original property '" + targetEntity.modelName + "." + sourceEntity.modelName + "'");
+                                        Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "Generated collection property name clashes with original property '" + targetEntity.modelName + "." + sourceEntity.modelName + "'");
                                     }
                                 } else if (targetEntities.isEmpty()) {
-                                    Logger.getLogger(Models.class.getName()).log(Level.WARNING, "No target model entity found for scalar property '" + sourceEntity.modelName + "." + scalarName + "' while references auto detection");
+                                    Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "No target model entity found for scalar property '" + sourceEntity.modelName + "." + scalarName + "' while references auto detection");
                                 } else {
-                                    Logger.getLogger(Models.class.getName()).log(Level.WARNING, "Target model entity for scalar property '" + sourceEntity.modelName + "." + scalarName + "' is ambiguous. Candidates are: [" + targetEntities.stream()
+                                    Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "Target model entity for scalar property '" + sourceEntity.modelName + "." + scalarName + "' is ambiguous. Candidates are: [" + targetEntities.stream()
                                             .map(modelEntity -> modelEntity.modelName)
                                             .map(name -> new StringBuilder().append("'").append(name).append("'"))
                                             .reduce((name1, name2) -> name1.append(", ").append(name2))
@@ -441,7 +405,7 @@ public class Models {
                                             .toString() + "]");
                                 }
                             } else {
-                                Logger.getLogger(Models.class.getName()).log(Level.WARNING, "Property '" + propertyName + "' is not suitable for scalar property name generation in model entity '" + sourceEntity.modelName);
+                                Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "Property '" + propertyName + "' is not suitable for scalar property name generation in model entity '" + sourceEntity.modelName);
                             }
                         })
                 );
@@ -454,7 +418,7 @@ public class Models {
                     if (aEntities.containsKey(reference.destination)) {
                         aEntities.get(reference.destination).inReferences.put(reference.collection, reference);
                     } else {
-                        Logger.getLogger(Models.class.getName()).log(Level.WARNING, "Target model entity '" + reference.destination + "' is not found in reference '" + reference.source + "." + reference.property + "'");
+                        Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "Target model entity '" + reference.destination + "' is not found in reference '" + reference.source + "." + reference.property + "'");
                     }
                 });
     }
@@ -507,20 +471,18 @@ public class Models {
                                     .collect(Collectors.toMap(reference -> reference.property, Function.identity())) :
                             new HashMap<>();
                     JsonNode keyNode = entityBodyNode.get("key");
-                    String keyName;
                     EntityField keyField;
                     if (keyNode != null && keyNode.isTextual() && !keyNode.asText().isEmpty()) {
-                        keyName = fieldToProperty(keyNode.asText());
-                        keyField = fieldsByProperty.get(keyName);
+                        // This should be field name, but we want to be able to use both 'pet_id' or 'petId' names
+                        String keyPropertyName = fieldToProperty(keyNode.asText());
+                        keyField = fieldsByProperty.get(keyPropertyName);
                     } else {
                         List<EntityField> pks = fieldsByProperty.values().stream()
                                 .filter(Field::isPk)
                                 .collect(Collectors.toList());
                         if (pks.size() == 1) {
                             keyField = pks.get(0);
-                            keyName = fieldToProperty(keyField.getName());
                         } else if (pks.isEmpty()) {
-                            keyName = null;
                             keyField = null;
                         } else {
                             throw new IllegalStateException("Model entity '" + modelEntityName + "' in model '" + modelPath + "' has ambiguous key. Candidates are: [" + pks.stream()
@@ -540,7 +502,7 @@ public class Models {
                                 modelEntityName,
                                 modelClassName,
                                 entity,
-                                keyName,
+                                keyField.getName(),
                                 Utils.javaType(keyField),
                                 Utils.javaType(keyField, true),
                                 fieldsByProperty,
