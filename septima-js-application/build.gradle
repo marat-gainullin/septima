@@ -1,5 +1,7 @@
 apply plugin: 'jacoco'
 
+version = '0.0.7'
+
 def servletVersion = '3.1.0'
 def mailVersion = '1.4.7'
 def webSocketVersion = '1.1'

@@ -19,6 +19,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
@@ -156,6 +158,14 @@ public class Answer {
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
+    }
+
+    public void withContent(String aContentType, String aData) {
+        withContent(aContentType, aData.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public void withJsonContent(String aData) {
+        withContent("application/json;charset=utf-8", aData.getBytes(StandardCharsets.UTF_8));
     }
 
     public void ok() {
