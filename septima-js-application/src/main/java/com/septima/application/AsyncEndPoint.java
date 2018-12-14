@@ -3,7 +3,6 @@ package com.septima.application;
 import com.septima.application.endpoint.Answer;
 import com.septima.application.endpoint.HttpEndPoint;
 import com.septima.application.exceptions.NoImplementationException;
-import com.septima.entities.SqlEntities;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServlet;
@@ -17,7 +16,6 @@ import java.util.logging.Logger;
 public abstract class AsyncEndPoint extends HttpServlet implements HttpEndPoint {
 
     protected transient volatile Executor futuresExecutor;
-    protected transient volatile SqlEntities entities;
 
     private void handleAsync(Consumer<Answer> aHandler, AsyncContext aContext) {
         aHandler.accept(new Answer(aContext, futuresExecutor));
@@ -34,7 +32,6 @@ public abstract class AsyncEndPoint extends HttpServlet implements HttpEndPoint 
     public final void init() {
         try {
             futuresExecutor = Config.lookupExecutor();
-            entities = Data.getInstance().getEntities();
             prepare();
         } catch (Throwable th) {
             Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Problem while endpoint init", th);

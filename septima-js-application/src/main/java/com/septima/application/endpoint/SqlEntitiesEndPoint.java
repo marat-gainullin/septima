@@ -3,9 +3,11 @@ package com.septima.application.endpoint;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import com.septima.GenericType;
 import com.septima.application.AsyncEndPoint;
+import com.septima.application.Data;
 import com.septima.application.exceptions.NotPublicException;
 import com.septima.application.exceptions.ReadsNotAllowedException;
 import com.septima.application.exceptions.WritesNotAllowedException;
+import com.septima.entities.SqlEntities;
 import com.septima.entities.SqlEntity;
 import com.septima.metadata.EntityField;
 import com.septima.metadata.Parameter;
@@ -55,12 +57,12 @@ public class SqlEntitiesEndPoint extends AsyncEndPoint {
         }
     }
 
-    static Map<String, GenericType> parametersTypes(SqlEntity aEntity){
+    static Map<String, GenericType> parametersTypes(SqlEntity aEntity) {
         return aEntity.getParameters().values().stream()
                 .collect(Collectors.toMap(Parameter::getName, p -> p.getType() != null ? p.getType() : GenericType.STRING));
     }
 
-    static Map<String, GenericType> fieldsTypes(SqlEntity aEntity){
+    static Map<String, GenericType> fieldsTypes(SqlEntity aEntity) {
         return aEntity.getFields().values().stream()
                 .collect(Collectors.toMap(EntityField::getName, f -> f.getType() != null ? f.getType() : GenericType.STRING));
     }
@@ -87,4 +89,10 @@ public class SqlEntitiesEndPoint extends AsyncEndPoint {
                 });
     }
 
+    protected transient volatile SqlEntities entities;
+
+    @Override
+    protected void prepare() throws Exception {
+        entities = Data.getInstance().getEntities();
+    }
 }

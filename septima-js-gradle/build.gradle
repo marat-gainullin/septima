@@ -1,0 +1,6 @@
+dependencies {
+    compile gradleApi(),
+            project(':septima-js-data'),
+            project(':septima-js-generator'),
+            "com.zaxxer:HikariCP:2.7.6"
+}
