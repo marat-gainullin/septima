@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -35,7 +36,8 @@ import java.util.stream.Collectors;
 
 public class Answer {
 
-    private static final String JSON_CONTENT_TYPE = "application/json;charset=utf-8";
+    private static final String JSON_CONTENT_TYPE = "application/json";
+    private static final String JSON_CONTENT_TYPE_UTF8 = JSON_CONTENT_TYPE + ";charset=utf-8";
     private static final String JSON_CONTENT_TYPE_REQUIRED = "Request is expected to have a json body, i.e. content type should be '" + JSON_CONTENT_TYPE + "'";
     private static final ObjectWriter JSON_WRITER = new ObjectMapper()
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
@@ -63,6 +65,14 @@ public class Answer {
         request = (HttpServletRequest) aContext.getRequest();
         response = (HttpServletResponse) aContext.getResponse();
         futuresExecutor = aFuturesExecutor;
+    }
+
+    private static Charset charsetOf(HttpServletRequest request) {
+        if (request.getCharacterEncoding() != null && !request.getCharacterEncoding().isBlank()) {
+            return Charset.forName(request.getCharacterEncoding());
+        } else {
+            return StandardCharsets.UTF_8;
+        }
     }
 
     public static <K, V> Map<K, V> scalars(Map<K, V[]> aValue) {
@@ -129,7 +139,7 @@ public class Answer {
      */
     public void withJsonValue(Object aValue) {
         try {
-            withContent(JSON_CONTENT_TYPE, JSON_WRITER.writeValueAsBytes(aValue));
+            withContent(JSON_CONTENT_TYPE_UTF8, JSON_WRITER.writeValueAsBytes(aValue));
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
@@ -137,7 +147,7 @@ public class Answer {
 
     public void withJsonObject(Map<String, Object> anInstance) {
         try {
-            withContent(JSON_CONTENT_TYPE, JSON_WRITER.writeValueAsBytes(anInstance));
+            withContent(JSON_CONTENT_TYPE_UTF8, JSON_WRITER.writeValueAsBytes(anInstance));
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
@@ -145,7 +155,7 @@ public class Answer {
 
     public void withJsonArray(Collection<Map<String, Object>> aData) {
         try {
-            withContent(JSON_CONTENT_TYPE, JSON_WRITER.writeValueAsBytes(aData));
+            withContent(JSON_CONTENT_TYPE_UTF8, JSON_WRITER.writeValueAsBytes(aData));
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
@@ -179,11 +189,26 @@ public class Answer {
     }
 
     public CompletableFuture<List<Map<String, Object>>> onJsonArray() {
-        if (request.getContentType() != null && JSON_CONTENT_TYPE.equalsIgnoreCase(request.getContentType())) {
+        if (request.getContentType() != null && request.getContentType().toLowerCase().startsWith(JSON_CONTENT_TYPE)) {
             return input()
                     .thenApply(data -> {
                         try {
-                            return JSON_ARRAY_READER.readValue(data);
+                            return JSON_ARRAY_READER.readValue(new String(data, charsetOf(request)));
+                        } catch (IOException ex) {
+                            throw new UncheckedIOException(ex);
+                        }
+                    });
+        } else {
+            throw new InvalidRequestException(JSON_CONTENT_TYPE_REQUIRED);
+        }
+    }
+
+    public CompletableFuture<List<Object>> onPlainJsonArray() {
+        if (request.getContentType() != null && request.getContentType().toLowerCase().startsWith(JSON_CONTENT_TYPE)) {
+            return input()
+                    .thenApply(data -> {
+                        try {
+                            return JSON_ARRAY_READER.readValue(new String(data, charsetOf(request)));
                         } catch (IOException ex) {
                             throw new UncheckedIOException(ex);
                         }
@@ -194,11 +219,11 @@ public class Answer {
     }
 
     public CompletableFuture<Map<String, Object>> onJsonObject() {
-        if (request.getContentType() != null && JSON_CONTENT_TYPE.equalsIgnoreCase(request.getContentType())) {
+        if (request.getContentType() != null && request.getContentType().toLowerCase().startsWith(JSON_CONTENT_TYPE)) {
             return input()
                     .thenApply(data -> {
                         try {
-                            return JSON_OBJECT_READER.readValue(data);
+                            return JSON_OBJECT_READER.readValue(new String(data, charsetOf(request)));
                         } catch (IOException ex) {
                             throw new UncheckedIOException(ex);
                         }
@@ -209,11 +234,11 @@ public class Answer {
     }
 
     public CompletableFuture<Object> onJsonValue() {
-        if (request.getContentType() != null && JSON_CONTENT_TYPE.equalsIgnoreCase(request.getContentType())) {
+        if (request.getContentType() != null && request.getContentType().toLowerCase().startsWith(JSON_CONTENT_TYPE)) {
             return input()
                     .thenApply(data -> {
                         try {
-                            return JSON_VALUE_READER.readValue(data);
+                            return JSON_VALUE_READER.readValue(new String(data, charsetOf(request)));
                         } catch (IOException ex) {
                             throw new UncheckedIOException(ex);
                         }

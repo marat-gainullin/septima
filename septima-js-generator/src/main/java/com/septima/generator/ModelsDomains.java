@@ -374,6 +374,7 @@ public class ModelsDomains {
     private void complementReferences(Map<String, ModelEntity> aEntities) {
         Map<String, Set<ModelEntity>> byQualifiedTableName = aEntities.values().stream()
                 .flatMap(modelEntity -> modelEntity.entity.getFields().values().stream()
+                        .filter(field -> field.getTableName() != null)
                         .map(field -> Map.entry(field.getTableName(), modelEntity)))
                 .collect(Collectors.groupingBy(Map.Entry::getKey,
                         Collectors.mapping(Map.Entry::getValue, Collectors.toSet())));
