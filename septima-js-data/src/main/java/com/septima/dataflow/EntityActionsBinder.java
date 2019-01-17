@@ -66,17 +66,21 @@ public class EntityActionsBinder implements EntityActionsVisitor {
         return logEntries;
     }
 
-    private Function<Map.Entry<String, Object>, Map.Entry<String, Parameter>> asTableDatumEntry(SqlEntity aEntity) {
+    private Function<Map.Entry<String, Object>, Map.Entry<String, Parameter>> asTableDatumEntry(SqlEntity anEntity) {
         return datum -> {
             String datumName = datum.getKey();
             Object datumValue = datum.getValue();
-            EntityField entityEntityField = aEntity.getFields().get(datumName);
+            EntityField entityEntityField = anEntity.getFields().get(datumName);
             if (entityEntityField != null) {
                 String keyColumnName = entityEntityField.getOriginalName() != null ? entityEntityField.getOriginalName() : entityEntityField.getName();
                 Parameter bound = new Parameter(keyColumnName, datumValue, entityEntityField.getType());
-                return Map.entry(entityEntityField.getTableName(), bound);
+                if(entityEntityField.getTableName() != null){
+                    return Map.entry(entityEntityField.getTableName(), bound);
+                } else {
+                    throw new IllegalStateException("Entity field '" + datumName + "' of entity '" + anEntity.getName() + "' has no source table");
+                }
             } else {
-                throw new IllegalStateException("Entity field '" + datumName + "' is not found in entity '" + aEntity.getName() + "'");
+                throw new IllegalStateException("Entity field '" + datumName + "' is not found in entity '" + anEntity.getName() + "'");
             }
         };
     }

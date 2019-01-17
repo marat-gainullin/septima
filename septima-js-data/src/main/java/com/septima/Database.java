@@ -142,6 +142,7 @@ public class Database {
                 connection.setAutoCommit(false);
                 try {
                     int affected = riddleStatements(statements, connection);
+                    connection.commit();
                     committing.completeAsync(() -> affected, futuresExecutor);
                 } catch (SQLException | UncheckedSQLException ex) {
                     connection.rollback();
