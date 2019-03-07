@@ -1,7 +1,5 @@
 # Septima Java & Sql
 
-[![Build Status](https://travis-ci.org/marat-gainullin/septima.svg?branch=master)](https://travis-ci.org/marat-gainullin/septima)
-
 The Septima is a data driven framework for building Java applications.
 
 Septima provides a developer with libraries needed to develop complete and ready for market applications.
