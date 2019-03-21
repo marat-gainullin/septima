@@ -12,7 +12,7 @@ public class ExtractParameters extends SyntaxTreeVisitor {
 
     private final Map<String, Parameter> extracted = new CaseInsensitiveMap<>(new LinkedHashMap<>());
 
-    ExtractParameters() {
+    private ExtractParameters() {
     }
 
     @Override

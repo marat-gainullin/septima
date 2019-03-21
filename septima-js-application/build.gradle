@@ -19,10 +19,12 @@ dependencies {
             project(':septima-js-data')
 }
 
+/*
 task coverage() {
     doLast {
-        java.awt.Desktop.desktop.browse jacocoTestReport.reports.html.entryPoint.toURI()
+         java.awt.Desktop.desktop.browse jacocoTestReport.reports.html.entryPoint.toURI()
     }
 }
 
 coverage.dependsOn jacocoTestReport
+*/

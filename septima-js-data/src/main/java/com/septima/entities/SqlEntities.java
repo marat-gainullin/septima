@@ -115,6 +115,8 @@ public class SqlEntities {
             JsonNode parameterNode = parameterEntry.getValue();
             JsonNode typeNode = parameterNode.get("type");
             GenericType type = typeNode != null && typeNode.isTextual() ? GenericType.of(typeNode.asText(), parameter.getType()) : parameter.getType();
+            JsonNode subTypeNode = parameterNode.get("subType");
+            String subType = subTypeNode != null && subTypeNode.isTextual() ? subTypeNode.asText() : null;
             JsonNode descriptionNode = parameterNode.get("description");
             String description = descriptionNode != null && descriptionNode.isTextual() ? descriptionNode.asText(parameter.getDescription()) : parameter.getDescription();
             JsonNode valueNode = parameterNode.get("value");
@@ -125,6 +127,7 @@ public class SqlEntities {
                     parameterName,
                     value,
                     type,
+                    subType,
                     out ? Parameter.Mode.InOut : Parameter.Mode.In,
                     description
             ));
@@ -153,20 +156,22 @@ public class SqlEntities {
     private static Consumer<Map.Entry<String, JsonNode>> fieldReader(Map<String, EntityField> fields, String entityName) {
         return (fieldEntry) -> {
             String fieldName = fieldEntry.getKey();
-            EntityField entityField = fields.getOrDefault(fieldName, new EntityField(fieldName));
+            EntityField basicField = fields.getOrDefault(fieldName, new EntityField(fieldName));
             JsonNode fieldNode = fieldEntry.getValue();
             JsonNode typeNode = fieldNode.get("type");
-            GenericType type = typeNode != null && typeNode.isTextual() ? GenericType.of(typeNode.asText(), entityField.getType()) : entityField.getType();
+            GenericType type = typeNode != null && typeNode.isTextual() ? GenericType.of(typeNode.asText(), basicField.getType()) : basicField.getType();
+            JsonNode subTypeNode = fieldNode.get("subType");
+            String subType = subTypeNode != null && subTypeNode.isTextual() ? subTypeNode.asText() : null;
             JsonNode descriptionNode = fieldNode.get("description");
-            String description = descriptionNode != null && descriptionNode.isTextual() ? descriptionNode.asText(entityField.getDescription()) : entityField.getDescription();
+            String description = descriptionNode != null && descriptionNode.isTextual() ? descriptionNode.asText(basicField.getDescription()) : basicField.getDescription();
             JsonNode nullableNode = fieldNode.get("nullable");
-            boolean nullable = nullableNode != null && nullableNode.isBoolean() ? nullableNode.asBoolean() : entityField.isNullable();
+            boolean nullable = nullableNode != null && nullableNode.isBoolean() ? nullableNode.asBoolean() : basicField.isNullable();
             JsonNode originalNameNode = fieldNode.get("originalName");
-            String originalName = originalNameNode != null && originalNameNode.isTextual() ? originalNameNode.asText(entityField.getOriginalName()) : entityField.getOriginalName();
+            String originalName = originalNameNode != null && originalNameNode.isTextual() ? originalNameNode.asText(basicField.getOriginalName()) : basicField.getOriginalName();
             JsonNode tableNameNode = fieldNode.get("tableName");
-            String tableName = tableNameNode != null && tableNameNode.isTextual() ? tableNameNode.asText(entityField.getTableName()) : entityField.getTableName();
+            String tableName = tableNameNode != null && tableNameNode.isTextual() ? tableNameNode.asText(basicField.getTableName()) : basicField.getTableName();
             JsonNode keyNode = fieldNode.get("key");
-            boolean key = keyNode != null && keyNode.isBoolean() ? keyNode.asBoolean() : entityField.isPk();
+            boolean key = keyNode != null && keyNode.isBoolean() ? keyNode.asBoolean() : basicField.isPk();
             String referencedEntity;
             String referencedKey;
             JsonNode referenceNode = fieldNode.get("reference");
@@ -177,7 +182,7 @@ public class SqlEntities {
                         referencedKeyNode != null &&
                         referencedEntityNode.isTextual() &&
                         referencedKeyNode.isTextual()
-                        ) {
+                ) {
                     referencedEntity = referencedEntityNode.asText();
                     referencedKey = referencedKeyNode.asText();
                 } else {
@@ -194,6 +199,7 @@ public class SqlEntities {
                             originalName,
                             tableName,
                             type,
+                            subType,
                             nullable,
                             key,
                             referencedEntity != null && !referencedEntity.isEmpty() &&
@@ -202,7 +208,7 @@ public class SqlEntities {
                                             null, entityName, fieldName, null,
                                             ForeignKey.ForeignKeyRule.NO_ACTION, ForeignKey.ForeignKeyRule.NO_ACTION, false,
                                             null, referencedEntity, referencedKey, null)
-                                    : entityField.getFk()
+                                    : basicField.getFk()
                     )
             );
         };

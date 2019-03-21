@@ -68,9 +68,9 @@ public class OracleSqlDriver extends SqlDriver {
         if (size > 0) {
             int scale = aColumn.getScale();
             if (resolver.isScaled(sqlTypeName) && resolver.isSized(sqlTypeName)) {
-                typeDefine += "(" + String.valueOf(size) + "," + String.valueOf(scale) + ")";
+                typeDefine += "(" + size + "," + scale + ")";
             } else if (resolver.isSized(sqlTypeName)) {
-                typeDefine += "(" + String.valueOf(size) + ")";
+                typeDefine += "(" + size + ")";
             }
         }
         return typeDefine;
@@ -137,7 +137,7 @@ public class OracleSqlDriver extends SqlDriver {
         if (oldNullable != newNullable) {
             sqls.add(updateDefinition + (newNullable ? " null" : " not null"));
         }
-        return sqls.toArray(new String[sqls.size()]);
+        return sqls.toArray(new String[]{});
     }
 
     @Override

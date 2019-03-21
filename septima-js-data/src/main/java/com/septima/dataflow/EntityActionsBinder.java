@@ -73,7 +73,7 @@ public class EntityActionsBinder implements EntityActionsVisitor {
             EntityField entityEntityField = anEntity.getFields().get(datumName);
             if (entityEntityField != null) {
                 String keyColumnName = entityEntityField.getOriginalName() != null ? entityEntityField.getOriginalName() : entityEntityField.getName();
-                Parameter bound = new Parameter(keyColumnName, datumValue, entityEntityField.getType());
+                Parameter bound = new Parameter(keyColumnName, datumValue, entityEntityField.getType(), entityEntityField.getSubType(), Parameter.Mode.In, null);
                 if(entityEntityField.getTableName() != null){
                     return Map.entry(entityEntityField.getTableName(), bound);
                 } else {
@@ -179,6 +179,7 @@ public class EntityActionsBinder implements EntityActionsVisitor {
                                 queryParameter.getName(),
                                 aCommand.getArguments().getOrDefault(queryParameter.getName(), queryParameter.getValue()),
                                 queryParameter.getType(),
+                                queryParameter.getSubType(),
                                 queryParameter.getMode(),
                                 queryParameter.getDescription())
                         )

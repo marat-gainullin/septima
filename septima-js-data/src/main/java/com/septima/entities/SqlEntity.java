@@ -195,6 +195,7 @@ public class SqlEntity {
                             p.getName(),
                             p.getValue(),
                             p.getType(),
+                            p.getSubType(),
                             p.getMode(),
                             p.getDescription()
                     ));

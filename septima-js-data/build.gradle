@@ -1,4 +1,4 @@
-version = '0.0.7'
+version = '0.0.8'
 
 configurations {
     h2
@@ -72,10 +72,13 @@ test {
     systemProperties["datasource.schema"] = dataSourceSchema
     systemProperties["testsource.path"] = appDirName
 }
-
+/*
 task coverage() {
     doLast {
         java.awt.Desktop.desktop.browse jacocoTestReport.reports.html.entryPoint.toURI()
     }
 }
 coverage.dependsOn jacocoTestReport
+/*
+
+ */

@@ -20,26 +20,17 @@ public class EntityField extends Field {
     private final GenericType type;
 
     /**
+     * Null value means absence of dbms specific type
+     */
+    private final String subType;
+
+    /**
      * Constructor with name.
      *
      * @param aName Name of the created field.
      */
     public EntityField(String aName) {
-        this(aName, null);
-    }
-
-    /**
-     * Constructor with name and description.
-     *
-     * @param aName        Name of the created field.
-     * @param aDescription Description of the created field.
-     */
-    public EntityField(String aName, String aDescription) {
-        this(aName, aDescription, GenericType.STRING);
-    }
-
-    public EntityField(String aName, String aDescription, GenericType aType) {
-        this(aName, aDescription, aName, null, aType, true, false, null);
+        this(aName, null, aName, null, GenericType.STRING, true, false, null);
     }
 
     public EntityField(
@@ -52,6 +43,20 @@ public class EntityField extends Field {
             boolean aPk,
             ForeignKey aFk
     ) {
+        this(aName, aDescription, aOriginalName, aTableName, aType, null, aNullable, aPk, aFk);
+    }
+
+    public EntityField(
+            String aName,
+            String aDescription,
+            String aOriginalName,
+            String aTableName,
+            GenericType aType,
+            String aSubType,
+            boolean aNullable,
+            boolean aPk,
+            ForeignKey aFk
+    ) {
         super(aName,
                 aDescription,
                 aOriginalName,
@@ -60,6 +65,7 @@ public class EntityField extends Field {
                 aPk,
                 aFk);
         type = aType;
+        subType = aSubType;
     }
 
     /**
@@ -69,6 +75,10 @@ public class EntityField extends Field {
      */
     public GenericType getType() {
         return type;
+    }
+
+    public String getSubType() {
+        return subType;
     }
 
     /**
@@ -103,6 +113,9 @@ public class EntityField extends Field {
             sb.append(rf.getColumn());
         }
         sb.append(", ").append(type);
+        if (subType != null) {
+            sb.append(":").append(subType);
+        }
         if (isNullable()) {
             sb.append(", nullable");
         }

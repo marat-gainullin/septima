@@ -70,6 +70,7 @@ public class SqlQuery {
                         own.getName(),
                         aParametersValues.getOrDefault(own.getName(), own.getValue()),
                         own.getType(),
+                        own.getSubType(),
                         own.getMode(),
                         own.getDescription())
                 )

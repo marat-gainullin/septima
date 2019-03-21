@@ -80,7 +80,7 @@ public enum GenericType {
                     return aValue;
             }
         } else {
-            return aValue;
+            return null;
         }
     }
 

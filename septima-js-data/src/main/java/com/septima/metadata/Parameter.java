@@ -29,31 +29,25 @@ public class Parameter {
     private final String description;
 
     private final GenericType type;
+    private final String subType;
     private final Mode mode;
     private Object value;
 
     public Parameter(String aName) {
-        this(aName, null);
-    }
-
-    public Parameter(String aName, Object aValue) {
-        this(aName, aValue, null);
+        this(aName, null, null);
     }
 
     public Parameter(String aName, Object aValue, GenericType aType) {
-        this(aName, aValue, aType, Mode.In);
+        this(aName, aValue, aType, null, Mode.In, null);
     }
 
-    public Parameter(String aName, Object aValue, GenericType aType, Mode aMode) {
-        this(aName, aValue, aType, aMode, null);
-    }
-
-    public Parameter(String aName, Object aValue, GenericType aType, Mode aMode, String aDescription) {
+    public Parameter(String aName, Object aValue, GenericType aType, String aSubType, Mode aMode, String aDescription) {
         super();
         name = aName;
         value = aValue;
         description = aDescription;
         type = aType;
+        subType = aSubType;
         mode = aMode;
     }
 
@@ -67,6 +61,10 @@ public class Parameter {
 
     public GenericType getType() {
         return type;
+    }
+
+    public String getSubType() {
+        return subType;
     }
 
     /**

@@ -49,14 +49,14 @@ public abstract class JdbcDataProvider implements DataProvider {
     /**
      * A flow dataSource, intended transform support jdbc data sources.
      *
-     * @param aDataSource      A DataSource instance, that would supply resources for
-     *                         use them by flow dataSource in single operations, like retriving data of
-     *                         applying data changes.
+     * @param aDataSource         A DataSource instance, that would supply resources for
+     *                            use them by flow dataSource in single operations, like retriving data of
+     *                            applying data changes.
      * @param aJdbcReaderAssigner Jdbc {@link PreparedStatement} and {@link CallableStatement} parameters handler.
-     * @param aAsyncDataPuller {@link Executor} for Jdbc blocking tasks.
-     * @param aClause          A sql clause, dataSource should use transform achieve
-     *                         PreparedStatement instance transform use it in the result set querying process.
-     * @param aExpectedFields  Fields, expected by Septima according transform metadata analysis.
+     * @param aAsyncDataPuller    {@link Executor} for Jdbc blocking tasks.
+     * @param aClause             A sql clause, dataSource should use transform achieve
+     *                            PreparedStatement instance transform use it in the result set querying process.
+     * @param aExpectedFields     Fields, expected by Septima according transform metadata analysis.
      * @see DataSource
      */
     public JdbcDataProvider(DataSource aDataSource, JdbcReaderAssigner aJdbcReaderAssigner, Executor aAsyncDataPuller, Executor aFutureExecutor, String aClause, boolean aProcedure, int aPageSize, Map<String, EntityField> aExpectedFields) {
@@ -151,6 +151,8 @@ public abstract class JdbcDataProvider implements DataProvider {
                         connection.close();
                     }
                 }
+            } catch (SQLException ex) {
+                futureExecutor.execute(() -> fetching.completeExceptionally(new UncheckedSQLException("Failed to execute '" + getEntityName() + "' entity sql", ex)));
             } catch (Throwable ex) {
                 futureExecutor.execute(() -> fetching.completeExceptionally(ex));
             }
