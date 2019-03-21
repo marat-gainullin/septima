@@ -199,7 +199,17 @@ public class SqlEntity {
                             p.getMode(),
                             p.getDescription()
                     ));
-                    return postgreSQL && GenericType.DATE == p.getType() ? "?::timestamp" : "?";
+                    if (postgreSQL) {
+                        if (p.getSubType() != null && !p.getSubType().isBlank()) {
+                            return "?::" + p.getSubType();
+                        } else if (GenericType.DATE == p.getType()) {
+                            return "?::timestamp";
+                        } else {
+                            return "?";
+                        }
+                    } else {
+                        return "?";
+                    }
                 }
         );
         return new SqlQuery(
