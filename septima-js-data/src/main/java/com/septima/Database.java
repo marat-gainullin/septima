@@ -50,14 +50,11 @@ public class Database {
                 try {
                     rowsAffected += entry.apply(aConnection);
                 } catch (SQLException ex) {
-                    String message = "Entity '" + entry.getEntityName() + "' action \" " + entry.getClause() + " \" failed with cause: " + ex.getMessage();
                     errorStatements.add(entry);
-                    errors.add(message);
-                    Logger.getLogger(DataSources.class.getName()).log(Level.WARNING, message);
+                    errors.add("Entity '" + entry.getEntityName() + "' action \" " + entry.getClause() + " \" failed with cause: " + ex.getMessage());
                 } catch (UncheckedSQLException ex) {
                     errorStatements.add(entry);
                     errors.add(ex.getMessage());
-                    Logger.getLogger(DataSources.class.getName()).log(Level.WARNING, ex.getMessage());
                 }
             }
             if (errorStatements.size() == aStatements.size()) {
