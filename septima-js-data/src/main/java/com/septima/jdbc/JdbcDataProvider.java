@@ -94,8 +94,8 @@ public abstract class JdbcDataProvider implements DataProvider {
             endPaging();
         }
         asyncDataPuller.execute(() -> {
+            String sqlClause = clause;
             try {
-                String sqlClause = clause;
                 Connection connection = dataSource.getConnection();
                 try {
                     PreparedStatement statement = getFlowStatement(connection, sqlClause);
@@ -152,7 +152,7 @@ public abstract class JdbcDataProvider implements DataProvider {
                     }
                 }
             } catch (SQLException ex) {
-                futureExecutor.execute(() -> fetching.completeExceptionally(new UncheckedSQLException("Failed to execute '" + getEntityName() + "' entity sql", ex)));
+                futureExecutor.execute(() -> fetching.completeExceptionally(new UncheckedSQLException("Entity '" + getEntityName() + "' sql clause \" " + sqlClause + " \" execution failed.", ex)));
             } catch (Throwable ex) {
                 futureExecutor.execute(() -> fetching.completeExceptionally(ex));
             }

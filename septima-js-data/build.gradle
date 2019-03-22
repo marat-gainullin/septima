@@ -1,4 +1,4 @@
-version = '0.0.9'
+version = '0.0.12'
 
 configurations {
     h2
@@ -79,6 +79,4 @@ task coverage() {
     }
 }
 coverage.dependsOn jacocoTestReport
-/*
-
- */
+*/

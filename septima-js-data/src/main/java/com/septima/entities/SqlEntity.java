@@ -182,8 +182,6 @@ public class SqlEntity {
             Logger.getLogger(SqlEntity.class.getName()).log(Level.INFO, "Entity sql was substituted with customSql while compiling entity {0}", name);
         }
         List<Parameter> compiledParams = new ArrayList<>(params.size());
-        String dialect = database.getSqlDriver().getDialect();
-        boolean postgreSQL = dialect.toLowerCase().contains("postgre"); // TODO: Think about how to avoid this hack
         String jdbcSql = riddleParameters(
                 customSqlText != null && !customSqlText.isEmpty() ? customSqlText : sqlText,
                 paramName -> {
@@ -199,17 +197,7 @@ public class SqlEntity {
                             p.getMode(),
                             p.getDescription()
                     ));
-                    if (postgreSQL) {
-                        if (p.getSubType() != null && !p.getSubType().isBlank()) {
-                            return "?::" + p.getSubType();
-                        } else if (GenericType.DATE == p.getType()) {
-                            return "?::timestamp";
-                        } else {
-                            return "?";
-                        }
-                    } else {
-                        return "?";
-                    }
+                    return database.getSqlDriver().parameterPlaceholder(p);
                 }
         );
         return new SqlQuery(
@@ -255,7 +243,7 @@ public class SqlEntity {
             assembly.append(replaceInterSegment.apply((interSegment)));
             assembly.append(replaceSegment.apply(segment));
         }
-        interSegment = aText.substring(lastPosition, aText.length());
+        interSegment = aText.substring(lastPosition);
         assembly.append(replaceInterSegment.apply((interSegment)));
         return assembly;
     }

@@ -23,25 +23,26 @@ public class EntityActionsBinder implements EntityActionsVisitor {
     private static final String UPDATE_CLAUSE = "update %s set %s where %s";
     private final List<BoundStatement> logEntries = new ArrayList<>();
     private final SqlEntity entity;
+
     public EntityActionsBinder(SqlEntity aEntity) {
         super();
         entity = aEntity;
     }
 
-    private static String generatePlaceholders(int count) {
+    private String generatePlaceholders(List<Parameter> parameters) {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < parameters.size(); i++) {
             if (i > 0) {
                 sb.append(", ");
             }
-            sb.append("?");
+            sb.append(entity.getDatabase().getSqlDriver().parameterPlaceholder(parameters.get(i)));
         }
         return sb.toString();
     }
 
-    private static String generateUpdateColumnsClause(List<Parameter> data) {
-        return data.stream()
-                .map(datum -> new StringBuilder(datum.getName()).append(" = ?"))
+    private String generateUpdateColumnsClause(List<Parameter> parameters) {
+        return parameters.stream()
+                .map(parameter -> new StringBuilder(parameter.getName()).append(" = " + entity.getDatabase().getSqlDriver().parameterPlaceholder(parameter)))
                 .reduce((name1, name2) -> name1.append(", ").append(name2))
                 .map(StringBuilder::toString)
                 .orElse("");
@@ -74,7 +75,7 @@ public class EntityActionsBinder implements EntityActionsVisitor {
             if (entityEntityField != null) {
                 String keyColumnName = entityEntityField.getOriginalName() != null ? entityEntityField.getOriginalName() : entityEntityField.getName();
                 Parameter bound = new Parameter(keyColumnName, datumValue, entityEntityField.getType(), entityEntityField.getSubType(), Parameter.Mode.In, null);
-                if(entityEntityField.getTableName() != null){
+                if (entityEntityField.getTableName() != null) {
                     return Map.entry(entityEntityField.getTableName(), bound);
                 } else {
                     throw new IllegalStateException("Entity field '" + datumName + "' of entity '" + anEntity.getName() + "' has no source table");
@@ -98,10 +99,11 @@ public class EntityActionsBinder implements EntityActionsVisitor {
                                 (entity.getWritable().isEmpty() || entity.getWritable().contains(entry.getKey()))
                 )
                 .map(entry -> new BoundStatement(
+                        aAdd.getEntityName(),
                         String.format(INSERT_CLAUSE,
                                 entry.getKey(),
                                 generateInsertColumnsClause(entry.getValue()),
-                                generatePlaceholders(entry.getValue().size())
+                                generatePlaceholders(entry.getValue())
                         ),
                         Collections.unmodifiableList(entry.getValue()),
                         jdbcReaderAssigner
@@ -110,13 +112,13 @@ public class EntityActionsBinder implements EntityActionsVisitor {
     }
 
     @Override
-    public void visit(InstanceChange aUpdate) {
+    public void visit(InstanceChange anUpdate) {
         JdbcReaderAssigner jdbcReaderAssigner = entity.getDatabase().jdbcReaderAssigner(entity.isProcedure());
-        Map<String, List<Parameter>> updatesKeys = aUpdate.getKeys().entrySet().stream()
+        Map<String, List<Parameter>> updatesKeys = anUpdate.getKeys().entrySet().stream()
                 .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey, LinkedHashMap::new,
                         Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
-        aUpdate.getData().entrySet().stream()
+        anUpdate.getData().entrySet().stream()
                 .map(asTableDatumEntry(entity))
                 .collect(Collectors.groupingBy(Map.Entry::getKey, LinkedHashMap::new,
                         Collectors.mapping(Map.Entry::getValue, Collectors.toList())))
@@ -125,6 +127,7 @@ public class EntityActionsBinder implements EntityActionsVisitor {
                         (entity.getWritable().isEmpty() || entity.getWritable().contains(entry.getKey()))
                 )
                 .map(entry -> new BoundStatement(
+                        anUpdate.getEntityName(),
                         String.format(UPDATE_CLAUSE,
                                 entry.getKey(),
                                 generateUpdateColumnsClause(entry.getValue()),
@@ -158,6 +161,7 @@ public class EntityActionsBinder implements EntityActionsVisitor {
                                 (entity.getWritable().isEmpty() || entity.getWritable().contains(entry.getKey()))
                 )
                 .map(entry -> new BoundStatement(
+                        aRemove.getEntityName(),
                         String.format(DELETE_CLAUSE,
                                 entry.getKey(),
                                 generateWhereClause(entry.getValue())
@@ -173,6 +177,7 @@ public class EntityActionsBinder implements EntityActionsVisitor {
         JdbcReaderAssigner jdbcReaderAssigner = entity.getDatabase().jdbcReaderAssigner(entity.isProcedure());
         SqlQuery query = entity.toQuery();
         logEntries.add(new BoundStatement(
+                aCommand.getEntityName(),
                 query.getSqlClause(),
                 Collections.unmodifiableList(query.getParameters().stream()
                         .map(queryParameter -> new Parameter(
@@ -214,15 +219,25 @@ public class EntityActionsBinder implements EntityActionsVisitor {
 
         private static final Logger QUERIES_LOGGER = Logger.getLogger(BoundStatement.class.getName());
 
+        private final String entityName;
         private final String clause;
         private final List<Parameter> parameters;
         private final JdbcReaderAssigner jdbcReaderAssigner;
 
-        BoundStatement(String aClause, List<Parameter> aParameters, JdbcReaderAssigner aJdbcReaderAssigner) {
+        BoundStatement(String aEntityName, String aClause, List<Parameter> aParameters, JdbcReaderAssigner aJdbcReaderAssigner) {
             super();
+            entityName = aEntityName;
             clause = aClause;
             parameters = aParameters;
             jdbcReaderAssigner = aJdbcReaderAssigner;
+        }
+
+        public String getEntityName() {
+            return entityName;
+        }
+
+        public String getClause() {
+            return clause;
         }
 
         public int apply(Connection aConnection) throws SQLException {

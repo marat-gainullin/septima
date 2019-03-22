@@ -1,7 +1,9 @@
 package com.septima.sqldrivers;
 
+import com.septima.GenericType;
 import com.septima.metadata.ForeignKey;
 import com.septima.metadata.JdbcColumn;
+import com.septima.metadata.Parameter;
 import com.septima.metadata.PrimaryKey;
 import com.septima.sqldrivers.resolvers.PostgreTypesResolver;
 import com.septima.sqldrivers.resolvers.TypesResolver;
@@ -320,6 +322,17 @@ public class PostgreSqlDriver extends SqlDriver {
             } else {
                 return null;
             }
+        }
+    }
+
+    @Override
+    public String parameterPlaceholder(Parameter aParameter) {
+        if (aParameter.getSubType() != null && !aParameter.getSubType().isBlank()) {
+            return "?::" + aParameter.getSubType();
+        } else if (GenericType.DATE == aParameter.getType()) {
+            return "?::timestamp";
+        } else {
+            return "?";
         }
     }
 }

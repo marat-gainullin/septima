@@ -2,6 +2,7 @@ package com.septima.sqldrivers;
 
 import com.septima.metadata.ForeignKey;
 import com.septima.metadata.JdbcColumn;
+import com.septima.metadata.Parameter;
 import com.septima.metadata.PrimaryKey;
 import com.septima.sqldrivers.resolvers.GenericTypesResolver;
 import com.septima.sqldrivers.resolvers.TypesResolver;
@@ -30,7 +31,7 @@ public class SqlDriver {
 
     private static final Set<SqlDriver> DRIVERS = new HashSet<>() {
         {
-            ServiceLoader<SqlDriver> loader = ServiceLoader.load(SqlDriver.class);
+            ServiceLoader<SqlDriver> loader = ServiceLoader.load(SqlDriver.class, SqlDriver.class.getClassLoader());
             Iterator<SqlDriver> drivers = loader.iterator();
             drivers.forEachRemaining(sqlDriver -> {
                 try {
@@ -297,7 +298,7 @@ public class SqlDriver {
     public String escapeNameIfNeeded(String aName) {
         if (aName != null && !aName.isEmpty() &&
                 isEscapeNeeded(aName) && !isNameEscaped(aName)) {
-            Character escape = getEscape();
+            char escape = getEscape();
             return escape + aName.replace(escape + "", (escape + "") + (escape + "")) + escape;
         } else {
             return aName;
@@ -306,12 +307,16 @@ public class SqlDriver {
 
     public String unescapeNameIfNeeded(String aName) {
         if (aName != null && !aName.isEmpty() && isNameEscaped(aName)) {
-            Character escape = getEscape();
+            char escape = getEscape();
             String body = aName.substring(1, aName.length() - 1);
             return body.replace((escape + "") + (escape + ""), escape + "");
         } else {
             return aName;
         }
+    }
+
+    public String parameterPlaceholder(Parameter aParameter){
+        return "?";
     }
 
     private boolean isNameEscaped(String aName) {
