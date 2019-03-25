@@ -43,8 +43,8 @@ public class ModelsDomainsTest {
     private void checkModel(String testAppSuffix, String modelRelativePathName) throws IOException {
         Path destination = new File(System.getProperty("generated.path")).toPath().resolve(testAppSuffix);
         Path ethalons = new File(System.getProperty("ethalons.path")).toPath().resolve(testAppSuffix);
-        String ethalonGoodOrders = new String(Files.readAllBytes(ethalons.resolve(modelRelativePathName + ".ethalon")), StandardCharsets.UTF_8);
-        String generatedGoodOrders = new String(Files.readAllBytes(destination.resolve(modelRelativePathName)), StandardCharsets.UTF_8);
+        String ethalonGoodOrders = Files.readString(ethalons.resolve(modelRelativePathName + ".ethalon"), StandardCharsets.UTF_8);
+        String generatedGoodOrders = Files.readString(destination.resolve(modelRelativePathName), StandardCharsets.UTF_8);
         assertEquals(rn2n(ethalonGoodOrders), rn2n(generatedGoodOrders));
     }
 

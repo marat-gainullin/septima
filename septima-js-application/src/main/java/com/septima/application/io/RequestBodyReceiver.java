@@ -15,11 +15,13 @@ public class RequestBodyReceiver implements ReadListener {
     private final ByteArrayOutputStream body = new ByteArrayOutputStream(buffer.length);
 
     private final Consumer<byte[]> onComplete;
+    private final Consumer<Throwable> onError;
     private final ServletInputStream stream;
 
-    public RequestBodyReceiver(ServletInputStream aStream, Consumer<byte[]> aOnComplete) {
+    public RequestBodyReceiver(ServletInputStream aStream, Consumer<byte[]> aOnComplete, Consumer<Throwable> aOnError) {
         stream = aStream;
         onComplete = aOnComplete;
+        onError = aOnError;
     }
 
     @Override
@@ -41,6 +43,6 @@ public class RequestBodyReceiver implements ReadListener {
 
     @Override
     public void onError(Throwable t) {
-        Logger.getLogger(RequestBodyReceiver.class.getName()).log(Level.SEVERE, t.getMessage(), t);
+        onError.accept(t);
     }
 }

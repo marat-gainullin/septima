@@ -152,7 +152,7 @@ public abstract class JdbcDataProvider implements DataProvider {
                     }
                 }
             } catch (SQLException ex) {
-                futureExecutor.execute(() -> fetching.completeExceptionally(new SQLException("Entity '" + getEntityName() + "' sql clause \" " + sqlClause + " \" execution failed.", ex)));
+                futureExecutor.execute(() -> fetching.completeExceptionally(new SQLException("Entity '" + getEntityName() + "' sql clause \" " + sqlClause + " \" execution failed with cause: " + ex.getMessage())));
             } catch (Throwable ex) {
                 futureExecutor.execute(() -> fetching.completeExceptionally(ex));
             }

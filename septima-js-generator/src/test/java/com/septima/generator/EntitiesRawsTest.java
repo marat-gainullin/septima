@@ -40,14 +40,14 @@ public class EntitiesRawsTest {
         String customersEntityPathName = "com/septima/entities/customers/CustomersRaw.java";
         String goodsEntityPathName = "com/septima/entities/goods/GoodsRaw.java";
         String ordersEntityPathName = "com/septima/entities/orders/OrdersRaw.java";
-        String ethalonCustomers = new String(Files.readAllBytes(ethalons.resolve(customersEntityPathName + ".ethalon")), StandardCharsets.UTF_8);
-        String generatedCustomers = new String(Files.readAllBytes(destination.resolve(customersEntityPathName)), StandardCharsets.UTF_8);
+        String ethalonCustomers = Files.readString(ethalons.resolve(customersEntityPathName + ".ethalon"), StandardCharsets.UTF_8);
+        String generatedCustomers = Files.readString(destination.resolve(customersEntityPathName), StandardCharsets.UTF_8);
         assertEquals(rn2n(ethalonCustomers), rn2n(generatedCustomers));
-        String ethalonGoods = new String(Files.readAllBytes(ethalons.resolve(goodsEntityPathName + ".ethalon")), StandardCharsets.UTF_8);
-        String generatedGoods = new String(Files.readAllBytes(destination.resolve(goodsEntityPathName)), StandardCharsets.UTF_8);
+        String ethalonGoods = Files.readString(ethalons.resolve(goodsEntityPathName + ".ethalon"), StandardCharsets.UTF_8);
+        String generatedGoods = Files.readString(destination.resolve(goodsEntityPathName), StandardCharsets.UTF_8);
         assertEquals(rn2n(ethalonGoods), rn2n(generatedGoods));
-        String ethalonOrders = new String(Files.readAllBytes(ethalons.resolve(ordersEntityPathName + ".ethalon")), StandardCharsets.UTF_8);
-        String generatedOrders = new String(Files.readAllBytes(destination.resolve(ordersEntityPathName)), StandardCharsets.UTF_8);
+        String ethalonOrders = Files.readString(ethalons.resolve(ordersEntityPathName + ".ethalon"), StandardCharsets.UTF_8);
+        String generatedOrders = Files.readString(destination.resolve(ordersEntityPathName), StandardCharsets.UTF_8);
         assertEquals(rn2n(ethalonOrders), rn2n(generatedOrders));
     }
 }

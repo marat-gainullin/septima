@@ -12,6 +12,7 @@ import com.septima.application.exceptions.NoImplementationException;
 import com.septima.application.exceptions.NoInstanceException;
 import com.septima.application.io.RequestBodyReceiver;
 import com.septima.application.io.ResponseBodySender;
+import com.septima.jdbc.UncheckedSQLException;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletInputStream;
@@ -19,7 +20,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -38,7 +38,7 @@ public class Answer {
 
     private static final String JSON_CONTENT_TYPE = "application/json";
     private static final String JSON_CONTENT_TYPE_UTF8 = JSON_CONTENT_TYPE + ";charset=utf-8";
-    private static final String JSON_CONTENT_TYPE_REQUIRED = "Request is expected to have a json body, i.e. content type should be '" + JSON_CONTENT_TYPE + "'";
+    private static final String JSON_CONTENT_TYPE_REQUIRED = "Request is expected to have a json body, i.e. content type should be '" + JSON_CONTENT_TYPE + "' and content length should greater than zero";
     private static final ObjectWriter JSON_WRITER = new ObjectMapper()
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             .writer();
@@ -115,16 +115,20 @@ public class Answer {
 
     public Void exceptionally(Throwable aTh) {
         Objects.requireNonNull(aTh, "aTh is required argument");
-        Throwable th = unwrapException(aTh, t -> t instanceof EndPointException, 16);
+        Throwable th = unwrapException(aTh, t -> t instanceof EndPointException || t instanceof SQLException || t instanceof UncheckedSQLException || t instanceof IOException || t instanceof UncheckedIOException, 16);
         Logger.getLogger(Answer.class.getName()).log(Level.SEVERE, th.getMessage(), th);
         response.setStatus(
                 th instanceof NoInstanceException || th instanceof NoCollectionException ? HttpServletResponse.SC_NOT_FOUND :
                         th instanceof NoAccessException ? HttpServletResponse.SC_FORBIDDEN :
-                                th instanceof InvalidRequestException || th instanceof NoImplementationException ? HttpServletResponse.SC_METHOD_NOT_ALLOWED :
-                                        th instanceof SQLException ? HttpServletResponse.SC_CONFLICT :
-                                                HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                                th instanceof NoImplementationException ? HttpServletResponse.SC_METHOD_NOT_ALLOWED :
+                                        th instanceof InvalidRequestException || th instanceof IOException || th instanceof UncheckedIOException ? HttpServletResponse.SC_BAD_REQUEST :
+                                                th instanceof SQLException || th instanceof UncheckedSQLException ? HttpServletResponse.SC_CONFLICT :
+                                                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         if (th instanceof EndPointException && th.getMessage() != null && !th.getMessage().isEmpty()) {
-            withJsonObject(Map.of("description", th.getMessage()));
+            withJsonObject(Map.of(
+                    "status", response.getStatus(),
+                    "description", th.getMessage())
+            );
         } else {
             context.complete();
         }
@@ -189,7 +193,7 @@ public class Answer {
     }
 
     public CompletableFuture<List<Map<String, Object>>> onJsonArray() {
-        if (request.getContentType() != null && request.getContentType().toLowerCase().startsWith(JSON_CONTENT_TYPE)) {
+        if (request.getContentType() != null && request.getContentType().toLowerCase().startsWith(JSON_CONTENT_TYPE) && request.getContentLength() > 0) {
             return input()
                     .thenApply(data -> {
                         try {
@@ -204,7 +208,7 @@ public class Answer {
     }
 
     public CompletableFuture<List<Object>> onPlainJsonArray() {
-        if (request.getContentType() != null && request.getContentType().toLowerCase().startsWith(JSON_CONTENT_TYPE)) {
+        if (request.getContentType() != null && request.getContentType().toLowerCase().startsWith(JSON_CONTENT_TYPE) && request.getContentLength() > 0) {
             return input()
                     .thenApply(data -> {
                         try {
@@ -219,7 +223,7 @@ public class Answer {
     }
 
     public CompletableFuture<Map<String, Object>> onJsonObject() {
-        if (request.getContentType() != null && request.getContentType().toLowerCase().startsWith(JSON_CONTENT_TYPE)) {
+        if (request.getContentType() != null && request.getContentType().toLowerCase().startsWith(JSON_CONTENT_TYPE) && request.getContentLength() > 0) {
             return input()
                     .thenApply(data -> {
                         try {
@@ -234,7 +238,7 @@ public class Answer {
     }
 
     public CompletableFuture<Object> onJsonValue() {
-        if (request.getContentType() != null && request.getContentType().toLowerCase().startsWith(JSON_CONTENT_TYPE)) {
+        if (request.getContentType() != null && request.getContentType().toLowerCase().startsWith(JSON_CONTENT_TYPE) && request.getContentLength() > 0) {
             return input()
                     .thenApply(data -> {
                         try {
@@ -249,15 +253,21 @@ public class Answer {
     }
 
     public CompletableFuture<byte[]> input() {
-        try {
-            CompletableFuture<byte[]> receiving = new CompletableFuture<>();
-            ServletInputStream in = request.getInputStream();
-            in.setReadListener(new RequestBodyReceiver(in, (data) -> {
-                receiving.completeAsync(() -> data, futuresExecutor);
-            }));
-            return receiving;
-        } catch (IOException ex) {
-            throw new UncheckedIOException(ex);
+        if (request.getContentLength() > 0) {
+            try {
+                CompletableFuture<byte[]> receiving = new CompletableFuture<>();
+                ServletInputStream in = request.getInputStream();
+                in.setReadListener(new RequestBodyReceiver(in,
+                        data -> receiving.completeAsync(() -> data, futuresExecutor),
+                        t -> futuresExecutor.execute(() ->
+                                receiving.completeExceptionally(t)
+                        )));
+                return receiving;
+            } catch (IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
+        } else {
+            return CompletableFuture.completedFuture(new byte[]{});
         }
     }
 
