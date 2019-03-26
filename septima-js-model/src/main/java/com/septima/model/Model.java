@@ -187,9 +187,13 @@ public class Model {
                     .collect(Collectors.toMap(keyOf, Function.identity()));
             domainData.values().forEach(classifier);
             return new ObservableMap<>(domainData,
-                    (key, removedValue, addedValue) -> {
+                    (aKey, removedValue, addedValue) -> {
                         onRemoved.apply(removedValue);
                         D added = onAdded.apply(addedValue);
+                        // Warning! This case is not about instance's fields changes.
+                        // It is change of one instance to another.
+                        // So, the old instance can be deleted from database and than, another instance should be added with the same key.
+                        // But in this case we can just update all fields in the database and avoid extra sql statement.
                         changes.add(new InstanceChange(query.getEntityName(), Map.of(keyName, keyOf.apply(added)), reverseMapper.apply(added)));
                     },
                     (aKey, removedValue, addedValue) -> {
