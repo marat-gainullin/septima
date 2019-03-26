@@ -1,6 +1,7 @@
 package com.septima.model;
 
 import com.septima.changes.EntityAction;
+import com.septima.changes.EntityCommand;
 import com.septima.changes.InstanceAdd;
 import com.septima.changes.InstanceChange;
 import com.septima.changes.InstanceRemove;
@@ -71,6 +72,10 @@ public class Model {
                         query.getEntityName(),
                         Map.of(keyName, keyName.equals(e.getPropertyName()) ? e.getOldValue() : keyMapper.apply((D) e.getSource())),
                         Map.of(e.getPropertyName(), e.getNewValue())));
+    }
+
+    public void addEntityCommand(String anEntity, Map<String, Object> parameters){
+        changes.add(new EntityCommand(anEntity, parameters));
     }
 
     public void dropChanges() {
