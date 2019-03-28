@@ -2,7 +2,6 @@ package com.septima;
 
 import com.septima.dataflow.DynamicTypingDataProvider;
 import com.septima.dataflow.EntityActionsBinder;
-import com.septima.jdbc.DataSources;
 import com.septima.jdbc.JdbcReaderAssigner;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.EntityField;
@@ -13,14 +12,11 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Database {
 
@@ -41,27 +37,10 @@ public class Database {
         futuresExecutor = aFuturesExecutor;
     }
 
-    private static int riddleStatements(List<EntityActionsBinder.BoundStatement> aStatements, Connection aConnection) throws SQLException {
+    private static int applyStatements(List<EntityActionsBinder.BoundStatement> aStatements, Connection aConnection) throws SQLException {
         int rowsAffected = 0;
-        if (!aStatements.isEmpty()) {
-            List<EntityActionsBinder.BoundStatement> errorStatements = new ArrayList<>();
-            List<String> errors = new ArrayList<>();
-            for (EntityActionsBinder.BoundStatement entry : aStatements) {
-                try {
-                    rowsAffected += entry.apply(aConnection);
-                } catch (SQLException ex) {
-                    errorStatements.add(entry);
-                    errors.add("Entity '" + entry.getEntityName() + "' action \" " + entry.getClause() + " \" failed with cause: " + ex.getMessage());
-                } catch (UncheckedSQLException ex) {
-                    errorStatements.add(entry);
-                    errors.add(ex.getMessage());
-                }
-            }
-            if (errorStatements.size() == aStatements.size()) {
-                throw new SQLException(String.join("\n", errors));
-            } else if (errorStatements.size() < aStatements.size()) {
-                rowsAffected += riddleStatements(errorStatements, aConnection);
-            }
+        for (EntityActionsBinder.BoundStatement entry : aStatements) {
+            rowsAffected += entry.apply(aConnection);
         }
         return rowsAffected;
     }
@@ -143,7 +122,7 @@ public class Database {
                 boolean autoCommit = connection.getAutoCommit();
                 connection.setAutoCommit(false);
                 try {
-                    int affected = riddleStatements(statements, connection);
+                    int affected = applyStatements(statements, connection);
                     connection.commit();
                     committing.completeAsync(() -> affected, futuresExecutor);
                 } catch (SQLException | UncheckedSQLException ex) {
