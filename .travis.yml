@@ -9,7 +9,7 @@ sudo: false
 language: java
 
 jdk:
-  - oraclejdk9
+  - oraclejdk11
     
 git:
   depth: 1
