@@ -14,7 +14,7 @@ public class TomcatExec extends JavaExec {
 
     private String tomcatAt;
 
-    private int debugPort = 5007;
+    private String debugPort = "5007";
 
     private String applicationAt;
 
@@ -38,11 +38,11 @@ public class TomcatExec extends JavaExec {
         ));
     }
 
-    public int getDebugPort() {
+    public String getDebugPort() {
         return debugPort;
     }
 
-    public void setDebugPort(int debugPort) {
+    public void setDebugPort(String debugPort) {
         this.debugPort = debugPort;
         updateJvmArgs();
     }
