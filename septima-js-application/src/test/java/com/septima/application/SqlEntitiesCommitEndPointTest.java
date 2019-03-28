@@ -19,8 +19,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class SqlEntitiesCommitEndPointTest extends SqlEntitiesEndPointTest {
 
@@ -41,7 +40,7 @@ public class SqlEntitiesCommitEndPointTest extends SqlEntitiesEndPointTest {
         h2 = null;
     }
 
-    public static String loadResource(String resourceName) throws IOException {
+    static String loadResource(String resourceName) throws IOException {
         try (BufferedReader buffered = new BufferedReader(new InputStreamReader(SqlEntitiesCommitEndPointTest.class.getResourceAsStream(resourceName), StandardCharsets.UTF_8))) {
             return buffered.lines().collect(Collectors.joining("\n"));
         }
@@ -52,7 +51,8 @@ public class SqlEntitiesCommitEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockOut("/pets-public", SqlEntitiesCommitEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_METHOD_NOT_ALLOWED, requestResult.getStatus());
-        assertEquals("{\"description\":\"Not implemented\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Not implemented\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
 
         assertNull(requestResult.getLocation());
     }
@@ -73,7 +73,8 @@ public class SqlEntitiesCommitEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("", commitLog, METHOD_POST, SqlEntitiesCommitEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, requestResult.getStatus());
-        assertEquals("{\"description\":\"Commit log entry have to contain 'entity' property\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Commit log entry have to contain 'entity' property\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
         assertNull(requestResult.getLocation());
     }
 
@@ -83,7 +84,8 @@ public class SqlEntitiesCommitEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("", commitLog, METHOD_POST, SqlEntitiesCommitEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, requestResult.getStatus());
-        assertEquals("{\"description\":\"Commit log entry have to contain 'kind' property\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Commit log entry have to contain 'kind' property\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
         assertNull(requestResult.getLocation());
     }
 
@@ -93,17 +95,19 @@ public class SqlEntitiesCommitEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("", commitLog, METHOD_POST, SqlEntitiesCommitEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, requestResult.getStatus());
-        assertEquals("{\"description\":\"Unknown commit log entry kind: 'explode'\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Unknown commit log entry kind: 'explode'\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
         assertNull(requestResult.getLocation());
     }
 
     @Test
     public void postAbsentEntity() throws ServletException, IOException, InterruptedException, ExecutionException {
-        String commitLog = loadResource("/abset-entity-commit.log.json");
+        String commitLog = loadResource("/absent-entity-commit.log.json");
         CompletableFuture<RequestResult> response = mockInOut("", commitLog, METHOD_POST, SqlEntitiesCommitEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
-        assertEquals("{\"description\":\"Collection 'absent-entity' is not found.\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Collection 'absent-entity' is not found.\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
         assertNull(requestResult.getLocation());
     }
 
@@ -113,7 +117,8 @@ public class SqlEntitiesCommitEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("", commitLog, METHOD_POST, SqlEntitiesCommitEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_FORBIDDEN, requestResult.getStatus());
-        assertEquals("{\"description\":\"Public access to 'pets' is not allowed\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Public access to 'pets' is not allowed\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
         assertNull(requestResult.getLocation());
     }
 
@@ -123,7 +128,8 @@ public class SqlEntitiesCommitEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("", commitLog, METHOD_POST, SqlEntitiesCommitEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_FORBIDDEN, requestResult.getStatus());
-        assertEquals("{\"description\":\"Write access to collection 'pets-public-write-roles' data requires one of the following roles: ['boss']\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Write access to collection 'pets-public-write-roles' data requires one of the following roles: ['boss']\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
         assertNull(requestResult.getLocation());
     }
 
@@ -132,7 +138,8 @@ public class SqlEntitiesCommitEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("/pets-public", "", METHOD_PUT, SqlEntitiesCommitEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_METHOD_NOT_ALLOWED, requestResult.getStatus());
-        assertEquals("{\"description\":\"Not implemented\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Not implemented\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
         assertNull(requestResult.getLocation());
     }
 
@@ -141,7 +148,8 @@ public class SqlEntitiesCommitEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("/pets-public", "", METHOD_DELETE, SqlEntitiesCommitEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_METHOD_NOT_ALLOWED, requestResult.getStatus());
-        assertEquals("{\"description\":\"Not implemented\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Not implemented\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
         assertNull(requestResult.getLocation());
     }
 }

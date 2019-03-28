@@ -15,8 +15,7 @@ import java.sql.SQLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class SqlEntitiesParametersEndPointTest extends SqlEntitiesEndPointTest {
 
@@ -42,7 +41,8 @@ public class SqlEntitiesParametersEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockOut("/pets", SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_FORBIDDEN, requestResult.getStatus());
-        assertEquals("{\"description\":\"Public access to 'pets' is not allowed\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Public access to 'pets' is not allowed\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -50,7 +50,8 @@ public class SqlEntitiesParametersEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockOut("/pets-public-read-roles", SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_FORBIDDEN, requestResult.getStatus());
-        assertEquals("{\"description\":\"Read access to collection 'pets-public-read-roles' data requires one of the following roles: ['boss']\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Read access to collection 'pets-public-read-roles' data requires one of the following roles: ['boss']\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -69,9 +70,7 @@ public class SqlEntitiesParametersEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockOut("/pets-public/p2", SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_OK, requestResult.getStatus());
-        assertEquals(
-                "{\"type\":\"BOOLEAN\",\"description\":null,\"mode\":\"In\"}",
-                requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"type\":\"BOOLEAN\",\"description\":null,\"mode\":\"In\""));
     }
 
     @Test
@@ -79,10 +78,8 @@ public class SqlEntitiesParametersEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockOut("/absent-collection/87686", SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
-        assertEquals(
-                "{\"description\":\"Collection 'absent-collection/87686 or absent-collection' is not found.\"}",
-                requestResult.getBody()
-        );
+        assertTrue(requestResult.getBody().contains("\"description\":\"Collection 'absent-collection/87686 or absent-collection' is not found.\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -90,10 +87,8 @@ public class SqlEntitiesParametersEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockOut("/absent-collection", SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
-        assertEquals(
-                "{\"description\":\"Collection 'absent-collection' is not found.\"}",
-                requestResult.getBody()
-        );
+        assertTrue(requestResult.getBody().contains("\"description\":\"Collection 'absent-collection' is not found.\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -101,10 +96,8 @@ public class SqlEntitiesParametersEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockOut("/pets-public/87686", SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
-        assertEquals(
-                "{\"description\":\"Collection 'pets-public' doesn't contain an instance with a key: parameter.name = 87686\"}",
-                requestResult.getBody()
-        );
+        assertTrue(requestResult.getBody().contains("\"description\":\"Collection 'pets-public' doesn't contain an instance with a key: parameter.name = 87686\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -112,8 +105,9 @@ public class SqlEntitiesParametersEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("/pets-public", "", METHOD_POST, SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_METHOD_NOT_ALLOWED, requestResult.getStatus());
-        assertEquals("{\"description\":\"Not implemented\"}", requestResult.getBody());
         assertNull(requestResult.getLocation());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Not implemented\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -121,8 +115,9 @@ public class SqlEntitiesParametersEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("/pets-public", "", METHOD_PUT, SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_METHOD_NOT_ALLOWED, requestResult.getStatus());
-        assertEquals("{\"description\":\"Not implemented\"}", requestResult.getBody());
         assertNull(requestResult.getLocation());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Not implemented\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -130,7 +125,8 @@ public class SqlEntitiesParametersEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("/pets-public", "", METHOD_DELETE, SqlEntitiesParametersEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_METHOD_NOT_ALLOWED, requestResult.getStatus());
-        assertEquals("{\"description\":\"Not implemented\"}", requestResult.getBody());
         assertNull(requestResult.getLocation());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Not implemented\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 }

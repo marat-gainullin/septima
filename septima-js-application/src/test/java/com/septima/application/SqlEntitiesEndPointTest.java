@@ -121,6 +121,7 @@ public class SqlEntitiesEndPointTest {
             requestResult.status = invocation.getArgument(0);
             return null;
         }).when(response).setStatus(Mockito.any(Integer.class));
+        Mockito.when(response.getStatus()).then(invocation -> requestResult.status);
 
         SqlEntitiesEndPoint endpoint = endPointSource.get();
         endpoint.init(config);
@@ -182,6 +183,7 @@ public class SqlEntitiesEndPointTest {
             }
             return null;
         }).when(response).setHeader(Mockito.any(String.class), Mockito.any(String.class));
+        Mockito.when(response.getStatus()).then(invocation -> requestResult.status);
 
         ServletInputStream in = Mockito.mock(ServletInputStream.class);
         AtomicReference<ReadListener> inReadListener = new AtomicReference<>();
@@ -201,6 +203,7 @@ public class SqlEntitiesEndPointTest {
             return read;
         });
         Mockito.when(request.getInputStream()).thenReturn(in);
+        Mockito.when(request.getContentLength()).thenReturn(inBodyData != null ? inBodyData.available() : 0);
 
         SqlEntitiesEndPoint endpoint = endPointSource.get();
         endpoint.init(config);

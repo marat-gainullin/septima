@@ -38,7 +38,7 @@ public class Answer {
 
     private static final String JSON_CONTENT_TYPE = "application/json";
     private static final String JSON_CONTENT_TYPE_UTF8 = JSON_CONTENT_TYPE + ";charset=utf-8";
-    private static final String JSON_CONTENT_TYPE_REQUIRED = "Request is expected to have a json body, i.e. content type should be '" + JSON_CONTENT_TYPE + "' and content length should greater than zero";
+    private static final String JSON_CONTENT_TYPE_REQUIRED = "Request is expected to have a json body, i.e. content type should be '" + JSON_CONTENT_TYPE + "' and content length should be greater than zero";
     private static final ObjectWriter JSON_WRITER = new ObjectMapper()
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             .writer();

@@ -12,7 +12,7 @@ dependencies {
             "javax.websocket:javax.websocket-api:$webSocketVersion",
             "javax.mail:mail:$mailVersion",
             'com.h2database:h2:1.4.193',
-            'org.mockito:mockito-core:2.13.0'
+            'org.mockito:mockito-core:2.25.1'
     compile 'com.fasterxml.jackson.core:jackson-core:2.9.2',
             'com.fasterxml.jackson.core:jackson-databind:2.9.2',
             project(':septima-js-model'),

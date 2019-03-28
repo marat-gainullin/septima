@@ -45,7 +45,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockOut("/pets", SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_FORBIDDEN, requestResult.getStatus());
-        assertEquals("{\"description\":\"Public access to 'pets' is not allowed\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Public access to 'pets' is not allowed\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -53,7 +54,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockOut("/pets-public-read-roles", SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_FORBIDDEN, requestResult.getStatus());
-        assertEquals("{\"description\":\"Read access to collection 'pets-public-read-roles' data requires one of the following roles: ['boss']\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Read access to collection 'pets-public-read-roles' data requires one of the following roles: ['boss']\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -101,10 +103,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockOut("/absent-collection/87686", SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
-        assertEquals(
-                "{\"description\":\"Collection 'absent-collection/87686 or absent-collection' is not found.\"}",
-                requestResult.getBody()
-        );
+        assertTrue(requestResult.getBody().contains("\"description\":\"Collection 'absent-collection/87686 or absent-collection' is not found.\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -112,10 +112,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockOut("/absent-collection", SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
-        assertEquals(
-                "{\"description\":\"Collection 'absent-collection' is not found.\"}",
-                requestResult.getBody()
-        );
+        assertTrue(requestResult.getBody().contains("\"description\":\"Collection 'absent-collection' is not found.\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -123,10 +121,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockOut("/pets-public/87686", SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
-        assertEquals(
-                "{\"description\":\"Collection 'pets-public' doesn't contain an instance with a key: pets_id = 87686.0\"}",
-                requestResult.getBody()
-        );
+        assertTrue(requestResult.getBody().contains("\"description\":\"Collection 'pets-public' doesn't contain an instance with a key: pets_id = 87686.0\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -142,7 +138,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("/pets-public/87686", "", METHOD_POST, SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
-        assertEquals("{\"description\":\"Collection 'pets-public/87686' is not found.\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Collection 'pets-public/87686' is not found.\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -150,7 +147,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("/pets", "", METHOD_POST, SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_FORBIDDEN, requestResult.getStatus());
-        assertEquals("{\"description\":\"Public access to 'pets' is not allowed\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Public access to 'pets' is not allowed\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -158,7 +156,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("/pets-public-write-roles", "", METHOD_POST, SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_FORBIDDEN, requestResult.getStatus());
-        assertEquals("{\"description\":\"Write access to collection 'pets-public-write-roles' data requires one of the following roles: ['boss']\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Write access to collection 'pets-public-write-roles' data requires one of the following roles: ['boss']\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -181,9 +180,9 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
                 "{\"birthdate\":\"2015-04-30T21:00:00.000+0000\",\"owner_id\":1.42841788496711E14,\"type_id\":1.42841300122653E14,\"name\":\"Kin\",\"pets_id\":tttt}",
                 METHOD_POST, SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
-        assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, requestResult.getStatus());
-        assertNull(requestResult.getBody());
+        assertEquals(HttpServletResponse.SC_BAD_REQUEST, requestResult.getStatus());
         assertNull(requestResult.getLocation());
+        assertNull(requestResult.getBody());
     }
 
     @Test
@@ -207,7 +206,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("/absent/87686", "", METHOD_PUT, SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
-        assertEquals("{\"description\":\"Collection 'absent' is not found.\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Collection 'absent' is not found.\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -215,7 +215,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("/pets/8899", "", METHOD_PUT, SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_FORBIDDEN, requestResult.getStatus());
-        assertEquals("{\"description\":\"Public access to 'pets' is not allowed\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Public access to 'pets' is not allowed\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -223,7 +224,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("/pets-public-write-roles/89908", "", METHOD_PUT, SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_FORBIDDEN, requestResult.getStatus());
-        assertEquals("{\"description\":\"Write access to collection 'pets-public-write-roles' data requires one of the following roles: ['boss']\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Write access to collection 'pets-public-write-roles' data requires one of the following roles: ['boss']\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -245,7 +247,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
                 METHOD_PUT, SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
-        assertEquals("{\"description\":\"Collection 'pets-public' doesn't contain an instance with a key: pets_id = 542842880961396\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Collection 'pets-public' doesn't contain an instance with a key: pets_id = 542842880961396\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -256,7 +259,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
                 METHOD_PUT, SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
-        assertEquals("{\"description\":\"Collection 'pets-public' doesn't contain an instance with a key: pets_id = tttt\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Collection 'pets-public' doesn't contain an instance with a key: pets_id = tttt\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -266,8 +270,9 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
                 "{\"birthdate\":\"2015-04-40T21:00:00.000+0000\",\"owner_id\":1.42841788496711E14,\"type_id\":1.42841300122653E14,\"name\":\"Gosha\"}",
                 METHOD_PUT, SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
-        assertEquals(HttpServletResponse.SC_METHOD_NOT_ALLOWED, requestResult.getStatus());
-        assertEquals("{\"description\":\"Can't update whole collection: 'pets-public'. Update of a whole collection is not supported\"}", requestResult.getBody());
+        assertEquals(HttpServletResponse.SC_BAD_REQUEST, requestResult.getStatus());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Can't update whole collection: 'pets-public'. Update of a whole collection is not supported\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -275,7 +280,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("/absent/87686", "", METHOD_DELETE, SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
-        assertEquals("{\"description\":\"Collection 'absent' is not found.\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Collection 'absent' is not found.\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -283,7 +289,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("/pets/8899", "", METHOD_DELETE, SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_FORBIDDEN, requestResult.getStatus());
-        assertEquals("{\"description\":\"Public access to 'pets' is not allowed\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Public access to 'pets' is not allowed\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -291,7 +298,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("/pets-public-write-roles/89908", "", METHOD_DELETE, SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_FORBIDDEN, requestResult.getStatus());
-        assertEquals("{\"description\":\"Write access to collection 'pets-public-write-roles' data requires one of the following roles: ['boss']\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Write access to collection 'pets-public-write-roles' data requires one of the following roles: ['boss']\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -313,7 +321,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
                 METHOD_DELETE, SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
-        assertEquals("{\"description\":\"Collection 'pets-public' doesn't contain an instance with a key: pets_id = 542842880961396\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Collection 'pets-public' doesn't contain an instance with a key: pets_id = 542842880961396\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -324,7 +333,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
                 METHOD_DELETE, SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_NOT_FOUND, requestResult.getStatus());
-        assertEquals("{\"description\":\"Collection 'pets-public' doesn't contain an instance with a key: pets_id = tttt\"}", requestResult.getBody());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Collection 'pets-public' doesn't contain an instance with a key: pets_id = tttt\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
     @Test
@@ -334,8 +344,9 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
                 "{\"birthdate\":\"2015-04-40T21:00:00.000+0000\",\"owner_id\":1.42841788496711E14,\"type_id\":1.42841300122653E14,\"name\":\"Gosha\"}",
                 METHOD_DELETE, SqlEntitiesDataEndPoint::new);
         RequestResult requestResult = response.get();
-        assertEquals(HttpServletResponse.SC_METHOD_NOT_ALLOWED, requestResult.getStatus());
-        assertEquals("{\"description\":\"Can't delete whole collection: 'pets-public'. Delete of a whole collection is not supported\"}", requestResult.getBody());
+        assertEquals(HttpServletResponse.SC_BAD_REQUEST, requestResult.getStatus());
+        assertTrue(requestResult.getBody().contains("\"description\":\"Can't delete whole collection: 'pets-public'. Delete of a whole collection is not supported\""));
+        assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
     }
 
 }
