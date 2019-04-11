@@ -174,16 +174,20 @@ public class SqlEntity {
     }
 
     public SqlQuery toQuery() {
-        Objects.requireNonNull(sqlText, "Sql query text missing.");
-        if (sqlText.isEmpty()) {
-            throw new IllegalStateException("Empty Sql query text is not supported");
-        }
-        if (customSqlText != null && !customSqlText.isEmpty()) {
-            Logger.getLogger(SqlEntity.class.getName()).log(Level.INFO, "Entity sql was substituted with customSql while compiling entity {0}", name);
+        String sqlClause;
+        if (customSqlText != null && !customSqlText.isBlank()) {
+            sqlClause = customSqlText;
+            Logger.getLogger(SqlEntity.class.getName()).log(Level.INFO, "Entity sql was substituted with custom sql while compiling entity {0}", name);
+        } else {
+            Objects.requireNonNull(sqlText, "Sql query text missing.");
+            if (sqlText.isBlank()) {
+                throw new IllegalStateException("Empty sql query text is not supported");
+            }
+            sqlClause = sqlText;
         }
         List<Parameter> compiledParams = new ArrayList<>(params.size());
         String jdbcSql = riddleParameters(
-                customSqlText != null && !customSqlText.isEmpty() ? customSqlText : sqlText,
+                sqlClause,
                 paramName -> {
                     Parameter p = params.getOrDefault(
                             paramName,

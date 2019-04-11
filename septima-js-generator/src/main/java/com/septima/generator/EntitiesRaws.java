@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class EntitiesRaws {
+public class EntitiesRaws extends EntitiesProcessor{
 
     private final String rowTemplate;
     private final String rowPropertyFieldTemplate;
@@ -25,11 +25,6 @@ public class EntitiesRaws {
     private final String forwardMappingTemplate;
     private final String narrowedForwardMappingTemplate;
     private final String reverseMappingTemplate;
-
-    private final SqlEntities entities;
-    private final Path destination;
-    private final String lf;
-    private final Charset charset;
 
     public static EntitiesRaws fromResources(SqlEntities anEntities, Path aDestination) throws IOException {
         return fromResources(anEntities, aDestination, StandardCharsets.UTF_8, System.lineSeparator());
@@ -54,16 +49,13 @@ public class EntitiesRaws {
                          String aNarrowedForwardMappingTemplate,
                          String aReverseMappingTemplate,
                          String aLf, Charset aCharset) {
-        entities = anEntities;
-        destination = aDestination;
+        super(anEntities, aDestination, aLf, aCharset);
         rowTemplate = aRowTemplate;
         rowPropertyFieldTemplate = aRowPropertyFieldTemplate;
         rowPropertyFieldAccessorsTemplate = aRowPropertyFieldAccessorsTemplate;
         forwardMappingTemplate = aForwardMappingTemplate.replace(aLf, "");
         narrowedForwardMappingTemplate = aNarrowedForwardMappingTemplate.replace(aLf, "");
         reverseMappingTemplate = aReverseMappingTemplate.replace(aLf, "");
-        lf = aLf;
-        charset = aCharset;
     }
 
     public Path considerJavaSource(Path sqlEntityFile) {

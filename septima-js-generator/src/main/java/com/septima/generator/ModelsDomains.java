@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class ModelsDomains {
+public class ModelsDomains extends EntitiesProcessor {
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -34,11 +34,7 @@ public class ModelsDomains {
     private final String nullableScalarPropertyTemplate;
     private final String collectionPropertyTemplate;
 
-    private final SqlEntities entities;
-    private final Path destination;
     private final Path modelsRoot;
-    private final String lf;
-    private final Charset charset;
 
     public static ModelsDomains fromResources(SqlEntities anEntities, Path aModelsRoot, Path aDestination) throws IOException {
         return fromResources(anEntities, aModelsRoot, aDestination, StandardCharsets.UTF_8, System.lineSeparator());
@@ -71,9 +67,8 @@ public class ModelsDomains {
                           String aNullableScalarPropertyTemplate,
                           String aCollectionPropertyTemplate,
                           String aLf, Charset aCharset) {
-        entities = anEntities;
+        super(anEntities, aDestination, aLf, aCharset);
         modelsRoot = aModelsRoot;
-        destination = aDestination;
         modelTemplate = aModelTemplate;
         modelEntityTemplate = aModelEntityTemplate;
         modelEntityGetterTemplate = aModelEntityGetterTemplate;
@@ -84,8 +79,6 @@ public class ModelsDomains {
         requiredScalarPropertyTemplate = aRequiredScalarPropertyTemplate;
         nullableScalarPropertyTemplate = aNullableScalarPropertyTemplate;
         collectionPropertyTemplate = aCollectionPropertyTemplate;
-        lf = aLf;
-        charset = aCharset;
     }
 
     public Path considerJavaSource(Path modelDefinition) {
