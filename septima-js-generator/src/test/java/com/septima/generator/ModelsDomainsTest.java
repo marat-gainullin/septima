@@ -31,7 +31,8 @@ public class ModelsDomainsTest {
         Path testAppPath = new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath().resolve(testAppSuffix);
         SqlEntities sqlEntities = new SqlEntities(
                 testAppPath,
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true
         );
         Path destination = new File(System.getProperty("generated.path")).toPath().resolve(testAppSuffix);
         EntitiesRaws javaEntities = EntitiesRaws.fromResources(sqlEntities, destination);

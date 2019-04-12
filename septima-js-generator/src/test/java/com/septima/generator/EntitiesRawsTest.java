@@ -31,7 +31,8 @@ public class EntitiesRawsTest {
         Path testAppPath = new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath().resolve("rows");
         SqlEntities entities = new SqlEntities(
                 testAppPath,
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true
         );
         Path destination = new File(System.getProperty("generated.path")).toPath().resolve("rows");
         Path ethalons = new File(System.getProperty("ethalons.path")).toPath().resolve("rows");

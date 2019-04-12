@@ -33,7 +33,7 @@ public class GenerateTask extends DefaultTask {
 
     private void checkSqlEntities() {
         if (entitiesRoot != null && defaultDataSourceName != null) {
-            sqlEntities = new SqlEntities(entitiesRoot.toPath(), defaultDataSourceName);
+            sqlEntities = new SqlEntities(entitiesRoot.toPath(), defaultDataSourceName, true);
         }
     }
 }

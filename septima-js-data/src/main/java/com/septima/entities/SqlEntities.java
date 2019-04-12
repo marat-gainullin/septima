@@ -8,34 +8,60 @@ import com.septima.Metadata;
 import com.septima.changes.EntityAction;
 import com.septima.dataflow.DataProvider;
 import com.septima.dataflow.EntityActionsBinder;
+import com.septima.jdbc.DataSources;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.EntityField;
 import com.septima.metadata.ForeignKey;
 import com.septima.metadata.JdbcColumn;
 import com.septima.metadata.Parameter;
-import com.septima.queries.*;
+import com.septima.queries.CaseInsensitiveMap;
+import com.septima.queries.CaseInsensitiveSet;
+import com.septima.queries.ExtractParameters;
+import com.septima.queries.InlineEntities;
+import com.septima.queries.SqlQuery;
 import com.septima.sqldrivers.SqlDriver;
-import net.sf.jsqlparser.JSqlParser;
 import net.sf.jsqlparser.JSqlParserException;
 import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.UncheckedJSqlParserException;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.select.*;
+import net.sf.jsqlparser.statement.select.AllColumns;
+import net.sf.jsqlparser.statement.select.AllTableColumns;
+import net.sf.jsqlparser.statement.select.FromItem;
+import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.select.SelectBody;
+import net.sf.jsqlparser.statement.select.SelectExpressionItem;
+import net.sf.jsqlparser.statement.select.SelectItem;
+import net.sf.jsqlparser.statement.select.SubSelect;
 import net.sf.jsqlparser.syntax.FromItems;
 import net.sf.jsqlparser.syntax.SelectItems;
 import net.sf.jsqlparser.util.deparser.StatementDeParser;
 
 import javax.naming.NamingException;
 import javax.sql.DataSource;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.Spliterators;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
@@ -54,6 +80,7 @@ public class SqlEntities {
     private static final String LOADED_QUERY_MSG = "Entity '%s' loaded.";
     private static final ObjectMapper JSON = new ObjectMapper();
 
+    private final boolean compileEntities;
     private final Path entitiesRoot;
     private final Path resourcesEntitiesRoot;
     private final String defaultDataSource;
@@ -63,16 +90,17 @@ public class SqlEntities {
     private final Executor futuresExecutor;
 
     private final Map<String, Database> databases = new ConcurrentHashMap<>();
+    private final Map<Database, String> dataSources = new ConcurrentHashMap<>();
 
-    public SqlEntities(Path anEntitiesRoot, String aDefaultDataSource) {
-        this(anEntitiesRoot, aDefaultDataSource, Database.jdbcTasksPerformer(32), ForkJoinPool.commonPool());
+    public SqlEntities(Path anEntitiesRoot, String aDefaultDataSource, boolean aCompileEntities) {
+        this(anEntitiesRoot, aDefaultDataSource, Database.jdbcTasksPerformer(32), ForkJoinPool.commonPool(), aCompileEntities);
     }
 
-    public SqlEntities(Path anEntitiesRoot, String aDefaultDataSource, Executor aJdbcPerformer, Executor aFuturesExecutor) {
-        this(null, anEntitiesRoot, aDefaultDataSource, aJdbcPerformer, aFuturesExecutor);
+    public SqlEntities(Path anEntitiesRoot, String aDefaultDataSource, Executor aJdbcPerformer, Executor aFuturesExecutor, boolean aCompileEntities) {
+        this(null, anEntitiesRoot, aDefaultDataSource, aJdbcPerformer, aFuturesExecutor, aCompileEntities);
     }
 
-    public SqlEntities(Path aResourcesEntitiesRoot, Path anEntitiesRoot, String aDefaultDataSource, Executor aJdbcPerformer, Executor aFuturesExecutor) {
+    public SqlEntities(Path aResourcesEntitiesRoot, Path anEntitiesRoot, String aDefaultDataSource, Executor aJdbcPerformer, Executor aFuturesExecutor, boolean aCompileEntities) {
         super();
         Objects.requireNonNull(
                 Objects.requireNonNullElse(aResourcesEntitiesRoot, anEntitiesRoot),
@@ -86,6 +114,7 @@ public class SqlEntities {
         defaultDataSource = aDefaultDataSource;
         jdbcPerformer = aJdbcPerformer;
         futuresExecutor = aFuturesExecutor;
+        compileEntities = aCompileEntities;
     }
 
     private static Map<String, EntityField> columnsToApplicationFields(Map<String, JdbcColumn> tableColumns, SqlDriver aDriver) {
@@ -261,6 +290,10 @@ public class SqlEntities {
         return defaultDataSource;
     }
 
+    public String dataSourceOf(Database aDatabase) {
+        return dataSources.get(aDatabase);
+    }
+
     public SqlEntity loadEntity(String anEntityName) {
         return loadEntity(anEntityName, new HashSet<>());
     }
@@ -352,7 +385,7 @@ public class SqlEntities {
             File mainQueryFile = entitiesRoot.resolve(entitySqlFileName).toFile();
             if (mainQueryFile.exists()) {
                 if (!mainQueryFile.isDirectory()) {
-                    return new String(Files.readAllBytes(mainQueryFile.toPath()), StandardCharsets.UTF_8);
+                    return Files.readString(mainQueryFile.toPath(), StandardCharsets.UTF_8);
                 } else {
                     throw new FileNotFoundException(entitySqlFileName + "' at path: " + entitiesRoot + " is a directory.");
                 }
@@ -397,9 +430,12 @@ public class SqlEntities {
         }
     }
 
-    private SqlEntity constructEntity(String anEntityName, String anEntitySql, String anEntityJson, Path aStartOfReferences, Set<String> aIllegalRefrences) throws IOException, JSqlParserException, SQLException {
+    private SqlEntity constructEntity(String anEntityName, String anEntitySql, String anEntityJson, Path aStartOfReferences, Set<String> aIllegalReferences) throws IOException, JSqlParserException, SQLException {
         Objects.requireNonNull(anEntityName, ENTITY_NAME_MISSING_MSG);
         Objects.requireNonNull(anEntitySql, "anEntitySql is required argument");
+        if (!compileEntities) {
+            Objects.requireNonNull(anEntityJson, "anEntityJson is required argument if no entities compilation is considered");
+        }
 
         if (!anEntitySql.isEmpty()) {
             JsonNode entityDocument = anEntityJson != null ? JSON.readTree(anEntityJson) : null;
@@ -407,6 +443,8 @@ public class SqlEntities {
             JsonNode dataSourceNode = entityDocument != null ? entityDocument.get("source") : null;
             String dataSource = dataSourceNode != null && dataSourceNode.isTextual() ? dataSourceNode.asText() : defaultDataSource;
             Database database = databaseOf(dataSource);
+            dataSources.put(database, dataSource);
+
             JsonNode procedureNode = entityDocument != null ? entityDocument.get("procedure") : null;
             boolean procedure = procedureNode != null && procedureNode.asBoolean();
 
@@ -421,14 +459,12 @@ public class SqlEntities {
             JsonNode pageSizeNode = entityDocument != null ? entityDocument.get("pageSize") : null;
             int pageSize = pageSizeNode != null && pageSizeNode.isInt() ? pageSizeNode.asInt(DataProvider.NO_PAGING_PAGE_SIZE) : DataProvider.NO_PAGING_PAGE_SIZE;
 
-            JSqlParser sqlParser = new SeptimaSqlParser();
-            Statement querySyntax = sqlParser.parse(new StringReader(anEntitySql));
+            Statement querySyntax = compileEntities ? new SeptimaSqlParser().parse(new StringReader(anEntitySql)) : null;
 
-            boolean command = !(querySyntax instanceof Select);
             JsonNode commandNode = entityDocument != null ? entityDocument.get("command") : null;
-            command = commandNode != null && commandNode.isBoolean() ? commandNode.asBoolean() : command;
+            boolean command = commandNode != null && commandNode.isBoolean() ? commandNode.asBoolean() : querySyntax != null && !(querySyntax instanceof Select);
 
-            Map<String, Parameter> params = ExtractParameters.from(querySyntax);
+            Map<String, Parameter> params = querySyntax != null ? ExtractParameters.from(querySyntax) : new HashMap<>();
             // subQueryName, subQueryParameterName, parameterName
             Map<String, Map<String, String>> paramsBinds = new HashMap<>();
             JsonNode paramsNode = entityDocument != null ? entityDocument.get("parameters") : null;
@@ -436,11 +472,13 @@ public class SqlEntities {
                 paramsNode.fields().forEachRemaining(parameterReader(params, paramsBinds));
             }
 
-            InlineEntities.to(querySyntax, this, paramsBinds, aStartOfReferences, aIllegalRefrences);
-            String sqlWithSubQueries = StatementDeParser.assemble(querySyntax);
-            Map<String, EntityField> fields = columnsToApplicationFields(
+            if (querySyntax != null) {
+                InlineEntities.to(querySyntax, this, paramsBinds, aStartOfReferences, aIllegalReferences);
+            }
+            String sqlWithSubQueries = querySyntax != null ? StatementDeParser.assemble(querySyntax) : null;
+            Map<String, EntityField> fields = querySyntax != null ? columnsToApplicationFields(
                     resolveColumnsBySyntax(database, querySyntax), database.getSqlDriver()
-            );
+            ) : new HashMap<>();
 
             Set<String> writable = new CaseInsensitiveSet(new HashSet<>());
             Set<String> readRoles = new HashSet<>();
@@ -609,11 +647,11 @@ public class SqlEntities {
         Objects.requireNonNull(aDataSourceName, "aDataSourceName ia required argument");
         return databases.computeIfAbsent(aDataSourceName, dsn -> {
             try {
-                DataSource ds = Database.obtainDataSource(aDataSourceName);
-                Metadata metadata = Metadata.of(ds);
+                DataSource dataSource = Database.obtainDataSource(aDataSourceName);
                 return new Database(
-                        ds,
-                        metadata,
+                        dataSource,
+                        DataSources.getDataSourceSqlDriver(dataSource),
+                        compileEntities ? Metadata.of(dataSource) : null,
                         jdbcPerformer,
                         futuresExecutor
                 );

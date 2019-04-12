@@ -31,7 +31,8 @@ public class DmlTest {
         double assetField7 = 0.6d;
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true
         );
         SqlEntity insertEntity = entities.loadEntity("dml/insert-asset");
         assertNotNull(insertEntity);
@@ -102,7 +103,8 @@ public class DmlTest {
         double assetField7 = 0.6d;
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true
         );
         SqlEntity insertEntity = entities.loadEntity("dml/insert-asset");
         assertNotNull(insertEntity);

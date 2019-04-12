@@ -2,6 +2,7 @@ package com.septima;
 
 import com.septima.dataflow.DynamicTypingDataProvider;
 import com.septima.dataflow.EntityActionsBinder;
+import com.septima.jdbc.DataSources;
 import com.septima.jdbc.JdbcReaderAssigner;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.EntityField;
@@ -26,13 +27,13 @@ public class Database {
     private final Executor jdbcPerformer;
     private final Executor futuresExecutor;
 
-    public Database(DataSource aDataSource, Metadata aMetadata, Executor aJdbcPerformer, Executor aFuturesExecutor) {
+    public Database(DataSource aDataSource, SqlDriver aSqlDriver, Metadata aMetadata, Executor aJdbcPerformer, Executor aFuturesExecutor) {
         Objects.requireNonNull(aDataSource, "aDataSource is required argument");
         Objects.requireNonNull(aJdbcPerformer, "aJdbcPerformer is required argument");
         Objects.requireNonNull(aFuturesExecutor, "aFuturesExecutor is required argument");
         dataSource = aDataSource;
         metadata = aMetadata;
-        sqlDriver = metadata.getSqlDriver();
+        sqlDriver = aSqlDriver;
         jdbcPerformer = aJdbcPerformer;
         futuresExecutor = aFuturesExecutor;
     }
@@ -73,7 +74,13 @@ public class Database {
     public static Database of(String aDataSourceName) throws NamingException, SQLException {
         DataSource dataSource = obtainDataSource(aDataSourceName);
         Metadata metadata = Metadata.of(dataSource);
-        return new Database(dataSource, metadata, jdbcTasksPerformer(32), ForkJoinPool.commonPool());
+        return new Database(
+                dataSource,
+                DataSources.getDataSourceSqlDriver(dataSource),
+                metadata,
+                jdbcTasksPerformer(32),
+                ForkJoinPool.commonPool()
+        );
     }
 
     public DataSource getDataSource() {

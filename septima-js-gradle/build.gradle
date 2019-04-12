@@ -1,5 +1,3 @@
-version = '0.0.8'
-
 dependencies {
     compile gradleApi(),
             project(':septima-js-data'),

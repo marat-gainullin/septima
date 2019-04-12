@@ -31,7 +31,8 @@ public class GoodOrdersTest {
         Path testAppPath = new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath().resolve("auto");
         SqlEntities entities = new SqlEntities(
                 testAppPath,
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true
         );
         GoodOrders model = new GoodOrders(entities);
         Order order = model.new Order();
@@ -43,7 +44,8 @@ public class GoodOrdersTest {
         Path testAppPath = new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath().resolve("auto");
         SqlEntities entities = new SqlEntities(
                 testAppPath,
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true
         );
         GoodOrders model = new GoodOrders(entities);
         Order order = model.new Order();
@@ -55,7 +57,8 @@ public class GoodOrdersTest {
         Path testAppPath = new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath().resolve("auto");
         SqlEntities entities = new SqlEntities(
                 testAppPath,
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true
         );
         createOrders(entities);
         checkReferences(entities);
@@ -68,7 +71,8 @@ public class GoodOrdersTest {
         Path testAppPath = new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath().resolve("auto");
         SqlEntities entities = new SqlEntities(
                 testAppPath,
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true
         );
         GoodOrders model = new GoodOrders(entities);
         Map<Long, Good> goods = model.getGoods().query(Map.of()).get();

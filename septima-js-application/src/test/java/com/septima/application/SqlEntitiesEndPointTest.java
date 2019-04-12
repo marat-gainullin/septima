@@ -43,6 +43,7 @@ public class SqlEntitiesEndPointTest {
         System.out.println("Test database filled.");
         TestDataSource.bind();
         System.out.println("Test data source bound.");
+        System.setProperty("com.septima.entities.compile", "true");
     }
 
     static void initServlets() {

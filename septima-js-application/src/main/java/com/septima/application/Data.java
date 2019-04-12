@@ -19,7 +19,14 @@ public class Data {
         if (instance != null) {
             throw new IllegalStateException("Data can be initialized only once.");
         }
-        instance = new Data(new SqlEntities(aConfig.getResourcesEntitiesPath(), aConfig.getEntitiesPath(), aConfig.getDefaultDataSourceName(), Database.jdbcTasksPerformer(aConfig.getMaximumJdbcThreads()), Config.lookupExecutor()));
+        instance = new Data(new SqlEntities(
+                aConfig.getResourcesEntitiesPath(),
+                aConfig.getEntitiesPath(),
+                aConfig.getDefaultDataSourceName(),
+                Database.jdbcTasksPerformer(aConfig.getMaximumJdbcThreads()),
+                Config.lookupExecutor(),
+                Boolean.valueOf(System.getProperty("com.septima.entities.compile", "false"))
+        ));
     }
 
     private static void done() {

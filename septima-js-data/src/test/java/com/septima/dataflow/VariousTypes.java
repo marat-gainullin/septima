@@ -28,7 +28,8 @@ public class VariousTypes {
     private static void dataFlow(Supplier<Map<String, Object>> values) throws Exception {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true
         );
         SqlEntity entity = entities.loadEntity("various-types/various-types");
         assertNotNull(entity);

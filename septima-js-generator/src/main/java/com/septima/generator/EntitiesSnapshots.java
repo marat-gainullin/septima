@@ -3,7 +3,6 @@ package com.septima.generator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.septima.Database;
 import com.septima.GenericType;
 import com.septima.entities.SqlEntities;
 import com.septima.entities.SqlEntity;
@@ -105,15 +104,13 @@ public class EntitiesSnapshots extends EntitiesProcessor {
         String entityRef = entityRelativePathName.substring(0, entityRelativePathName.length() - 4);
         SqlEntity entity = entities.loadEntity(entityRef);
 
-        Map<Database, String> dataSourcesNames = entities.datasourceByDatabase();
-
         Path jsonFile = considerSnapshotJson(sqlEntityFile);
         if (!jsonFile.getParent().toFile().exists()) {
             jsonFile.getParent().toFile().mkdirs();
         }
         JSON_WRITER.writeValue(jsonFile.toFile(), map(
                 entry("title", entity.getTitle()),
-                entry("source", dataSourcesNames.get(entity.getDatabase())),
+                entry("source", entities.dataSourceOf(entity.getDatabase())),
                 entry("public", entity.isPublicAccess()),
                 entry("sql", entity.getCustomSqlText() != null && !entity.getCustomSqlText().isBlank() ? entity.getCustomSqlText() : entity.getSqlText()),
                 entry("procedure", entity.isProcedure()),

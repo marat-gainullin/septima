@@ -38,7 +38,8 @@ public class EntitiesChangesTest {
         String g_name = "g_name-" + g_id;
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true
         );
         SqlEntity compoundEntity = entities.loadEntity("changes/asset-groups-types-kinds");
         compoundEntity.toQuery().requestData()
@@ -94,7 +95,8 @@ public class EntitiesChangesTest {
         String g_name = "g_name-" + g_id;
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true
         );
         SqlEntity compoundEntity = entities.loadEntity("changes/asset-groups-types-kinds-writable-restricted");
         compoundEntity.toQuery().requestData(Map.of())
@@ -145,7 +147,8 @@ public class EntitiesChangesTest {
         Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true
         );
         database.commit(entities.bindChanges(List.of(
                 new EntityCommand("dml/insert-asset",

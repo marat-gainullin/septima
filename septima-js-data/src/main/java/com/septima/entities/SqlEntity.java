@@ -90,7 +90,9 @@ public class SqlEntity {
                      Set<String> aWriteRoles
     ) {
         Objects.requireNonNull(aDatabase, "aDatabase is required argument");
-        Objects.requireNonNull(aSql, "aSql is required argument");
+        if (aCustomSql == null || aCustomSql.isBlank()) {
+            Objects.requireNonNull(aSql, "aSql is required argument");
+        }
         Objects.requireNonNull(aParams, "aParams is required argument");
         Objects.requireNonNull(aFields, "aFields is required argument");
         Objects.requireNonNull(aWritable, "aWritable is required argument");
