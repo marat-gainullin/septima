@@ -179,7 +179,7 @@ public class SqlEntity {
         String sqlClause;
         if (customSqlText != null && !customSqlText.isBlank()) {
             sqlClause = customSqlText;
-            Logger.getLogger(SqlEntity.class.getName()).log(Level.INFO, "Entity sql was substituted with custom sql while compiling entity {0}", name);
+            Logger.getLogger(SqlEntity.class.getName()).log(Level.INFO, "Entity sql was substituted with custom sql while transforming entity {0} to query", name);
         } else {
             Objects.requireNonNull(sqlText, "Sql query text missing.");
             if (sqlText.isBlank()) {

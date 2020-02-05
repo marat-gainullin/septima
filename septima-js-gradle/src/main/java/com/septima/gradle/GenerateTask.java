@@ -7,11 +7,9 @@ import java.io.File;
 
 public class GenerateTask extends DefaultTask {
 
+    private File entitiesRoot;
+    private String defaultDataSourceName;
     protected SqlEntities sqlEntities;
-
-    protected File entitiesRoot;
-
-    protected String defaultDataSourceName;
 
     public String getDefaultDataSourceName() {
         return defaultDataSourceName;
@@ -29,6 +27,14 @@ public class GenerateTask extends DefaultTask {
     public void setEntitiesRoot(File entitiesRoot) {
         this.entitiesRoot = entitiesRoot;
         checkSqlEntities();
+    }
+
+    public SqlEntities getSqlEntities() {
+        return sqlEntities;
+    }
+
+    public void setSqlEntities(SqlEntities sqlEntities) {
+        this.sqlEntities = sqlEntities;
     }
 
     private void checkSqlEntities() {

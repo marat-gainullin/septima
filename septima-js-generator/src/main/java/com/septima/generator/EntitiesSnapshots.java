@@ -3,7 +3,6 @@ package com.septima.generator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.septima.GenericType;
 import com.septima.entities.SqlEntities;
 import com.septima.entities.SqlEntity;
 import com.septima.jdbc.UncheckedSQLException;
@@ -12,6 +11,7 @@ import net.sf.jsqlparser.UncheckedJSqlParserException;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.AbstractMap;
@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -30,39 +29,22 @@ public class EntitiesSnapshots extends EntitiesProcessor {
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             .writer();
 
-    private EntitiesSnapshots(SqlEntities anEntities, Path aDestination,
-                              String aLf, Charset aCharset) {
+    public EntitiesSnapshots(SqlEntities anEntities, Path aDestination) {
+        this(anEntities, aDestination, System.lineSeparator(), StandardCharsets.UTF_8);
+    }
+
+    public EntitiesSnapshots(SqlEntities anEntities, Path aDestination,
+                             String aLf, Charset aCharset) {
         super(anEntities, aDestination, aLf, aCharset);
     }
 
-    private Path considerSnapshotJson(Path sqlEntityFile) {
+    public Path considerSnapshotJson(Path sqlEntityFile) {
         return destination
                 .resolve(entities.getEntitiesRoot()
                         .relativize(sqlEntityFile.resolveSibling(
                                 sqlEntityFile.getFileName() + ".json")
                         )
                 );
-    }
-
-    private static String textOf(GenericType aType) {
-        if (aType != null) {
-            switch (aType) {
-                case GEOMETRY:
-                    return "Geometry";
-                case DOUBLE:
-                    return "Number";
-                case LONG:
-                    return "Long";
-                case DATE:
-                    return "Date";
-                case BOOLEAN:
-                    return "Boolean";
-                default:
-                    return "String";
-            }
-        } else {
-            return "String";
-        }
     }
 
     /**
@@ -98,7 +80,7 @@ public class EntitiesSnapshots extends EntitiesProcessor {
         return Collections.unmodifiableMap(map);
     }
 
-    private void toSnapshotJson(Path sqlEntityFile) throws IOException {
+    public Path toSnapshotJson(Path sqlEntityFile) throws IOException {
         Path entityRelativePath = entities.getEntitiesRoot().relativize(sqlEntityFile);
         String entityRelativePathName = entityRelativePath.toString().replace('\\', '/');
         String entityRef = entityRelativePathName.substring(0, entityRelativePathName.length() - 4);
@@ -116,16 +98,16 @@ public class EntitiesSnapshots extends EntitiesProcessor {
                 entry("procedure", entity.isProcedure()),
                 entry("command", entity.isCommand()),
                 entry("readonly", entity.isReadonly()),
-                entry("parameters", entity.getParameters().entrySet().stream().collect(Collectors.toMap(Function.identity(), e -> map(
-                        entry("type", textOf(e.getValue().getType())),
+                entry("parameters", entity.getParameters().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> map(
+                        entry("type", e.getValue().getType() != null ? e.getValue().getType().getText() : null),
                         entry("subType", e.getValue().getSubType()),
                         entry("description", e.getValue().getDescription()),
                         entry("value", e.getValue().getValue()),
                         entry("out", e.getValue().getMode() == Parameter.Mode.InOut || e.getValue().getMode() == Parameter.Mode.Out)
                 )))),
-                entry("fields", entity.getFields().entrySet().stream().collect(Collectors.toMap(Function.identity(), e -> map(
+                entry("fields", entity.getFields().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> map(
                         entry("nullable", e.getValue().isNullable()),
-                        entry("type", textOf(e.getValue().getType())),
+                        entry("type", e.getValue().getType() != null ? e.getValue().getType().getText() : null),
                         entry("subType", e.getValue().getSubType()),
                         entry("description", e.getValue().getDescription()),
                         entry("tableName", e.getValue().getTableName()),
@@ -141,6 +123,7 @@ public class EntitiesSnapshots extends EntitiesProcessor {
                 )),
                 entry("pageSize", entity.getPageSize())
         ));
+        return jsonFile;
     }
 
     public int deepToSnapshotJsons(Path source) throws IOException {
