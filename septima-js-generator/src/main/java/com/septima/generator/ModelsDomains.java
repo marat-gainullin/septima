@@ -127,7 +127,7 @@ public class ModelsDomains extends EntitiesProcessor {
                 .orElse(0);
     }
 
-    private class Reference {
+    private static class Reference {
         private final String property;
         private final String type;
         private final String source;
@@ -156,7 +156,7 @@ public class ModelsDomains extends EntitiesProcessor {
         }
     }
 
-    private class ModelEntity {
+    private static class ModelEntity {
         private final String modelName;
         private final Map<String, EntityField> fieldsByProperty;
         private final Map<String, Reference> inReferences = new HashMap<>();
@@ -395,11 +395,11 @@ public class ModelsDomains extends EntitiesProcessor {
                                             .map(modelEntity -> modelEntity.modelName)
                                             .map(name -> new StringBuilder().append("'").append(name).append("'"))
                                             .reduce((name1, name2) -> name1.append(", ").append(name2))
-                                            .get()
+                                            .orElseGet(StringBuilder::new)
                                             .toString() + "]");
                                 }
                             } else {
-                                Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "Property '" + propertyName + "' is not suitable for scalar property name generation in model entity '" + sourceEntity.modelName);
+                                Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "Property '" + propertyName + "' is not suitable for scalar property name generation in model entity '" + sourceEntity.modelName + "'");
                             }
                         })
                 );
@@ -506,10 +506,6 @@ public class ModelsDomains extends EntitiesProcessor {
                     }
                 })
                 .collect(Collectors.toMap(modelEntity -> modelEntity.modelName, Function.identity()));
-    }
-
-    private static String mutatorArg(String field) {
-        return "a" + Utils.toPascalCase(field);
     }
 
     /**
