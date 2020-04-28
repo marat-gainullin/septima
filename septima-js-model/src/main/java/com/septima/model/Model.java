@@ -20,6 +20,7 @@ public class Model {
 
     private final SqlEntities sqlEntities;
     private final List<EntityAction> changes = new ArrayList<>();
+    private InstanceAdd lastAdd;
 
     public Model(SqlEntities aEntities) {
         sqlEntities = aEntities;
@@ -67,19 +68,26 @@ public class Model {
     }
 
     private <D, K> PropertyChangeListener listener(SqlQuery query, String keyName, Function<D, K> keyMapper) {
-        return e ->
+        return e -> {
+            if (lastAdd != null && lastAdd.getEntityName().equals(query.getEntityName())) {
+                lastAdd.getData().put(e.getPropertyName(), e.getNewValue());
+            } else {
+                lastAdd = null;
                 changes.add(new InstanceChange(
                         query.getEntityName(),
                         Map.of(keyName, keyName.equals(e.getPropertyName()) ? e.getOldValue() : keyMapper.apply((D) e.getSource())),
                         Map.of(e.getPropertyName(), e.getNewValue())));
+            }
+        };
     }
 
-    public void addEntityCommand(String anEntity, Map<String, Object> parameters){
+    public void addEntityCommand(String anEntity, Map<String, Object> parameters) {
         changes.add(new EntityCommand(anEntity, parameters));
     }
 
     public void dropChanges() {
         changes.clear();
+        lastAdd = null;
     }
 
     public CompletableFuture<Integer> save() {
@@ -88,7 +96,7 @@ public class Model {
                 .collect(Collectors.toList());
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[]{}))
                 .thenApply(v -> {
-                    changes.clear();
+                    dropChanges();
                     return futures.stream()
                             .map(f -> f.getNow(0))
                             .reduce(Integer::sum).orElse(0);
@@ -188,6 +196,7 @@ public class Model {
             domainData.values().forEach(classifier);
             return new ObservableMap<>(domainData,
                     (aKey, removedValue, addedValue) -> {
+                        lastAdd = null;
                         onRemoved.apply(removedValue);
                         D added = onAdded.apply(addedValue);
                         // Warning! This case is not about instance's fields changes.
@@ -197,12 +206,14 @@ public class Model {
                         changes.add(new InstanceChange(query.getEntityName(), Map.of(keyName, keyOf.apply(added)), reverseMapper.apply(added)));
                     },
                     (aKey, removedValue, addedValue) -> {
+                        lastAdd = null;
                         D removed = onRemoved.apply(removedValue);
                         changes.add(new InstanceRemove(query.getEntityName(), Map.of(keyName, keyOf.apply(removed))));
                     },
                     (aKey, removedValue, addedValue) -> {
                         D added = onAdded.apply(addedValue);
-                        changes.add(new InstanceAdd(query.getEntityName(), reverseMapper.apply(added)));
+                        lastAdd = new InstanceAdd(query.getEntityName(), reverseMapper.apply(added));
+                        changes.add(lastAdd);
                     }
             );
         }
