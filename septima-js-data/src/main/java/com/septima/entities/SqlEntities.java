@@ -442,8 +442,14 @@ public class SqlEntities {
         Objects.requireNonNull(anEntityName, ENTITY_NAME_MISSING_MSG);
         if (compileEntities) {
             Objects.requireNonNull(anEntitySql, "anEntitySql is required argument");
+            if (anEntitySql.isBlank()) {
+                throw new IllegalArgumentException("anEntitySql should not be blank");
+            }
         } else {
             Objects.requireNonNull(anEntityJson, "anEntityJson is required argument if no entities compilation is considered");
+            if (anEntityJson.isBlank()) {
+                throw new IllegalArgumentException("anEntityJson should not be blank");
+            }
         }
 
         JsonNode entityDocument = anEntityJson != null ? JSON.readTree(anEntityJson) : null;

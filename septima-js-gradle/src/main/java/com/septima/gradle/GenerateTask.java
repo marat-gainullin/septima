@@ -42,4 +42,8 @@ public class GenerateTask extends DefaultTask {
             sqlEntities = new SqlEntities(entitiesRoot.toPath(), defaultDataSourceName, true);
         }
     }
+
+    public static SqlEntities sqlEntitiesOf(File entitiesRoot, String defaultDataSourceName) {
+        return new SqlEntities(entitiesRoot.toPath(), defaultDataSourceName, true);
+    }
 }

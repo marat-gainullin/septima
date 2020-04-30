@@ -86,7 +86,7 @@ public class SqlEntitiesTest {
         entities.loadEntity("entities/inline/cyclic/a1");
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void emptyEntity() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
@@ -96,7 +96,7 @@ public class SqlEntitiesTest {
         entities.loadEntity("entities/empty");
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void withEmptySubEntity() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),

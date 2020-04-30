@@ -72,49 +72,53 @@ public class EntitiesRaws extends EntitiesProcessor{
         String entityRelativePathName = entityRelativePath.toString().replace('\\', '/');
         String entityRef = entityRelativePathName.substring(0, entityRelativePathName.length() - 4);
         SqlEntity entity = entities.loadEntity(entityRef);
-        String entityBaseClassName = Utils.rawClass(entityRef.substring(entityRef.lastIndexOf('/') + 1));
-        Path entityClassFile = destination.resolve(entityRelativePath.resolveSibling(entityBaseClassName + ".java"));
+        if (!entity.isCommand()) {
+            String entityBaseClassName = Utils.rawClass(entityRef.substring(entityRef.lastIndexOf('/') + 1));
+            Path entityClassFile = destination.resolve(entityRelativePath.resolveSibling(entityBaseClassName + ".java"));
 
-        StringBuilder propertiesFields = entity.getFields().values().stream()
-                .sorted(Comparator.comparing(EntityField::getName))
-                .map(Utils.ModelField::new)
-                .map(f -> Utils.replaceVariables(rowPropertyFieldTemplate, Map.of(
-                        "propertyType", f.getPropertyType(),
-                        "property", f.getProperty()
-                ), lf))
-                .reduce(StringBuilder::append)
-                .orElse(new StringBuilder());
-        StringBuilder propertiesAccessors = entity.getFields().values().stream()
-                .sorted(Comparator.comparing(EntityField::getName))
-                .map(Utils.ModelField::new)
-                .map(f -> Utils.replaceVariables(rowPropertyFieldAccessorsTemplate, Map.of(
-                        "propertyType", f.getPropertyType(),
-                        "propertyGetter", f.getPropertyGetter(),
-                        "property", f.getProperty(),
-                        "propertyMutator", f.getPropertyMutator(),
-                        "fieldName", f.getFieldName()
-                ), lf))
-                .reduce((s1, s2) -> s1.append(lf).append(s2))
-                .orElse(new StringBuilder());
-        StringBuilder forwardMappings = generateForwardMappings(entity);
-        StringBuilder reverseMappings = generateReverseMappings(entity);
-        String entityRow = Utils.replaceVariables(rowTemplate, Map.of(
-                "package", entityRelativeDirPath != null ?
-                        ("package " + entityRelativeDirPath.toString().replace('\\', '/').replace('/', '.') + ";" + lf) :
-                        "",
-                "dateImport", entity.getFields().values().stream().anyMatch(f -> GenericType.DATE == f.getType()) ? "import java.util.Date;" + lf : "",
-                "entityBaseClass", entityBaseClassName,
-                "propertiesFields", propertiesFields.toString(),
-                "propertiesAccessors", propertiesAccessors.toString(),
-                "forwardMappings", forwardMappings.toString(),
-                "reverseMappings", reverseMappings.toString()
-        ), lf).toString();
-        if (!entityClassFile.getParent().toFile().exists()) {
-            entityClassFile.getParent().toFile().mkdirs();
+            StringBuilder propertiesFields = entity.getFields().values().stream()
+                    .sorted(Comparator.comparing(EntityField::getName))
+                    .map(Utils.ModelField::new)
+                    .map(f -> Utils.replaceVariables(rowPropertyFieldTemplate, Map.of(
+                            "propertyType", f.getPropertyType(),
+                            "property", f.getProperty()
+                    ), lf))
+                    .reduce(StringBuilder::append)
+                    .orElse(new StringBuilder());
+            StringBuilder propertiesAccessors = entity.getFields().values().stream()
+                    .sorted(Comparator.comparing(EntityField::getName))
+                    .map(Utils.ModelField::new)
+                    .map(f -> Utils.replaceVariables(rowPropertyFieldAccessorsTemplate, Map.of(
+                            "propertyType", f.getPropertyType(),
+                            "propertyGetter", f.getPropertyGetter(),
+                            "property", f.getProperty(),
+                            "propertyMutator", f.getPropertyMutator(),
+                            "fieldName", f.getFieldName()
+                    ), lf))
+                    .reduce((s1, s2) -> s1.append(lf).append(s2))
+                    .orElse(new StringBuilder());
+            StringBuilder forwardMappings = generateForwardMappings(entity);
+            StringBuilder reverseMappings = generateReverseMappings(entity);
+            String entityRow = Utils.replaceVariables(rowTemplate, Map.of(
+                    "package", entityRelativeDirPath != null ?
+                            ("package " + entityRelativeDirPath.toString().replace('\\', '/').replace('/', '.') + ";" + lf) :
+                            "",
+                    "dateImport", entity.getFields().values().stream().anyMatch(f -> GenericType.DATE == f.getType()) ? "import java.util.Date;" + lf : "",
+                    "entityBaseClass", entityBaseClassName,
+                    "propertiesFields", propertiesFields.toString(),
+                    "propertiesAccessors", propertiesAccessors.toString(),
+                    "forwardMappings", forwardMappings.toString(),
+                    "reverseMappings", reverseMappings.toString()
+            ), lf).toString();
+            if (!entityClassFile.getParent().toFile().exists()) {
+                entityClassFile.getParent().toFile().mkdirs();
+            }
+            Files.write(entityClassFile, entityRow.getBytes(charset));
+            Logger.getLogger(EntitiesRaws.class.getName()).log(Level.INFO, "Sql entity definition '" + path + "' transformed and written to: " + entityClassFile);
+            return entityClassFile;
+        } else {
+            throw new IllegalStateException("Can't transform a DML query '" + path + "' to an entity class");
         }
-        Files.write(entityClassFile, entityRow.getBytes(charset));
-        Logger.getLogger(EntitiesRaws.class.getName()).log(Level.INFO, "Sql entity definition '" + path + "' transformed and written to: " + entityClassFile);
-        return entityClassFile;
     }
 
     public int deepToJavaSources(Path source) throws IOException {
