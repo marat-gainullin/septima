@@ -140,9 +140,6 @@ public class TomcatConfigure extends Copy {
         if (tomcatConfTo == null) {
             throw new GradleException("Missing 'tomcatConfTo' option");
         }
-        if (webAppsAt == null) {
-            throw new GradleException("Missing 'webAppsAt' option");
-        }
         if (dataSourcesSettings == null) {
             throw new GradleException("Missing 'dataSourcesSettings' option");
         }
@@ -170,7 +167,9 @@ public class TomcatConfigure extends Copy {
             } else {
                 context.setAttribute("path", "/" + this.context);
             }
-            context.setAttribute("docBase", webAppsAt + "/" + this.context);
+            if (webAppsAt != null && !webAppsAt.isEmpty()) {
+                context.setAttribute("docBase", webAppsAt + "/" + this.context);
+            }
             AtomicBoolean realmAdded = new AtomicBoolean(false);
             dataSourcesSettings.forEach((dataSourceName, dataSourceSettings) -> {
                 if (realmDataSourceName != null && realmDataSourceName.equals(dataSourceName)) {

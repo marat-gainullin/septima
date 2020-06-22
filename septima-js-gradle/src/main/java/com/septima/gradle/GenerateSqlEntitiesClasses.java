@@ -1,6 +1,7 @@
 package com.septima.gradle;
 
 import com.septima.generator.EntitiesRaws;
+import com.septima.jdbc.UncheckedSQLException;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.tasks.TaskAction;

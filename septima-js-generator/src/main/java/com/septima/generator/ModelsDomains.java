@@ -436,7 +436,9 @@ public class ModelsDomains extends EntitiesProcessor {
                     Path entityRelativePath = entities.getEntitiesRoot().relativize(entityPath);
                     String entityRef = entityRelativePath.toString().replace('\\', '/');
                     SqlEntity entity = entities.loadEntity(entityRef);
-
+                    if (entity.isCommand()) {
+                        throw new IllegalStateException("Model entity can't be based on a DML query ('" + modelEntityName + "' in model '" + modelPath + "').");
+                    }
                     Map<String, EntityField> fieldsByProperty = entity.getFields().values().stream()
                             .collect(Collectors.toMap(field -> fieldToProperty(field.getName()), Function.identity()));
 

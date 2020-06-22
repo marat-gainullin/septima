@@ -1,11 +1,13 @@
 def servletVersion = '3.1.0'
 def mailVersion = '1.4.7'
+def jaspicVersion = '1.1.1'
 def webSocketVersion = '1.1'
 
 dependencies {
     compileOnly "javax.servlet:javax.servlet-api:$servletVersion",
             "javax.websocket:javax.websocket-api:$webSocketVersion",
-            "javax.mail:mail:$mailVersion"
+            "javax.mail:mail:$mailVersion",
+            "javax.security.auth.message:javax.security.auth.message-api:$jaspicVersion"
     testCompile "javax.servlet:javax.servlet-api:$servletVersion",
             "javax.websocket:javax.websocket-api:$webSocketVersion",
             "javax.mail:mail:$mailVersion",

@@ -3,9 +3,6 @@ package com.septima.application;
 import com.septima.Database;
 import com.septima.entities.SqlEntities;
 
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-
 public class Data {
 
     private static volatile Data instance;
@@ -15,7 +12,7 @@ public class Data {
         entities = aEntities;
     }
 
-    private static void init(Config aConfig) {
+    public static void init(Config aConfig) {
         if (instance != null) {
             throw new IllegalStateException("Data can be initialized only once.");
         }
@@ -24,12 +21,12 @@ public class Data {
                 aConfig.getEntitiesPath(),
                 aConfig.getDefaultDataSourceName(),
                 Database.jdbcTasksPerformer(aConfig.getMaximumJdbcThreads()),
-                Config.lookupExecutor(),
-                Boolean.valueOf(System.getProperty("com.septima.entities.compile", "false"))
+                Futures.getExecutor(),
+                Boolean.getBoolean("com.septima.entities.compile")
         ));
     }
 
-    private static void done() {
+    public static void done() {
         if (instance == null) {
             throw new IllegalStateException("Extra data shutdown attempt detected.");
         }
@@ -37,22 +34,13 @@ public class Data {
     }
 
     public static Data getInstance() {
+        if (instance == null) {
+            throw new IllegalStateException("The data infrastructure is not initialized.");
+        }
         return instance;
     }
 
     public SqlEntities getEntities() {
         return entities;
-    }
-
-    public static class Init implements ServletContextListener {
-        @Override
-        public void contextInitialized(ServletContextEvent anEvent) {
-            init(Config.parse(anEvent.getServletContext()));
-        }
-
-        @Override
-        public void contextDestroyed(ServletContextEvent anEvent) {
-            done();
-        }
     }
 }

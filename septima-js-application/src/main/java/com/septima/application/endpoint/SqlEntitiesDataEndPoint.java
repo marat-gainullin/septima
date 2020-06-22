@@ -187,7 +187,11 @@ public class SqlEntitiesDataEndPoint extends SqlEntitiesDataFlowEndPoint {
                                     try {
                                         Object parsedKey = GenericType.parseValue(instanceKey, pkField.getType());
                                         reviveDates(arrived, fieldsTypes(entity));
-                                        InstanceChange action = new InstanceChange(entity.getName(), handleUpdateKeys(answer, entity, Map.of(pkField.getName(), parsedKey)), handleUpdateData(answer, entity, arrived));
+                                        InstanceChange action = new InstanceChange(
+                                                entity.getName(),
+                                                handleUpdateKeys(answer, entity, Map.of(pkField.getName(), parsedKey)),
+                                                handleUpdateData(answer, entity, arrived)
+                                        );
                                         action.accept(binder);
                                         return entity.getDatabase().commit(binder.getLogEntries());
                                     } catch (IllegalStateException ex) {

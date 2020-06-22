@@ -2,8 +2,6 @@ package com.septima.application;
 
 import com.septima.application.endpoint.Answer;
 
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
@@ -24,22 +22,21 @@ public class Scope {
     private final int maximumLpcQueueSize;
     private final Context globalContext;
 
-    private Scope(Config aConfig) {
-        maximumLpcQueueSize = aConfig.getMaximumLpcQueueSize();
-        ExecutorService executor = Config.lookupExecutor();
-        SubmissionPublisher<Runnable> globalPublisher = new SubmissionPublisher<>(executor, maximumLpcQueueSize);
+    private Scope(int aMaximumLpcQueueSize) {
+        maximumLpcQueueSize = aMaximumLpcQueueSize;
+        SubmissionPublisher<Runnable> globalPublisher = new SubmissionPublisher<>(Futures.getExecutor(), maximumLpcQueueSize);
         globalPublisher.subscribe(new Subscriber("Global"));
         globalContext = new Context(globalPublisher);
     }
 
-    private static void init(Config aConfig) {
+    public static void init(Config aConfig) {
         if (instance != null) {
             throw new IllegalStateException("Scope can be initialized only once.");
         }
-        instance = new Scope(aConfig);
+        instance = new Scope(aConfig.getMaximumLpcQueueSize());
     }
 
-    private static void done() {
+    public static void done() {
         if (instance == null) {
             throw new IllegalStateException("Extra scope shutdown attempt detected.");
         }
@@ -47,6 +44,9 @@ public class Scope {
     }
 
     private static Scope getInstance() {
+        if (instance == null) {
+            throw new IllegalStateException("The scope infrastructure is not initialized.");
+        }
         return instance;
     }
 
@@ -69,8 +69,7 @@ public class Scope {
     }
 
     private Context createContext() {
-        ExecutorService executor = Config.lookupExecutor();
-        SubmissionPublisher<Runnable> publisher = new SubmissionPublisher<>(executor, maximumLpcQueueSize);
+        SubmissionPublisher<Runnable> publisher = new SubmissionPublisher<>(Futures.getExecutor(), maximumLpcQueueSize);
         publisher.subscribe(new Subscriber("Septima scope"));
         return new Context(publisher);
     }
@@ -101,8 +100,7 @@ public class Scope {
         private void readObject(java.io.ObjectInputStream in)
                 throws IOException, ClassNotFoundException {
             instances = (Map<String, Object>) in.readObject();
-            ExecutorService executor = Config.lookupExecutor();
-            SubmissionPublisher<Runnable> readPublisher = new SubmissionPublisher<>(executor, Scope.getInstance().maximumLpcQueueSize);
+            SubmissionPublisher<Runnable> readPublisher = new SubmissionPublisher<>(Futures.getExecutor(), Scope.getInstance().maximumLpcQueueSize);
             readPublisher.subscribe(new Subscriber("Septima scope"));
             publisher = readPublisher;
         }
@@ -156,24 +154,12 @@ public class Scope {
         }
     }
 
-    public static class Init implements ServletContextListener {
-
-        @Override
-        public void contextInitialized(ServletContextEvent anEvent) {
-            init(Config.parse(anEvent.getServletContext()));
-        }
-
-        @Override
-        public void contextDestroyed(ServletContextEvent sce) {
-            done();
-        }
-    }
-
     public static class SessionInit implements HttpSessionListener {
 
 
         @Override
         public void sessionCreated(HttpSessionEvent anEvent) {
+            Config config = Config.parse(anEvent.getSession().getServletContext());
             anEvent.getSession().setAttribute(Context.ATTRIBUTE, Scope.getInstance().createContext());
         }
 

@@ -139,7 +139,7 @@ public class SqlEntities {
 
     private static Consumer<? super Map.Entry<String, JsonNode>> parameterReader(Map<String, Parameter> params, Map<String, Map<String, String>> paramsBinds) {
         return (parameterEntry) -> {
-            String parameterName = parameterEntry.getKey();
+            String parameterName = parameterEntry.getKey().toLowerCase();
             Parameter parameter = params.getOrDefault(parameterName, new Parameter(parameterName));
             JsonNode parameterNode = parameterEntry.getValue();
             JsonNode typeNode = parameterNode.get("type");
@@ -173,7 +173,7 @@ public class SqlEntities {
                                     JsonNode subQueryParamNode = subQueryParamsNode.get(i);
                                     if (subQueryParamNode.isTextual()) {
                                         Map<String, String> subToOuterParams = paramsBinds.computeIfAbsent(subQueryName, sqn -> new HashMap<>());
-                                        subToOuterParams.put(subQueryParamNode.asText(), parameterName);
+                                        subToOuterParams.put(subQueryParamNode.asText().toLowerCase(), parameterName);
                                     }
                                 }
                             }
@@ -330,7 +330,7 @@ public class SqlEntities {
                 } catch (IOException ex) {
                     throw new UncheckedIOException(ex);
                 } catch (JSqlParserException ex) {
-                    throw new UncheckedJSqlParserException(ex);
+                    throw new UncheckedJSqlParserException("Can't parse sql entity: '" + anEntityName + "'", ex);
                 } catch (SQLException ex) {
                     throw new UncheckedSQLException(ex);
                 }
@@ -655,7 +655,7 @@ public class SqlEntities {
     }
 
     private Database databaseOf(final String aDataSourceName) {
-        Objects.requireNonNull(aDataSourceName, "aDataSourceName ia required argument");
+        Objects.requireNonNull(aDataSourceName, "aDataSourceName is a required argument");
         return databases.computeIfAbsent(aDataSourceName, dsn -> {
             try {
                 DataSource dataSource = Database.obtainDataSource(aDataSourceName);

@@ -252,7 +252,7 @@ public class JdbcReaderAssigner {
 
     private static BigDecimal number2BigDecimal(Number aNumber) {
         if (aNumber instanceof Float || aNumber instanceof Double) {
-            return new BigDecimal(aNumber.doubleValue());
+            return BigDecimal.valueOf(aNumber.doubleValue());
         } else if (aNumber instanceof BigInteger) {
             return new BigDecimal((BigInteger) aNumber);
         } else if (aNumber instanceof BigDecimal) {
@@ -278,16 +278,16 @@ public class JdbcReaderAssigner {
                     try {
                         aStatement.setObject(aValuePosition, aValue, aValueJdbcType);
                     } catch (SQLException | UncheckedSQLException ex) {
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FAILED_CAST_TO_DATABASE, aValue.getClass().getName());
                         aStatement.setNull(aValuePosition, aValueJdbcType, aValueSqlTypeName);
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.STRUCT:
                     try {
                         aStatement.setObject(aValuePosition, aValue, Types.STRUCT);
                     } catch (SQLException | UncheckedSQLException ex) {
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FAILED_CAST_TO_DATABASE, aValue.getClass().getName());
                         aStatement.setNull(aValuePosition, aValueJdbcType, aValueSqlTypeName);
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
                     }
                     break;
                 case Types.BINARY:
@@ -297,7 +297,8 @@ public class JdbcReaderAssigner {
                     if (aValue instanceof byte[]) {
                         aStatement.setBytes(aValuePosition, (byte[]) aValue);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FAILED_CAST_TO_DATABASE, aValue.getClass().getName());
+                        aStatement.setNull(aValuePosition, aValueJdbcType);
                     }
                     break;
                 case Types.BLOB:
@@ -305,7 +306,8 @@ public class JdbcReaderAssigner {
                     if (aValue instanceof Blob) {
                         aStatement.setBlob(aValuePosition, (Blob) aValue);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FAILED_CAST_TO_DATABASE, aValue.getClass().getName());
+                        aStatement.setNull(aValuePosition, aValueJdbcType);
                     }
                     break;
                 case Types.CLOB:
@@ -313,7 +315,8 @@ public class JdbcReaderAssigner {
                     if (aValue instanceof Clob) {
                         aStatement.setClob(aValuePosition, (Clob) aValue);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FAILED_CAST_TO_DATABASE, aValue.getClass().getName());
+                        aStatement.setNull(aValuePosition, aValueJdbcType);
                     }
                     break;
                 case Types.NCLOB:
@@ -321,7 +324,8 @@ public class JdbcReaderAssigner {
                     if (aValue instanceof NClob) {
                         aStatement.setNClob(aValuePosition, (NClob) aValue);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FAILED_CAST_TO_DATABASE, aValue.getClass().getName());
+                        aStatement.setNull(aValuePosition, aValueJdbcType);
                     }
                     break;
                 case Types.DECIMAL:
@@ -342,7 +346,8 @@ public class JdbcReaderAssigner {
                     if (castedBigDecimal != null) {
                         aStatement.setBigDecimal(aValuePosition, castedBigDecimal);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FAILED_CAST_TO_DATABASE, aValue.getClass().getName());
+                        aStatement.setNull(aValuePosition, aValueJdbcType);
                     }
                     break;
                 case Types.BIGINT:
@@ -362,7 +367,8 @@ public class JdbcReaderAssigner {
                     if (castedBigInteger != null) {
                         aStatement.setBigDecimal(aValuePosition, new BigDecimal(castedBigInteger));
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FAILED_CAST_TO_DATABASE, aValue.getClass().getName());
+                        aStatement.setNull(aValuePosition, aValueJdbcType);
                     }
                     break;
                 case Types.SMALLINT:
@@ -382,7 +388,8 @@ public class JdbcReaderAssigner {
                     if (castedShort != null) {
                         aStatement.setShort(aValuePosition, castedShort);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FAILED_CAST_TO_DATABASE, aValue.getClass().getName());
+                        aStatement.setNull(aValuePosition, aValueJdbcType);
                     }
                     break;
                 case Types.TINYINT:
@@ -403,7 +410,8 @@ public class JdbcReaderAssigner {
                     if (castedInteger != null) {
                         aStatement.setInt(aValuePosition, castedInteger);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FAILED_CAST_TO_DATABASE, aValue.getClass().getName());
+                        aStatement.setNull(aValuePosition, aValueJdbcType);
                     }
                     break;
                 case Types.REAL:
@@ -424,7 +432,8 @@ public class JdbcReaderAssigner {
                     if (castedFloat != null) {
                         aStatement.setFloat(aValuePosition, castedFloat);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FAILED_CAST_TO_DATABASE, aValue.getClass().getName());
+                        aStatement.setNull(aValuePosition, aValueJdbcType);
                     }
                     break;
                 case Types.DOUBLE:
@@ -444,7 +453,8 @@ public class JdbcReaderAssigner {
                     if (castedDouble != null) {
                         aStatement.setDouble(aValuePosition, castedDouble);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FAILED_CAST_TO_DATABASE, aValue.getClass().getName());
+                        aStatement.setNull(aValuePosition, aValueJdbcType);
                     }
                     break;
                 case Types.CHAR:
@@ -474,7 +484,8 @@ public class JdbcReaderAssigner {
                             aStatement.setString(aValuePosition, castedString);
                         }
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FAILED_CAST_TO_DATABASE, aValue.getClass().getName());
+                        aStatement.setNull(aValuePosition, aValueJdbcType);
                     }
                     break;
                 case Types.BIT:
@@ -499,7 +510,8 @@ public class JdbcReaderAssigner {
                     if (castedBoolean != null) {
                         aStatement.setBoolean(aValuePosition, castedBoolean);
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FAILED_CAST_TO_DATABASE, aValue.getClass().getName());
+                        aStatement.setNull(aValuePosition, aValueJdbcType);
                     }
                     break;
                 case Types.DATE:
@@ -515,6 +527,8 @@ public class JdbcReaderAssigner {
                         castedDate = new java.util.Date(((Boolean) aValue) ? 1 : 0);
                     } else if (aValue instanceof java.util.Date) {
                         castedDate = (java.util.Date) aValue;
+                    } else if (aValue instanceof java.time.Instant) {
+                        castedDate = java.util.Date.from((java.time.Instant) aValue);
                     }
                     if (castedDate != null) {
                         if (aValueJdbcType == Types.DATE) {
@@ -527,7 +541,8 @@ public class JdbcReaderAssigner {
                             assert false;
                         }
                     } else {
-                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FALL_BACK_TO_NULL_MSG, aValue.getClass().getName());
+                        Logger.getLogger(JdbcDataProvider.class.getName()).log(Level.WARNING, FAILED_CAST_TO_DATABASE, aValue.getClass().getName());
+                        aStatement.setNull(aValuePosition, Types.DATE); // Crazy jdbc drivers of some databases (PostgreSQL for example) ignore other then Types#DATE types, while setting nulls
                     }
                     break;
             }
@@ -552,7 +567,7 @@ public class JdbcReaderAssigner {
         return aValueJdbcType;
     }
 
-    private static final String FALL_BACK_TO_NULL_MSG = "Some value falled transform null while tranferring transform a database. May be it''s class is unsupported: {0}";
+    private static final String FAILED_CAST_TO_DATABASE = "Some value can't be casted to a database type. May be class of the value is unsupported: {0}. About to substitute it with null.";
 
     private static int jdbcTypeByValue(Object aValue) {
         int jdbcType;

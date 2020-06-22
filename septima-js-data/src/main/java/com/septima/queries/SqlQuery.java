@@ -65,10 +65,12 @@ public class SqlQuery {
     }
 
     private List<Parameter> mergeParametersValues(Map<String, Object> aParametersValues) {
+        Map<String, Object> parametersValues = new HashMap<>();
+        aParametersValues.forEach((k, v) -> parametersValues.put(k.toLowerCase(), v));
         return parameters.stream()
                 .map(own -> new Parameter(
                         own.getName(),
-                        aParametersValues.getOrDefault(own.getName(), own.getValue()),
+                        parametersValues.getOrDefault(own.getName(), own.getValue()),
                         own.getType(),
                         own.getSubType(),
                         own.getMode(),
@@ -104,12 +106,14 @@ public class SqlQuery {
 
     public Map<String, Object> parseParameters(Map<String, String> aParametersValues) {
         Objects.requireNonNull(aParametersValues, "aParametersValues is required argument");
+        Map<String, String> parametersValues = new HashMap<>();
+        aParametersValues.forEach((k, v) -> parametersValues.put(k.toLowerCase(), v));
         Map<String, GenericType> types = parameters.stream()
                 .collect(Collectors.toMap(Parameter::getName, p -> p.getType() != null ? p.getType() : GenericType.STRING, (v1, v2) -> v1));
         // Warning. Don't refactor to another .collect(Collectors.toMap( because of null values of parameters !
         Map<String, Object> values = new HashMap<>();
         for (Map.Entry<String, GenericType> e : types.entrySet()) {
-            values.put(e.getKey(), GenericType.parseValue(aParametersValues.get(e.getKey()), e.getValue()));
+            values.put(e.getKey(), GenericType.parseValue(parametersValues.get(e.getKey()), e.getValue()));
         }
         return values;
     }
