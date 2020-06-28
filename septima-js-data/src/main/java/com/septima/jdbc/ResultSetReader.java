@@ -39,7 +39,7 @@ public class ResultSetReader {
         List<EntityField> appEntityFields = new ArrayList<>();
         for (int i = 1; i <= jdbcFields.getColumnCount(); i++) {
             // String schemaName = jdbcFields.getSchema(i);
-            String alias = jdbcFields.getColumnLabel(i);// Column label in jdbc is the name of platypus property
+            String alias = jdbcFields.getColumnLabel(i);// Column label in jdbc is the name of septima property
             String columnName = jdbcFields.getColumnName(i);
 
             appEntityFields.add(new EntityField(

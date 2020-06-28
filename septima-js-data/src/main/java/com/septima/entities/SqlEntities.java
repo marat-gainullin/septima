@@ -139,7 +139,7 @@ public class SqlEntities {
 
     private static Consumer<? super Map.Entry<String, JsonNode>> parameterReader(Map<String, Parameter> params, Map<String, Map<String, String>> paramsBinds) {
         return (parameterEntry) -> {
-            String parameterName = parameterEntry.getKey().toLowerCase();
+            String parameterName = parameterEntry.getKey();
             Parameter parameter = params.getOrDefault(parameterName, new Parameter(parameterName));
             JsonNode parameterNode = parameterEntry.getValue();
             JsonNode typeNode = parameterNode.get("type");
@@ -173,7 +173,7 @@ public class SqlEntities {
                                     JsonNode subQueryParamNode = subQueryParamsNode.get(i);
                                     if (subQueryParamNode.isTextual()) {
                                         Map<String, String> subToOuterParams = paramsBinds.computeIfAbsent(subQueryName, sqn -> new HashMap<>());
-                                        subToOuterParams.put(subQueryParamNode.asText().toLowerCase(), parameterName);
+                                        subToOuterParams.put(subQueryParamNode.asText(), parameterName);
                                     }
                                 }
                             }
@@ -478,16 +478,16 @@ public class SqlEntities {
         JsonNode commandNode = entityDocument != null ? entityDocument.get("command") : null;
         boolean command = commandNode != null && commandNode.isBoolean() ? commandNode.asBoolean() : querySyntax != null && !(querySyntax instanceof Select);
 
-        Map<String, Parameter> params = querySyntax != null ? ExtractParameters.from(querySyntax) : new HashMap<>();
+        Map<String, Parameter> parameters = querySyntax != null ? ExtractParameters.from(querySyntax) : new HashMap<>();
         // subQueryName, subQueryParameterName, parameterName
-        Map<String, Map<String, String>> paramsBinds = new HashMap<>();
+        Map<String, Map<String, String>> parametersBinds = new HashMap<>();
         JsonNode paramsNode = entityDocument != null ? entityDocument.get("parameters") : null;
         if (paramsNode != null && paramsNode.isObject()) {
-            paramsNode.fields().forEachRemaining(parameterReader(params, paramsBinds));
+            paramsNode.fields().forEachRemaining(parameterReader(parameters, parametersBinds));
         }
 
         if (querySyntax != null) {
-            InlineEntities.to(querySyntax, this, paramsBinds, aStartOfReferences, aIllegalReferences);
+            InlineEntities.to(querySyntax, this, parametersBinds, aStartOfReferences, aIllegalReferences);
         }
         String sqlWithSubQueries = querySyntax != null ? StatementDeParser.assemble(querySyntax) : null;
         Map<String, EntityField> fields = querySyntax != null ? columnsToApplicationFields(
@@ -524,7 +524,7 @@ public class SqlEntities {
                 publicAccess,
                 title,
                 pageSize,
-                Collections.unmodifiableMap(params),
+                Collections.unmodifiableMap(parameters),
                 Collections.unmodifiableMap(fields),
                 Collections.unmodifiableSet(writable),
                 Collections.unmodifiableSet(readRoles),

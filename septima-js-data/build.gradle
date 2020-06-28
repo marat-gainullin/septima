@@ -19,7 +19,7 @@ dependencies {
             project(':septima-js-sql-driver-oracle'),
             'com.hynnet:oracle-driver-ojdbc6:12.1.0.1',
             'org.postgresql:postgresql:42.1.4',
-            'org.postgis:postgis-jdbc:2.1.0',
+            'net.postgis:postgis-jdbc:2.5.0',
             'com.h2database:h2:1.4.193',
             'com.vividsolutions:jts:1.13'
 }

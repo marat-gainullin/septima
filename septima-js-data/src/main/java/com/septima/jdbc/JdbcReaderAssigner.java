@@ -522,7 +522,7 @@ public class JdbcReaderAssigner {
                     if (aValue instanceof Number) {
                         castedDate = new java.util.Date(((Number) aValue).longValue());
                     } else if (aValue instanceof String) {
-                        castedDate = new java.util.Date(Long.valueOf((String) aValue));
+                        castedDate = new java.util.Date(Long.parseLong((String) aValue));
                     } else if (aValue instanceof Boolean) {
                         castedDate = new java.util.Date(((Boolean) aValue) ? 1 : 0);
                     } else if (aValue instanceof java.util.Date) {

@@ -20,9 +20,6 @@ allprojects {
             url 'http://repo.boundlessgeo.com/main/'
         }
         maven {
-            url 'http://www.datanucleus.org/downloads/maven2/'
-        }
-        maven {
             url 'https://clojars.org/repo/'
         }
         maven {
