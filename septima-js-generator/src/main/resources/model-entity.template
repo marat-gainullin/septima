@@ -3,12 +3,14 @@
         @Override
         public void ${entityKeyMutator}(${entityKeyType} aValue) {
             ${entityKeyType} old = ${entityKeyGetter}();
-            if (${modelEntity}.getByKey().containsKey(old)) {
-                ${modelEntity}.getByKey().remove(old);
-                super.${entityKeyMutator}(aValue);
-                ${modelEntity}.getByKey().put(aValue, this);
-            } else {
-                super.${entityKeyMutator}(aValue);
+            if (old != aValue) {
+                if (${modelEntity}.getByKey().containsKey(old)) {
+                    ${modelEntity}.getByKey().remove(old);
+                    super.${entityKeyMutator}(aValue);
+                    ${modelEntity}.getByKey().put(aValue, this);
+                } else {
+                    super.${entityKeyMutator}(aValue);
+                }
             }
         }
 ${scalarProperties}${collectionProperties}

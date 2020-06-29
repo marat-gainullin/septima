@@ -259,10 +259,13 @@ public class ModelsDomains extends EntitiesProcessor {
                     return modelEntities.containsKey(reference.destination);
                 })
                 .filter(reference -> {
-                    if (!aEntity.fieldsByProperty.containsKey(reference.property)) {
-                        Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "No reference property '" + reference.property + "' found in model entity '" + aEntity.modelName + "' while scalar property '" + aEntity.modelName + "." + reference.scalar + "' generation");
+                    Field field = aEntity.fieldsByProperty.get(reference.property);
+                    if (field == null) {
+                        Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "No base field '" + reference.property + "' found in model entity '" + aEntity.modelName + "' while scalar property '" + aEntity.modelName + "." + reference.scalar + "' generation");
+                    } else if (field.isPk()){
+                        Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "Reference property '" + reference.property + "' in model entity '" + aEntity.modelName + "' ignored while scalar property '" + aEntity.modelName + "." + reference.scalar + "' generation. Scalar properties based on primary keys are not supported.");
                     }
-                    return aEntity.fieldsByProperty.containsKey(reference.property);
+                    return field != null && !field.isPk(); // If the field is a PK and FK at the same time, we ignore its scalar reference. So have to filter it out here.
                 })
                 .map(reference -> {
                     ModelEntity target = modelEntities.get(reference.destination);
@@ -469,7 +472,7 @@ public class ModelsDomains extends EntitiesProcessor {
                     JsonNode keyNode = entityBodyNode.get("key");
                     EntityField keyField;
                     if (keyNode != null && keyNode.isTextual() && !keyNode.asText().isEmpty()) {
-                        // This should be field name, but we want to be able to use both 'pet_id' or 'petId' names
+                        // This should be a field name, but we want to be able to use both 'pet_id' or 'petId' names
                         String keyPropertyName = fieldToProperty(keyNode.asText());
                         keyField = fieldsByProperty.get(keyPropertyName);
                     } else {
@@ -511,7 +514,7 @@ public class ModelsDomains extends EntitiesProcessor {
     }
 
     /**
-     * Transforms name like {@code customer_id} into name like {@code customerId}
+     * Transforms a name like {@code customer_id} into a name like {@code customerId}
      * It is idempotent. So if model's references are declared under names {@code customer_id} or {@code customerId} in *.model.json, - they are equivalent.
      * Warning! If such declarations are present in both forms, only one will survive.
      *

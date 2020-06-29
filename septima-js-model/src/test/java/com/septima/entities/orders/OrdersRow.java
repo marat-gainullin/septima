@@ -49,7 +49,7 @@ public class OrdersRow extends Observable {
     public void setCustomerId(long aValue) {
         long old = customerId;
         customerId = aValue;
-        changeSupport.firePropertyChange("customer_id", old, customerId);
+        changeSupport.firePropertyChange("customerId", old, customerId);
     }
     public String getDestination() {
         return destination;

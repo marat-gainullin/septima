@@ -20,12 +20,14 @@ public class GoodOrders extends Model {
         @Override
         public void setId(long aValue) {
             long old = getId();
-            if (goods.getByKey().containsKey(old)) {
-                goods.getByKey().remove(old);
-                super.setId(aValue);
-                goods.getByKey().put(aValue, this);
-            } else {
-                super.setId(aValue);
+            if (old != aValue) {
+                if (goods.getByKey().containsKey(old)) {
+                    goods.getByKey().remove(old);
+                    super.setId(aValue);
+                    goods.getByKey().put(aValue, this);
+                } else {
+                    super.setId(aValue);
+                }
             }
         }
 
@@ -52,12 +54,14 @@ public class GoodOrders extends Model {
         @Override
         public void setId(long aValue) {
             long old = getId();
-            if (orders.getByKey().containsKey(old)) {
-                orders.getByKey().remove(old);
-                super.setId(aValue);
-                orders.getByKey().put(aValue, this);
-            } else {
-                super.setId(aValue);
+            if (old != aValue) {
+                if (orders.getByKey().containsKey(old)) {
+                    orders.getByKey().remove(old);
+                    super.setId(aValue);
+                    orders.getByKey().put(aValue, this);
+                } else {
+                    super.setId(aValue);
+                }
             }
         }
 
@@ -155,12 +159,14 @@ public class GoodOrders extends Model {
         @Override
         public void setId(long aValue) {
             long old = getId();
-            if (customers.getByKey().containsKey(old)) {
-                customers.getByKey().remove(old);
-                super.setId(aValue);
-                customers.getByKey().put(aValue, this);
-            } else {
-                super.setId(aValue);
+            if (old != aValue) {
+                if (customers.getByKey().containsKey(old)) {
+                    customers.getByKey().remove(old);
+                    super.setId(aValue);
+                    customers.getByKey().put(aValue, this);
+                } else {
+                    super.setId(aValue);
+                }
             }
         }
 

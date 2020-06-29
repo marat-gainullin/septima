@@ -478,7 +478,7 @@ public class SqlEntities {
         JsonNode commandNode = entityDocument != null ? entityDocument.get("command") : null;
         boolean command = commandNode != null && commandNode.isBoolean() ? commandNode.asBoolean() : querySyntax != null && !(querySyntax instanceof Select);
 
-        Map<String, Parameter> parameters = querySyntax != null ? ExtractParameters.from(querySyntax) : new HashMap<>();
+        Map<String, Parameter> parameters = querySyntax != null ? ExtractParameters.from(querySyntax) : new CaseInsensitiveMap<>(new LinkedHashMap<>());
         // subQueryName, subQueryParameterName, parameterName
         Map<String, Map<String, String>> parametersBinds = new HashMap<>();
         JsonNode paramsNode = entityDocument != null ? entityDocument.get("parameters") : null;
@@ -492,7 +492,7 @@ public class SqlEntities {
         String sqlWithSubQueries = querySyntax != null ? StatementDeParser.assemble(querySyntax) : null;
         Map<String, EntityField> fields = querySyntax != null ? columnsToApplicationFields(
                 resolveColumnsBySyntax(database, querySyntax), database.getSqlDriver()
-        ) : new HashMap<>();
+        ) : new CaseInsensitiveMap<>(new LinkedHashMap<>());
 
         Set<String> writable = new CaseInsensitiveSet(new HashSet<>());
         Set<String> readRoles = new HashSet<>();

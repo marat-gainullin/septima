@@ -31,19 +31,20 @@ public class ResultSetReader {
     public List<Map<String, Object>> readRowSet(ResultSet aResultSet, int aPageSize) throws SQLException {
         Objects.requireNonNull(aResultSet, "aResultSet is required argument");
         ResultSetMetaData lowLevelJdbcFields = aResultSet.getMetaData();
-        List<EntityField> readEntityFields = readFields(lowLevelJdbcFields);
-        return readRows(expectedFields != null && !expectedFields.isEmpty() ? expectedFields : readEntityFields.stream().collect(Collectors.toMap(EntityField::getName, Function.identity())), readEntityFields, aResultSet, aPageSize, aResultSet.getStatement().getConnection());
+        List<EntityField> jdbcFields = readFields(lowLevelJdbcFields);
+        List<EntityField> entityFields = mapFields(expectedFields != null && !expectedFields.isEmpty() ? expectedFields : jdbcFields.stream().collect(Collectors.toMap(EntityField::getName, Function.identity())), jdbcFields);
+        return readRows(entityFields, aResultSet, aPageSize, aResultSet.getStatement().getConnection());
     }
 
     private List<EntityField> readFields(ResultSetMetaData jdbcFields) throws SQLException {
         List<EntityField> appEntityFields = new ArrayList<>();
         for (int i = 1; i <= jdbcFields.getColumnCount(); i++) {
             // String schemaName = jdbcFields.getSchema(i);
-            String alias = jdbcFields.getColumnLabel(i);// Column label in jdbc is the name of septima property
+            String alias = jdbcFields.getColumnLabel(i);// Column label in JDBC is most likely an alias
             String columnName = jdbcFields.getColumnName(i);
 
             appEntityFields.add(new EntityField(
-                    alias != null && !alias.isEmpty() ? alias : columnName,
+                    (alias != null && !alias.isEmpty() ? alias : columnName),
                     null,
                     columnName,
                     jdbcFields.getTableName(i),
@@ -56,23 +57,30 @@ public class ResultSetReader {
         return appEntityFields;
     }
 
-    private List<Map<String, Object>> readRows(Map<String, EntityField> aExpectedFields, List<EntityField> aReadEntityFields, ResultSet aResultSet, int aPageSize, Connection aConnection) throws SQLException {
+    private List<EntityField> mapFields(Map<String, EntityField> aExpectedFields, List<EntityField> aJdbcFields){
+        List<EntityField> fields = new ArrayList<>(aJdbcFields.size());
+        for (EntityField jdbcField : aJdbcFields) {
+            EntityField expectedEntityField = aExpectedFields.get(jdbcField.getName());
+            fields.add(expectedEntityField != null ? expectedEntityField : jdbcField);
+        }
+        return fields;
+    }
+
+    private List<Map<String, Object>> readRows(List<EntityField> aEntityFields, ResultSet aResultSet, int aPageSize, Connection aConnection) throws SQLException {
         List<Map<String, Object>> oRows = new ArrayList<>();
         while ((aPageSize <= 0 || oRows.size() < aPageSize) && aResultSet.next()) {
-            Map<String, Object> jsRow = readRow(aExpectedFields, aReadEntityFields, aResultSet, aConnection);
+            Map<String, Object> jsRow = readRow(aEntityFields, aResultSet, aConnection);
             oRows.add(jsRow);
         }
         return oRows;
     }
 
-    private Map<String, Object> readRow(Map<String, EntityField> aExpectedFields, List<EntityField> aReadEntityFields, ResultSet aResultSet, Connection aConnection) throws SQLException {
+    private Map<String, Object> readRow(List<EntityField> aEntityFields, ResultSet aResultSet, Connection aConnection) throws SQLException {
         if (aResultSet != null) {
-            assert aExpectedFields != null;
+            assert aEntityFields != null;
             Map<String, Object> row = new HashMap<>();
-            for (int i = 0; i < aReadEntityFields.size(); i++) {
-                EntityField readEntityField = aReadEntityFields.get(i);
-                EntityField expectedEntityField = aExpectedFields.get(readEntityField.getName());
-                EntityField entityField = expectedEntityField != null ? expectedEntityField : readEntityField;
+            for (int i = 0; i < aEntityFields.size(); i++) {
+                EntityField entityField = aEntityFields.get(i);
                 Object value;
                 if (GenericType.GEOMETRY == entityField.getType()) {
                     value = jdbcReaderAssigner.getSqlDriver().geometryToWkt(aResultSet, i + 1, aConnection);

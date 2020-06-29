@@ -1,6 +1,6 @@
 Select
     ord.id as id,
-    ord.customer_id as customer_id,
+    ord.customer_id as customerId,
     ord.seller_id as seller_id,
     ord.good_id as good_id,
     ord.comment as comment,

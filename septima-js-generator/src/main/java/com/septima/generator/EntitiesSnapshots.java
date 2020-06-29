@@ -98,14 +98,16 @@ public class EntitiesSnapshots extends EntitiesProcessor {
                 entry("procedure", entity.isProcedure()),
                 entry("command", entity.isCommand()),
                 entry("readonly", entity.isReadonly()),
-                entry("parameters", entity.getParameters().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> map(
+                // Warning! Don't refactor entry -> entry.getValue().getName() as Entry::getKey because keys are lower cased.
+                entry("parameters", entity.getParameters().entrySet().stream().collect(Collectors.toMap(entry -> entry.getValue().getName(), e -> map(
                         entry("type", e.getValue().getType() != null ? e.getValue().getType().getText() : null),
                         entry("subType", e.getValue().getSubType()),
                         entry("description", e.getValue().getDescription()),
                         entry("value", e.getValue().getValue()),
                         entry("out", e.getValue().getMode() == Parameter.Mode.InOut || e.getValue().getMode() == Parameter.Mode.Out)
                 )))),
-                entry("fields", entity.getFields().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> map(
+                // Warning! Don't refactor entry -> entry.getValue().getName() as Entry::getKey because keys are lower cased.
+                entry("fields", entity.getFields().entrySet().stream().collect(Collectors.toMap(entry -> entry.getValue().getName(), e -> map(
                         entry("nullable", e.getValue().isNullable()),
                         entry("type", e.getValue().getType() != null ? e.getValue().getType().getText() : null),
                         entry("subType", e.getValue().getSubType()),

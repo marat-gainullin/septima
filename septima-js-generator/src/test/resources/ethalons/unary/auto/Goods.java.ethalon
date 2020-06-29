@@ -15,12 +15,14 @@ public class Goods extends Model {
         @Override
         public void setId(long aValue) {
             long old = getId();
-            if (hierarchy.getByKey().containsKey(old)) {
-                hierarchy.getByKey().remove(old);
-                super.setId(aValue);
-                hierarchy.getByKey().put(aValue, this);
-            } else {
-                super.setId(aValue);
+            if (old != aValue) {
+                if (hierarchy.getByKey().containsKey(old)) {
+                    hierarchy.getByKey().remove(old);
+                    super.setId(aValue);
+                    hierarchy.getByKey().put(aValue, this);
+                } else {
+                    super.setId(aValue);
+                }
             }
         }
 
