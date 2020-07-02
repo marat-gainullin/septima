@@ -265,7 +265,7 @@ public class ModelsDomains extends EntitiesProcessor {
                     } else if (field.isPk()){
                         Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "Reference property '" + reference.property + "' in model entity '" + aEntity.modelName + "' ignored while scalar property '" + aEntity.modelName + "." + reference.scalar + "' generation. Scalar properties based on primary keys are not supported.");
                     }
-                    return field != null && !field.isPk(); // If the field is a PK and FK at the same time, we ignore its scalar reference. So have to filter it out here.
+                    return field != null && !field.isPk(); // If the field is a PK and FK at the same time, we ignore its scalar reference. So we have to filter it out here.
                 })
                 .map(reference -> {
                     ModelEntity target = modelEntities.get(reference.destination);

@@ -90,7 +90,7 @@ public class Config {
                 throw new IllegalStateException("One of ['" + RESOURCES_ENTITIES_PATH_CONF_PARAM + "', '" + ENTITIES_PATH_CONF_PARAM + "'] parameters should to be specified");
             }
         } else {
-            throw new IllegalStateException("Default data source have to be specified");
+            throw new IllegalStateException("Default data source has to be specified");
         }
     }
 
