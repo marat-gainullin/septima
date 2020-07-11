@@ -81,6 +81,8 @@ public class SqlEntities {
     private static final ObjectMapper JSON = new ObjectMapper();
 
     private final boolean compileEntities;
+    private final boolean useBatches;
+    private final int maximumBatchSize;
     private final Path entitiesRoot;
     private final Path resourcesEntitiesRoot;
     private final String defaultDataSource;
@@ -92,15 +94,15 @@ public class SqlEntities {
     private final Map<String, Database> databases = new ConcurrentHashMap<>();
     private final Map<Database, String> dataSources = new ConcurrentHashMap<>();
 
-    public SqlEntities(Path anEntitiesRoot, String aDefaultDataSource, boolean aCompileEntities) {
-        this(anEntitiesRoot, aDefaultDataSource, Database.jdbcTasksPerformer(32), ForkJoinPool.commonPool(), aCompileEntities);
+    public SqlEntities(Path anEntitiesRoot, String aDefaultDataSource, boolean aCompileEntities, boolean aUseBatches, int aMaximumBatchSize) {
+        this(anEntitiesRoot, aDefaultDataSource, Database.jdbcTasksPerformer(32), ForkJoinPool.commonPool(), aCompileEntities, aUseBatches, aMaximumBatchSize);
     }
 
-    public SqlEntities(Path anEntitiesRoot, String aDefaultDataSource, Executor aJdbcPerformer, Executor aFuturesExecutor, boolean aCompileEntities) {
-        this(null, anEntitiesRoot, aDefaultDataSource, aJdbcPerformer, aFuturesExecutor, aCompileEntities);
+    public SqlEntities(Path anEntitiesRoot, String aDefaultDataSource, Executor aJdbcPerformer, Executor aFuturesExecutor, boolean aCompileEntities, boolean aUseBatches, int aMaximumBatchSize) {
+        this(null, anEntitiesRoot, aDefaultDataSource, aJdbcPerformer, aFuturesExecutor, aCompileEntities, aUseBatches, aMaximumBatchSize);
     }
 
-    public SqlEntities(Path aResourcesEntitiesRoot, Path anEntitiesRoot, String aDefaultDataSource, Executor aJdbcPerformer, Executor aFuturesExecutor, boolean aCompileEntities) {
+    public SqlEntities(Path aResourcesEntitiesRoot, Path anEntitiesRoot, String aDefaultDataSource, Executor aJdbcPerformer, Executor aFuturesExecutor, boolean aCompileEntities, boolean aUseBatches, int aMaximumBatchSize) {
         super();
         Objects.requireNonNull(
                 Objects.requireNonNullElse(aResourcesEntitiesRoot, anEntitiesRoot),
@@ -115,6 +117,8 @@ public class SqlEntities {
         jdbcPerformer = aJdbcPerformer;
         futuresExecutor = aFuturesExecutor;
         compileEntities = aCompileEntities;
+        useBatches = aUseBatches;
+        maximumBatchSize = aMaximumBatchSize;
     }
 
     private static Map<String, EntityField> columnsToApplicationFields(Map<String, JdbcColumn> tableColumns, SqlDriver aDriver) {
@@ -664,7 +668,9 @@ public class SqlEntities {
                         DataSources.getDataSourceSqlDriver(dataSource),
                         compileEntities ? Metadata.of(dataSource) : null,
                         jdbcPerformer,
-                        futuresExecutor
+                        futuresExecutor,
+                        useBatches,
+                        maximumBatchSize
                 );
             } catch (NamingException ex) {
                 throw new IllegalStateException(ex);

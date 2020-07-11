@@ -54,8 +54,11 @@ public abstract class JdbcDataProvider implements DataProvider {
      *                            applying data changes.
      * @param aJdbcReaderAssigner Jdbc {@link PreparedStatement} and {@link CallableStatement} parameters handler.
      * @param aAsyncDataPuller    {@link Executor} for Jdbc blocking tasks.
+     * @param aFutureExecutor     An executor for input output completions.
      * @param aClause             A sql clause, dataSource should use transform achieve
      *                            PreparedStatement instance transform use it in the result set querying process.
+     * @param aPageSize           A maximum count of records fetches on a sinlge page, while using paged fetching.
+     * @param aProcedure          A flag, indicating, that the query is a stored procedure and might have out parameters.
      * @param aExpectedFields     Fields, expected by Septima according transform metadata analysis.
      * @see DataSource
      */

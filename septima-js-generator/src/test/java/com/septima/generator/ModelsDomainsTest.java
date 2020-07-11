@@ -32,7 +32,9 @@ public class ModelsDomainsTest {
         SqlEntities sqlEntities = new SqlEntities(
                 testAppPath,
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
-                true
+                true,
+                true,
+                1
         );
         Path destination = new File(System.getProperty("generated.path")).toPath().resolve(testAppSuffix);
         EntitiesRaws javaEntities = EntitiesRaws.fromResources(sqlEntities, destination);

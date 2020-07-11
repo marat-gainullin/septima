@@ -16,6 +16,8 @@ public class Config {
     private static final String FUTURES_EXECUTOR_CONF_PARAM = "futures.executor";
     private static final String MAIL_SESSION_CONF_PARAM = "mail.session";
     private static final String MAX_JDBC_THREADS_CONF_PARAM = "jdbc.max.threads";
+    private static final String MAX_BATCH_SIZE_CONF_PARAM = "max.batch.size";
+    private static final String JDBC_BATCHES_CONF_PARAM = "jdbc.batches";
     private static final String MAX_MAIL_THREADS_CONF_PARAM = "mail.max.threads";
     private static final String LPC_QUEUE_SIZE_CONF_PARAM = "scope.queue.size";
     private static final String ENTITIES_PATH_CONF_PARAM = "entities.path";
@@ -23,17 +25,21 @@ public class Config {
 
     private final String defaultDataSourceName;
     private final String futuresExecutorName;
+    private final boolean jdbcBatches;
+    private final int maximumBatchSize;
     private final int maximumJdbcThreads;
     private final int maximumMailThreads;
     private final int maximumLpcQueueSize;
     private final Path resourcesEntitiesPath;
     private final Path entitiesPath;
 
-    private Config(String aDefaultDataSourceName, String aFuturesExecutorName, Path anEntitiesResourcesPath, Path anEntitiesPath, int aMaximumJdbcThreads, int aMaximumMailTreads, int aMaximumLpcQueueSize) {
+    private Config(String aDefaultDataSourceName, String aFuturesExecutorName, Path anEntitiesResourcesPath, Path anEntitiesPath, boolean aJdbcBatches, int aMaximumBatchSize, int aMaximumJdbcThreads, int aMaximumMailTreads, int aMaximumLpcQueueSize) {
         defaultDataSourceName = aDefaultDataSourceName;
         futuresExecutorName = aFuturesExecutorName;
         resourcesEntitiesPath = anEntitiesResourcesPath;
         entitiesPath = anEntitiesPath;
+        jdbcBatches = aJdbcBatches;
+        maximumBatchSize = aMaximumBatchSize;
         maximumJdbcThreads = aMaximumJdbcThreads;
         maximumMailThreads = aMaximumMailTreads;
         maximumLpcQueueSize = aMaximumLpcQueueSize;
@@ -43,6 +49,8 @@ public class Config {
         String defaultDataSourceName = null;
         String futuresExecutorName = null;
         String mailSessionName = null;
+        boolean jdbcBatches = true;
+        int maximumBatchSize = 1024;
         int maximumJdbcThreads = 16;
         int maximumMailTreads = 16;
         int maximumLpcQueueSize = 1024;
@@ -55,11 +63,15 @@ public class Config {
                 if (paramName != null) {
                     String paramValue = aContext.getInitParameter(paramName);
                     if (MAX_JDBC_THREADS_CONF_PARAM.equals(paramName)) {
-                        maximumJdbcThreads = Math.max(1, Double.valueOf(paramValue).intValue());
+                        maximumJdbcThreads = Math.max(1, Integer.parseInt(paramValue));
+                    } else if (MAX_BATCH_SIZE_CONF_PARAM.equals(paramName)) {
+                        maximumBatchSize = Math.max(1, Integer.parseInt(paramValue));
+                    } else if (JDBC_BATCHES_CONF_PARAM.equalsIgnoreCase(paramName)) {
+                        jdbcBatches = Boolean.parseBoolean(paramValue);
                     } else if (MAX_MAIL_THREADS_CONF_PARAM.equalsIgnoreCase(paramName)) {
-                        maximumMailTreads = Math.max(1, Double.valueOf(paramValue).intValue());
+                        maximumMailTreads = Math.max(1, Integer.parseInt(paramValue));
                     } else if (LPC_QUEUE_SIZE_CONF_PARAM.equalsIgnoreCase(paramName)) {
-                        maximumLpcQueueSize = Math.max(1, Double.valueOf(paramValue).intValue());
+                        maximumLpcQueueSize = Math.max(1, Integer.parseInt(paramValue));
                     } else if (ENTITIES_PATH_CONF_PARAM.equalsIgnoreCase(paramName)) {
                         entitiesPath = Paths.get(aContext.getRealPath(paramValue));
                     } else if (RESOURCES_ENTITIES_PATH_CONF_PARAM.equalsIgnoreCase(paramName)) {
@@ -80,6 +92,8 @@ public class Config {
                         futuresExecutorName,
                         entitiesResourcesPath,
                         entitiesPath,
+                        jdbcBatches,
+                        maximumBatchSize,
                         maximumJdbcThreads,
                         maximumMailTreads,
                         maximumLpcQueueSize
@@ -100,6 +114,14 @@ public class Config {
 
     public String getFuturesExecutorName() {
         return futuresExecutorName;
+    }
+
+    public boolean useJdbcBatches() {
+        return jdbcBatches;
+    }
+
+    public int getMaximumBatchSize() {
+        return maximumBatchSize;
     }
 
     public int getMaximumJdbcThreads() {

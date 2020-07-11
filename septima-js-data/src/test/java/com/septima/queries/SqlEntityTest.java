@@ -27,7 +27,7 @@ public class SqlEntityTest {
 
     @Test(expected = IllegalStateException.class)
     public void sqlEntityEmptySql() throws Exception {
-        SqlEntity entity = new SqlEntity(Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)),
+        SqlEntity entity = new SqlEntity(Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1),
                 "",
                 null,
                 "",
@@ -45,7 +45,7 @@ public class SqlEntityTest {
 
     @Test
     public void sqlEntityCustomSql() throws Exception {
-        SqlEntity entity = new SqlEntity(Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)),
+        SqlEntity entity = new SqlEntity(Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1),
                 "select f1, f2 from table",
                 "select f1, f2::json from table",
                 "",
@@ -64,7 +64,7 @@ public class SqlEntityTest {
 
     @Test
     public void sqlEntityStructure() throws Exception {
-        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
+        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1);
         SqlEntity entity = new SqlEntity(database,
                 "select f1, f2 from table",
                 "select f1, f2::json from table",
@@ -104,7 +104,7 @@ public class SqlEntityTest {
     @Test
     public void namedParametersExtraction() throws Exception {
         SqlEntity entity = new SqlEntity(
-                Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)),
+                Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1),
                 "select a.id::json, /*multil/i*ne \n com \r ment * /text :pp1 */'jj :pp2 ww' txt from assets a\n" +
                         "-- line :comment text\r" +
                         "-- line :comment text\n" +
@@ -124,7 +124,7 @@ public class SqlEntityTest {
     @Test
     public void namedParametersToJdbcParameters() throws Exception {
         SqlEntity entity = new SqlEntity(
-                Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)),
+                Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1),
                 "select a.id::json ajson, /*multil/i*ne \n" +
                         " com \r" +
                         " ment * /'jj '':pp ww' txt from assets a\n" +

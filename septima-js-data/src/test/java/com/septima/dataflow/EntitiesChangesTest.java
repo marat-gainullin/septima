@@ -39,7 +39,9 @@ public class EntitiesChangesTest {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
-                true
+                true,
+                true,
+                1
         );
         SqlEntity compoundEntity = entities.loadEntity("changes/asset-groups-types-kinds");
         compoundEntity.toQuery().requestData()
@@ -96,7 +98,9 @@ public class EntitiesChangesTest {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
-                true
+                true,
+                true,
+                1
         );
         SqlEntity compoundEntity = entities.loadEntity("changes/asset-groups-types-kinds-writable-restricted");
         compoundEntity.toQuery().requestData(Map.of())
@@ -144,13 +148,14 @@ public class EntitiesChangesTest {
         long assetId = 823456;
         String assetName = "asset-" + assetId;
         double assetField7 = 0.2d;
-        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
-                true
+                true,
+                true,
+                1
         );
-        database.commit(entities.bindChanges(List.of(
+        List<EntityActionsBinder.BoundStatement> boundChanges = entities.bindChanges(List.of(
                 new EntityCommand("dml/insert-asset",
                         Map.of(
                                 "field7", assetField7,
@@ -169,7 +174,12 @@ public class EntitiesChangesTest {
                                 "id", assetId
                         )
                 )
-        )).values().iterator().next())
+        )).values().iterator().next();
+        Database databaseWithoutBatches = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, false, 1);
+        databaseWithoutBatches.commit(boundChanges)
+                .thenAccept(affected -> assertEquals(3L, (long) affected)).get();
+        Database databaseWithBatches = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1);
+        databaseWithBatches.commit(boundChanges)
                 .thenAccept(affected -> assertEquals(3L, (long) affected)).get();
     }
 }

@@ -39,11 +39,11 @@ public class GenerateTask extends DefaultTask {
 
     private void checkSqlEntities() {
         if (entitiesRoot != null && defaultDataSourceName != null) {
-            sqlEntities = new SqlEntities(entitiesRoot.toPath(), defaultDataSourceName, true);
+            sqlEntities = new SqlEntities(entitiesRoot.toPath(), defaultDataSourceName, true, false, 1);
         }
     }
 
     public static SqlEntities sqlEntitiesOf(File entitiesRoot, String defaultDataSourceName) {
-        return new SqlEntities(entitiesRoot.toPath(), defaultDataSourceName, true);
+        return new SqlEntities(entitiesRoot.toPath(), defaultDataSourceName, true, false, 1);
     }
 }

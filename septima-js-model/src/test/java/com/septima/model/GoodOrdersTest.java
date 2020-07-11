@@ -32,7 +32,9 @@ public class GoodOrdersTest {
         SqlEntities entities = new SqlEntities(
                 testAppPath,
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
-                true
+                true,
+                true,
+                1
         );
         GoodOrders model = new GoodOrders(entities);
         Order order = model.new Order();
@@ -45,7 +47,9 @@ public class GoodOrdersTest {
         SqlEntities entities = new SqlEntities(
                 testAppPath,
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
-                true
+                true,
+                true,
+                1
         );
         GoodOrders model = new GoodOrders(entities);
         Order order = model.new Order();
@@ -58,7 +62,9 @@ public class GoodOrdersTest {
         SqlEntities entities = new SqlEntities(
                 testAppPath,
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
-                true
+                true,
+                true,
+                1
         );
         createOrders(entities);
         checkReferences(entities);
@@ -72,7 +78,9 @@ public class GoodOrdersTest {
         SqlEntities entities = new SqlEntities(
                 testAppPath,
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
-                true
+                true,
+                true,
+                1
         );
         GoodOrders model = new GoodOrders(entities);
         Map<Long, Good> goods = model.getGoods().query(Map.of()).get();

@@ -32,7 +32,9 @@ public class EntitiesRawsTest {
         SqlEntities entities = new SqlEntities(
                 testAppPath,
                 System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
-                true
+                true,
+                true,
+                1
         );
         Path destination = new File(System.getProperty("generated.path")).toPath().resolve("rows");
         Path ethalons = new File(System.getProperty("ethalons.path")).toPath().resolve("rows");

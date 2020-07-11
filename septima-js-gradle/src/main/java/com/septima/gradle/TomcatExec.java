@@ -18,21 +18,21 @@ import java.util.Objects;
 
 public class TomcatExec extends JavaExec {
 
-    private String initPath = "/init";
+    private String initUri = "/init";
     private String tomcatAt;
     private String debugPort = "5007";
     private String applicationAt;
 
-    public String getInitPath() {
-        return initPath;
+    public String getInitUri() {
+        return initUri;
     }
 
-    public void setInitPath(String initPath) {
-        Objects.requireNonNull(initPath, "initPath is required");
-        if (initPath.isBlank()) {
-            throw new IllegalArgumentException("initPath is required");
+    public void setInitUri(String initUri) {
+        Objects.requireNonNull(initUri, "initUri is required");
+        if (initUri.isBlank()) {
+            throw new IllegalArgumentException("initUri is required");
         }
-        this.initPath = initPath;
+        this.initUri = initUri;
     }
 
     public String getTomcatAt() {
@@ -124,7 +124,7 @@ public class TomcatExec extends JavaExec {
         URL applicationUrl = new URL(applicationAt);
         InetAddress address = InetAddress.getByName(applicationUrl.getHost());
         int port = applicationUrl.getPort() != -1 ? applicationUrl.getPort() : 80;
-        String request = "GET " + applicationUrl.getPath() + initPath + " HTTP/1.1\r\n" +
+        String request = "GET " + applicationUrl.getPath() + initUri + " HTTP/1.1\r\n" +
                 "Host: " + applicationUrl.getHost() + ":" + applicationUrl.getPort() + "\r\n" +
                 "\r\n";
         try (Socket initRequestClient = new Socket(address, port)) {

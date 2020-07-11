@@ -22,7 +22,9 @@ public class Data {
                 aConfig.getDefaultDataSourceName(),
                 Database.jdbcTasksPerformer(aConfig.getMaximumJdbcThreads()),
                 Futures.getExecutor(),
-                Boolean.getBoolean("com.septima.entities.compile")
+                Boolean.getBoolean("com.septima.entities.compile"),
+                aConfig.useJdbcBatches(),
+                aConfig.getMaximumBatchSize()
         ));
     }
 
