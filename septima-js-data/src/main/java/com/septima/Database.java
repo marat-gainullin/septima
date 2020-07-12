@@ -68,20 +68,24 @@ public class Database {
         private final Connection connection;
         private final PreparedStatement stmt;
         private final String clause;
+        private final int maximumBatchSize;
+        private int batchSize;
 
-        private StatementsBatch(Connection aConnection, PreparedStatement aStmt, String aClause) {
+        private StatementsBatch(Connection aConnection, PreparedStatement aStmt, String aClause, int aMaximumBatchSize) {
             connection = aConnection;
             stmt = aStmt;
             clause = aClause;
+            maximumBatchSize = aMaximumBatchSize;
         }
 
-        public boolean clauseNotSame(String aClause) {
-            return !Objects.equals(clause, aClause);
+        public boolean acceptable(String aClause) {
+            return batchSize < maximumBatchSize && Objects.equals(clause, aClause);
         }
 
         public void add(EntityActionsBinder.BoundStatement entry) throws SQLException {
             entry.assignParameters(connection, stmt);
             stmt.addBatch();
+            batchSize++;
         }
 
         public int flush() throws SQLException {
@@ -92,8 +96,8 @@ public class Database {
             stmt.close();
         }
 
-        public static StatementsBatch of(Connection aConnection, String aClause) throws SQLException {
-            return new StatementsBatch(aConnection, aConnection.prepareStatement(aClause), aClause);
+        public static StatementsBatch of(Connection aConnection, String aClause, int aMaximumBatchSize) throws SQLException {
+            return new StatementsBatch(aConnection, aConnection.prepareStatement(aClause), aClause, aMaximumBatchSize);
         }
     }
 
@@ -101,19 +105,19 @@ public class Database {
         int rowsAffected = 0;
         if (!aStatements.isEmpty()) {
             EntityActionsBinder.BoundStatement firstStatement = aStatements.get(0);
-            StatementsBatch batch = StatementsBatch.of(aConnection, firstStatement.getClause());
+            StatementsBatch batch = StatementsBatch.of(aConnection, firstStatement.getClause(), maximumBatchSize);
             try {
                 batch.add(firstStatement);
                 for (int i = 1; i < aStatements.size(); i++) {
                     EntityActionsBinder.BoundStatement statement = aStatements.get(i);
-                    if (batch.clauseNotSame(statement.getClause()) || i % maximumBatchSize == 0) {
+                    if (!batch.acceptable(statement.getClause())) {
                         rowsAffected += batch.flush();
                         try {
                             batch.close();
                         } finally { // Try .. finally here to avoid exception hiding by second attempt to call statement.close()
                             batch = null;
                         }
-                        batch = StatementsBatch.of(aConnection, statement.getClause());
+                        batch = StatementsBatch.of(aConnection, statement.getClause(), maximumBatchSize);
                     }
                     batch.add(statement);
                 }

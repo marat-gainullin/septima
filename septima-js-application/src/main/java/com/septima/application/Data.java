@@ -23,7 +23,7 @@ public class Data {
                 Database.jdbcTasksPerformer(aConfig.getMaximumJdbcThreads()),
                 Futures.getExecutor(),
                 Boolean.getBoolean("com.septima.entities.compile"),
-                aConfig.useJdbcBatches(),
+                aConfig.isDataBatches(),
                 aConfig.getMaximumBatchSize()
         ));
     }
