@@ -137,7 +137,7 @@ public class SelectTest {
         select = (Select) parserManager.parse(new StringReader(statement));
         assertEquals(statement, "" + select);
 
-        statement = "/*0*/ SELECT /*1*/ * FROM /*2*/ mytable /**/ WHERE /**/ mytable.col /**/ = /**/ 9 /*3*/ LIMIT /*4*/ 3 /*5*/ , /*6*/ ? /*7*/";
+        statement = "/*0*/ SELECT /*1*/ * FROM /*2*/ mytable /**/ WHERE /**/ mytable.col /**/ = /**/ 9 /*3*/ LIMIT /*4*/ 3 /*5*/, /*6*/ ? /*7*/";
         select = (Select) parserManager.parse(new StringReader(statement));
         assertEquals(statement, "" + select);
 
@@ -174,7 +174,7 @@ public class SelectTest {
         statement =
                 "/**/ (/**/ SELECT /**/ * FROM /**/ mytable WHERE mytable.col = 9 /**/ OFFSET /**/ ? /**/) /**/ UNION "
                 + "/**/ (/**/ SELECT /**/ * FROM /**/ mytable2 WHERE mytable2.col = 9 /**/ OFFSET /**/ ? /**/) "
-                + "/**/ ORDER /**/ BY mytable.col /**/ DESC /**/ LIMIT /**/ 3 /**/ , /**/ 4 /**/";
+                + "/**/ ORDER /**/ BY mytable.col /**/ DESC /**/ LIMIT /**/ 3 /**/, /**/ 4 /**/";
         select = (Select) parserManager.parse(new StringReader(statement));
         assertEquals(statement, "" + select);
 

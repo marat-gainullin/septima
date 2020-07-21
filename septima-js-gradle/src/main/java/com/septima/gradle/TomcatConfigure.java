@@ -198,7 +198,6 @@ public class TomcatConfigure extends Copy {
                     resource.setAttribute("username", dataSourceSettings.get("user"));
                     resource.setAttribute("driverClassName", dataSourceSettings.get("driverClass"));
                     resource.setAttribute("type", "javax.sql.DataSource");
-                    resource.setAttribute("type", "true");
                     if (dataSourceSettings.get("password") != null)
                         resource.setAttribute("password", dataSourceSettings.get("password"));
                     /*

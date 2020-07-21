@@ -67,7 +67,7 @@ public class Model {
             Objects.requireNonNull(e.getKey());
             map.put(e.getKey(), e.getValue());
         }
-        return Collections.unmodifiableMap(map);
+        return map;
     }
 
     private <D, K> PropertyChangeListener listener(SqlQuery query, String keyName, Function<D, K> keyMapper) {

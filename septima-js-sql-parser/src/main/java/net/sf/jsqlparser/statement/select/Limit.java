@@ -1,5 +1,7 @@
 package net.sf.jsqlparser.statement.select;
 
+import net.sf.jsqlparser.expression.NamedParameter;
+
 /**
  * A limit clause in the form [LIMIT {[offset,] row_count) | (row_count | ALL) OFFSET offset}]
  */
@@ -7,8 +9,10 @@ public class Limit {
 
     private long offset;
     private long rowCount;
-    private boolean rowCountJdbcParameter = false;
-    private boolean offsetJdbcParameter = false;
+    private boolean offsetJdbcParameter;
+    private boolean rowCountJdbcParameter;
+    private NamedParameter offsetNamedParameter;
+    private NamedParameter rowCountNamedParameter;
     private boolean limitAll;
     private boolean comma = false;
     private String commentLimit;
@@ -35,6 +39,14 @@ public class Limit {
         rowCount = l;
     }
 
+    public boolean isOffset() {
+        return offsetJdbcParameter || offsetNamedParameter != null || offset != 0;
+    }
+
+    public boolean isRowCount() {
+        return rowCountJdbcParameter || rowCountNamedParameter != null || rowCount != 0;
+    }
+
     public boolean isOffsetJdbcParameter() {
         return offsetJdbcParameter;
     }
@@ -51,6 +63,22 @@ public class Limit {
         rowCountJdbcParameter = b;
     }
 
+    public NamedParameter getOffsetNamedParameter() {
+        return offsetNamedParameter;
+    }
+
+    public void setOffsetNamedParameter(NamedParameter offsetNamedParameter) {
+        this.offsetNamedParameter = offsetNamedParameter;
+    }
+
+    public NamedParameter getRowCountNamedParameter() {
+        return rowCountNamedParameter;
+    }
+
+    public void setRowCountNamedParameter(NamedParameter rowCountNamedParameter) {
+        this.rowCountNamedParameter = rowCountNamedParameter;
+    }
+
     /**
      * @return true if the limit is "LIMIT ALL [OFFSET ...])
      */
@@ -63,29 +91,74 @@ public class Limit {
     }
 
     public String toString() {
-        String retVal = "";
-        if (rowCount > 0 || rowCountJdbcParameter || limitAll) {
+        StringBuilder builder = new StringBuilder();
+        if (limitAll || rowCountNamedParameter != null || rowCountJdbcParameter || rowCount != 0) {
+            builder
+                    .append(commentLimit != null ? " " + commentLimit : "")
+                    .append(" LIMIT");
+        }
+        if (comma) {
+            builder
+                    .append(commentLimitValue != null ? " " + commentLimitValue : "");
+
+            builder.append(" ");
+            if (offsetJdbcParameter) {
+                builder.append("?");
+            } else if (offsetNamedParameter != null) {
+                builder.append(offsetNamedParameter.toString());
+            } else if (offset != 0) {
+                builder.append(offset);
+            }
+
+            builder
+                    .append(commentComma != null ? " " + commentComma : "")
+                    .append(",")
+                    .append(commentAfterCommaValue != null ? " " + commentAfterCommaValue : "");
+
+            builder.append(" ");
+            if (rowCountJdbcParameter) {
+                builder.append("?");
+            } else if (rowCountNamedParameter != null) {
+                builder.append(rowCountNamedParameter.toString());
+            } else if (rowCount != 0) {
+                builder.append(rowCount);
+            }
+        } else {
             if (limitAll) {
-                retVal += (getCommentLimit() != null ? " "+getCommentLimit() : "") + " LIMIT " + 
-                          (getCommentAll() != null ? getCommentAll()+" " : "") + "ALL";
-            } else {
-                if (isComma()) {
-                    retVal +=(getCommentLimit() != null ? " "+getCommentLimit() : "") + " LIMIT " +  
-                             (getCommentLimitValue() != null ? getCommentLimitValue()+" " : "") + (offsetJdbcParameter ? "?" : offset + "");
-                    retVal +=(getCommentComma() != null ? " "+getCommentComma()+" " : "") + ", " + 
-                             (getCommentAfterCommaValue() != null ? getCommentAfterCommaValue()+" " : "") + (rowCountJdbcParameter ? "?" : rowCount + "");
-                    return retVal;
-                } else {
-                    retVal += (getCommentLimit() != null ? " "+getCommentLimit() : "") + " LIMIT " + 
-                              (getCommentLimitValue() != null ? getCommentLimitValue()+" " : "") + (rowCountJdbcParameter ? "?" : rowCount + "");
+                builder
+                        .append(commentAll != null ? " " + commentAll : "")
+                        .append(" ALL");
+            } else if (rowCountNamedParameter != null || rowCountJdbcParameter || rowCount != 0) {
+                builder
+                        .append(commentLimitValue != null ? " " + commentLimitValue : "");
+
+                builder.append(" ");
+                if (rowCountJdbcParameter) {
+                    builder.append("?");
+                } else if (rowCountNamedParameter != null) {
+                    builder.append(rowCountNamedParameter.toString());
+                } else if (rowCount != 0) {
+                    builder.append(rowCount);
+                }
+            }
+
+            if (offsetJdbcParameter || offsetNamedParameter != null || offset != 0) {
+                builder
+                        .append(commentOffset != null ? " " + commentOffset : "")
+                        .append(" OFFSET")
+                        .append(commentOffsetValue != null ? " " + commentOffsetValue : "");
+
+                builder.append(" ");
+                if (offsetJdbcParameter) {
+                    builder.append("?");
+                } else if (offsetNamedParameter != null) {
+                    builder.append(offsetNamedParameter.toString());
+                } else if (offset != 0) {
+                    builder.append(offset);
                 }
             }
         }
-        if (offset > 0 || offsetJdbcParameter) {
-            retVal += (getCommentOffset() != null ? " "+getCommentOffset() : "") + " OFFSET " + 
-                      (getCommentOffsetValue() != null ? getCommentOffsetValue()+" " : "") + (offsetJdbcParameter ? "?" : offset + "");
-        }
-        return retVal;
+        return builder.toString();
     }
 
     /**

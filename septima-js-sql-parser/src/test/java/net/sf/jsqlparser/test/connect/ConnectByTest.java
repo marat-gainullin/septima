@@ -17,7 +17,6 @@ import static org.junit.Assert.*;
  */
 public class ConnectByTest extends GeneralTest{
 
-
     @Test
     public void startWithPriorBeforeTest() throws JSqlParserException {
         String statement = "SELECT last_name, employee_id, manager_id, LEVEL FROM employees START WITH employee_id = :par1 CONNECT BY NOCYCLE (PRIOR employee_id <> manager_id) ORDER BY last_name ASC";
