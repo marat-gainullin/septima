@@ -50,8 +50,8 @@ public class GenerateDomains extends GenerateTask {
             generator = ModelsDomains.fromResources(sqlEntities, sourceDir.toPath(), targetDir.toPath());
         }
 
-        System.out.println("Sql entities are read from '" + sourceDir.toPath() + "'");
-        System.out.println("Generated classes are written to '" + targetDir.toPath() + "'");
+        System.out.println("Models definitions are read from '" + sourceDir.toPath() + "'");
+        System.out.println("Generated model classes are written to '" + targetDir.toPath() + "'");
 
         Path sourcePath = sourceDir.toPath();
         Path targetPath = targetDir.toPath();
