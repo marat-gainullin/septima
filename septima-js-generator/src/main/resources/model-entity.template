@@ -16,15 +16,28 @@
 ${scalarProperties}${collectionProperties}
     }
 ${groupsDeclarations}
-    private final Entity<${entityKeyBoxedType}, ${entityClass}> ${modelEntity} = new Entity<>(
-            "${entityRef}",
-            "${entityKey}",
-            ${entityClass}::${entityKeyGetter},
-            datum -> ${entityBaseClass}.of(datum, ${entityClass}::new),
-            ${entityBaseClass}::asMap,
-            instance -> {${groupsFulfills}
-            },
-            instance -> {${groupsEvicts}
-            }
-    );
+    public class ${entityClass}Entity extends Entity<${entityKeyBoxedType}, ${entityClass}> {
+        public ${entityClass}Entity(){
+            super(
+                "${entityRef}",
+                "${entityKey}",
+                ${entityClass}::${entityKeyGetter},
+                datum -> ${entityBaseClass}.of(datum, ${entityClass}::new),
+                ${entityBaseClass}::asMap,
+                instance -> {${groupsFulfills}
+                },
+                instance -> {${groupsEvicts}
+                }
+            );
+        }
 
+        public CompletableFuture<Map<${entityKeyBoxedType}, ${entityClass}>> query(
+${queryParameters}
+        ) {
+            return query(map(
+${queryParametersMapping}
+            ));
+        }
+    }
+
+    private final ${entityClass}Entity ${modelEntity} = new ${entityClass}Entity();

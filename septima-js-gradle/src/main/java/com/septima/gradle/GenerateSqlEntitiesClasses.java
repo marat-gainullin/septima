@@ -1,12 +1,11 @@
 package com.septima.gradle;
 
 import com.septima.generator.EntitiesRaws;
-import com.septima.jdbc.UncheckedSQLException;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,13 +62,16 @@ public class GenerateSqlEntitiesClasses extends GenerateTask {
             generator = EntitiesRaws.fromResources(sqlEntities, targetDir.toPath());
         }
 
+        System.out.println("Sql entities are read from '" + sqlEntities.getEntitiesRoot() + "'");
+        System.out.println("Generated classes are written to '" + targetDir + "'");
+
         Set<String> processed = new HashSet<>();
         Action<File> transform = sqlEntityFile -> {
             if (!processed.contains(sqlEntityFile.getAbsolutePath())) {
                 try {
                     Path generatedClass = generator.toJavaSource(sqlEntityFile.toPath());
                     processed.add(sqlEntityFile.getAbsolutePath());
-                    System.out.println("Sql entity definition '" + sqlEntityFile + "' transformed to '" + generatedClass + "'");
+                    System.out.println("Class '" + targetDir.toPath().relativize(generatedClass) + "' has been generated");
                 } catch (IOException ex) {
                     throw new UncheckedIOException(ex);
                 } catch (IllegalStateException ex) {

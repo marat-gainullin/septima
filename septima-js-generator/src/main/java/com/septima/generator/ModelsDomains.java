@@ -6,13 +6,19 @@ import com.septima.entities.SqlEntities;
 import com.septima.entities.SqlEntity;
 import com.septima.metadata.EntityField;
 import com.septima.metadata.Field;
+import com.septima.metadata.Parameter;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Spliterators;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,6 +28,8 @@ import java.util.stream.StreamSupport;
 public class ModelsDomains extends EntitiesProcessor {
 
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final String INDENT_12 = "            ";
+    private static final String INDENT_16 = "                ";
 
     private final String modelTemplate;
     private final String modelEntityGetterTemplate;
@@ -250,6 +258,26 @@ public class ModelsDomains extends EntitiesProcessor {
                 .toString();
     }
 
+    private String generateQueryParameters(ModelEntity aEntity) {
+        return aEntity.entity.getParameters().entrySet().stream()
+                .map(e -> {
+                    String name = e.getKey();
+                    Parameter p = e.getValue();
+                    return new StringBuilder(INDENT_12).append(Utils.javaType(p)).append(" ").append(fieldToProperty(name));
+                })
+                .reduce((p1, p2) -> p1.append(",").append(lf).append(p2))
+                .orElse(new StringBuilder())
+                .toString();
+    }
+
+    private String generateQueryParametersMapping(ModelEntity aEntity) {
+        return aEntity.entity.getParameters().keySet().stream()
+                .map(name -> new StringBuilder(INDENT_16).append("entry(\"").append(name).append("\"").append(", ").append(fieldToProperty(name)).append(")"))
+                .reduce((p1, p2) -> p1.append(",").append(lf).append(p2))
+                .orElse(new StringBuilder())
+                .toString();
+    }
+
     private String generateScalarProperties(ModelEntity aEntity, Map<String, ModelEntity> modelEntities) {
         return aEntity.outReferences.values().stream()
                 .filter(reference -> {
@@ -262,7 +290,7 @@ public class ModelsDomains extends EntitiesProcessor {
                     Field field = aEntity.fieldsByProperty.get(reference.property);
                     if (field == null) {
                         Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "No base field '" + reference.property + "' found in model entity '" + aEntity.modelName + "' while scalar property '" + aEntity.modelName + "." + reference.scalar + "' generation");
-                    } else if (field.isPk()){
+                    } else if (field.isPk()) {
                         Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "Reference property '" + reference.property + "' in model entity '" + aEntity.modelName + "' ignored while scalar property '" + aEntity.modelName + "." + reference.scalar + "' generation. Scalar properties based on primary keys are not supported.");
                     }
                     return field != null && !field.isPk(); // If the field is a PK and FK at the same time, we ignore its scalar reference. So we have to filter it out here.
@@ -325,7 +353,9 @@ public class ModelsDomains extends EntitiesProcessor {
                 Map.entry("entityRef", anEntity.entity.getName()),
                 Map.entry("entityKey", anEntity.key),
                 Map.entry("entityKeyGetter", anEntity.keyGetter),
-                Map.entry("entityKeyMutator", anEntity.keyMutator)
+                Map.entry("entityKeyMutator", anEntity.keyMutator),
+                Map.entry("queryParameters", generateQueryParameters(anEntity)),
+                Map.entry("queryParametersMapping", generateQueryParametersMapping(anEntity))
         ), lf).toString();
     }
 

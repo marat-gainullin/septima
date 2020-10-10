@@ -62,13 +62,16 @@ public class GenerateSqlEntitiesSnapshot extends GenerateTask {
             generator = new EntitiesSnapshots(sqlEntities, targetDir.toPath());
         }
 
+        System.out.println("Sql entities are read from '" + sqlEntities.getEntitiesRoot() + "'");
+        System.out.println("Metadata snapshot is written to '" + targetDir + "'");
+
         Set<String> processed = new HashSet<>();
         Action<File> transform = sqlEntityFile -> {
             if (!processed.contains(sqlEntityFile.getAbsolutePath())) {
                 try {
                     Path filledSnapshot = generator.toSnapshotJson(sqlEntityFile.toPath());
                     processed.add(sqlEntityFile.getAbsolutePath());
-                    System.out.println("Sql entity definition '" + sqlEntityFile + "' filled with metadata and saved to '" + filledSnapshot + "'");
+                    System.out.println("Metadata snapshot for '" + sqlEntities.getEntitiesRoot().relativize(sqlEntityFile.toPath()) + "' has been saved.");
                 } catch (IOException ex) {
                     throw new UncheckedIOException(ex);
                 }

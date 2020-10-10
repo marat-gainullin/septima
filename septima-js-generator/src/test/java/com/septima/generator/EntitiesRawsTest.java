@@ -40,9 +40,9 @@ public class EntitiesRawsTest {
         Path ethalons = new File(System.getProperty("ethalons.path")).toPath().resolve("rows");
         EntitiesRaws generator = EntitiesRaws.fromResources(entities, destination);
         assertTrue(generator.deepToJavaSources(testAppPath) > 0);
-        String customersEntityPathName = "com/septima/entities/customers/CustomersRaw.java";
-        String goodsEntityPathName = "com/septima/entities/goods/GoodsRaw.java";
-        String ordersEntityPathName = "com/septima/entities/orders/OrdersRaw.java";
+        String customersEntityPathName = "com/septima/entities/customers/CustomersRow.java";
+        String goodsEntityPathName = "com/septima/entities/goods/GoodsRow.java";
+        String ordersEntityPathName = "com/septima/entities/orders/OrdersRow.java";
         String ethalonCustomers = Files.readString(ethalons.resolve(customersEntityPathName + ".ethalon"), StandardCharsets.UTF_8);
         String generatedCustomers = Files.readString(destination.resolve(customersEntityPathName), StandardCharsets.UTF_8);
         assertEquals(rn2n(ethalonCustomers), rn2n(generatedCustomers));

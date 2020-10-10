@@ -243,14 +243,14 @@ public class EntityActionsBinder implements EntityActionsVisitor {
         public int apply(Connection aConnection) throws SQLException {
             try (PreparedStatement stmt = aConnection.prepareStatement(clause)) {
                 assignParameters(aConnection, stmt);
-                if (QUERIES_LOGGER.isLoggable(Level.FINE)) {
-                    QUERIES_LOGGER.log(Level.FINE, "Executing sql with {0} parameters: {1}", new Object[]{parameters.size(), clause});
-                }
                 return stmt.executeUpdate();
             }
         }
 
         public void assignParameters(Connection aConnection, PreparedStatement stmt) throws SQLException {
+            if (QUERIES_LOGGER.isLoggable(Level.FINE)) {
+                QUERIES_LOGGER.log(Level.FINE, "About to execute sql with {0} parameters: {1}", new Object[]{parameters.size(), clause});
+            }
             for (int i = 0; i < parameters.size(); i++) {
                 jdbcReaderAssigner.assignInParameter(parameters.get(i), stmt, i + 1, aConnection);
             }
