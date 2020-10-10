@@ -46,8 +46,12 @@ public class GenerateDomains extends GenerateTask {
             throw new GradleException("Property 'sqlEntities' is required for" +
                     " the task");
         }
-        if (generator == null)
+        if (generator == null) {
             generator = ModelsDomains.fromResources(sqlEntities, sourceDir.toPath(), targetDir.toPath());
+        }
+
+        System.out.println("Sql entities are read from '" + sourceDir.toPath() + "'");
+        System.out.println("Generated classes are written to '" + targetDir.toPath() + "'");
 
         Files.walkFileTree(sourceDir.toPath(), new SimpleFileVisitor<>() {
             @Override
@@ -56,7 +60,7 @@ public class GenerateDomains extends GenerateTask {
                 if (!file.isDirectory()) {
                     if (file.getName().endsWith(".model.json")) {
                         Path generatedClass = generator.toJavaSource(filePath);
-                        System.out.println("Model definition '" + filePath + "' transformed to '" + generatedClass + "'");
+                        System.out.println("Model definition '" + filePath.relativize(sourceDir.toPath()) + "' transformed to '" + generatedClass.relativize(targetDir.toPath()) + "'");
                     }
                 }
                 return FileVisitResult.CONTINUE;
