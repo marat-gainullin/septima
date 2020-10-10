@@ -53,6 +53,8 @@ public class GenerateDomains extends GenerateTask {
         System.out.println("Sql entities are read from '" + sourceDir.toPath() + "'");
         System.out.println("Generated classes are written to '" + targetDir.toPath() + "'");
 
+        Path sourcePath = sourceDir.toPath();
+        Path targetPath = targetDir.toPath();
         Files.walkFileTree(sourceDir.toPath(), new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) throws IOException {
@@ -60,7 +62,7 @@ public class GenerateDomains extends GenerateTask {
                 if (!file.isDirectory()) {
                     if (file.getName().endsWith(".model.json")) {
                         Path generatedClass = generator.toJavaSource(filePath);
-                        System.out.println("Model definition '" + filePath.relativize(sourceDir.toPath()) + "' transformed to '" + generatedClass.relativize(targetDir.toPath()) + "'");
+                        System.out.println("Model definition '" + sourcePath.relativize(filePath) + "' transformed to '" + targetPath.relativize(generatedClass) + "'");
                     }
                 }
                 return FileVisitResult.CONTINUE;
