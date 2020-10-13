@@ -259,19 +259,16 @@ public class ModelsDomains extends EntitiesProcessor {
     }
 
     private String generateQueryParameters(ModelEntity aEntity) {
-        return aEntity.entity.getParameters().entrySet().stream()
-                .map(e -> {
-                    String name = e.getKey();
-                    Parameter p = e.getValue();
-                    return new StringBuilder(INDENT_12).append(Utils.javaType(p)).append(" ").append(fieldToProperty(name));
-                })
+        return aEntity.entity.getParameters().values().stream()
+                .map(p -> new StringBuilder(INDENT_12).append(Utils.javaType(p)).append(" ").append(fieldToProperty(p.getName())))
                 .reduce((p1, p2) -> p1.append(",").append(lf).append(p2))
                 .orElse(new StringBuilder())
                 .toString();
     }
 
     private String generateQueryParametersMapping(ModelEntity aEntity) {
-        return aEntity.entity.getParameters().keySet().stream()
+        return aEntity.entity.getParameters().values().stream()
+                .map(Parameter::getName)
                 .map(name -> new StringBuilder(INDENT_16).append("entry(\"").append(name).append("\"").append(", ").append(fieldToProperty(name)).append(")"))
                 .reduce((p1, p2) -> p1.append(",").append(lf).append(p2))
                 .orElse(new StringBuilder())
