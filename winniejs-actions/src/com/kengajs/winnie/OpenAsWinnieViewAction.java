@@ -5,7 +5,7 @@ import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.DataKeys;
+import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.SystemInfo;
@@ -44,14 +44,14 @@ public class OpenAsWinnieViewAction extends AnAction {
 
     @Override
     public void update(AnActionEvent e) {
-        VirtualFile file = DataKeys.VIRTUAL_FILE.getData(e.getDataContext());
+        VirtualFile file = PlatformDataKeys.VIRTUAL_FILE.getData(e.getDataContext());
         e.getPresentation().setEnabled(file != null && !file.isDirectory() && "js".equalsIgnoreCase(file.getExtension()) && file.exists());
     }
 
     @Override
     public void actionPerformed(AnActionEvent e) {
-        VirtualFile file = DataKeys.VIRTUAL_FILE.getData(e.getDataContext());
-        Project project = DataKeys.PROJECT.getData(e.getDataContext());
+        VirtualFile file = PlatformDataKeys.VIRTUAL_FILE.getData(e.getDataContext());
+        Project project = PlatformDataKeys.PROJECT.getData(e.getDataContext());
         if (project != null && file != null && !file.isDirectory() && "js".equalsIgnoreCase(file.getExtension()) && file.exists()) {
             Path projectPath = Paths.get(project.getBasePath());
             Path filePath = Paths.get(file.getPath());
@@ -64,7 +64,7 @@ public class OpenAsWinnieViewAction extends AnAction {
                 args.add(0, "/C");
             }
             args.add(0, SHELL);
-            Notifications.Bus.notify(new Notification("winnie-actions", "Winnie open", "About to execute: " + args.stream().collect(Collectors.joining(" ")), NotificationType.INFORMATION), project);
+            Notifications.Bus.notify(new Notification("Execution", "Winnie open", "About to execute: " + args.stream().collect(Collectors.joining(" ")), NotificationType.INFORMATION), project);
             try {
                 new ProcessBuilder(args)
                         .directory(projectPath.toFile())
@@ -74,11 +74,11 @@ public class OpenAsWinnieViewAction extends AnAction {
                             int exitWith = process.exitValue();
                             String msg = exitWith == 0 ? "A module '" + moduleId + "' opened as Winnie view." :
                                     "Opening a module '" + moduleId + "' as Winnie view failed. Command exit code: " + exitWith;
-                            Notifications.Bus.notify(new Notification("winnie-actions", "Winnie open", msg, NotificationType.INFORMATION), project);
+                            Notifications.Bus.notify(new Notification("Execution", "Winnie open", msg, NotificationType.INFORMATION), project);
                             LOG.info(msg);
                         });
             } catch (IOException ex) {
-                Notifications.Bus.notify(new Notification("winnie-actions", "Winnie open", ex.getMessage(), NotificationType.ERROR), project);
+                Notifications.Bus.notify(new Notification("Execution", "Winnie open", ex.getMessage(), NotificationType.ERROR), project);
                 LOG.error(ex);
             }
         }

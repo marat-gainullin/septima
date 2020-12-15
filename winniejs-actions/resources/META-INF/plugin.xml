@@ -1,38 +1,38 @@
 <idea-plugin>
-  <id>com.kengajs.winnie.actions</id>
-  <name>Winnie actions</name>
-  <version>0.1</version>
-  <vendor email="marat.gainullin.iv@gmail.com" url="http://septimajs.com">Bear-Soft</vendor>
+    <id>com.kengajs.winnie.actions</id>
+    <name>Winnie Actions</name>
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
+    <idea-version since-build="203.5981.135"/>
+    <version>0.0.1</version>
+    <vendor email="marat.gainullin.iv@gmail.com" url="http://septimajs.com">Bear-Soft</vendor>
 
-  <description><![CDATA[
+    <description><![CDATA[
       Winnie designer actions.<br>
+      This plugin helps to edit a Kenga view source with Winnie WYSIWYG editor.
       <em></em>
     ]]></description>
 
-  <change-notes><![CDATA[
+    <change-notes><![CDATA[
       Added 'Edit with Winnie' action<br>
       <em></em>
     ]]>
-  </change-notes>
+    </change-notes>
 
-  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-  <idea-version since-build="173.0"/>
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.modules.lang</depends>
 
-  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
-       on how to target different products -->
-  <depends>com.intellij.modules.lang</depends>
+    <resource-bundle>i18n.bundle_en</resource-bundle>
 
-  <extensions defaultExtensionNs="com.intellij">
-    <!-- Add your extensions here -->
-  </extensions>
-
-  <actions>
-    <!-- Add your actions here -->
-    <action id="open-as-winnie-view" class="com.kengajs.winnie.OpenAsWinnieViewAction" text="Edit with Winnie"
-            description="Opens a *.js file as an editable layout in Winnie GUI editor">
-      <add-to-group group-id="EditMenu" relative-to-action="CutCopyPasteGroup" anchor="before"/>
-      <add-to-group group-id="ProjectViewPopupMenu" relative-to-action="CutCopyPasteGroup" anchor="before"/>
-    </action>
-  </actions>
+    <extensions defaultExtensionNs="com.intellij">
+        <projectStructure.sourceRootEditHandler implementation="com.kengajs.winnie.viewssource.ViewsSourceRootEditHandler"/>
+        <moduleConfigurationEditorProvider implementation="com.kengajs.winnie.viewssource.KengaModuleEditorsProvider"/>
+    </extensions>
+    <actions>
+        <action id="open-as-winnie-view" class="com.kengajs.winnie.OpenAsWinnieViewAction">
+            <add-to-group group-id="ProjectViewPopupMenu" relative-to-action="ProjectViewPopupMenuRefactoringGroup"
+                          anchor="before"/>
+        </action>
+    </actions>
 
 </idea-plugin>
