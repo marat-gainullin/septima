@@ -134,12 +134,12 @@ public class Database {
     public static DataSource obtainDataSource(String aDataSourceName) throws NamingException {
         Objects.requireNonNull(aDataSourceName, "aDataSourceName is required argument");
         try {
-            return (DataSource) InitialContext.doLookup("java:comp/env/" + aDataSourceName);
+            return InitialContext.doLookup("java:comp/env/" + aDataSourceName);
         } catch (NamingException ex) {
             try {
-                return (DataSource) InitialContext.doLookup("java:comp/" + aDataSourceName);
+                return InitialContext.doLookup("java:comp/" + aDataSourceName);
             } catch (NamingException ex1) {
-                return (DataSource) InitialContext.doLookup(aDataSourceName);
+                return InitialContext.doLookup(aDataSourceName);
             }
         }
     }
