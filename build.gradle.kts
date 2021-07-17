@@ -40,8 +40,14 @@ subprojects {
     tasks["jacocoTestReport"].dependsOn("test")
     tasks["check"].dependsOn("jacocoTestReport")
 
-    (extensions["java"] as JavaPluginExtension).also {
-        it.withJavadocJar()
-        it.withSourcesJar()
+    tasks.register("sourcesJar", Jar::class) {
+        archiveClassifier.set("sources")
+        from("src/main/java", "src/main/resources")
     }
+    tasks.register("javadocJar", Jar::class) {
+        dependsOn("javadoc")
+        archiveClassifier.set("javadoc")
+        from("build/docs/javadoc")
+    }
+    tasks["assemble"].dependsOn("sourcesJar", "javadocJar")
 }

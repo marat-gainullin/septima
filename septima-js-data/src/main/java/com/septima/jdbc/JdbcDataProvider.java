@@ -1,14 +1,22 @@
 package com.septima.jdbc;
 
 import com.septima.GenericType;
-import com.septima.metadata.Parameter;
 import com.septima.dataflow.DataProvider;
 import com.septima.metadata.EntityField;
+import com.septima.metadata.Parameter;
 
 import javax.sql.DataSource;
-import java.sql.*;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TimeZone;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.logging.Level;
@@ -120,10 +128,13 @@ public abstract class JdbcDataProvider implements DataProvider {
                                 Parameter param = aParams.get(i - 1);
                                 jdbcReaderAssigner.acceptOutParameter(param, cStmt, i, connection);
                             }
-                            // let's return a ResultSet
                             results = cStmt.getResultSet();
                         } else {
                             results = statement.executeQuery();
+                        }
+                        // If the ResultSet is empty, let's return first not empty ResultSet
+                        while (results.isBeforeFirst() && results.isAfterLast() && statement.getMoreResults()) {
+                            results = statement.getResultSet();
                         }
                         try {
                             T processed = aProcessor.apply(results/* may be null*/);
