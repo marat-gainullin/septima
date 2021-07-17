@@ -27,11 +27,11 @@ package net.sf.jsqlparser.expression;
  */
 public abstract class BinaryExpression implements Expression {
 
-    private boolean leftPrior = false;
+    private boolean leftPrior;
     private Expression leftExpression;
-    private boolean rightPrior = false;
+    private boolean rightPrior;
     private Expression rightExpression;
-    private boolean not = false;
+    private boolean not;
     private String commentNot;
     private String commentLeftPrior;
     private String commentRightPrior;

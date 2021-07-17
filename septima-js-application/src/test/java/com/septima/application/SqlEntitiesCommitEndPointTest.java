@@ -32,8 +32,8 @@ public class SqlEntitiesCommitEndPointTest extends SqlEntitiesEndPointTest {
     @AfterClass
     public static void tearDown() throws SQLException, NamingException {
         ServletContextEvent scEvent = Mockito.mock(ServletContextEvent.class);
-        dataInit.contextDestroyed(scEvent);
-        dataInit = null;
+        appInit.contextDestroyed(scEvent);
+        appInit = null;
         config = null;
         TestDataSource.unbind();
         h2.close();
@@ -73,7 +73,7 @@ public class SqlEntitiesCommitEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("", commitLog, METHOD_POST, SqlEntitiesCommitEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, requestResult.getStatus());
-        assertTrue(requestResult.getBody().contains("\"description\":\"Commit log entry have to contain 'entity' property\""));
+        assertTrue(requestResult.getBody().contains("\"description\":\"Commit log entry has to contain 'entity' property\""));
         assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
         assertNull(requestResult.getLocation());
     }
@@ -84,7 +84,7 @@ public class SqlEntitiesCommitEndPointTest extends SqlEntitiesEndPointTest {
         CompletableFuture<RequestResult> response = mockInOut("", commitLog, METHOD_POST, SqlEntitiesCommitEndPoint::new);
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, requestResult.getStatus());
-        assertTrue(requestResult.getBody().contains("\"description\":\"Commit log entry have to contain 'kind' property\""));
+        assertTrue(requestResult.getBody().contains("\"description\":\"Commit log entry has to contain 'kind' property\""));
         assertTrue(requestResult.getBody().contains("\"status\":" + requestResult.getStatus()));
         assertNull(requestResult.getLocation());
     }

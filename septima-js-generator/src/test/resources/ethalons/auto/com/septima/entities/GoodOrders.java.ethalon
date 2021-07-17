@@ -5,27 +5,30 @@
 package com.septima.entities;
 
 
-import com.septima.entities.goods.GoodsRaw;
-import com.septima.entities.orders.OrdersRaw;
-import com.septima.entities.customers.CustomersRaw;
+import com.septima.entities.goods.GoodsRow;
+import com.septima.entities.orders.OrdersRow;
+import com.septima.entities.customers.CustomersRow;
 import com.septima.entities.SqlEntities;
 import com.septima.model.Model;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class GoodOrders extends Model {
 
-    public class Good extends GoodsRaw {
+    public class Good extends GoodsRow {
 
         @Override
         public void setId(long aValue) {
             long old = getId();
-            if (goods.getByKey().containsKey(old)) {
-                goods.getByKey().remove(old);
-                super.setId(aValue);
-                goods.getByKey().put(aValue, this);
-            } else {
-                super.setId(aValue);
+            if (old != aValue) {
+                if (goods.getByKey().containsKey(old)) {
+                    goods.getByKey().remove(old);
+                    super.setId(aValue);
+                    goods.getByKey().put(aValue, this);
+                } else {
+                    super.setId(aValue);
+                }
             }
         }
 
@@ -35,29 +38,44 @@ public class GoodOrders extends Model {
 
     }
 
-    private final Entity<Long, Good> goods = new Entity<>(
-            "com/septima/entities/goods/goods",
-            "id",
-            Good::getId,
-            datum -> GoodsRaw.of(datum, Good::new),
-            GoodsRaw::asMap,
-            instance -> {
-            },
-            instance -> {
-            }
-    );
+    public class GoodEntity extends Entity<Long, Good> {
+        public GoodEntity(){
+            super(
+                "com/septima/entities/goods/goods",
+                "id",
+                Good::getId,
+                datum -> GoodsRow.of(datum, Good::new),
+                GoodsRow::asMap,
+                instance -> {
+                },
+                instance -> {
+                }
+            );
+        }
 
-    public class Order extends OrdersRaw {
+        public CompletableFuture<Map<Long, Good>> query(
+
+        ) {
+            return query(map(
+
+            ));
+        }
+    }
+
+    private final GoodEntity goods = new GoodEntity();
+    public class Order extends OrdersRow {
 
         @Override
         public void setId(long aValue) {
             long old = getId();
-            if (orders.getByKey().containsKey(old)) {
-                orders.getByKey().remove(old);
-                super.setId(aValue);
-                orders.getByKey().put(aValue, this);
-            } else {
-                super.setId(aValue);
+            if (old != aValue) {
+                if (orders.getByKey().containsKey(old)) {
+                    orders.getByKey().remove(old);
+                    super.setId(aValue);
+                    orders.getByKey().put(aValue, this);
+                } else {
+                    super.setId(aValue);
+                }
             }
         }
 
@@ -132,35 +150,50 @@ public class GoodOrders extends Model {
     private Map<Long, Collection<Order>> ordersByCustomerId = new HashMap<>();
     private Map<Long, Collection<Order>> ordersByGoodId = new HashMap<>();
 
-    private final Entity<Long, Order> orders = new Entity<>(
-            "com/septima/entities/orders/orders",
-            "id",
-            Order::getId,
-            datum -> OrdersRaw.of(datum, Order::new),
-            OrdersRaw::asMap,
-            instance -> {
+    public class OrderEntity extends Entity<Long, Order> {
+        public OrderEntity(){
+            super(
+                "com/septima/entities/orders/orders",
+                "id",
+                Order::getId,
+                datum -> OrdersRow.of(datum, Order::new),
+                OrdersRow::asMap,
+                instance -> {
                 toGroups(instance, ordersBySellerId, instance.getSellerId());
                 toGroups(instance, ordersByCustomerId, instance.getCustomerId());
                 toGroups(instance, ordersByGoodId, instance.getGoodId());
-            },
-            instance -> {
+                },
+                instance -> {
                 fromGroups(instance, ordersBySellerId, instance.getSellerId());
                 fromGroups(instance, ordersByCustomerId, instance.getCustomerId());
                 fromGroups(instance, ordersByGoodId, instance.getGoodId());
-            }
-    );
+                }
+            );
+        }
 
-    public class Customer extends CustomersRaw {
+        public CompletableFuture<Map<Long, Order>> query(
+
+        ) {
+            return query(map(
+
+            ));
+        }
+    }
+
+    private final OrderEntity orders = new OrderEntity();
+    public class Customer extends CustomersRow {
 
         @Override
         public void setId(long aValue) {
             long old = getId();
-            if (customers.getByKey().containsKey(old)) {
-                customers.getByKey().remove(old);
-                super.setId(aValue);
-                customers.getByKey().put(aValue, this);
-            } else {
-                super.setId(aValue);
+            if (old != aValue) {
+                if (customers.getByKey().containsKey(old)) {
+                    customers.getByKey().remove(old);
+                    super.setId(aValue);
+                    customers.getByKey().put(aValue, this);
+                } else {
+                    super.setId(aValue);
+                }
             }
         }
 
@@ -170,31 +203,44 @@ public class GoodOrders extends Model {
 
     }
 
-    private final Entity<Long, Customer> customers = new Entity<>(
-            "com/septima/entities/customers/customers",
-            "id",
-            Customer::getId,
-            datum -> CustomersRaw.of(datum, Customer::new),
-            CustomersRaw::asMap,
-            instance -> {
-            },
-            instance -> {
-            }
-    );
+    public class CustomerEntity extends Entity<Long, Customer> {
+        public CustomerEntity(){
+            super(
+                "com/septima/entities/customers/customers",
+                "id",
+                Customer::getId,
+                datum -> CustomersRow.of(datum, Customer::new),
+                CustomersRow::asMap,
+                instance -> {
+                },
+                instance -> {
+                }
+            );
+        }
 
+        public CompletableFuture<Map<Long, Customer>> query(
+
+        ) {
+            return query(map(
+
+            ));
+        }
+    }
+
+    private final CustomerEntity customers = new CustomerEntity();
     public GoodOrders(SqlEntities aEntities) {
         super(aEntities);
     }
 
-    public Entity<Long, Good> getGoods() {
+    public GoodEntity getGoods() {
         return goods;
     }
 
-    public Entity<Long, Order> getOrders() {
+    public OrderEntity getOrders() {
         return orders;
     }
 
-    public Entity<Long, Customer> getCustomers() {
+    public CustomerEntity getCustomers() {
         return customers;
     }
 

@@ -14,31 +14,49 @@ import java.text.ParseException;
  */
 public enum GenericType {
 
-    GEOMETRY,
-    STRING,
-    DOUBLE,
-    LONG,
-    DATE,
-    BOOLEAN;
+    GEOMETRY("Geometry"),
+    STRING("String"),
+    DOUBLE("Number", "Double"),
+    LONG("Long"),
+    DATE("Date", "Timestamp"),
+    BOOLEAN("Boolean");
+
+    private String text;
+    private String alias;
+
+    GenericType(String aText) {
+        this(aText, null);
+    }
+
+    GenericType(String aText, String aAlias) {
+        text = aText;
+        alias = aAlias;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    boolean isName(String aName) {
+        return text.equalsIgnoreCase(aName) || alias != null && alias.equalsIgnoreCase(aName);
+    }
 
     public static GenericType of(String aValue) {
         return of(aValue, null);
     }
 
     public static GenericType of(String aValue, GenericType defaultType) {
-        if ("Geometry".equalsIgnoreCase(aValue)) {
+        if (GEOMETRY.isName(aValue)) {
             return GEOMETRY;
-        } else if ("String".equalsIgnoreCase(aValue)) {
+        } else if (STRING.isName(aValue)) {
             return STRING;
-        } else if ("Number".equalsIgnoreCase(aValue)) {
+        } else if (DOUBLE.isName(aValue)) {
             return DOUBLE;
-        } else if ("Double".equalsIgnoreCase(aValue)) {
-            return DOUBLE;
-        } else if ("Long".equalsIgnoreCase(aValue)) {
+        } else if (LONG.isName(aValue)) {
             return LONG;
-        } else if ("Date".equalsIgnoreCase(aValue)) {
+        } else if (DATE.isName(aValue)) {
             return DATE;
-        } else if ("Boolean".equalsIgnoreCase(aValue)) {
+        } else if (BOOLEAN.isName(aValue)) {
             return BOOLEAN;
         } else {
             return defaultType;

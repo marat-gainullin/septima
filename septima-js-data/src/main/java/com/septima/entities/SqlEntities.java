@@ -8,34 +8,60 @@ import com.septima.Metadata;
 import com.septima.changes.EntityAction;
 import com.septima.dataflow.DataProvider;
 import com.septima.dataflow.EntityActionsBinder;
+import com.septima.jdbc.DataSources;
 import com.septima.jdbc.UncheckedSQLException;
 import com.septima.metadata.EntityField;
 import com.septima.metadata.ForeignKey;
 import com.septima.metadata.JdbcColumn;
 import com.septima.metadata.Parameter;
-import com.septima.queries.*;
+import com.septima.queries.CaseInsensitiveMap;
+import com.septima.queries.CaseInsensitiveSet;
+import com.septima.queries.ExtractParameters;
+import com.septima.queries.InlineEntities;
+import com.septima.queries.SqlQuery;
 import com.septima.sqldrivers.SqlDriver;
-import net.sf.jsqlparser.JSqlParser;
 import net.sf.jsqlparser.JSqlParserException;
 import net.sf.jsqlparser.SeptimaSqlParser;
 import net.sf.jsqlparser.UncheckedJSqlParserException;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.select.*;
+import net.sf.jsqlparser.statement.select.AllColumns;
+import net.sf.jsqlparser.statement.select.AllTableColumns;
+import net.sf.jsqlparser.statement.select.FromItem;
+import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.select.SelectBody;
+import net.sf.jsqlparser.statement.select.SelectExpressionItem;
+import net.sf.jsqlparser.statement.select.SelectItem;
+import net.sf.jsqlparser.statement.select.SubSelect;
 import net.sf.jsqlparser.syntax.FromItems;
 import net.sf.jsqlparser.syntax.SelectItems;
 import net.sf.jsqlparser.util.deparser.StatementDeParser;
 
 import javax.naming.NamingException;
 import javax.sql.DataSource;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.Spliterators;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
@@ -54,6 +80,9 @@ public class SqlEntities {
     private static final String LOADED_QUERY_MSG = "Entity '%s' loaded.";
     private static final ObjectMapper JSON = new ObjectMapper();
 
+    private final boolean compileEntities;
+    private final boolean useBatches;
+    private final int maximumBatchSize;
     private final Path entitiesRoot;
     private final Path resourcesEntitiesRoot;
     private final String defaultDataSource;
@@ -63,16 +92,17 @@ public class SqlEntities {
     private final Executor futuresExecutor;
 
     private final Map<String, Database> databases = new ConcurrentHashMap<>();
+    private final Map<Database, String> dataSources = new ConcurrentHashMap<>();
 
-    public SqlEntities(Path anEntitiesRoot, String aDefaultDataSource) {
-        this(anEntitiesRoot, aDefaultDataSource, Database.jdbcTasksPerformer(32), ForkJoinPool.commonPool());
+    public SqlEntities(Path anEntitiesRoot, String aDefaultDataSource, boolean aCompileEntities, boolean aUseBatches, int aMaximumBatchSize) {
+        this(anEntitiesRoot, aDefaultDataSource, Database.jdbcTasksPerformer(32), ForkJoinPool.commonPool(), aCompileEntities, aUseBatches, aMaximumBatchSize);
     }
 
-    public SqlEntities(Path anEntitiesRoot, String aDefaultDataSource, Executor aJdbcPerformer, Executor aFuturesExecutor) {
-        this(null, anEntitiesRoot, aDefaultDataSource, aJdbcPerformer, aFuturesExecutor);
+    public SqlEntities(Path anEntitiesRoot, String aDefaultDataSource, Executor aJdbcPerformer, Executor aFuturesExecutor, boolean aCompileEntities, boolean aUseBatches, int aMaximumBatchSize) {
+        this(null, anEntitiesRoot, aDefaultDataSource, aJdbcPerformer, aFuturesExecutor, aCompileEntities, aUseBatches, aMaximumBatchSize);
     }
 
-    public SqlEntities(Path aResourcesEntitiesRoot, Path anEntitiesRoot, String aDefaultDataSource, Executor aJdbcPerformer, Executor aFuturesExecutor) {
+    public SqlEntities(Path aResourcesEntitiesRoot, Path anEntitiesRoot, String aDefaultDataSource, Executor aJdbcPerformer, Executor aFuturesExecutor, boolean aCompileEntities, boolean aUseBatches, int aMaximumBatchSize) {
         super();
         Objects.requireNonNull(
                 Objects.requireNonNullElse(aResourcesEntitiesRoot, anEntitiesRoot),
@@ -86,6 +116,9 @@ public class SqlEntities {
         defaultDataSource = aDefaultDataSource;
         jdbcPerformer = aJdbcPerformer;
         futuresExecutor = aFuturesExecutor;
+        compileEntities = aCompileEntities;
+        useBatches = aUseBatches;
+        maximumBatchSize = aMaximumBatchSize;
     }
 
     private static Map<String, EntityField> columnsToApplicationFields(Map<String, JdbcColumn> tableColumns, SqlDriver aDriver) {
@@ -261,6 +294,10 @@ public class SqlEntities {
         return defaultDataSource;
     }
 
+    public String dataSourceOf(Database aDatabase) {
+        return dataSources.get(aDatabase);
+    }
+
     public SqlEntity loadEntity(String anEntityName) {
         return loadEntity(anEntityName, new HashSet<>());
     }
@@ -297,7 +334,7 @@ public class SqlEntities {
                 } catch (IOException ex) {
                     throw new UncheckedIOException(ex);
                 } catch (JSqlParserException ex) {
-                    throw new UncheckedJSqlParserException(ex);
+                    throw new UncheckedJSqlParserException("Can't parse sql entity: '" + anEntityName + "'", ex);
                 } catch (SQLException ex) {
                     throw new UncheckedSQLException(ex);
                 }
@@ -352,12 +389,14 @@ public class SqlEntities {
             File mainQueryFile = entitiesRoot.resolve(entitySqlFileName).toFile();
             if (mainQueryFile.exists()) {
                 if (!mainQueryFile.isDirectory()) {
-                    return new String(Files.readAllBytes(mainQueryFile.toPath()), StandardCharsets.UTF_8);
+                    return Files.readString(mainQueryFile.toPath(), StandardCharsets.UTF_8);
                 } else {
                     throw new FileNotFoundException(entitySqlFileName + "' at path: " + entitiesRoot + " is a directory.");
                 }
-            } else {
+            } else if (compileEntities) {
                 throw new FileNotFoundException("Can't find '" + entitySqlFileName + "' from path: " + entitiesRoot);
+            } else {
+                return null;
             }
         } else {
             URL resourceUrl = SqlEntities.class.getResource(resolveResourceName(entitySqlFileName));
@@ -365,8 +404,10 @@ public class SqlEntities {
                 try (BufferedReader in = new BufferedReader(new InputStreamReader(SqlEntities.class.getResourceAsStream(resolveResourceName(entitySqlFileName)), StandardCharsets.UTF_8))) {
                     return in.lines().collect(Collectors.joining("\n", "", "\n"));
                 }
-            } else {
+            } else if (compileEntities) {
                 throw new FileNotFoundException("Can't find '" + entitySqlFileName + "' resource from resource path: " + resourcesEntitiesRoot.toString().replace(File.separatorChar, '/'));
+            } else {
+                return null;
             }
         }
     }
@@ -378,10 +419,12 @@ public class SqlEntities {
             File jsonFile = entitiesRoot.resolve(entityJsonFileName).toFile();
             if (jsonFile.exists()) {
                 if (!jsonFile.isDirectory()) {
-                    return new String(Files.readAllBytes(jsonFile.toPath()), StandardCharsets.UTF_8);
+                    return Files.readString(jsonFile.toPath(), StandardCharsets.UTF_8);
                 } else {
                     throw new FileNotFoundException(entityJsonFileName + "' at path: " + entitiesRoot + " is a directory.");
                 }
+            } else if (!compileEntities) {
+                throw new FileNotFoundException("Can't find '" + entityJsonFileName + "' from path: " + entitiesRoot);
             } else {
                 return null;
             }
@@ -391,96 +434,106 @@ public class SqlEntities {
                 try (BufferedReader in = new BufferedReader(new InputStreamReader(SqlEntities.class.getResourceAsStream(resolveResourceName(entityJsonFileName)), StandardCharsets.UTF_8))) {
                     return in.lines().collect(Collectors.joining("\n", "", "\n"));
                 }
+            } else if (!compileEntities) {
+                throw new FileNotFoundException("Can't find '" + entityJsonFileName + "' resource from resource path: " + resourcesEntitiesRoot.toString().replace(File.separatorChar, '/'));
             } else {
                 return null;
             }
         }
     }
 
-    private SqlEntity constructEntity(String anEntityName, String anEntitySql, String anEntityJson, Path aStartOfReferences, Set<String> aIllegalRefrences) throws IOException, JSqlParserException, SQLException {
+    private SqlEntity constructEntity(String anEntityName, String anEntitySql, String anEntityJson, Path aStartOfReferences, Set<String> aIllegalReferences) throws IOException, JSqlParserException, SQLException {
         Objects.requireNonNull(anEntityName, ENTITY_NAME_MISSING_MSG);
-        Objects.requireNonNull(anEntitySql, "anEntitySql is required argument");
-
-        if (!anEntitySql.isEmpty()) {
-            JsonNode entityDocument = anEntityJson != null ? JSON.readTree(anEntityJson) : null;
-
-            JsonNode dataSourceNode = entityDocument != null ? entityDocument.get("source") : null;
-            String dataSource = dataSourceNode != null && dataSourceNode.isTextual() ? dataSourceNode.asText() : defaultDataSource;
-            Database database = databaseOf(dataSource);
-            JsonNode procedureNode = entityDocument != null ? entityDocument.get("procedure") : null;
-            boolean procedure = procedureNode != null && procedureNode.asBoolean();
-
-            JsonNode titleNode = entityDocument != null ? entityDocument.get("title") : null;
-            String title = titleNode != null && titleNode.isTextual() ? titleNode.asText() : anEntityName;
-            JsonNode sqlNode = entityDocument != null ? entityDocument.get("sql") : null;
-            String customSql = sqlNode != null && sqlNode.isTextual() ? sqlNode.asText() : null;
-            JsonNode readonlyNode = entityDocument != null ? entityDocument.get("readonly") : null;
-            boolean readonly = readonlyNode != null && readonlyNode.asBoolean();
-            JsonNode publicNode = entityDocument != null ? entityDocument.get("public") : null;
-            boolean publicAccess = publicNode != null && publicNode.asBoolean();
-            JsonNode pageSizeNode = entityDocument != null ? entityDocument.get("pageSize") : null;
-            int pageSize = pageSizeNode != null && pageSizeNode.isInt() ? pageSizeNode.asInt(DataProvider.NO_PAGING_PAGE_SIZE) : DataProvider.NO_PAGING_PAGE_SIZE;
-
-            JSqlParser sqlParser = new SeptimaSqlParser();
-            Statement querySyntax = sqlParser.parse(new StringReader(anEntitySql));
-
-            boolean command = !(querySyntax instanceof Select);
-            JsonNode commandNode = entityDocument != null ? entityDocument.get("command") : null;
-            command = commandNode != null && commandNode.isBoolean() ? commandNode.asBoolean() : command;
-
-            Map<String, Parameter> params = ExtractParameters.from(querySyntax);
-            // subQueryName, subQueryParameterName, parameterName
-            Map<String, Map<String, String>> paramsBinds = new HashMap<>();
-            JsonNode paramsNode = entityDocument != null ? entityDocument.get("parameters") : null;
-            if (paramsNode != null && paramsNode.isObject()) {
-                paramsNode.fields().forEachRemaining(parameterReader(params, paramsBinds));
+        if (compileEntities) {
+            Objects.requireNonNull(anEntitySql, "anEntitySql is required argument");
+            if (anEntitySql.isBlank()) {
+                throw new IllegalArgumentException("anEntitySql should not be blank");
             }
-
-            InlineEntities.to(querySyntax, this, paramsBinds, aStartOfReferences, aIllegalRefrences);
-            String sqlWithSubQueries = StatementDeParser.assemble(querySyntax);
-            Map<String, EntityField> fields = columnsToApplicationFields(
-                    resolveColumnsBySyntax(database, querySyntax), database.getSqlDriver()
-            );
-
-            Set<String> writable = new CaseInsensitiveSet(new HashSet<>());
-            Set<String> readRoles = new HashSet<>();
-            Set<String> writeRoles = new HashSet<>();
-
-            if (entityDocument != null) {
-                JsonNode fieldsNode = entityDocument.get("fields");
-                if (fieldsNode != null) {
-                    fieldsNode.fields().forEachRemaining(fieldReader(fields, anEntityName));
-                }
-                JsonNode writableNode = entityDocument.get("writable");
-                writable.addAll(jsonStringArrayToSet(writableNode));
-                JsonNode rolesNode = entityDocument.get("roles");
-                if (rolesNode != null && rolesNode.isObject()) {
-                    JsonNode readRolesNode = rolesNode.get("read");
-                    readRoles.addAll(jsonStringArrayToSet(readRolesNode));
-                    JsonNode writeRolesNode = rolesNode.get("write");
-                    writeRoles.addAll(jsonStringArrayToSet(writeRolesNode));
-                }
-            }
-            return new SqlEntity(
-                    database,
-                    sqlWithSubQueries,
-                    customSql,
-                    anEntityName,
-                    readonly,
-                    command,
-                    procedure,
-                    publicAccess,
-                    title,
-                    pageSize,
-                    Collections.unmodifiableMap(params),
-                    Collections.unmodifiableMap(fields),
-                    Collections.unmodifiableSet(writable),
-                    Collections.unmodifiableSet(readRoles),
-                    Collections.unmodifiableSet(writeRoles)
-            );
         } else {
-            throw new IllegalStateException("'" + anEntityName + "' has an empty sql text.");
+            Objects.requireNonNull(anEntityJson, "anEntityJson is required argument if no entities compilation is considered");
+            if (anEntityJson.isBlank()) {
+                throw new IllegalArgumentException("anEntityJson should not be blank");
+            }
         }
+
+        JsonNode entityDocument = anEntityJson != null ? JSON.readTree(anEntityJson) : null;
+
+        JsonNode dataSourceNode = entityDocument != null ? entityDocument.get("source") : null;
+        String dataSource = dataSourceNode != null && dataSourceNode.isTextual() ? dataSourceNode.asText() : defaultDataSource;
+        Database database = databaseOf(dataSource);
+        dataSources.put(database, dataSource);
+
+        JsonNode procedureNode = entityDocument != null ? entityDocument.get("procedure") : null;
+        boolean procedure = procedureNode != null && procedureNode.asBoolean();
+
+        JsonNode titleNode = entityDocument != null ? entityDocument.get("title") : null;
+        String title = titleNode != null && titleNode.isTextual() ? titleNode.asText() : anEntityName;
+        JsonNode sqlNode = entityDocument != null ? entityDocument.get("sql") : null;
+        String customSql = sqlNode != null && sqlNode.isTextual() ? sqlNode.asText() : null;
+        JsonNode readonlyNode = entityDocument != null ? entityDocument.get("readonly") : null;
+        boolean readonly = readonlyNode != null && readonlyNode.asBoolean();
+        JsonNode publicNode = entityDocument != null ? entityDocument.get("public") : null;
+        boolean publicAccess = publicNode != null && publicNode.asBoolean();
+        JsonNode pageSizeNode = entityDocument != null ? entityDocument.get("pageSize") : null;
+        int pageSize = pageSizeNode != null && pageSizeNode.isInt() ? pageSizeNode.asInt(DataProvider.NO_PAGING_PAGE_SIZE) : DataProvider.NO_PAGING_PAGE_SIZE;
+
+        Statement querySyntax = compileEntities ? new SeptimaSqlParser().parse(new StringReader(anEntitySql)) : null;
+
+        JsonNode commandNode = entityDocument != null ? entityDocument.get("command") : null;
+        boolean command = commandNode != null && commandNode.isBoolean() ? commandNode.asBoolean() : querySyntax != null && !(querySyntax instanceof Select);
+
+        Map<String, Parameter> parameters = querySyntax != null ? ExtractParameters.from(querySyntax) : new CaseInsensitiveMap<>(new LinkedHashMap<>());
+        // subQueryName, subQueryParameterName, parameterName
+        Map<String, Map<String, String>> parametersBinds = new HashMap<>();
+        JsonNode paramsNode = entityDocument != null ? entityDocument.get("parameters") : null;
+        if (paramsNode != null && paramsNode.isObject()) {
+            paramsNode.fields().forEachRemaining(parameterReader(parameters, parametersBinds));
+        }
+
+        if (querySyntax != null) {
+            InlineEntities.to(querySyntax, this, parametersBinds, aStartOfReferences, aIllegalReferences);
+        }
+        String sqlWithSubQueries = querySyntax != null ? StatementDeParser.assemble(querySyntax) : null;
+        Map<String, EntityField> fields = querySyntax != null ? columnsToApplicationFields(
+                resolveColumnsBySyntax(database, querySyntax), database.getSqlDriver()
+        ) : new CaseInsensitiveMap<>(new LinkedHashMap<>());
+
+        Set<String> writable = new CaseInsensitiveSet(new HashSet<>());
+        Set<String> readRoles = new HashSet<>();
+        Set<String> writeRoles = new HashSet<>();
+
+        if (entityDocument != null) {
+            JsonNode fieldsNode = entityDocument.get("fields");
+            if (fieldsNode != null) {
+                fieldsNode.fields().forEachRemaining(fieldReader(fields, anEntityName));
+            }
+            JsonNode writableNode = entityDocument.get("writable");
+            writable.addAll(jsonStringArrayToSet(writableNode));
+            JsonNode rolesNode = entityDocument.get("roles");
+            if (rolesNode != null && rolesNode.isObject()) {
+                JsonNode readRolesNode = rolesNode.get("read");
+                readRoles.addAll(jsonStringArrayToSet(readRolesNode));
+                JsonNode writeRolesNode = rolesNode.get("write");
+                writeRoles.addAll(jsonStringArrayToSet(writeRolesNode));
+            }
+        }
+        return new SqlEntity(
+                database,
+                sqlWithSubQueries,
+                customSql,
+                anEntityName,
+                readonly,
+                command,
+                procedure,
+                publicAccess,
+                title,
+                pageSize,
+                Collections.unmodifiableMap(parameters),
+                Collections.unmodifiableMap(fields),
+                Collections.unmodifiableSet(writable),
+                Collections.unmodifiableSet(readRoles),
+                Collections.unmodifiableSet(writeRoles)
+        );
     }
 
     private Map<String, JdbcColumn> resolveColumnsBySyntax(Database database, Statement parsedQuery) throws SQLException {
@@ -606,16 +659,18 @@ public class SqlEntities {
     }
 
     private Database databaseOf(final String aDataSourceName) {
-        Objects.requireNonNull(aDataSourceName, "aDataSourceName ia required argument");
+        Objects.requireNonNull(aDataSourceName, "aDataSourceName is a required argument");
         return databases.computeIfAbsent(aDataSourceName, dsn -> {
             try {
-                DataSource ds = Database.obtainDataSource(aDataSourceName);
-                Metadata metadata = Metadata.of(ds);
+                DataSource dataSource = Database.obtainDataSource(aDataSourceName);
                 return new Database(
-                        ds,
-                        metadata,
+                        dataSource,
+                        DataSources.getDataSourceSqlDriver(dataSource),
+                        compileEntities ? Metadata.of(dataSource) : null,
                         jdbcPerformer,
-                        futuresExecutor
+                        futuresExecutor,
+                        useBatches,
+                        maximumBatchSize
                 );
             } catch (NamingException ex) {
                 throw new IllegalStateException(ex);

@@ -28,8 +28,8 @@ public class SqlEntitiesSchemaEndPointTest extends SqlEntitiesEndPointTest {
     @AfterClass
     public static void tearDown() throws SQLException, NamingException {
         ServletContextEvent scEvent = Mockito.mock(ServletContextEvent.class);
-        dataInit.contextDestroyed(scEvent);
-        dataInit = null;
+        appInit.contextDestroyed(scEvent);
+        appInit = null;
         config = null;
         TestDataSource.unbind();
         h2.close();

@@ -78,10 +78,10 @@ public class SqlEntitiesCommitEndPoint extends SqlEntitiesDataFlowEndPoint {
                                 }
                             }
                         } else {
-                            throw new EndPointException("Commit log entry have to contain 'entity' property");
+                            throw new EndPointException("Commit log entry has to contain 'entity' property");
                         }
                     } else {
-                        throw new EndPointException("Commit log entry have to contain 'kind' property");
+                        throw new EndPointException("Commit log entry has to contain 'kind' property");
                     }
                 }).collect(Collectors.toList());
     }

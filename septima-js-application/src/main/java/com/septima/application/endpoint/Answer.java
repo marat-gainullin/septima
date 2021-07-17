@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.septima.application.Futures;
 import com.septima.application.exceptions.EndPointException;
 import com.septima.application.exceptions.InvalidRequestException;
 import com.septima.application.exceptions.NoAccessException;
@@ -58,13 +59,11 @@ public class Answer {
     private final HttpServletRequest request;
     private final HttpServletResponse response;
     private final AsyncContext context;
-    private final Executor futuresExecutor;
 
-    public Answer(AsyncContext aContext, Executor aFuturesExecutor) {
+    public Answer(AsyncContext aContext) {
         context = aContext;
         request = (HttpServletRequest) aContext.getRequest();
         response = (HttpServletResponse) aContext.getResponse();
-        futuresExecutor = aFuturesExecutor;
     }
 
     private static Charset charsetOf(HttpServletRequest request) {
@@ -253,6 +252,7 @@ public class Answer {
     }
 
     public CompletableFuture<byte[]> input() {
+        Executor futuresExecutor = Futures.getExecutor();
         if (request.getContentLength() > 0) {
             try {
                 CompletableFuture<byte[]> receiving = new CompletableFuture<>();

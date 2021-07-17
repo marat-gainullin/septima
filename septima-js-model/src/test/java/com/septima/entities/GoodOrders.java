@@ -148,7 +148,7 @@ public class GoodOrders extends Model {
                 Order instance = new Order();
 
                 instance.setId((long) datum.get("id"));
-                instance.setCustomerId((long) datum.get("customer_id"));
+                instance.setCustomerId((long) datum.get("customerId"));
                 instance.setSellerId((Long) datum.get("seller_id"));
                 instance.setGoodId((long) datum.get("good_id"));
                 instance.setComment((String) datum.get("comment"));
@@ -162,7 +162,7 @@ public class GoodOrders extends Model {
             },
             instance -> map(
                     entry("id", instance.getId()),
-                    entry("customer_id", instance.getCustomerId()),
+                    entry("customerId", instance.getCustomerId()),
                     entry("seller_id", instance.getSellerId()),
                     entry("good_id", instance.getGoodId()),
                     entry("comment", instance.getComment()),

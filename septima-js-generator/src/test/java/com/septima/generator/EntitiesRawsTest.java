@@ -31,15 +31,18 @@ public class EntitiesRawsTest {
         Path testAppPath = new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath().resolve("rows");
         SqlEntities entities = new SqlEntities(
                 testAppPath,
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         Path destination = new File(System.getProperty("generated.path")).toPath().resolve("rows");
         Path ethalons = new File(System.getProperty("ethalons.path")).toPath().resolve("rows");
         EntitiesRaws generator = EntitiesRaws.fromResources(entities, destination);
         assertTrue(generator.deepToJavaSources(testAppPath) > 0);
-        String customersEntityPathName = "com/septima/entities/customers/CustomersRaw.java";
-        String goodsEntityPathName = "com/septima/entities/goods/GoodsRaw.java";
-        String ordersEntityPathName = "com/septima/entities/orders/OrdersRaw.java";
+        String customersEntityPathName = "com/septima/entities/customers/CustomersRow.java";
+        String goodsEntityPathName = "com/septima/entities/goods/GoodsRow.java";
+        String ordersEntityPathName = "com/septima/entities/orders/OrdersRow.java";
         String ethalonCustomers = Files.readString(ethalons.resolve(customersEntityPathName + ".ethalon"), StandardCharsets.UTF_8);
         String generatedCustomers = Files.readString(destination.resolve(customersEntityPathName), StandardCharsets.UTF_8);
         assertEquals(rn2n(ethalonCustomers), rn2n(generatedCustomers));

@@ -20,6 +20,10 @@ public class Model {
 
     private final SqlEntities sqlEntities;
     private final List<EntityAction> changes = new ArrayList<>();
+    private InstanceAdd lastAdd;
+    private Object lastAddSource;
+    private InstanceChange lastChange;
+    private Object lastChangeSource;
 
     public Model(SqlEntities aEntities) {
         sqlEntities = aEntities;
@@ -63,23 +67,46 @@ public class Model {
             Objects.requireNonNull(e.getKey());
             map.put(e.getKey(), e.getValue());
         }
-        return Collections.unmodifiableMap(map);
+        return map;
     }
 
     private <D, K> PropertyChangeListener listener(SqlQuery query, String keyName, Function<D, K> keyMapper) {
-        return e ->
-                changes.add(new InstanceChange(
-                        query.getEntityName(),
-                        Map.of(keyName, keyName.equals(e.getPropertyName()) ? e.getOldValue() : keyMapper.apply((D) e.getSource())),
-                        Map.of(e.getPropertyName(), e.getNewValue())));
+        return e -> {
+            if (lastAdd != null && lastAddSource == e.getSource()) {
+                lastChange = null;
+                lastChangeSource = null;
+                lastAdd.getData().put(e.getPropertyName(), e.getNewValue());
+            } else {
+                lastAdd = null;
+                lastAddSource = null;
+                if (lastChange != null && lastChangeSource == e.getSource()) {
+                    lastChange.getData().put(e.getPropertyName(), e.getNewValue());
+                } else {
+                    Map<String, Object> keys = Map.of(keyName, keyName.equals(e.getPropertyName()) ? e.getOldValue() : keyMapper.apply((D) e.getSource()));
+                    Map<String, Object> data = new HashMap<>();
+                    data.put(e.getPropertyName(), e.getNewValue());
+
+                    lastChange = new InstanceChange(
+                            query.getEntityName(),
+                            keys,
+                            data);
+                    lastChangeSource = e.getSource();
+                    changes.add(lastChange);
+                }
+            }
+        };
     }
 
-    public void addEntityCommand(String anEntity, Map<String, Object> parameters){
+    public void addEntityCommand(String anEntity, Map<String, Object> parameters) {
         changes.add(new EntityCommand(anEntity, parameters));
     }
 
     public void dropChanges() {
         changes.clear();
+        lastAdd = null;
+        lastAddSource = null;
+        lastChange = null;
+        lastChangeSource = null;
     }
 
     public CompletableFuture<Integer> save() {
@@ -88,7 +115,7 @@ public class Model {
                 .collect(Collectors.toList());
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[]{}))
                 .thenApply(v -> {
-                    changes.clear();
+                    dropChanges();
                     return futures.stream()
                             .map(f -> f.getNow(0))
                             .reduce(Integer::sum).orElse(0);
@@ -188,23 +215,44 @@ public class Model {
             domainData.values().forEach(classifier);
             return new ObservableMap<>(domainData,
                     (aKey, removedValue, addedValue) -> {
+                        lastAdd = null;
+                        lastAddSource = null;
+                        // WARNING! Don't refactor this as other cases of changes.
+                        // The following InstanceChange is not treated as an accumulator because we want to
+                        // separate all-fields change from one by one changes.
+                        // This is why lastChange is nullified here.
+                        lastChange = null;
+                        lastChangeSource = null;
                         onRemoved.apply(removedValue);
                         D added = onAdded.apply(addedValue);
                         // Warning! This case is not about instance's fields changes.
                         // It is change of one instance to another.
                         // So, the old instance can be deleted from database and than, another instance should be added with the same key.
                         // But in this case we can just update all fields in the database and avoid extra sql statement.
-                        changes.add(new InstanceChange(query.getEntityName(), Map.of(keyName, keyOf.apply(added)), reverseMapper.apply(added)));
+                        InstanceChange change = new InstanceChange(query.getEntityName(), Map.of(keyName, keyOf.apply(added)), reverseMapper.apply(added));
+                        changes.add(change);
                     },
                     (aKey, removedValue, addedValue) -> {
+                        lastAdd = null;
+                        lastAddSource = null;
+                        lastChange = null;
+                        lastChangeSource = null;
                         D removed = onRemoved.apply(removedValue);
                         changes.add(new InstanceRemove(query.getEntityName(), Map.of(keyName, keyOf.apply(removed))));
                     },
                     (aKey, removedValue, addedValue) -> {
                         D added = onAdded.apply(addedValue);
-                        changes.add(new InstanceAdd(query.getEntityName(), reverseMapper.apply(added)));
+                        lastAdd = new InstanceAdd(query.getEntityName(), reverseMapper.apply(added));
+                        lastAddSource = added;
+                        lastChange = null;
+                        lastChangeSource = null;
+                        changes.add(lastAdd);
                     }
             );
+        }
+
+        public Map<K, D> of(){
+            return toDomain(Set.of());
         }
     }
 }

@@ -1,76 +1,71 @@
 package com.septima.gradle;
 
-import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
-import com.septima.entities.SqlEntities;
 import com.septima.generator.ModelsDomains;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 
 public class GenerateDomains extends GenerateTask {
 
     private ModelsDomains generator;
 
     @InputDirectory
-    private File modelsDir;
+    private File sourceDir;
 
     @OutputDirectory
-    private File generatedSourcesDir;
+    private File targetDir;
 
-    public File getModelsDir() {
-        return modelsDir;
+    public File getSourceDir() {
+        return sourceDir;
     }
 
-    public void setModelsDir(File modelsDir) {
-        this.modelsDir = modelsDir;
+    public void setSourceDir(File sourceDir) {
+        this.sourceDir = sourceDir;
     }
 
-    public File getGeneratedSourcesDir() {
-        return generatedSourcesDir;
+    public File getTargetDir() {
+        return targetDir;
     }
 
-    public void setGeneratedSourcesDir(File generatedSourcesDir) {
-        this.generatedSourcesDir = generatedSourcesDir;
+    public void setTargetDir(File targetDir) {
+        this.targetDir = targetDir;
     }
 
     @TaskAction
-    public void generate(IncrementalTaskInputs inputs) throws IOException {
+    public void generate() throws IOException {
         if (sqlEntities == null) {
             throw new GradleException("Property 'sqlEntities' is required for" +
                     " the task");
         }
-        if (generator == null)
-            generator = ModelsDomains.fromResources(sqlEntities, modelsDir.toPath(), generatedSourcesDir.toPath());
-
-        if (!inputs.isIncremental()) {
-            getProject().delete(generatedSourcesDir.listFiles());
+        if (generator == null) {
+            generator = ModelsDomains.fromResources(sqlEntities, sourceDir.toPath(), targetDir.toPath());
         }
 
-        inputs.outOfDate(change -> {
-            try {
-                if (change.getFile().getName().endsWith(".model.json")) {
-                    Path generatedClass = generator.toJavaSource(change.getFile().toPath());
-                    System.out.println("Model definition '" + change.getFile() + "' transformed to '" + generatedClass + "'");
-                }
-            } catch (IOException ex) {
-                throw new UncheckedIOException(ex);
-            }
-        });
+        System.out.println("Models definitions are read from '" + sourceDir.toPath() + "'");
+        System.out.println("Generated model classes are written to '" + targetDir.toPath() + "'");
 
-        inputs.removed(change -> {
-            if (change.getFile().getName().endsWith(".model.json")) {
-                File targetFile = generator.considerJavaSource(change.getFile().toPath()).toFile();
-                if (targetFile.exists()) {
-                    targetFile.delete();
-                    System.out.println("Removed generated model class: " + targetFile);
+        Path sourcePath = sourceDir.toPath();
+        Path targetPath = targetDir.toPath();
+        Files.walkFileTree(sourceDir.toPath(), new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) throws IOException {
+                File file = filePath.toFile();
+                if (!file.isDirectory()) {
+                    if (file.getName().endsWith(".model.json")) {
+                        Path generatedClass = generator.toJavaSource(filePath);
+                        System.out.println("Model definition '" + sourcePath.relativize(filePath) + "' transformed to '" + targetPath.relativize(generatedClass) + "'");
+                    }
                 }
+                return FileVisitResult.CONTINUE;
             }
         });
     }

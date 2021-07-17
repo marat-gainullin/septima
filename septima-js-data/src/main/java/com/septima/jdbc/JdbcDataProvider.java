@@ -1,14 +1,22 @@
 package com.septima.jdbc;
 
 import com.septima.GenericType;
-import com.septima.metadata.Parameter;
 import com.septima.dataflow.DataProvider;
 import com.septima.metadata.EntityField;
+import com.septima.metadata.Parameter;
 
 import javax.sql.DataSource;
-import java.sql.*;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TimeZone;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.logging.Level;
@@ -54,8 +62,11 @@ public abstract class JdbcDataProvider implements DataProvider {
      *                            applying data changes.
      * @param aJdbcReaderAssigner Jdbc {@link PreparedStatement} and {@link CallableStatement} parameters handler.
      * @param aAsyncDataPuller    {@link Executor} for Jdbc blocking tasks.
+     * @param aFutureExecutor     An executor for input output completions.
      * @param aClause             A sql clause, dataSource should use transform achieve
      *                            PreparedStatement instance transform use it in the result set querying process.
+     * @param aPageSize           A maximum count of records fetches on a sinlge page, while using paged fetching.
+     * @param aProcedure          A flag, indicating, that the query is a stored procedure and might have out parameters.
      * @param aExpectedFields     Fields, expected by Septima according transform metadata analysis.
      * @see DataSource
      */
@@ -117,7 +128,7 @@ public abstract class JdbcDataProvider implements DataProvider {
                                 Parameter param = aParams.get(i - 1);
                                 jdbcReaderAssigner.acceptOutParameter(param, cStmt, i, connection);
                             }
-                            // let's return a ResultSet
+                            // let's return ResultSet
                             results = cStmt.getResultSet();
                         } else {
                             results = statement.executeQuery();

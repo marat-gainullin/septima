@@ -1,12 +1,15 @@
 package net.sf.jsqlparser.statement.select;
 
+import net.sf.jsqlparser.expression.NamedParameter;
+
 /**
  * A top clause in the form [TOP row_count]
  */
 public class Top {
 
     private long rowCount;
-    private boolean rowCountJdbcParameter = false;
+    private boolean rowCountJdbcParameter;
+    private NamedParameter rowCountNamedParameter;
     private String commentTop;
     private String commentTopValue;
 
@@ -24,6 +27,14 @@ public class Top {
 
     public void setRowCountJdbcParameter(boolean b) {
         rowCountJdbcParameter = b;
+    }
+
+    public NamedParameter getRowCountNamedParameter() {
+        return rowCountNamedParameter;
+    }
+
+    public void setRowCountNamedParameter(NamedParameter rowCountNamedParameter) {
+        this.rowCountNamedParameter = rowCountNamedParameter;
     }
 
     public String toString() {

@@ -7,6 +7,7 @@ ${entitiesRowsImports}import com.septima.entities.SqlEntities;
 import com.septima.model.Model;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class ${modelClass} extends Model {
 

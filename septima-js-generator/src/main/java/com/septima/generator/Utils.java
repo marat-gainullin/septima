@@ -2,6 +2,7 @@ package com.septima.generator;
 
 import com.septima.GenericType;
 import com.septima.metadata.EntityField;
+import com.septima.metadata.Parameter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -85,6 +86,28 @@ public class Utils {
         }
     }
 
+    public static String javaType(Parameter aParameter) {
+        if (aParameter.getType() != null) {
+            switch (aParameter.getType()) {
+                case STRING:
+                    return "String";
+                case LONG:
+                    return "Long";
+                case DOUBLE:
+                    return "Double";
+                case DATE:
+                    return "java.time.Instant";
+                case BOOLEAN:
+                    return "Boolean";
+                case GEOMETRY:
+                    return "String";
+                default:
+                    return "String";
+            }
+        } else {
+            return "String";
+        }
+    }
     public static String toPascalCase(String name) {
         return Stream.of(name.replaceAll("[^0-9a-zA-Z_]", "_").split("_+"))
                 .filter(part -> !part.isEmpty())
@@ -95,7 +118,7 @@ public class Utils {
     }
 
     public static String rawClass(String name) {
-        return toPascalCase(name) + "Raw";
+        return toPascalCase(name) + "Row";
     }
 
     public static String loadResource(String resourceName, Charset aCharset, String lf) throws IOException {
@@ -104,7 +127,7 @@ public class Utils {
         }
     }
 
-    private static Pattern VAR_PATTERN = Pattern.compile("\\$\\{([a-zA-Z0-9_]+)\\}");
+    private static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{([a-zA-Z0-9_]+)\\}");
 
     public static StringBuilder replaceVariables(String aBody, Map<String, String> aVariables, String lf) {
         StringBuilder body = new StringBuilder();

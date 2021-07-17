@@ -6,22 +6,30 @@ import com.septima.entities.SqlEntities;
 import com.septima.entities.SqlEntity;
 import com.septima.metadata.EntityField;
 import com.septima.metadata.Field;
+import com.septima.metadata.Parameter;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Spliterators;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class ModelsDomains {
+public class ModelsDomains extends EntitiesProcessor {
 
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final String INDENT_12 = "            ";
+    private static final String INDENT_16 = "                ";
 
     private final String modelTemplate;
     private final String modelEntityGetterTemplate;
@@ -34,11 +42,7 @@ public class ModelsDomains {
     private final String nullableScalarPropertyTemplate;
     private final String collectionPropertyTemplate;
 
-    private final SqlEntities entities;
-    private final Path destination;
     private final Path modelsRoot;
-    private final String lf;
-    private final Charset charset;
 
     public static ModelsDomains fromResources(SqlEntities anEntities, Path aModelsRoot, Path aDestination) throws IOException {
         return fromResources(anEntities, aModelsRoot, aDestination, StandardCharsets.UTF_8, System.lineSeparator());
@@ -71,9 +75,8 @@ public class ModelsDomains {
                           String aNullableScalarPropertyTemplate,
                           String aCollectionPropertyTemplate,
                           String aLf, Charset aCharset) {
-        entities = anEntities;
+        super(anEntities, aDestination, aLf, aCharset);
         modelsRoot = aModelsRoot;
-        destination = aDestination;
         modelTemplate = aModelTemplate;
         modelEntityTemplate = aModelEntityTemplate;
         modelEntityGetterTemplate = aModelEntityGetterTemplate;
@@ -84,8 +87,6 @@ public class ModelsDomains {
         requiredScalarPropertyTemplate = aRequiredScalarPropertyTemplate;
         nullableScalarPropertyTemplate = aNullableScalarPropertyTemplate;
         collectionPropertyTemplate = aCollectionPropertyTemplate;
-        lf = aLf;
-        charset = aCharset;
     }
 
     public Path considerJavaSource(Path modelDefinition) {
@@ -134,7 +135,7 @@ public class ModelsDomains {
                 .orElse(0);
     }
 
-    private class Reference {
+    private static class Reference {
         private final String property;
         private final String type;
         private final String source;
@@ -163,7 +164,7 @@ public class ModelsDomains {
         }
     }
 
-    private class ModelEntity {
+    private static class ModelEntity {
         private final String modelName;
         private final Map<String, EntityField> fieldsByProperty;
         private final Map<String, Reference> inReferences = new HashMap<>();
@@ -257,6 +258,23 @@ public class ModelsDomains {
                 .toString();
     }
 
+    private String generateQueryParameters(ModelEntity aEntity) {
+        return aEntity.entity.getParameters().values().stream()
+                .map(p -> new StringBuilder(INDENT_12).append(Utils.javaType(p)).append(" ").append(fieldToProperty(p.getName())))
+                .reduce((p1, p2) -> p1.append(",").append(lf).append(p2))
+                .orElse(new StringBuilder())
+                .toString();
+    }
+
+    private String generateQueryParametersMapping(ModelEntity aEntity) {
+        return aEntity.entity.getParameters().values().stream()
+                .map(Parameter::getName)
+                .map(name -> new StringBuilder(INDENT_16).append("entry(\"").append(name).append("\"").append(", ").append(fieldToProperty(name)).append(")"))
+                .reduce((p1, p2) -> p1.append(",").append(lf).append(p2))
+                .orElse(new StringBuilder())
+                .toString();
+    }
+
     private String generateScalarProperties(ModelEntity aEntity, Map<String, ModelEntity> modelEntities) {
         return aEntity.outReferences.values().stream()
                 .filter(reference -> {
@@ -266,10 +284,13 @@ public class ModelsDomains {
                     return modelEntities.containsKey(reference.destination);
                 })
                 .filter(reference -> {
-                    if (!aEntity.fieldsByProperty.containsKey(reference.property)) {
-                        Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "No reference property '" + reference.property + "' found in model entity '" + aEntity.modelName + "' while scalar property '" + aEntity.modelName + "." + reference.scalar + "' generation");
+                    Field field = aEntity.fieldsByProperty.get(reference.property);
+                    if (field == null) {
+                        Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "No base field '" + reference.property + "' found in model entity '" + aEntity.modelName + "' while scalar property '" + aEntity.modelName + "." + reference.scalar + "' generation");
+                    } else if (field.isPk()) {
+                        Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "Reference property '" + reference.property + "' in model entity '" + aEntity.modelName + "' ignored while scalar property '" + aEntity.modelName + "." + reference.scalar + "' generation. Scalar properties based on primary keys are not supported.");
                     }
-                    return aEntity.fieldsByProperty.containsKey(reference.property);
+                    return field != null && !field.isPk(); // If the field is a PK and FK at the same time, we ignore its scalar reference. So we have to filter it out here.
                 })
                 .map(reference -> {
                     ModelEntity target = modelEntities.get(reference.destination);
@@ -329,7 +350,9 @@ public class ModelsDomains {
                 Map.entry("entityRef", anEntity.entity.getName()),
                 Map.entry("entityKey", anEntity.key),
                 Map.entry("entityKeyGetter", anEntity.keyGetter),
-                Map.entry("entityKeyMutator", anEntity.keyMutator)
+                Map.entry("entityKeyMutator", anEntity.keyMutator),
+                Map.entry("queryParameters", generateQueryParameters(anEntity)),
+                Map.entry("queryParametersMapping", generateQueryParametersMapping(anEntity))
         ), lf).toString();
     }
 
@@ -402,11 +425,11 @@ public class ModelsDomains {
                                             .map(modelEntity -> modelEntity.modelName)
                                             .map(name -> new StringBuilder().append("'").append(name).append("'"))
                                             .reduce((name1, name2) -> name1.append(", ").append(name2))
-                                            .get()
+                                            .orElseGet(StringBuilder::new)
                                             .toString() + "]");
                                 }
                             } else {
-                                Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "Property '" + propertyName + "' is not suitable for scalar property name generation in model entity '" + sourceEntity.modelName);
+                                Logger.getLogger(ModelsDomains.class.getName()).log(Level.WARNING, "Property '" + propertyName + "' is not suitable for scalar property name generation in model entity '" + sourceEntity.modelName + "'");
                             }
                         })
                 );
@@ -443,7 +466,9 @@ public class ModelsDomains {
                     Path entityRelativePath = entities.getEntitiesRoot().relativize(entityPath);
                     String entityRef = entityRelativePath.toString().replace('\\', '/');
                     SqlEntity entity = entities.loadEntity(entityRef);
-
+                    if (entity.isCommand()) {
+                        throw new IllegalStateException("Model entity can't be based on a DML query ('" + modelEntityName + "' in model '" + modelPath + "').");
+                    }
                     Map<String, EntityField> fieldsByProperty = entity.getFields().values().stream()
                             .collect(Collectors.toMap(field -> fieldToProperty(field.getName()), Function.identity()));
 
@@ -474,7 +499,7 @@ public class ModelsDomains {
                     JsonNode keyNode = entityBodyNode.get("key");
                     EntityField keyField;
                     if (keyNode != null && keyNode.isTextual() && !keyNode.asText().isEmpty()) {
-                        // This should be field name, but we want to be able to use both 'pet_id' or 'petId' names
+                        // This should be a field name, but we want to be able to use both 'pet_id' or 'petId' names
                         String keyPropertyName = fieldToProperty(keyNode.asText());
                         keyField = fieldsByProperty.get(keyPropertyName);
                     } else {
@@ -515,12 +540,8 @@ public class ModelsDomains {
                 .collect(Collectors.toMap(modelEntity -> modelEntity.modelName, Function.identity()));
     }
 
-    private static String mutatorArg(String field) {
-        return "a" + Utils.toPascalCase(field);
-    }
-
     /**
-     * Transforms name like {@code customer_id} into name like {@code customerId}
+     * Transforms a name like {@code customer_id} into a name like {@code customerId}
      * It is idempotent. So if model's references are declared under names {@code customer_id} or {@code customerId} in *.model.json, - they are equivalent.
      * Warning! If such declarations are present in both forms, only one will survive.
      *

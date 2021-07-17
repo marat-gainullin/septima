@@ -27,7 +27,7 @@ public class SqlEntityTest {
 
     @Test(expected = IllegalStateException.class)
     public void sqlEntityEmptySql() throws Exception {
-        SqlEntity entity = new SqlEntity(Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)),
+        SqlEntity entity = new SqlEntity(Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1),
                 "",
                 null,
                 "",
@@ -45,7 +45,7 @@ public class SqlEntityTest {
 
     @Test
     public void sqlEntityCustomSql() throws Exception {
-        SqlEntity entity = new SqlEntity(Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)),
+        SqlEntity entity = new SqlEntity(Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1),
                 "select f1, f2 from table",
                 "select f1, f2::json from table",
                 "",
@@ -64,7 +64,7 @@ public class SqlEntityTest {
 
     @Test
     public void sqlEntityStructure() throws Exception {
-        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
+        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1);
         SqlEntity entity = new SqlEntity(database,
                 "select f1, f2 from table",
                 "select f1, f2::json from table",
@@ -81,10 +81,10 @@ public class SqlEntityTest {
         assertSame(database, entity.getDatabase());
         assertEquals("select f1, f2 from table", entity.getSqlText());
         assertEquals("select f1, f2::json from table", entity.getCustomSqlText());
-        assertEquals(true, entity.isReadonly());
-        assertEquals(true, entity.isCommand());
-        assertEquals(true, entity.isProcedure());
-        assertEquals(true, entity.isPublicAccess());
+        assertTrue(entity.isReadonly());
+        assertTrue(entity.isCommand());
+        assertTrue(entity.isProcedure());
+        assertTrue(entity.isPublicAccess());
         assertEquals("testEntity", entity.getName());
         assertEquals("Awesome sql based entity", entity.getTitle());
         assertEquals(64, entity.getPageSize());
@@ -98,13 +98,13 @@ public class SqlEntityTest {
         assertEquals("select f1, f2::json from table", query.getSqlClause());
         assertEquals("testEntity", query.getEntityName());
         assertEquals(64, query.getPageSize());
-        assertEquals(true, query.isProcedure());
+        assertTrue(query.isProcedure());
     }
 
     @Test
     public void namedParametersExtraction() throws Exception {
         SqlEntity entity = new SqlEntity(
-                Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)),
+                Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1),
                 "select a.id::json, /*multil/i*ne \n com \r ment * /text :pp1 */'jj :pp2 ww' txt from assets a\n" +
                         "-- line :comment text\r" +
                         "-- line :comment text\n" +
@@ -124,7 +124,7 @@ public class SqlEntityTest {
     @Test
     public void namedParametersToJdbcParameters() throws Exception {
         SqlEntity entity = new SqlEntity(
-                Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)),
+                Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1),
                 "select a.id::json ajson, /*multil/i*ne \n" +
                         " com \r" +
                         " ment * /'jj '':pp ww' txt from assets a\n" +

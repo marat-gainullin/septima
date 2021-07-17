@@ -8,6 +8,8 @@ package net.sf.jsqlparser.test;
 import net.sf.jsqlparser.JSqlParserException;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.FromItem;
+import net.sf.jsqlparser.statement.select.Limit;
+import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.syntax.FromItems;
 import org.junit.Test;
@@ -16,6 +18,7 @@ import java.io.StringReader;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -115,5 +118,68 @@ public class OperateTest extends GeneralTest{
     public void insert4ParamsTest() throws JSqlParserException {
         String statement = "insert into MTD_ENTITIES(MDENT_ID, MDENT_TYPE, MDENT_NAME, MDENT_CONTENT_TXT) values (:id, :type, :name, :content)";
         checkParseAndDeparse(statement);
+    }
+
+    @Test
+    public void selectWithLimitRowCount() throws JSqlParserException {
+        String statement = "select * from tbl limit 1";
+        Select parsed = (Select) checkParseAndDeparse(statement);
+        Limit limit = ((PlainSelect)parsed.getSelectBody()).getLimit();
+        assertEquals(1, limit.getRowCount());
+        String statementWithParameter = "select * from tbl limit :aRowCount";
+        checkParseAndDeparse(statementWithParameter);
+    }
+
+    @Test
+    public void selectWithLimitOffsetAndRowCountMySql() throws JSqlParserException {
+        String statement = "select * from tbl limit 1, 45";
+        Select parsed = (Select) checkParseAndDeparse(statement);
+        Limit limit = ((PlainSelect)parsed.getSelectBody()).getLimit();
+        assertEquals(1, limit.getOffset());
+        assertEquals(45, limit.getRowCount());
+        String statementWithParameter = "select * from tbl limit :aOffset, :aRowCount";
+        checkParseAndDeparse(statementWithParameter);
+    }
+
+    @Test
+    public void selectWithLimitOffsetAndRowCountPostgreSql() throws JSqlParserException {
+        String statement = "select * from tbl limit 1 offset 45";
+        Select parsed = (Select) checkParseAndDeparse(statement);
+        Limit limit = ((PlainSelect)parsed.getSelectBody()).getLimit();
+        assertEquals(1, limit.getRowCount());
+        assertEquals(45, limit.getOffset());
+        String statementWithParameter = "select * from tbl limit :aRowCount offset :aOffset";
+        checkParseAndDeparse(statementWithParameter);
+    }
+
+    @Test
+    public void selectWithOffsetWithoutLimitPostgreSql() throws JSqlParserException {
+        String statement = "select * from tbl offset 45";
+        Select parsed = (Select) checkParseAndDeparse(statement);
+        Limit limit = ((PlainSelect)parsed.getSelectBody()).getLimit();
+        assertEquals(45, limit.getOffset());
+        String statementWithParameter = "select * from tbl offset :aOffset";
+        checkParseAndDeparse(statementWithParameter);
+    }
+
+    @Test
+    public void selectWithLimitOffsetAndRowCountPostgreSqlWithAll() throws JSqlParserException {
+        String statement = "select * from tbl limit all offset 45";
+        Select parsed = (Select) checkParseAndDeparse(statement);
+        Limit limit = ((PlainSelect)parsed.getSelectBody()).getLimit();
+        assertTrue(limit.isLimitAll());
+        assertEquals(45, limit.getOffset());
+        String statementWithParameter = "select * from tbl limit all offset :aOffset";
+        checkParseAndDeparse(statementWithParameter);
+    }
+
+    @Test
+    public void selectWithLimitRowCountPostgreSqlWithAll() throws JSqlParserException {
+        String statement = "select * from tbl limit all";
+        Select parsed = (Select) checkParseAndDeparse(statement);
+        Limit limit = ((PlainSelect)parsed.getSelectBody()).getLimit();
+        assertTrue(limit.isLimitAll());
+        String statementWithParameter = "select * from tbl limit all";
+        checkParseAndDeparse(statementWithParameter);
     }
 }

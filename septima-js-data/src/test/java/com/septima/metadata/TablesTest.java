@@ -23,7 +23,7 @@ public class TablesTest {
 
     @Test
     public void schemaMetadataOnDemand() throws Exception {
-        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
+        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1);
         assertNotNull(database);
         Metadata metadata = database.getMetadata();
         assertNotNull(metadata);
@@ -35,7 +35,7 @@ public class TablesTest {
 
     @Test
     public void assetsCaseInsensitiveColumns() throws Exception {
-        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
+        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1);
         assertNotNull(database);
         Metadata metadata = database.getMetadata();
         assertNotNull(metadata);
@@ -52,7 +52,7 @@ public class TablesTest {
 
     @Test
     public void assetsColumns() throws Exception {
-        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
+        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1);
         assertNotNull(database);
         Metadata metadata = database.getMetadata();
         assertNotNull(metadata);
@@ -86,7 +86,7 @@ public class TablesTest {
 
     @Test
     public void assetsPrimaryKeys() throws Exception {
-        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
+        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1);
         assertNotNull(database);
         Metadata metadata = database.getMetadata();
         assertNotNull(metadata);
@@ -100,7 +100,7 @@ public class TablesTest {
 
     @Test
     public void defaultSchema() throws Exception {
-        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
+        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1);
         assertEquals("public", database.getMetadata().getDefaultSchema().toLowerCase());
         assertTrue(database.getMetadata().containsTable("AsseTs"));
         assertTrue(database.getMetadata().containsTable("pubLiC.AsseTs"));
@@ -120,7 +120,7 @@ public class TablesTest {
 
     @Test
     public void assetGroupsForeignKeys() throws Exception {
-        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME));
+        Database database = Database.of(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), 32, true, 1);
         assertNotNull(database);
         Metadata metadata = database.getMetadata();
         assertNotNull(metadata);

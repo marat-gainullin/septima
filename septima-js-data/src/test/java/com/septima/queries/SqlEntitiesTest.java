@@ -36,7 +36,10 @@ public class SqlEntitiesTest {
     public void badDataSource() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         entities.loadEntity("entities/bad-data-source");
     }
@@ -49,7 +52,10 @@ public class SqlEntitiesTest {
     public void unparsableSqlText() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         entities.loadEntity("entities/unparsable");
     }
@@ -58,7 +64,10 @@ public class SqlEntitiesTest {
     public void withUnparsableSubEntity() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         entities.loadEntity("entities/inline/with-unparsable-sub-entity");
     }
@@ -67,7 +76,10 @@ public class SqlEntitiesTest {
     public void cyclicHashRefsTwoElements() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         entities.loadEntity("entities/inline/cyclic/a");
     }
@@ -76,25 +88,34 @@ public class SqlEntitiesTest {
     public void cyclicHashRefsThreeElements() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         entities.loadEntity("entities/inline/cyclic/a1");
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void emptyEntity() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         entities.loadEntity("entities/empty");
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void withEmptySubEntity() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         entities.loadEntity("entities/empty");
     }
@@ -103,7 +124,10 @@ public class SqlEntitiesTest {
     public void absentEntity() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         entities.loadEntity("entities/absentEntity");
     }
@@ -112,7 +136,10 @@ public class SqlEntitiesTest {
     public void directoryInsteadOfEntitySqlFile() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         entities.loadEntity("entities/directory-entity");
     }
@@ -121,7 +148,10 @@ public class SqlEntitiesTest {
     public void withAbsentSubEntity() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         entities.loadEntity("entities/inline/delete-in-select/with-absent-sub-entity");
     }
@@ -130,7 +160,10 @@ public class SqlEntitiesTest {
     public void withInlinedDelete() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         entities.loadEntity("entities/inline/delete-in-select/with-delete");
     }
@@ -139,7 +172,10 @@ public class SqlEntitiesTest {
     public void ethalonJsonContent() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         SqlEntity entity = entities.loadEntity("entities/ethalon");
         assertNotNull(entity);
@@ -218,7 +254,10 @@ public class SqlEntitiesTest {
     public void ethalonJsonMergedContent() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         SqlEntity entity = entities.loadEntity("entities/ethalon-overriden-fields");
         assertNotNull(entity);
@@ -250,7 +289,10 @@ public class SqlEntitiesTest {
     public void simpleInline() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         assertEquals(System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME), entities.getDefaultDataSource());
         SqlEntity entity = entities.loadEntity("entities/inline/simple/a");
@@ -271,7 +313,10 @@ public class SqlEntitiesTest {
     public void variousCase() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         SqlEntity entity = entities.loadEntity("entities/case/with-various-case");
         assertEquals(4, entity.getFields().size());
@@ -297,7 +342,10 @@ public class SqlEntitiesTest {
     public void multiplePrimaryKeys() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         SqlEntity entity = entities.loadEntity("entities/keys/with-multiple-primary-keys");
         EntityField mdent_id = entity.getFields().get("mdent_id");
@@ -312,7 +360,10 @@ public class SqlEntitiesTest {
     public void allColumnsTwoTables() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         SqlEntity entity = entities.loadEntity("entities/all-columns/two-tables");
         assertNotNull(entity);
@@ -331,7 +382,10 @@ public class SqlEntitiesTest {
     public void allColumnsOneTableOneFieldFromOtherTable() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         SqlEntity entity = entities.loadEntity("entities/all-columns/one-table-one-field");
         assertNotNull(entity);
@@ -348,7 +402,10 @@ public class SqlEntitiesTest {
     public void allColumnsWithSubEntity() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         SqlEntity entity = entities.loadEntity("entities/all-columns/with-sub-entity");
         assertNotNull(entity);
@@ -370,7 +427,10 @@ public class SqlEntitiesTest {
     public void allColumnsOneSubEntity() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         SqlEntity entity = entities.loadEntity("entities/all-columns/one-sub-entity");
         assertNotNull(entity);
@@ -384,7 +444,10 @@ public class SqlEntitiesTest {
     public void columnsWithoutSource() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         SqlEntity entity = entities.loadEntity("entities/columns/without-source");
         assertNotNull(entity);
@@ -405,7 +468,10 @@ public class SqlEntitiesTest {
     public void columnsWithAliases() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         SqlEntity entity = entities.loadEntity("entities/columns/with-aliases");
         assertNotNull(entity);
@@ -420,7 +486,10 @@ public class SqlEntitiesTest {
     public void columnsWithoutAliases() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         SqlEntity entity = entities.loadEntity("entities/columns/without-aliases");
         assertNotNull(entity);
@@ -435,7 +504,10 @@ public class SqlEntitiesTest {
     public void columnsFromTablesWithAndWithoutAliases() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         SqlEntity entity = entities.loadEntity("entities/columns/from-tables-with-and-without-aliases");
         assertNotNull(entity);
@@ -450,7 +522,10 @@ public class SqlEntitiesTest {
     public void withSchemaInColumns() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         SqlEntity entity = entities.loadEntity("entities/columns/with-schema-in-columns");
         assertEquals(4, entity.getFields().size());
@@ -476,7 +551,10 @@ public class SqlEntitiesTest {
     public void expressionColumn() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                false,
+                1
         );
         SqlEntity entity = entities.loadEntity("entities/columns/expression-column");
         assertNotNull(entity);
@@ -488,7 +566,10 @@ public class SqlEntitiesTest {
     public void expressionColumnWithoutAlias() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         SqlEntity entity = entities.loadEntity("entities/columns/expression-column-without-alias");
         assertNotNull(entity);

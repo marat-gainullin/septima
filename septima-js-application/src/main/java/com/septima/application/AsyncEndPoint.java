@@ -8,30 +8,26 @@ import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public abstract class AsyncEndPoint extends HttpServlet implements HttpEndPoint {
 
-    protected transient volatile Executor futuresExecutor;
-
     private void handleAsync(Consumer<Answer> aHandler, AsyncContext aContext) {
-        aHandler.accept(new Answer(aContext, futuresExecutor));
+        aHandler.accept(new Answer(aContext));
     }
 
     /**
      * This method is final because of security risks.
      * Servlet container may expose security-sensitive information to a client through
-     * an exception if it will throw during the servlet initialization. To avoid using of
+     * an exception if it will be thrown during the servlet initialization. To avoid using of
      * complex techniques of #sendError suppressing, override the {@link #prepare()} method.
      * It is wrapped in safe try/catch with secure error handling and without swallowing of the exception.
      */
     @Override
     public final void init() {
         try {
-            futuresExecutor = Config.lookupExecutor();
             prepare();
         } catch (Throwable th) {
             Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Problem while endpoint init", th);

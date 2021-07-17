@@ -32,8 +32,8 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
     @AfterClass
     public static void tearDown() throws SQLException, NamingException {
         ServletContextEvent scEvent = Mockito.mock(ServletContextEvent.class);
-        dataInit.contextDestroyed(scEvent);
-        dataInit = null;
+        appInit.contextDestroyed(scEvent);
+        appInit = null;
         config = null;
         TestDataSource.unbind();
         h2.close();
@@ -81,7 +81,6 @@ public class SqlEntitiesDataEndPointTest extends SqlEntitiesEndPointTest {
         ));
         RequestResult requestResult = response.get();
         assertEquals(HttpServletResponse.SC_OK, requestResult.getStatus());
-        System.out.println("getPetsPublicWithParameters: \n" + requestResult.getBody());
         assertEquals("[" +
                 "{\"birthdate\":\"2015-04-28T21:00:00.000+0000\",\"owner_id\":1.42841834950629E14,\"type_id\":1.42841300155478E14,\"name\":\"Vasya\",\"pets_id\":1.42841883974964E14}" +
                 "]", requestResult.getBody());

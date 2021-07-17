@@ -22,7 +22,10 @@ public class GeometryTest {
     public void requestDataWithGeometry() throws Exception {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         SqlEntity compoundEntity = entities.loadEntity("geometry/data-with-geometry");
         compoundEntity.toQuery().requestData()
@@ -44,7 +47,10 @@ public class GeometryTest {
     public void insertGeometry() {
         SqlEntities entities = new SqlEntities(
                 new File(System.getProperty(TestDataSource.TEST_APP_PATH_PROP)).toPath(),
-                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME)
+                System.getProperty(TestDataSource.DATA_SOURCE_PROP_NAME),
+                true,
+                true,
+                1
         );
         SqlEntity insertEntity = entities.loadEntity("geometry/insert-administrative");
         assertNotNull(insertEntity);

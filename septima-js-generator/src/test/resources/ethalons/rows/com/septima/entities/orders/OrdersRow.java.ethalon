@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 import static com.septima.model.Model.entry;
 import static com.septima.model.Model.map;
 
-public class OrdersRaw extends Observable {
+public class OrdersRow extends Observable {
 
     private static final long serialVersionUID = 1L;
 
@@ -128,7 +128,7 @@ public class OrdersRaw extends Observable {
         changeSupport.firePropertyChange("summ", old, summ);
     }
 
-    public static <T extends OrdersRaw> T of(Map<String, Object> aDatum, Supplier<T> aSupplier) {
+    public static <T extends OrdersRow> T of(Map<String, Object> aDatum, Supplier<T> aSupplier) {
         T instance = aSupplier.get();
         instance.setId((long) com.septima.GenericType.LONG.narrow(aDatum.get("id")));
         instance.setCustomerId((long) com.septima.GenericType.LONG.narrow(aDatum.get("customer_id")));
@@ -143,11 +143,11 @@ public class OrdersRaw extends Observable {
         return instance;
     }
 
-    public static OrdersRaw of(Map<String, Object> aDatum) {
-        return of(aDatum, OrdersRaw::new);
+    public static OrdersRow of(Map<String, Object> aDatum) {
+        return of(aDatum, OrdersRow::new);
     }
 
-    public static Map<String, Object> asMap(OrdersRaw anInstance) {
+    public static Map<String, Object> asMap(OrdersRow anInstance) {
         return map(
                 entry("id", anInstance.getId()),
                 entry("customer_id", anInstance.getCustomerId()),

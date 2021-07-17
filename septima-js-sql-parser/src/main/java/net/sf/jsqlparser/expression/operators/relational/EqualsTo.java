@@ -1,5 +1,5 @@
 /* ================================================================
- * JSQLParser : java based sql parser 
+ * JSQLParser : java based sql parser
  * ================================================================
  *
  * Project Info:  http://jsqlparser.sourceforge.net
@@ -26,15 +26,15 @@ import net.sf.jsqlparser.expression.ExpressionVisitor;
 import net.sf.jsqlparser.expression.Relation;
 
 public class EqualsTo extends BinaryExpression implements Relation {
-    
+
     private String comment;
-    
+
     public void accept(ExpressionVisitor expressionVisitor) {
         expressionVisitor.visit(this);
     }
 
     public String getStringExpression() {
-        return (getComment() != null ? getComment()+" " : "") + "=";
+        return (getComment() != null ? getComment() + " " : "") + "=";
     }
 
     /**
@@ -50,5 +50,5 @@ public class EqualsTo extends BinaryExpression implements Relation {
     public void setComment(String comment) {
         this.comment = comment;
     }
-      
+
 }

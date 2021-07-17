@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 import static com.septima.model.Model.entry;
 import static com.septima.model.Model.map;
 
-public class GoodsRaw extends Observable {
+public class GoodsRow extends Observable {
 
     private static final long serialVersionUID = 1L;
 
@@ -39,18 +39,18 @@ public class GoodsRaw extends Observable {
         changeSupport.firePropertyChange("name", old, name);
     }
 
-    public static <T extends GoodsRaw> T of(Map<String, Object> aDatum, Supplier<T> aSupplier) {
+    public static <T extends GoodsRow> T of(Map<String, Object> aDatum, Supplier<T> aSupplier) {
         T instance = aSupplier.get();
         instance.setId((long) com.septima.GenericType.LONG.narrow(aDatum.get("id")));
         instance.setName((String) aDatum.get("name"));
         return instance;
     }
 
-    public static GoodsRaw of(Map<String, Object> aDatum) {
-        return of(aDatum, GoodsRaw::new);
+    public static GoodsRow of(Map<String, Object> aDatum) {
+        return of(aDatum, GoodsRow::new);
     }
 
-    public static Map<String, Object> asMap(GoodsRaw anInstance) {
+    public static Map<String, Object> asMap(GoodsRow anInstance) {
         return map(
                 entry("id", anInstance.getId()),
                 entry("name", anInstance.getName())

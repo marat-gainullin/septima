@@ -1,3 +1,0 @@
-dependencies {
-    compile project(':septima-js-data')
-}
