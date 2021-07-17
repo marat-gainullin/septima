@@ -81,10 +81,10 @@ public class SqlEntityTest {
         assertSame(database, entity.getDatabase());
         assertEquals("select f1, f2 from table", entity.getSqlText());
         assertEquals("select f1, f2::json from table", entity.getCustomSqlText());
-        assertEquals(true, entity.isReadonly());
-        assertEquals(true, entity.isCommand());
-        assertEquals(true, entity.isProcedure());
-        assertEquals(true, entity.isPublicAccess());
+        assertTrue(entity.isReadonly());
+        assertTrue(entity.isCommand());
+        assertTrue(entity.isProcedure());
+        assertTrue(entity.isPublicAccess());
         assertEquals("testEntity", entity.getName());
         assertEquals("Awesome sql based entity", entity.getTitle());
         assertEquals(64, entity.getPageSize());
@@ -98,7 +98,7 @@ public class SqlEntityTest {
         assertEquals("select f1, f2::json from table", query.getSqlClause());
         assertEquals("testEntity", query.getEntityName());
         assertEquals(64, query.getPageSize());
-        assertEquals(true, query.isProcedure());
+        assertTrue(query.isProcedure());
     }
 
     @Test

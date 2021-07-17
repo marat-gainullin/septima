@@ -128,13 +128,10 @@ public abstract class JdbcDataProvider implements DataProvider {
                                 Parameter param = aParams.get(i - 1);
                                 jdbcReaderAssigner.acceptOutParameter(param, cStmt, i, connection);
                             }
+                            // let's return ResultSet
                             results = cStmt.getResultSet();
                         } else {
                             results = statement.executeQuery();
-                        }
-                        // If the ResultSet is empty, let's return first not empty ResultSet
-                        while (results.isBeforeFirst() && results.isAfterLast() && statement.getMoreResults()) {
-                            results = statement.getResultSet();
                         }
                         try {
                             T processed = aProcessor.apply(results/* may be null*/);
