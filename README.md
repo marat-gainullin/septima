@@ -1,5 +1,5 @@
 # Septima Java & Sql
-![build](https://github.com/marat-gainullin/septima/actions/workflows/gradle/badge.svg)
+![Build & test](https://github.com/marat-gainullin/septima/workflows/build-test/badge.svg)
 
 The Septima is a data driven framework for building Java applications.
 
