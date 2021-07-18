@@ -1,4 +1,5 @@
 # Septima Java & Sql
+[![Coverage Status](https://coveralls.io/repos/github/marat-gainullin/septima/badge.svg?branch=master)](https://coveralls.io/github/marat-gainullin/septima?branch=master)
 
 The Septima is a data driven framework for building Java applications.
 
