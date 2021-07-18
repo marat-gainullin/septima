@@ -1,4 +1,4 @@
-name: Septima pipline
+name: Gradle coverage
 on: [push]
 jobs:
   Explore-GitHub-Actions:
